@@ -123,8 +123,9 @@ stack #content {
 
 ---
 
-## 📚 Documentation
+## 📚 Documentation & Ecosystem
 
+- 🖼️ **[Showcases & Real-World Designs](https://github.com/razy-me/toad-designs)**: Production-grade design gallery, posters (Bauhaus, Kamekura Tokyo 1964, Soul), and banner showcases created in TOAD.
 - 🌿 **[`the_seed/`](./the_seed/README.md)**: Exhaustive machine-readable language manual and grammar specification for LLMs and compiler engineers.
 - 🎨 **[`the_seed/08_PRODUCTION_TEMPLATES/`](./the_seed/08_PRODUCTION_TEMPLATES/)**: Battle-tested `.toad` templates (UI kits, analytics dashboards, print cards, posters).
 - 📖 **[`wiki.html`](./wiki.html)**: Standalone interactive offline web documentation with instant search.
