@@ -27,15 +27,17 @@ Design tools like Figma and Photoshop are great for freeform exploration, but th
 HTML/CSS rendering (like Puppeteer or headless Chrome) is heavy, memory-hungry, and can't produce native Photoshop documents or clean vector layers.
 
 **TOAD gives you the best of both worlds:**
+- 🤖 **Gateway to AI-Generated .PSD Files**: Large Language Models (LLMs) can easily write text and code, but they cannot directly create binary `.psd` files. TOAD acts as the bridge: an AI generates simple `.toad` code, and the compiler turns it into a **fully-layered, native Photoshop document** with editable text layers, vector Bézier paths, and real layer styles.
 - ✍️ **Code-first simplicity**: Design with clean, intuitive syntax instead of wrestling with heavy GUI apps.
 - ⚡ **Lightning-fast compilation**: Powered by high-speed native 2D rendering (@napi-rs/canvas) without needing a browser.
-- 📂 **Real Photoshop export**: Exports true `.psd` files with editable vector shapes, live rounded corners, gradient layers, and real text layers — ready to open in Photoshop.
+- 📂 **True native Photoshop export**: Exports real `.psd` files with editable vector shapes, live rounded corners, gradient layers, and real text layers — ready to open and refine in Adobe Photoshop.
 - 🔄 **Delightful developer experience**: Built-in hot reload, live browser preview via Server-Sent Events, instant project scaffolding, and intelligent file finding.
 
 ---
 
 ## ✨ Highlights
 
+- 🤖 **AI-Ready PSD Pipeline:** Enables AI agents & LLMs to synthesize complete, production-grade Photoshop files with non-destructive, fully editable layers.
 - 🎨 **Declarative & Modular:** Variables (`>primary = #3b82f6;`), reusable components (`component Button(...)`), slot projections (`slot;`), and multi-canvas pages in a single file.
 - 🚀 **Instant Setup:** Run `toad init` to generate a ready-to-run template in seconds.
 - ⚡ **Zero-Fuss CLI:** Just run `toad hero` — it automatically finds `hero.toad` in your project, builds it, and outputs your files.
