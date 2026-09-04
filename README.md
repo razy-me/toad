@@ -8,14 +8,13 @@
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20.0.0-339933.svg?style=flat-square&logo=nodedotjs&logoColor=white)](https://nodejs.org)
 [![Tests](https://img.shields.io/badge/Tests-929%20Passing-10b981.svg?style=flat-square&logo=vitest&logoColor=white)](./tests)
 [![Formats](https://img.shields.io/badge/Export-PNG%20%7C%20SVG%20%7C%20PSD%20%7C%20WebP%20%7C%20JPG-38bdf8.svg?style=flat-square)](https://github.com/razy-me/toad)
-[![Website](https://img.shields.io/badge/Website-Live%20Showcase-8b5cf6.svg?style=flat-square)](./website)
 
 <p align="center">
   <b>TOAD</b> is a modern design language and standalone compiler for makers, developers, and visual designers.<br/>
   Write clean, declarative code and compile directly into crisp images (<b>PNG, JPG, WebP</b>), scalable vectors (<b>SVG</b>), and fully-layered Photoshop files (<b>PSD</b>) with native vector shapes, gradients, and editable text.
 </p>
 
-[Why TOAD?](#-why-toad) • [Quickstart](#-quickstart) • [Syntax at a Glance](#-syntax-at-a-glance) • [CLI Commands](#-cli-commands) • [Website & Docs](#-website--playground)
+[Why TOAD?](#-why-toad) • [Quickstart](#-quickstart) • [Syntax at a Glance](#-syntax-at-a-glance) • [CLI Commands](#-cli-commands) • [Documentation](#-the-seed-machine-knowledge-base)
 
 </div>
 
@@ -296,23 +295,6 @@ Modal("Confirmation Dialog") {
     rect { size: 80px 32px; fill: #ef4444; at: inside parent offset 150px; }
 }
 ```
-
----
-
-## 🌐 Website & Playground
-
-We built a complete companion web app inside [`website/`](./website) so you can explore TOAD visually:
-- 🎮 **Live Playground**: Test and tweak `.toad` snippets right in your browser.
-- 🖼️ **Showcase Gallery**: Compare exported PNG, SVG, and PSD assets side-by-side.
-- 📖 **Interactive Docs**: Browse syntax guides and code recipes.
-
-To run it locally:
-```bash
-cd website
-npm install
-npm run dev
-```
-Then open [http://localhost:3030](http://localhost:3030) in your browser.
 
 ---
 
