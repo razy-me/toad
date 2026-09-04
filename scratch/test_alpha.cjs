@@ -1,0 +1,11 @@
+const { createCanvas } = require('@napi-rs/canvas');
+const c = createCanvas(400, 200);
+const ctx = c.getContext('2d');
+const fontSize = 24;
+ctx.font = `${fontSize}px sans-serif`;
+ctx.textBaseline = 'alphabetic';
+const m = ctx.measureText('Hello World');
+console.log('fontBoundingBoxAscent:', m.fontBoundingBoxAscent);
+console.log('fontBoundingBoxDescent:', m.fontBoundingBoxDescent);
+console.log('actualBoundingBoxAscent:', m.actualBoundingBoxAscent);
+console.log('emHeightAscent:', m.emHeightAscent);

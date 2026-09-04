@@ -1,0 +1,67 @@
+(* TOAD DSL — Formal Extended Backus-Naur Form (EBNF) Grammar *)
+(* Version: 3.0 *)
+
+Document            ::= Directive* VariableDecl* CanvasBlock* ComponentDecl* TopLevelElement*
+
+Directive           ::= ImportDirective | FontDirective
+ImportDirective     ::= "@import" StringLiteral ";"
+FontDirective       ::= "@font" StringLiteral ( "as" Identifier )? ( FontWeightToken | "normal" )? ";"
+                      | "@font" StringLiteral "{" FontBody* "}"
+
+VariableDecl        ::= ">" Identifier "=" Expression ";"
+
+CanvasBlock         ::= "canvas" StringLiteral? "{" CanvasProperty* Element* "}"
+
+ComponentDecl       ::= "component" Identifier "(" ParameterList? ")" "{" ComponentBody* "}"
+ParameterList       ::= Parameter ( "," Parameter )*
+Parameter           ::= Identifier ( "=" Expression )?
+
+Element             ::= RectElement
+                      | CircleElement
+                      | PathElement
+                      | PolygonElement
+                      | TextElement
+                      | ImageElement
+                      | GroupElement
+                      | StackElement
+                      | GridElement
+                      | ComponentInstance
+                      | SlotElement
+
+RectElement         ::= "rect" ( "#" Identifier )? StringLiteral? "{" PropertyStatement* Element* "}"
+CircleElement       ::= "circle" ( "#" Identifier )? "{" PropertyStatement* "}"
+PathElement         ::= "path" ( "#" Identifier )? "{" PropertyStatement* "}"
+PolygonElement      ::= "polygon" ( "#" Identifier )? "{" PropertyStatement* "}"
+TextElement         ::= "text" ( "#" Identifier )? StringLiteral? "{" PropertyStatement* "}"
+ImageElement        ::= "image" ( "#" Identifier )? "{" PropertyStatement* "}"
+GroupElement        ::= "group" ( "#" Identifier )? "{" PropertyStatement* Element* "}"
+StackElement        ::= "stack" ( "#" Identifier )? "{" PropertyStatement* Element* "}"
+GridElement         ::= "grid" ( "#" Identifier )? "{" PropertyStatement* Element* "}"
+ComponentInstance   ::= Identifier ( "#" Identifier )? ( "(" ArgumentList? ")" )? "{" PropertyStatement* Element* "}"
+SlotElement         ::= "slot" ";"
+
+PropertyStatement   ::= Identifier ":" ValueList ";"
+                      | RelationalAnchor ";"
+
+RelationalAnchor    ::= "at" ":" AnchorSpec ( "offset" Dimension Dimension? )?
+AnchorSpec          ::= EdgeKeyword "of" TargetReference
+                      | "(" Expression "," Expression ")"
+EdgeKeyword         ::= "top-left" | "top-center" | "top-right"
+                      | "center-left" | "center" | "center-right"
+                      | "bottom-left" | "bottom-center" | "bottom-right"
+                      | "below" | "above" | "left of" | "right of" | "inside"
+TargetReference     ::= "#" Identifier | "canvas" | "parent"
+
+Expression          ::= Term ( ( "+" | "-" ) Term )*
+Term                ::= Factor ( ( "*" | "/" ) Factor )*
+Factor              ::= DimensionLiteral
+                      | NumberLiteral
+                      | HexColorLiteral
+                      | StringLiteral
+                      | VariableReference
+                      | FunctionCall
+                      | "(" Expression ")"
+
+DimensionLiteral    ::= Number ( "px" | "%" | "pt" | "mm" | "cm" | "in" | "deg" | "rad" | "em" | "rem" )
+VariableReference   ::= ">" Identifier
+FunctionCall        ::= Identifier "(" ExpressionList? ")"

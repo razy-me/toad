@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1440 900" width="1440" height="900">
+  <defs>
+    <filter id="filter_1" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="40" />
+    </filter>
+    <radialGradient id="rad_grad_1" cx="50%" cy="50%" r="50%" fx="50%" fy="50%" color-interpolation="sRGB">
+      <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.145" />
+      <stop offset="50%" stop-color="#8b5cf6" stop-opacity="0.063" />
+      <stop offset="80%" stop-color="#000000" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="lin_grad_2" x1="15%" y1="15%" x2="85%" y2="85%" color-interpolation="sRGB">
+      <stop offset="0%" stop-color="#06b6d4" />
+      <stop offset="100%" stop-color="#8b5cf6" />
+    </linearGradient>
+    <filter id="filter_2" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#10b981" />
+    </filter>
+  </defs>
+  <rect width="100%" height="100%" fill="#090d16" />
+ <rect x="800" y="-100" width="700" height="500" fill="url(#rad_grad_1)" id="ambientGlow" filter="url(#filter_1)" />
+ <rect x="40" y="32" width="1360" height="64" rx="12" ry="12" fill="#11182780" stroke="#33415550" stroke-width="1" id="navBar" />
+ <rect x="0" y="0" width="32" height="32" rx="8" ry="8" fill="url(#lin_grad_2)" id="brandLogo" />
+  <text x="44" y="12" font-family="Inter, -apple-system, sans-serif" font-size="15" font-weight="800" font-style="normal" text-anchor="start" letter-spacing="1" xml:space="preserve" fill="#f8fafc" id="brandName">NEXUS // CORE ANALYTICS</text>
+ <rect x="0" y="0" width="160" height="36" rx="9999" ry="9999" fill="#10b98115" stroke="#10b98140" stroke-width="1" id="statusPill" />
+ <circle cx="4" cy="4" r="4" fill="#10b981" id="statusDot" filter="url(#filter_2)" />
+  <text x="16" y="9" font-family="Inter, -apple-system, sans-serif" font-size="11" font-weight="700" font-style="normal" text-anchor="start" letter-spacing="0.5" xml:space="preserve" fill="#34d399" id="statusText">ALL SYSTEMS LIVE</text>
+  <g id="kpiRow">
+ <rect x="40" y="120" width="322" height="140" rx="14" ry="14" fill="#111827" stroke="#33415550" stroke-width="1" id="kpi1" />
+ <rect x="386" y="120" width="322" height="140" rx="14" ry="14" fill="#111827" stroke="#33415550" stroke-width="1" id="kpi2" />
+ <rect x="732" y="120" width="322" height="140" rx="14" ry="14" fill="#111827" stroke="#33415550" stroke-width="1" id="kpi3" />
+ <rect x="1078" y="120" width="322" height="140" rx="14" ry="14" fill="#111827" stroke="#33415550" stroke-width="1" id="kpi4" />
+  </g>
+  <g id="mainBento">
+ <rect x="40" y="284" width="890" height="580" rx="16" ry="16" fill="#111827" stroke="#33415550" stroke-width="1" id="chartCard" />
+ <rect x="954" y="284" width="446" height="580" rx="16" ry="16" fill="#111827" stroke="#33415550" stroke-width="1" id="feedCard" />
+  </g>
+</svg>

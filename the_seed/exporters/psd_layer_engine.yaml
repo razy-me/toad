@@ -1,0 +1,49 @@
+# TOAD DSL — Photoshop PSD Native Layer Engine Specification
+# Output Format: Binary Layered Adobe Photoshop Document (.psd)
+# Schema Version: 3.0
+
+binary_file_structure:
+  section_1_header: "Signature '8BPS', Version 1, Channels 4 (RGBA), BitDepth 8"
+  section_2_color_mode: "RGB Mode (Section length = 0)"
+  section_3_image_resources: "DPI resolution info (0x0408), Slices (0x041A), Guides (0x0408), Global Light (0x0439)"
+  section_4_layer_and_mask: "Layer records, channel lengths, Tagged Data Blocks (ALI)"
+  section_5_composite_data: "Flattened RLE-compressed composite image for OS thumbnails"
+
+tagged_block_signatures:
+  TySh:
+    description: "Type Tool Object (Live editable Photoshop text layer)"
+    data_format: "Serialized EngineData dictionary"
+    contents:
+      FontSet: "PostScript font name registration"
+      RunArray: "Character-level styling (FontSize, FillColor RGB [0.0, 1.0], Tracking)"
+      ParagraphArray: "Justification, FirstLineIndent, Leading"
+      TextRect: "Bounding box for Photoshop word wrapping"
+
+  vmsk:
+    description: "Vector Mask (Infinite-resolution vector shape layer)"
+    path_record_types:
+      closed_subpath_length: "Defines number of knots in path loop"
+      initial_knot: "Cubic Bezier control points (Preceding, Anchor, Leaving)"
+
+  vsms:
+    description: "Vector Stroke Data (Live stroke width, color, alignment)"
+
+  SoCo:
+    description: "Solid Color Fill Descriptor (RGB normalized to [0, 255])"
+
+  GdFl:
+    description: "Gradient Fill Descriptor (Multi-stop linear/radial gradient with angle and scale)"
+
+  lsct:
+    description: "Layer Section Divider (Folder grouping)"
+    types:
+      1: "Open Folder"
+      2: "Closed Folder"
+      3: "Bounding Marker (</Layer group>)"
+
+  lrFX:
+    description: "Layer Effects descriptor (Multi drop shadows, bevel, outer glow)"
+
+compression:
+  algorithm: "PackBits Run-Length Encoding (RLE)"
+  byte_counts: "Written per scanline before channel stream"

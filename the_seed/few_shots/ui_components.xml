@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<few_shots category="ui_components" target="gemini_family" version="3.0">
+  <pattern id="STATUS_PILL_BADGE">
+    <user_prompt>Create a green status badge pill with text 'SYSTEM HEALTHY'</user_prompt>
+    <forbidden_reflex reason="Tight container width clips text in SVG renderers">
+      rect #badge {
+        width: 100px;
+        height: 28px;
+        text "SYSTEM HEALTHY" { at: center of parent; font-size: 11px; }
+      }
+    </forbidden_reflex>
+    <verified_toad_code>
+      rect #badge {
+        width: 140px; // Allocated 20% horizontal safety padding
+        height: 32px;
+        fill: #10b98120;
+        stroke: #10b98150 1px solid;
+        border-radius: 9999px;
+
+        circle #dot {
+          at: center-left of parent offset 14px 0px;
+          radius: 4px;
+          fill: #10b981;
+        }
+
+        text {
+          at: right of #dot offset 8px;
+          content: "SYSTEM HEALTHY";
+          font-family: "Inter, sans-serif";
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.5px;
+          color: #34d399;
+        }
+      }
+    </verified_toad_code>
+  </pattern>
+
+  <pattern id="COMPONENT_WITH_SLOT">
+    <user_prompt>Define a reusable card component that projects child content via a slot</user_prompt>
+    <forbidden_reflex reason="Missing semicolon on slot or invalid variable assignment">
+      component Card(title: string) {
+        rect {
+          slot
+        }
+      }
+    </forbidden_reflex>
+    <verified_toad_code>
+      component Card(title = "Default Title", width = 400px, height = 260px) {
+        rect #frame {
+          size: >width >height;
+          fill: #1e293b;
+          stroke: #334155 1px solid;
+          border-radius: 16px;
+          shadow: 0 10px 25px #00000040;
+
+          text #cardTitle {
+            at: top-left of parent offset 24px 20px;
+            content: >title;
+            font-family: "Inter, sans-serif";
+            font-size: 18px;
+            font-weight: 700;
+            color: #f8fafc;
+          }
+
+          // Mandatory statement termination on slot
+          slot;
+        }
+      }
+    </verified_toad_code>
+  </pattern>
+</few_shots>

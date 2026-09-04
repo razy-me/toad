@@ -1,0 +1,51 @@
+# TOAD DSL — Print Prepress, CMYK & Bleed Specification
+# Target Industry: Commercial Offset & High-Res Digital Print
+# Schema Version: 3.0
+
+dpi_and_resolution:
+  print_standard: 300
+  screen_reference: 96
+  conversion_formulas:
+    mm_to_px: "(mm / 25.4) * 300"
+    in_to_px: "in * 300"
+    css_to_print_multiplier: "300 / 96 = 3.125"
+
+box_model_hierarchy:
+  trim_box:
+    description: "Final physical dimensions of printed product after cutting"
+    example_eu_business_card: "85mm x 55mm (1004px x 650px @ 300 DPI)"
+    coordinate_anchor: "(0, 0) pins to top-left of Trim Box"
+
+  bleed_box:
+    standard_bleed: "3mm (approx 36px @ 300 DPI) or 0.125in"
+    expansion_formula:
+      width: "trim_width + (2 * bleed)"
+      height: "trim_height + (2 * bleed)"
+    rule: "Background fills and photos MUST extend to (-bleed, -bleed)"
+
+  safe_zone:
+    standard_safety_margin: "3mm to 5mm inside Trim Box"
+    rule: "All essential typography, logos, and QR codes MUST remain inside safe zone"
+
+  media_box:
+    description: "Total export canvas buffer containing crop marks and registration targets"
+    margin_formula: "max(bleed, 30px)"
+
+prepress_marks:
+  corner_trim_ticks:
+    count: 8
+    stroke: "0.5pt solid black"
+    offset: "Starts outside bleed box, points toward trim corners without touching artwork"
+  registration_crosshairs:
+    geometry: "Concentric circle with crosshair lines"
+    placement: "Centered on outer edges in margin buffer"
+
+color_management:
+  rgb_to_cmyk_shift:
+    warning: "Vivid RGB neons cannot be reproduced in standard 4-color process inks"
+  total_area_coverage_tac:
+    max_coated_paper: "300% to 320%"
+    max_uncoated_paper: "260%"
+  pure_black_vs_rich_black:
+    body_text_fine_lines: "C:0% M:0% Y:0% K:100% (Prevents registration fringing)"
+    large_background_fills: "C:60% M:40% Y:40% K:100% (Rich black)"

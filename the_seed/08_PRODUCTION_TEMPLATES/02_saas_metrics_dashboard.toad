@@ -1,0 +1,438 @@
+// 02_saas_metrics_dashboard.toad
+// Production-grade dark-tech SaaS Analytics Bento Dashboard
+// Demonstrates bento grid layout, relational positioning, status indicators,
+// and modern glassmorphic surface composition.
+
+>bgDark = #090d16;
+>cardSurface = #111827;
+>cardSurfaceAlt = #1e293b;
+>borderSubtle = #33415550;
+
+>accentCyan = #06b6d4;
+>accentGreen = #10b981;
+>accentPurple = #8b5cf6;
+>accentAmber = #f59e0b;
+
+>textWhite = #f8fafc;
+>textMuted = #94a3b8;
+>textDim = #64748b;
+
+>fontStack = "Inter, -apple-system, sans-serif";
+
+canvas "SaaS Metrics Dashboard" {
+  width: 1440px;
+  height: 900px;
+  background: >bgDark;
+  font-family: >fontStack;
+}
+
+// Subtle ambient background glow
+rect #ambientGlow {
+  at: (800px, -100px);
+  size: 700px 500px;
+  fill: radial-gradient(center, #06b6d425 0%, #8b5cf610 50%, transparent 80%);
+  filter: blur(80px);
+}
+
+// -------------------------------------------------------------
+// TOP NAVIGATION BAR
+// -------------------------------------------------------------
+rect #navBar {
+  at: top-left of canvas offset 40px 32px;
+  size: 1360px 64px;
+  fill: #11182780;
+  stroke: >borderSubtle 1px solid;
+  border-radius: 12px;
+}
+
+// Brand Logo Mark
+rect #brandLogo {
+  at: center-left of #navBar offset 24px 0px;
+  size: 32px 32px;
+  fill: linear-gradient(135deg, >accentCyan, >accentPurple);
+  border-radius: 8px;
+}
+
+text #brandName {
+  at: right of #brandLogo offset 12px;
+  content: "NEXUS // CORE ANALYTICS";
+  font-family: >fontStack;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: >textWhite;
+}
+
+// Global System Status Pill
+rect #statusPill {
+  at: center-right of #navBar offset -24px 0px;
+  size: 160px 36px;
+  fill: #10b98115;
+  stroke: #10b98140 1px solid;
+  border-radius: 9999px;
+}
+
+circle #statusDot {
+  at: center-left of #statusPill offset 14px 0px;
+  radius: 4px;
+  fill: >accentGreen;
+  shadow: 0 0 8px #10b981;
+}
+
+text #statusText {
+  at: right of #statusDot offset 8px;
+  content: "ALL SYSTEMS LIVE";
+  font-family: >fontStack;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #34d399;
+}
+
+// -------------------------------------------------------------
+// KPI METRIC CARDS ROW (4 CARDS)
+// -------------------------------------------------------------
+group #kpiRow {
+  at: below #navBar offset 24px;
+
+  // KPI 1: Total ARR
+  rect #kpi1 {
+    size: 322px 140px;
+    fill: >cardSurface;
+    stroke: >borderSubtle 1px solid;
+    border-radius: 14px;
+
+    text {
+      at: top-left of #kpi1 offset 20px 20px;
+      content: "ANNUAL RUN RATE";
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      color: >textDim;
+    }
+
+    text {
+      at: top-left of #kpi1 offset 20px 48px;
+      content: "$14.24M";
+      font-size: 32px;
+      font-weight: 800;
+      color: >textWhite;
+    }
+
+    text {
+      at: top-left of #kpi1 offset 20px 98px;
+      content: "+28.4% vs last quarter";
+      font-size: 12px;
+      font-weight: 500;
+      color: #34d399;
+    }
+  }
+
+  // KPI 2: Active Clusters
+  rect #kpi2 {
+    at: right of #kpi1 offset 24px;
+    size: 322px 140px;
+    fill: >cardSurface;
+    stroke: >borderSubtle 1px solid;
+    border-radius: 14px;
+
+    text {
+      at: top-left of #kpi2 offset 20px 20px;
+      content: "ACTIVE CLUSTERS";
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      color: >textDim;
+    }
+
+    text {
+      at: top-left of #kpi2 offset 20px 48px;
+      content: "1,420";
+      font-size: 32px;
+      font-weight: 800;
+      color: >textWhite;
+    }
+
+    text {
+      at: top-left of #kpi2 offset 20px 98px;
+      content: "+14 deployed today";
+      font-size: 12px;
+      font-weight: 500;
+      color: >accentCyan;
+    }
+  }
+
+  // KPI 3: Avg P99 Latency
+  rect #kpi3 {
+    at: right of #kpi2 offset 24px;
+    size: 322px 140px;
+    fill: >cardSurface;
+    stroke: >borderSubtle 1px solid;
+    border-radius: 14px;
+
+    text {
+      at: top-left of #kpi3 offset 20px 20px;
+      content: "GLOBAL P99 LATENCY";
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      color: >textDim;
+    }
+
+    text {
+      at: top-left of #kpi3 offset 20px 48px;
+      content: "18.4 ms";
+      font-size: 32px;
+      font-weight: 800;
+      color: >textWhite;
+    }
+
+    text {
+      at: top-left of #kpi3 offset 20px 98px;
+      content: "-3.2 ms improvement";
+      font-size: 12px;
+      font-weight: 500;
+      color: #34d399;
+    }
+  }
+
+  // KPI 4: Ingestion Rate
+  rect #kpi4 {
+    at: right of #kpi3 offset 24px;
+    size: 322px 140px;
+    fill: >cardSurface;
+    stroke: >borderSubtle 1px solid;
+    border-radius: 14px;
+
+    text {
+      at: top-left of #kpi4 offset 20px 20px;
+      content: "DATA INGESTION";
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      color: >textDim;
+    }
+
+    text {
+      at: top-left of #kpi4 offset 20px 48px;
+      content: "8.92 TB/s";
+      font-size: 32px;
+      font-weight: 800;
+      color: >textWhite;
+    }
+
+    text {
+      at: top-left of #kpi4 offset 20px 98px;
+      content: "Nominal operational load";
+      font-size: 12px;
+      font-weight: 500;
+      color: >textMuted;
+    }
+  }
+}
+
+// -------------------------------------------------------------
+// MAIN BENTO AREA: CHART (LEFT) + REAL-TIME FEED (RIGHT)
+// -------------------------------------------------------------
+group #mainBento {
+  at: below #kpiRow offset 24px;
+
+  // Large Traffic Chart Card (Width 890px)
+  rect #chartCard {
+    size: 890px 580px;
+    fill: >cardSurface;
+    stroke: >borderSubtle 1px solid;
+    border-radius: 16px;
+
+    text {
+      at: top-left of #chartCard offset 28px 24px;
+      content: "Traffic Velocity & Packet Throughput";
+      font-size: 18px;
+      font-weight: 700;
+      color: >textWhite;
+    }
+
+    text {
+      at: top-left of #chartCard offset 28px 52px;
+      content: "Real-time edge ingestion across 32 availability zones";
+      font-size: 13px;
+      font-weight: 400;
+      color: >textDim;
+    }
+
+    // Stylized Visual Data Bars
+    rect #bar1 {
+      at: bottom-left of #chartCard offset 60px -60px;
+      size: 40px 180px;
+      fill: linear-gradient(to top, #06b6d4, #06b6d480);
+      border-radius: 6px;
+    }
+
+    rect #bar2 {
+      at: right of #bar1 offset 32px;
+      size: 40px 240px;
+      fill: linear-gradient(to top, #06b6d4, #06b6d480);
+      border-radius: 6px;
+    }
+
+    rect #bar3 {
+      at: right of #bar2 offset 32px;
+      size: 40px 310px;
+      fill: linear-gradient(to top, #3b82f6, #3b82f680);
+      border-radius: 6px;
+    }
+
+    rect #bar4 {
+      at: right of #bar3 offset 32px;
+      size: 40px 220px;
+      fill: linear-gradient(to top, #3b82f6, #3b82f680);
+      border-radius: 6px;
+    }
+
+    rect #bar5 {
+      at: right of #bar4 offset 32px;
+      size: 40px 390px;
+      fill: linear-gradient(to top, #8b5cf6, #8b5cf680);
+      border-radius: 6px;
+    }
+
+    rect #bar6 {
+      at: right of #bar5 offset 32px;
+      size: 40px 350px;
+      fill: linear-gradient(to top, #8b5cf6, #8b5cf680);
+      border-radius: 6px;
+    }
+
+    rect #bar7 {
+      at: right of #bar6 offset 32px;
+      size: 40px 420px;
+      fill: linear-gradient(to top, #10b981, #10b98180);
+      border-radius: 6px;
+    }
+
+    rect #bar8 {
+      at: right of #bar7 offset 32px;
+      size: 40px 370px;
+      fill: linear-gradient(to top, #10b981, #10b98180);
+      border-radius: 6px;
+    }
+  }
+
+  // Real-Time Audit Feed Card (Right, Width 446px)
+  rect #feedCard {
+    at: right of #chartCard offset 24px;
+    size: 446px 580px;
+    fill: >cardSurface;
+    stroke: >borderSubtle 1px solid;
+    border-radius: 16px;
+
+    text {
+      at: top-left of #feedCard offset 24px 24px;
+      content: "Live Event Stream";
+      font-size: 18px;
+      font-weight: 700;
+      color: >textWhite;
+    }
+
+    text {
+      at: top-left of #feedCard offset 24px 52px;
+      content: "Automated telemetry and cluster events";
+      font-size: 13px;
+      font-weight: 400;
+      color: >textDim;
+    }
+
+    // Event 1
+    rect #evt1 {
+      at: top-left of #feedCard offset 24px 96px;
+      size: 398px 90px;
+      fill: #1e293b60;
+      border-radius: 10px;
+
+      circle {
+        at: top-left of #evt1 offset 16px 20px;
+        radius: 5px;
+        fill: >accentGreen;
+      }
+
+      text {
+        at: top-left of #evt1 offset 32px 14px;
+        content: "Auto-scale threshold triggered";
+        font-size: 14px;
+        font-weight: 600;
+        color: >textWhite;
+      }
+
+      text {
+        at: top-left of #evt1 offset 32px 38px;
+        size: 340px;
+        content: "Added 8 nodes to eu-west-1 cluster in response to traffic surge.";
+        font-size: 12px;
+        line-height: 1.3;
+        color: >textMuted;
+      }
+    }
+
+    // Event 2
+    rect #evt2 {
+      at: below #evt1 offset 16px;
+      size: 398px 90px;
+      fill: #1e293b60;
+      border-radius: 10px;
+
+      circle {
+        at: top-left of #evt2 offset 16px 20px;
+        radius: 5px;
+        fill: >accentCyan;
+      }
+
+      text {
+        at: top-left of #evt2 offset 32px 14px;
+        content: "SSL Certificate Rotated";
+        font-size: 14px;
+        font-weight: 600;
+        color: >textWhite;
+      }
+
+      text {
+        at: top-left of #evt2 offset 32px 38px;
+        size: 340px;
+        content: "Zero-downtime TLS 1.3 key exchange across all edge proxies.";
+        font-size: 12px;
+        line-height: 1.3;
+        color: >textMuted;
+      }
+    }
+
+    // Event 3
+    rect #evt3 {
+      at: below #evt2 offset 16px;
+      size: 398px 90px;
+      fill: #1e293b60;
+      border-radius: 10px;
+
+      circle {
+        at: top-left of #evt3 offset 16px 20px;
+        radius: 5px;
+        fill: >accentPurple;
+      }
+
+      text {
+        at: top-left of #evt3 offset 32px 14px;
+        content: "Snapshot Backup Completed";
+        font-size: 14px;
+        font-weight: 600;
+        color: >textWhite;
+      }
+
+      text {
+        at: top-left of #evt3 offset 32px 38px;
+        size: 340px;
+        content: "Global cold storage replication verified with sha256 checksum.";
+        font-size: 12px;
+        line-height: 1.3;
+        color: >textMuted;
+      }
+    }
+  }
+}

@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<negative_constraints target="gemini_family" version="3.0">
+  <guardrail id="NC-01" category="layout_model">
+    <intent>Horizontal or vertical distribution of child elements</intent>
+    <bad_reflex reason="CSS Flexbox hallucination">
+      rect #row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+    </bad_reflex>
+    <correct_toad reason="Native TOAD stack autolayout">
+      stack #row {
+        direction: horizontal;
+        justify: space-between;
+        align: center;
+      }
+    </correct_toad>
+  </guardrail>
+
+  <guardrail id="NC-02" category="element_tags">
+    <intent>Container or wrapper elements</intent>
+    <bad_reflex reason="HTML tag hallucination">
+      div #container {
+        p "Hello world" {}
+        span "Subtext" {}
+      }
+    </bad_reflex>
+    <correct_toad reason="Native TOAD primitives">
+      rect #container {
+        text "Hello world" {}
+        text "Subtext" {}
+      }
+    </correct_toad>
+  </guardrail>
+
+  <guardrail id="NC-03" category="color_functions">
+    <intent>Color with transparency</intent>
+    <bad_reflex reason="CSS rgba syntax hallucination">
+      fill: rgba(59, 130, 246, 0.5);
+    </bad_reflex>
+    <correct_toad reason="Native TOAD alpha function or 8-digit hex">
+      fill: alpha(#3b82f6, 0.5);
+      // or: fill: #3b82f680;
+    </correct_toad>
+  </guardrail>
+
+  <guardrail id="NC-04" category="variable_declaration">
+    <intent>Defining design tokens or variables</intent>
+    <bad_reflex reason="CSS property colon or JavaScript var/let">
+      >primary: #3b82f6;
+      primary: #3b82f6;
+      let accent = #10b981;
+    </bad_reflex>
+    <correct_toad reason="Strict TOAD assignment operator with > prefix">
+      >primary = #3b82f6;
+      >accent = #10b981;
+    </correct_toad>
+  </guardrail>
+
+  <guardrail id="NC-05" category="font_fallback_stacks">
+    <intent>Font fallback declaration in variable</intent>
+    <bad_reflex reason="Unquoted comma separated tokens">
+      >font = "Inter", sans-serif;
+    </bad_reflex>
+    <correct_toad reason="Single quoted string literal">
+      >font = "Inter, sans-serif";
+    </correct_toad>
+  </guardrail>
+
+  <guardrail id="NC-06" category="relational_anchor_offsets">
+    <intent>Positioning element relative to another with offset</intent>
+    <bad_reflex reason="Accidental colon after offset keyword">
+      at: below #hero offset: 24px;
+    </bad_reflex>
+    <correct_toad reason="Whitespace separated offset keyword">
+      at: below #hero offset 24px;
+    </correct_toad>
+  </guardrail>
+
+  <guardrail id="NC-07" category="text_vs_shape_styling">
+    <intent>Setting text color</intent>
+    <bad_reflex reason="Using shape fill property on text element">
+      text "Title" {
+        fill: #ffffff;
+      }
+    </bad_reflex>
+    <correct_toad reason="Using text color property">
+      text "Title" {
+        color: #ffffff;
+      }
+    </correct_toad>
+  </guardrail>
+
+  <guardrail id="NC-08" category="font_weight_naming">
+    <intent>Semi-bold font weight</intent>
+    <bad_reflex reason="Multi-word string or quoted number">
+      font-weight: "semi bold";
+      font-weight: semi bold;
+    </bad_reflex>
+    <correct_toad reason="Integer value or single-word token">
+      font-weight: 600;
+      // or: font-weight: semibold;
+    </correct_toad>
+  </guardrail>
+
+  <guardrail id="NC-09" category="content_projection_slots">
+    <intent>Component slot insertion point</intent>
+    <bad_reflex reason="Omitting semicolon after slot">
+      component Card() {
+        rect {
+          slot
+        }
+      }
+    </bad_reflex>
+    <correct_toad reason="Mandatory statement termination">
+      component Card() {
+        rect {
+          slot;
+        }
+      }
+    </correct_toad>
+  </guardrail>
+
+  <guardrail id="NC-10" category="stack_child_positioning">
+    <intent>Positioning children inside auto-layout stack</intent>
+    <bad_reflex reason="Putting explicit at coordinates inside stack">
+      stack #row {
+        direction: horizontal;
+        text "A" { at: (10px, 0px); }
+        text "B" { at: (100px, 0px); }
+      }
+    </bad_reflex>
+    <correct_toad reason="Letting stack autolayout calculate positions via gap">
+      stack #row {
+        direction: horizontal;
+        gap: 16px;
+        text "A" {}
+        text "B" {}
+      }
+    </correct_toad>
+  </guardrail>
+</negative_constraints>

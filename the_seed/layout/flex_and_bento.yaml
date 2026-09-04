@@ -1,0 +1,38 @@
+# TOAD DSL — Auto-Layout Stacks & Bento Grid Mathematics
+# Schema Version: 3.0
+
+stacks_and_autolayout:
+  solver_type: "Two-Pass Constraint Solver"
+  pass_1_intrinsic_sizing:
+    action: "Calculate child sizes and sum fixed dimensions"
+    horizontal_stack:
+      fixed_width_sum: "sum(fixed_child_widths) + (gap * (num_children - 1)) + padding_left + padding_right"
+      max_child_height: "max(child_heights) + padding_top + padding_bottom"
+    vertical_stack:
+      fixed_height_sum: "sum(fixed_child_heights) + (gap * (num_children - 1)) + padding_top + padding_bottom"
+      max_child_width: "max(child_widths) + padding_left + padding_right"
+
+  pass_2_flexible_distribution:
+    action: "Distribute remaining space to fill/flex children"
+    remaining_space_formula: "available_parent_space - fixed_sum"
+    per_child_flex_share: "remaining_space / count(flex_children)"
+
+  justification_modes:
+    flex_start: "Start at padding offset"
+    center: "Offset = (total_track_length - content_length) / 2"
+    flex_end: "Offset = total_track_length - content_length - end_padding"
+    space_between: "gap = (total_track_length - sum(child_lengths) - total_padding) / (num_children - 1)"
+    space_around: "Half-gap on ends, full gap between children"
+
+bento_grid_system:
+  standard_columns: 12
+  gutter_scale: [8px, 16px, 24px, 32px]
+  track_sizing:
+    fixed: "e.g. 300px"
+    fractional:
+      unit: "fr"
+      formula: "track_width = (available_grid_width - (gap * (total_cols - 1))) / total_fr_units"
+    auto_rows: "Expand to fit tallest card in row"
+  spans:
+    col_span: "Span N columns: col-span: 4 -> width = (4 * col_width) + (3 * gap)"
+    row_span: "Span N rows: row-span: 2 -> height = (2 * row_height) + gap"

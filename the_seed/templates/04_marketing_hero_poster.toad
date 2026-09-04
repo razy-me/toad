@@ -1,0 +1,221 @@
+// 04_marketing_hero_poster.toad
+// High-Impact Marketing Hero Poster (1080x1350 Portrait)
+// Demonstrates multi-layer radial glows (alpha >= 0.25), typography hierarchy,
+// pill badges with safety margins, and glassmorphic feature highlight cards.
+
+>bgDeep = #050811;
+>neonCyan = #00f5a0;
+>neonBlue = #00d9f5;
+>neonPurple = #7928ca;
+
+>textWhite = #ffffff;
+>textSlate = #94a3b8;
+>cardSurface = #0d132290;
+>borderGlow = #00f5a030;
+
+>fontFamily = "Inter, -apple-system, sans-serif";
+
+canvas "Marketing Hero Poster" {
+  width: 1080px;
+  height: 1350px;
+  background: >bgDeep;
+  font-family: >fontFamily;
+}
+
+// -------------------------------------------------------------
+// 1. LIGHTING & GLOW ENVIRONMENT (Vibrant Alpha >= 0.25)
+// -------------------------------------------------------------
+rect #glowTopRight {
+  at: (450px, -150px);
+  size: 750px 750px;
+  fill: radial-gradient(center, alpha(>neonBlue, 0.35) 0%, alpha(>neonPurple, 0.20) 45%, transparent 75%);
+  filter: blur(60px);
+}
+
+rect #glowCenterLeft {
+  at: (-200px, 450px);
+  size: 800px 800px;
+  fill: radial-gradient(center, alpha(>neonCyan, 0.30) 0%, transparent 70%);
+  filter: blur(80px);
+}
+
+// -------------------------------------------------------------
+// 2. HEADER & PILL BADGE (20% Safety Padding)
+// -------------------------------------------------------------
+group #heroHeader {
+  at: (90px, 120px);
+
+  // Status Badge with safe padding
+  rect #pillRelease {
+    size: 200px 36px;
+    fill: alpha(>neonCyan, 0.15);
+    stroke: alpha(>neonCyan, 0.50) 1px solid;
+    border-radius: 9999px;
+
+    text {
+      at: center of parent;
+      content: "TOAD COMPILER v3.0";
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: >neonCyan;
+    }
+  }
+
+  // Giant Punchy Hero Headline
+  text #headlineMain {
+    at: below #pillRelease offset 28px;
+    size: 900px;
+    content: "DETERMINISTIC GRAPHICS FOR SOFTWARE ENGINEERS";
+    font-size: 64px;
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: -1px;
+    color: >textWhite;
+  }
+
+  // Subtitle with explicit width for word wrapping
+  text #subHeadline {
+    at: below #headlineMain offset 28px;
+    size: 820px;
+    content: "Compile high-performance declarative layouts directly into native layered Photoshop PSDs, standalone vector SVGs, and subpixel-crisp raster images.";
+    font-size: 22px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: >textSlate;
+  }
+}
+
+// -------------------------------------------------------------
+// 3. CENTRAL HERO VISUAL / GLASSMORPHIC CARD
+// -------------------------------------------------------------
+rect #heroCard {
+  at: below #subHeadline offset 56px;
+  size: 900px 380px;
+  fill: >cardSurface;
+  stroke: >borderGlow 1px solid;
+  border-radius: 20px;
+  shadow: 0 20px 50px alpha(#000000, 0.60);
+
+  // Top Card Header
+  text {
+    at: top-left of #heroCard offset 36px 36px;
+    content: "CODE-TO-CANVAS PIPELINE BENCHMARKS";
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: >neonCyan;
+  }
+
+  // Feature Stat 1
+  rect #statCol1 {
+    at: top-left of #heroCard offset 36px 90px;
+    size: 240px 220px;
+    fill: #131b2e60;
+    border-radius: 12px;
+
+    text {
+      at: top-left of #statCol1 offset 24px 24px;
+      content: "3.2 ms";
+      font-size: 48px;
+      font-weight: 900;
+      color: >textWhite;
+    }
+
+    text {
+      at: below #statCol1 offset -110px;
+      size: 192px;
+      content: "Average compilation time per artboard in headless Skia.";
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 1.4;
+      color: >textSlate;
+    }
+  }
+
+  // Feature Stat 2
+  rect #statCol2 {
+    at: right of #statCol1 offset 24px;
+    size: 240px 220px;
+    fill: #131b2e60;
+    border-radius: 12px;
+
+    text {
+      at: top-left of #statCol2 offset 24px 24px;
+      content: "100%";
+      font-size: 48px;
+      font-weight: 900;
+      color: >neonBlue;
+    }
+
+    text {
+      at: below #statCol2 offset -110px;
+      size: 192px;
+      content: "Pure W3C SVG vector parity with zero external asset bloat.";
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 1.4;
+      color: >textSlate;
+    }
+  }
+
+  // Feature Stat 3
+  rect #statCol3 {
+    at: right of #statCol2 offset 24px;
+    size: 240px 220px;
+    fill: #131b2e60;
+    border-radius: 12px;
+
+    text {
+      at: top-left of #statCol3 offset 24px 24px;
+      content: "16-Bit";
+      font-size: 48px;
+      font-weight: 900;
+      color: >neonCyan;
+    }
+
+    text {
+      at: below #statCol3 offset -110px;
+      size: 192px;
+      content: "Deep color depth with Adobe Photoshop TySh text layers.";
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 1.4;
+      color: >textSlate;
+    }
+  }
+}
+
+// -------------------------------------------------------------
+// 4. FOOTER CALLOUT & BADGES
+// -------------------------------------------------------------
+group #footerCallout {
+  at: below #heroCard offset 56px;
+
+  rect #ctaButton {
+    size: 260px 60px;
+    fill: linear-gradient(135deg, >neonCyan, >neonBlue);
+    border-radius: 12px;
+    shadow: 0 10px 30px alpha(>neonCyan, 0.40);
+
+    text {
+      at: center of parent;
+      content: "EXPLORE THE SEED ->";
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: #050811;
+    }
+  }
+
+  text #footerMeta {
+    at: right of #ctaButton offset 32px;
+    size: 580px;
+    content: "OPEN SOURCE COMPILER ARCHITECTURE • BUILT FOR AUTOMATED ASSET GENERATION AT SCALE";
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    line-height: 1.6;
+    color: >textSlate;
+  }
+}

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<few_shots category="marketing_posters" target="gemini_family" version="3.0">
+  <pattern id="NEON_GLOW_LIGHTING">
+    <user_prompt>Create a vibrant cyber poster background with neon cyan and purple glows</user_prompt>
+    <forbidden_reflex reason="Low opacity alpha &lt; 0.20 gets washed out into dull gray in SVG">
+      rect #glow {
+        fill: radial-gradient(center, alpha(#00f5a0, 0.08) 0%, transparent 70%);
+      }
+    </forbidden_reflex>
+    <verified_toad_code>
+      >bgDeep = #050811;
+      >neonCyan = #00f5a0;
+      >neonBlue = #00d9f5;
+
+      canvas "Poster" {
+        width: 1080px;
+        height: 1350px;
+        background: >bgDeep;
+        font-family: "Inter, sans-serif";
+      }
+
+      // Center stop alpha >= 0.25 guarantees vibrant sRGB emission
+      rect #glowPrimary {
+        at: (300px, -100px);
+        size: 700px 700px;
+        fill: radial-gradient(center, alpha(>neonBlue, 0.35) 0%, transparent 70%);
+        filter: blur(80px);
+      }
+
+      rect #glowSecondary {
+        at: (-150px, 400px);
+        size: 800px 800px;
+        fill: radial-gradient(center, alpha(>neonCyan, 0.30) 0%, transparent 75%);
+        filter: blur(90px);
+      }
+    </verified_toad_code>
+  </pattern>
+</few_shots>

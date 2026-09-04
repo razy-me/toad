@@ -1,0 +1,53 @@
+# TOAD DSL — Colors, Gradients & Blend Modes
+# Schema Version: 3.0
+
+color_models:
+  hex_6:
+    syntax: "#RRGGBB"
+    example: "#3B82F6"
+  hex_8:
+    syntax: "#RRGGBBAA"
+    example: "#3B82F680"
+    note: "Last 2 characters represent alpha channel in hex (00=transparent, FF=opaque)"
+  hex_3:
+    syntax: "#RGB"
+    example: "#FFF"
+  alpha_function:
+    syntax: "alpha(color, opacity)"
+    opacity_range: "0.0 to 1.0 or 0% to 100%"
+    example: "alpha(#3B82F6, 0.40)"
+  mix_function:
+    syntax: "mix(color1, color2, weight)"
+    weight_range: "0.0 to 1.0 or 0% to 100%"
+    example: "mix(#000000, #FFFFFF, 0.5)"
+  named_keywords:
+    values: [transparent, currentColor, white, black]
+
+gradients:
+  linear:
+    syntax: "linear-gradient([angle | direction], stop1, stop2, ...)"
+    angle_examples: ["135deg", "to bottom", "to right", "to top right"]
+    stop_syntax: "color [position%]"
+    example: "linear-gradient(135deg, #00F5A0 0%, #00D9F5 100%)"
+    engine_guarantee: "SVG exporter automatically emits color-interpolation=\"sRGB\""
+
+  radial:
+    syntax: "radial-gradient([shape | center], stop1, stop2, ...)"
+    center_keywords: ["center", "circle", "(cx, cy)"]
+    example: "radial-gradient(center, alpha(#38BDF8, 0.35) 0%, transparent 70%)"
+    rule: "Center stop alpha MUST be >= 0.25 on dark backgrounds to withstand sRGB display normalization."
+
+blend_modes:
+  photoshop_and_svg_parity:
+    - { name: normal, psd_key: norm, svg: normal, skia: source-over }
+    - { name: multiply, psd_key: mul, svg: multiply, skia: multiply }
+    - { name: screen, psd_key: scrn, svg: screen, skia: screen }
+    - { name: overlay, psd_key: over, svg: overlay, skia: overlay }
+    - { name: darken, psd_key: dark, svg: darken, skia: darken }
+    - { name: lighten, psd_key: lite, svg: lighten, skia: lighten }
+    - { name: color-dodge, psd_key: lddg, svg: color-dodge, skia: color-dodge }
+    - { name: color-burn, psd_key: idiv, svg: color-burn, skia: color-burn }
+    - { name: hard-light, psd_key: hLit, svg: hard-light, skia: hard-light }
+    - { name: soft-light, psd_key: sLit, svg: soft-light, skia: soft-light }
+    - { name: difference, psd_key: diff, svg: difference, skia: difference }
+    - { name: exclusion, psd_key: smud, svg: exclusion, skia: exclusion }

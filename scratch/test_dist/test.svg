@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1000 1400" width="1000" height="1400">
+  <rect width="100%" height="100%" fill="#eff2f5" />
+ <rect x="40" y="40" width="920" height="1156" fill="none" stroke="#1a3258" stroke-width="1.5" id="frameBorder" />
+  <text x="42" y="1272" font-family="Yu Gothic" font-size="30" font-weight="bold" font-style="normal" text-anchor="start" xml:space="preserve" fill="#1a3258" id="title" dominant-baseline="hanging">東京オリンピックの公式ポスタ (亀倉 雄策)</text>
+ <circle cx="857" cy="1285" r="29" fill="#1a3258" id="logoCircle" />
+</svg>

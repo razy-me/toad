@@ -1,0 +1,190 @@
+// tests/fixtures/mobile_mockup.toad
+// Scenario 5: Mobile UI Mockup (430x932 iPhone screen size)
+
+@import "./tokens.toad";
+@import "./components.toad";
+
+canvas "Mobile App Mockup" {
+  width: 430px;
+  height: 932px;
+  background: #0f172a;
+}
+
+// Device Top Status Bar
+group #statusBar {
+  at: (24px, 16px);
+  size: 382px 24px;
+
+  text #timeText {
+    content: "9:41";
+    font-size: 15px;
+    font-weight: 600;
+    fill: #ffffff;
+  }
+
+  rect #islandPill {
+    at: (140px, -4px);
+    size: 102px 28px;
+    fill: #000000;
+    border-radius: 14px;
+  }
+
+  text #batteryText {
+    at: (340px, 0px);
+    content: "100%";
+    font-size: 14px;
+    font-weight: 500;
+    fill: #ffffff;
+  }
+}
+
+// Navigation Header
+group #navHeader {
+  at: (24px, 60px);
+
+  Avatar #userProfile {
+    size: 44px;
+    src: "./assets/profile.png";
+    borderColor: #3b82f6;
+  }
+
+  text #greeting {
+    at: right of #userProfile offset 12px;
+    content: "Good morning, Alex";
+    font-size: 18px;
+    font-weight: 700;
+    fill: #ffffff;
+  }
+
+  text #subGreeting {
+    at: below #greeting offset 4px;
+    content: "3 tasks due today";
+    font-size: 13px;
+    font-weight: 400;
+    fill: >textMuted;
+  }
+}
+
+// Quick Action Tile Grid (2 columns, 2 rows)
+grid #quickActions {
+  at: (24px, 140px);
+  columns: 2;
+  gap: 16px;
+
+  group #actionCard1 {
+    rect {
+      size: 183px 120px;
+      fill: #1e293b;
+      border-radius: 16px;
+      stroke: #334155 1px solid;
+    }
+    circle {
+      at: (16px, 16px);
+      radius: 16px;
+      fill: #3b82f630;
+    }
+    text {
+      at: (16px, 64px);
+      content: "Analytics";
+      font-size: 16px;
+      font-weight: 600;
+      fill: #ffffff;
+    }
+    text {
+      at: (16px, 86px);
+      content: "+24.5% vs last week";
+      font-size: 12px;
+      fill: #22c55e;
+    }
+  }
+
+  group #actionCard2 {
+    rect {
+      size: 183px 120px;
+      fill: #1e293b;
+      border-radius: 16px;
+      stroke: #334155 1px solid;
+    }
+    circle {
+      at: (16px, 16px);
+      radius: 16px;
+      fill: #10b98130;
+    }
+    text {
+      at: (16px, 64px);
+      content: "Projects";
+      font-size: 16px;
+      font-weight: 600;
+      fill: #ffffff;
+    }
+    text {
+      at: (16px, 86px);
+      content: "12 active streams";
+      font-size: 12px;
+      fill: >textMuted;
+    }
+  }
+
+  group #actionCard3 {
+    rect {
+      size: 183px 120px;
+      fill: #1e293b;
+      border-radius: 16px;
+      stroke: #334155 1px solid;
+    }
+    circle {
+      at: (16px, 16px);
+      radius: 16px;
+      fill: #f59e0b30;
+    }
+    text {
+      at: (16px, 64px);
+      content: "Team Chat";
+      font-size: 16px;
+      font-weight: 600;
+      fill: #ffffff;
+    }
+    text {
+      at: (16px, 86px);
+      content: "5 unread messages";
+      font-size: 12px;
+      fill: >accent;
+    }
+  }
+
+  group #actionCard4 {
+    rect {
+      size: 183px 120px;
+      fill: #1e293b;
+      border-radius: 16px;
+      stroke: #334155 1px solid;
+    }
+    circle {
+      at: (16px, 16px);
+      radius: 16px;
+      fill: #ec489930;
+    }
+    text {
+      at: (16px, 64px);
+      content: "Settings";
+      font-size: 16px;
+      font-weight: 600;
+      fill: #ffffff;
+    }
+    text {
+      at: (16px, 86px);
+      content: "Synced just now";
+      font-size: 12px;
+      fill: >textMuted;
+    }
+  }
+}
+
+// Bottom Action Button
+Button #mainActionBtn {
+  at: (24px, 820px);
+  label: "Create New Project";
+  width: 382px;
+  height: 54px;
+  variant: #3b82f6;
+}

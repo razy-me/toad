@@ -1,0 +1,9 @@
+// tests/fixtures/circular_b.toad
+@import "./circular_a.toad";
+
+>varB = 200px;
+
+rect #elemB {
+  size: >varB >varB;
+  fill: #00ff00;
+}

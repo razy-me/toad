@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<few_shots category="print_cards" target="gemini_family" version="3.0">
+  <pattern id="FOLDING_TENT_CARD_ROTATION">
+    <user_prompt>Create a folding table tent card where Side A is rotated 180 degrees to face opposite attendees</user_prompt>
+    <forbidden_reflex reason="Forgetting that 180deg inverted coordinates push content towards the top border">
+      group #sideA {
+        rotation: 180;
+        text "Speaker" { at: (0px, 0px); } // Clips outside canvas!
+      }
+    </forbidden_reflex>
+    <verified_toad_code>
+      canvas "TentCard" {
+        width: 1200px;
+        height: 1600px;
+        background: #f8fafc;
+        font-family: "Inter, sans-serif";
+      }
+
+      // Prepress fold line in center
+      rect #foldGuide {
+        at: (0px, 780px);
+        size: 1200px 40px;
+        fill: #f1f5f9;
+
+        text {
+          at: center of parent;
+          content: "--- FOLD LINE / SCORE & FOLD ---";
+          font-size: 12px;
+          font-weight: 700;
+          color: #94a3b8;
+        }
+      }
+
+      // Side A: Inverted for opposite viewer
+      group #sideA {
+        at: (100px, 80px);
+        size: 1000px 640px;
+        rotation: 180;
+
+        rect #bgA {
+          size: 1000px 640px;
+          fill: #ffffff;
+          border-radius: 16px;
+        }
+
+        text {
+          at: top-left of #bgA offset 60px 120px;
+          content: "Dr. Elena Rostova";
+          font-size: 56px;
+          font-weight: 900;
+          color: #0f172a;
+        }
+      }
+
+      // Side B: Right-side up for seated attendee
+      group #sideB {
+        at: (100px, 880px);
+        size: 1000px 640px;
+
+        rect #bgB {
+          size: 1000px 640px;
+          fill: #ffffff;
+          border-radius: 16px;
+        }
+
+        text {
+          at: top-left of #bgB offset 60px 48px;
+          content: "Symposium Agenda";
+          font-size: 36px;
+          font-weight: 800;
+          color: #0f172a;
+        }
+      }
+    </verified_toad_code>
+  </pattern>
+</few_shots>

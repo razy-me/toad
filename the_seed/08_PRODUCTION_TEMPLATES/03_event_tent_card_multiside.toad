@@ -1,0 +1,270 @@
+// 03_event_tent_card_multiside.toad
+// Print Prepress Multi-Side Folding Table Tent Card
+// Dimensions: 1200px x 1600px (Print Ready with central score/fold guide)
+// Side A is rotated 180 degrees so that when folded along the central fold line,
+// attendees on both sides of the conference table see right-side up artwork.
+
+>primary = #1e3a8a;
+>accent = #d97706;
+>bgCard = #f8fafc;
+>surfaceWhite = #ffffff;
+>borderLine = #cbd5e1;
+>foldGuideColor = #94a3b8;
+
+>textNavy = #0f172a;
+>textSlate = #475569;
+>textMuted = #64748b;
+
+>fontMain = "Inter, -apple-system, sans-serif";
+
+canvas "Conference Table Tent Card" {
+  width: 1200px;
+  height: 1600px;
+  background: >bgCard;
+  font-family: >fontMain;
+}
+
+// -------------------------------------------------------------
+// CENTRAL SCORE & FOLD LINE GUIDE (PREPRESS)
+// -------------------------------------------------------------
+rect #foldZone {
+  at: (0px, 780px);
+  size: 1200px 40px;
+  fill: #f1f5f9;
+}
+
+rect #foldLine {
+  at: (40px, 799px);
+  size: 1120px 2px;
+  fill: >foldGuideColor;
+}
+
+text #foldNotice {
+  at: center of #foldZone;
+  content: "--- FOLD LINE / SCORE & FOLD (VALLEY FOLD) ---";
+  font-family: >fontMain;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: >foldGuideColor;
+}
+
+// -------------------------------------------------------------
+// SIDE A: SPEAKER & TABLE BADGE (ROTATED 180 DEGREES)
+// -------------------------------------------------------------
+group #sideA {
+  at: (100px, 80px);
+  size: 1000px 640px;
+  rotation: 180;
+
+  rect #cardA_Bg {
+    size: 1000px 640px;
+    fill: >surfaceWhite;
+    stroke: >borderLine 1px solid;
+    border-radius: 16px;
+    shadow: 0 4px 12px #00000010;
+  }
+
+  // Top decorative color stripe
+  rect #stripeA {
+    at: top-left of #cardA_Bg;
+    size: 1000px 16px;
+    fill: linear-gradient(90deg, #2563eb, #7c3aed);
+    border-radius: 16px;
+  }
+
+  // Table & Room Pill
+  rect #pillA {
+    at: top-left of #cardA_Bg offset 60px 48px;
+    size: 180px 36px;
+    fill: #eff6ff;
+    border-radius: 9999px;
+
+    text {
+      at: center of parent;
+      content: "EXECUTIVE SUITE 4";
+      font-size: 12px;
+      font-weight: 700;
+      color: #1d4ed8;
+    }
+  }
+
+  // Speaker Name & Title
+  text #speakerNameA {
+    at: top-left of #cardA_Bg offset 60px 120px;
+    content: "Dr. Elena Rostova";
+    font-size: 64px;
+    font-weight: 900;
+    color: >textNavy;
+  }
+
+  text #speakerRoleA {
+    at: below #speakerNameA offset 16px;
+    content: "VP of Autonomous Systems Research  •  Global AI Institute";
+    font-size: 24px;
+    font-weight: 500;
+    color: >textSlate;
+  }
+
+  // Keynote Session Box
+  rect #sessionBoxA {
+    at: below #speakerRoleA offset 40px;
+    size: 880px 140px;
+    fill: #f8fafc;
+    stroke: >borderLine 1px solid;
+    border-radius: 12px;
+
+    text {
+      at: top-left of #sessionBoxA offset 24px 20px;
+      content: "MORNING KEYNOTE • 09:30 AM CET";
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: >accent;
+    }
+
+    text {
+      at: top-left of #sessionBoxA offset 24px 50px;
+      size: 830px;
+      content: "Next-Generation Declarative Graphics Pipelines in Mission-Critical Systems";
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1.3;
+      color: >textNavy;
+    }
+  }
+}
+
+// -------------------------------------------------------------
+// SIDE B: ATTENDEE AGENDA & WIFI (RIGHT-SIDE UP)
+// -------------------------------------------------------------
+group #sideB {
+  at: (100px, 880px);
+  size: 1000px 640px;
+
+  rect #cardB_Bg {
+    size: 1000px 640px;
+    fill: >surfaceWhite;
+    stroke: >borderLine 1px solid;
+    border-radius: 16px;
+    shadow: 0 4px 12px #00000010;
+  }
+
+  // Header Title
+  text #titleB {
+    at: top-left of #cardB_Bg offset 60px 48px;
+    content: "Symposium Agenda & Live Q&A";
+    font-size: 36px;
+    font-weight: 800;
+    color: >textNavy;
+  }
+
+  text #subTitleB {
+    at: below #titleB offset 8px;
+    content: "Scan QR code on your mobile device to submit questions directly to the speaker.";
+    font-size: 16px;
+    font-weight: 400;
+    color: >textSlate;
+  }
+
+  // Schedule Timeline Stack
+  stack #scheduleB {
+    at: below #subTitleB offset 36px;
+    direction: vertical;
+    gap: 16px;
+
+    rect #item1 {
+      size: 580px 52px;
+      fill: #f8fafc;
+      border-radius: 8px;
+
+      text {
+        at: center-left of #item1 offset 16px 0px;
+        content: "09:00 - 09:30   |   Welcome Coffee & Delegate Check-In";
+        font-size: 15px;
+        font-weight: 500;
+        color: >textSlate;
+      }
+    }
+
+    rect #item2 {
+      size: 580px 52px;
+      fill: #eff6ff;
+      border-radius: 8px;
+
+      text {
+        at: center-left of #item2 offset 16px 0px;
+        content: "09:30 - 10:45   |   Opening Keynote: Dr. Elena Rostova";
+        font-size: 15px;
+        font-weight: 700;
+        color: #1d4ed8;
+      }
+    }
+
+    rect #item3 {
+      size: 580px 52px;
+      fill: #f8fafc;
+      border-radius: 8px;
+
+      text {
+        at: center-left of #item3 offset 16px 0px;
+        content: "10:45 - 11:15   |   Panel: Deterministic Rendering vs Raster";
+        font-size: 15px;
+        font-weight: 500;
+        color: >textSlate;
+      }
+    }
+
+    rect #item4 {
+      size: 580px 52px;
+      fill: #f8fafc;
+      border-radius: 8px;
+
+      text {
+        at: center-left of #item4 offset 16px 0px;
+        content: "11:15 - 12:30   |   Technical Workshop & Live Compilation";
+        font-size: 15px;
+        font-weight: 500;
+        color: >textSlate;
+      }
+    }
+  }
+
+  // QR Code & WiFi Info Card (Right side)
+  rect #qrBoxB {
+    at: top-right of #cardB_Bg offset -60px 110px;
+    size: 260px 320px;
+    fill: #f1f5f9;
+    stroke: >borderLine 1px solid;
+    border-radius: 12px;
+
+    // Stylized QR code mock frame
+    rect #qrSymbol {
+      at: top-left of #qrBoxB offset 30px 24px;
+      size: 200px 200px;
+      fill: #0f172a;
+      border-radius: 8px;
+
+      rect {
+        at: center of parent;
+        size: 160px 160px;
+        fill: #ffffff;
+      }
+
+      rect {
+        at: center of parent;
+        size: 100px 100px;
+        fill: #0f172a;
+      }
+    }
+
+    text {
+      at: below #qrSymbol offset 14px;
+      content: "WIFI: SYMPOSIUM-VIP\nPASS: TOAD2026";
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.4;
+      color: >textNavy;
+    }
+  }
+}

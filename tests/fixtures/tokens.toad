@@ -1,0 +1,32 @@
+// tests/fixtures/tokens.toad
+// Design tokens for toad compiler test suites
+
+>primary = #3b82f6;
+>primaryDark = #1d4ed8;
+>secondary = #10b981;
+>accent = #f59e0b;
+>danger = #ef4444;
+>background = #0f172a;
+>surface = #1e293b;
+>surfaceLight = #334155;
+>textLight = #f8fafc;
+>textMuted = #94a3b8;
+
+>radiusSm = 4px;
+>radiusMd = 8px;
+>radiusLg = 16px;
+>radiusFull = 9999px;
+
+>spacingXs = 4px;
+>spacingSm = 8px;
+>spacingMd = 16px;
+>spacingLg = 24px;
+>spacingXl = 32px;
+
+>fontFamilySans = "Inter";
+>fontFamilySerif = "Merriweather";
+>fontSizeSm = 12px;
+>fontSizeBase = 16px;
+>fontSizeLg = 20px;
+>fontSizeXl = 32px;
+>fontSizeTitle = 48px;

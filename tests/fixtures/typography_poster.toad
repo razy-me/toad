@@ -1,0 +1,95 @@
+// tests/fixtures/typography_poster.toad
+// Scenario 4: Typography Poster (1080x1350)
+
+@font "./fonts/CustomSans.ttf" as "DisplayType";
+@import "./tokens.toad";
+
+canvas "Swiss Typography Poster" {
+  width: 1080px;
+  height: 1350px;
+  background: #f4f4f0;
+}
+
+// Background Split Blocks with Multiply Blend Mode
+rect #accentBlock1 {
+  at: (0px, 0px);
+  size: 600px 1350px;
+  fill: #ff3366;
+  blend-mode: multiply;
+  opacity: 0.85;
+}
+
+rect #accentBlock2 {
+  at: (480px, 200px);
+  size: 600px 800px;
+  fill: linear-gradient(to bottom, #00d2ff, #3a7bd5, #120078);
+  blend-mode: multiply;
+  opacity: 0.9;
+}
+
+// Typography Elements with Custom Font & Relational Constraints
+group #typeComposition {
+  at: (80px, 120px);
+
+  text #kicker {
+    content: "INTERNATIONAL TYPOGRAPHIC STYLE";
+    font-family: "DisplayType";
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    fill: #111111;
+  }
+
+  // Giant Unwrapped Header
+  text #giantNumber {
+    at: below #kicker offset 40px;
+    content: "84";
+    font-family: "DisplayType";
+    font-size: 240px;
+    font-weight: 900;
+    line-height: 0.85;
+    fill: #111111;
+  }
+
+  text #mainWord {
+    at: below #giantNumber offset 10px;
+    content: "GRID";
+    font-family: "DisplayType";
+    font-size: 160px;
+    font-weight: 900;
+    line-height: 0.9;
+    fill: #111111;
+  }
+
+  text #subTitle {
+    at: right of #mainWord offset 24px;
+    content: "SYSTEMS";
+    font-family: "DisplayType";
+    font-size: 60px;
+    font-weight: 300;
+    fill: #ffffff;
+    blend-mode: screen;
+  }
+
+  // Multi-column Paragraph Block
+  text #bodyParagraph {
+    at: below #mainWord offset 80px;
+    size: 440px;
+    content: "Order and rational organization of visual information creates clarity, efficiency, and timeless universal aesthetic balance.";
+    font-size: 20px;
+    font-weight: 400;
+    line-height: 1.45;
+    fill: #222222;
+  }
+
+  // Secondary relational block
+  text #metaDetails {
+    at: right of #bodyParagraph offset 60px;
+    size: 400px;
+    content: "ZURICH EXHIBITION • KUNSTGEWERBEMUSEUM\nAUGUST 18 - OCTOBER 30, 2026\nCURATED BY TOAD COMPILER";
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.6;
+    fill: #333333;
+  }
+}

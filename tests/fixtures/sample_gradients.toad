@@ -1,0 +1,29 @@
+// tests/fixtures/sample_gradients.toad
+canvas {
+  width: 800px;
+  height: 600px;
+}
+
+rect #linearGrad1 {
+  at: (20px, 20px);
+  size: 200px 150px;
+  fill: linear-gradient(to right, #ff0000, #00ff00, #0000ff);
+}
+
+rect #linearGrad2 {
+  at: (260px, 20px);
+  size: 200px 150px;
+  fill: linear-gradient(45deg, #f59e0b, #ef4444 80%, #7c3aed);
+}
+
+rect #radialGrad1 {
+  at: (20px, 200px);
+  size: 200px 150px;
+  fill: radial-gradient(circle, #3b82f6, #1e3a8a);
+}
+
+rect #radialGrad2 {
+  at: (260px, 200px);
+  size: 200px 150px;
+  fill: radial-gradient(ellipse, #10b981 10%, #047857 50%, #064e3b);
+}

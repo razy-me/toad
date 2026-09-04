@@ -1,0 +1,37 @@
+# TOAD DSL — Headless Skia Raster Pipeline
+# Target Outputs: PNG, JPEG, WebP
+# Schema Version: 3.0
+
+canvas_context:
+  engine: "@napi-rs/canvas"
+  underlying_core: "Google Skia C++ Library"
+  dpi_baseline: 72
+  scale_multiplier:
+    1x: "Logical canvas dimensions (w, h)"
+    2x: "(w * 2, h * 2) with ctx.scale(2, 2)"
+    4x: "(w * 4, h * 4) with ctx.scale(4, 4)"
+
+subpixel_precision:
+  fill_snapping: "Math.round(x), Math.round(y)"
+  stroke_alignment:
+    1px_stroke_crisp: "Offset coordinate by +0.5px to align with device pixel grid"
+    fractional_stroke: "Analytical anti-aliasing via coverage masks"
+
+text_rendering:
+  baseline_calculation:
+    formula: "baseline_y = node.y + valign_shift + (node.textLayout.ascent || Math.round(font_size * 0.80))"
+    reason: "Skia positions text from alphabetic baseline, while TOAD coordinates reference bounding box top."
+  font_registry:
+    mechanism: "GlobalFonts.registerFromPath(path, alias)"
+    lookup_chain: "Custom @font -> Registered GlobalFonts -> System DirectWrite / FreeType fallback"
+
+blend_modes:
+  mapping:
+    normal: "source-over"
+    multiply: "multiply"
+    screen: "screen"
+    overlay: "overlay"
+    darken: "darken"
+    lighten: "lighten"
+    color-dodge: "color-dodge"
+    color-burn: "color-burn"

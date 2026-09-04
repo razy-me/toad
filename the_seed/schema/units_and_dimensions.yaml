@@ -1,0 +1,58 @@
+# TOAD DSL — Units, Dimensions & Math Evaluation
+# Schema Version: 3.0
+
+baseline_reference:
+  dpi: 96
+  rule: "All physical print units resolve to pixels using the fixed 96 DPI CSS reference."
+
+units:
+  px:
+    type: pixel
+    scale: 1.0
+    example: 16px
+  pt:
+    type: point
+    scale: 1.3333333333333333  # 96 / 72
+    example: 12pt
+  mm:
+    type: millimeter
+    scale: 3.779527559055118   # 96 / 25.4
+    example: 85mm
+  cm:
+    type: centimeter
+    scale: 37.79527559055118   # (96 / 25.4) * 10
+    example: 5.5cm
+  in:
+    type: inch
+    scale: 96.0
+    example: 3.5in
+  "%":
+    type: percentage
+    scope: parent_bounding_box
+    example: 50%
+  deg:
+    type: angle_degrees
+    scale: 1.0
+    example: 180deg
+  rad:
+    type: angle_radians
+    scale: 57.29577951308232   # 180 / PI
+    example: 3.14rad
+
+special_tokens:
+  hug:
+    description: "Derive dimension from children bounding box union plus padding."
+    valid_contexts: [width, height, size]
+  fill:
+    description: "Expand dimension to fill 100% of available parent container space."
+    valid_contexts: [width, height, size]
+
+math_and_calc:
+  operators: ["+", "-", "*", "/"]
+  precedence:
+    multiplication_division: 2
+    addition_subtraction: 1
+  rules:
+    - "Expressions can mix units: calc(100% - 32px)"
+    - "Parenthesized expressions evaluate first: (100% - (>pad * 2))"
+    - "Variables prefixed with > or $ are substituted prior to math reduction"

@@ -1,0 +1,28 @@
+# TOAD DSL — W3C SVG Vector Exporter Specification
+# Output Format: Standalone W3C Scalable Vector Graphics (.svg)
+# Schema Version: 3.0
+
+document_structure:
+  root: "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 W H\" width=\"W\" height=\"H\">"
+  defs_section:
+    embedded_fonts: "<defs><style>@font-face { font-family: '...'; src: url('data:font/...;base64,...'); }</style></defs>"
+    gradients: "<linearGradient id=\"...\" color-interpolation=\"sRGB\"> ... </linearGradient>"
+    filters: "<filter id=\"...\" x=\"-100%\" y=\"-100%\" width=\"300%\" height=\"300%\" color-interpolation-filters=\"sRGB\">"
+    clipping_paths: "<clipPath id=\"...\"> <rect ... /> </clipPath>"
+
+critical_engine_guarantees:
+  srgb_color_interpolation:
+    problem: "Default W3C SVG interpolation is linearRGB, washing out gradients and radiant glows."
+    engine_solution: "Explicit color-interpolation=\"sRGB\" on all gradients and color-interpolation-filters=\"sRGB\" on all filters."
+
+  expanded_filter_subregions:
+    problem: "Default W3C subregion [-10%, -10%, 120%, 120%] clips shadows and glows with blur > 12px."
+    engine_solution: "Hardcode bounding box to x=\"-100%\" y=\"-100%\" width=\"300%\" height=\"300%\" on all feDropShadow and feGaussianBlur."
+
+  alphabetic_baseline_parity:
+    formula: "y_baseline = node.y + valign_shift + (node.textLayout.ascent || Math.round(fontSize * 0.80))"
+    engine_solution: "Matches Skia Canvas positioning; eliminates text jumping between vector and raster outputs."
+
+  autonomous_base64_font_embedding:
+    problem: "Missing fonts on client devices break word wrap and kerning."
+    engine_solution: "Read TTF/WOFF2 binary -> convert to Base64 data URI -> inject into <defs><style>."

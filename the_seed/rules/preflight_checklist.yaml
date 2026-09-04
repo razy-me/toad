@@ -1,0 +1,48 @@
+# TOAD DSL — Pre-Flight Chain-of-Thought Checklist
+# Version: 3.0
+# Target: Gemini 3.1 Pro / 3.5 Pro / 3.8 Flash
+
+verification_steps:
+  1_syntax_tokens:
+    check: "Are all variables declared with '>' and '=' and end with ';'?"
+    pattern: "^>[a-zA-Z0-9_]+\\s*=\\s*[^;]+;$"
+    action_if_invalid: "Ensure prefix is '>', remove any '$', change ':' to '=', and add semicolon ';'"
+
+  2_font_stacks:
+    check: "Are all font fallback chains wrapped in a single quoted string?"
+    invalid_pattern: "\"[^\"]+\",\\s*[a-zA-Z-]+"
+    valid_pattern: "\"[^\"]+,\\s*[^\"]+\""
+    action_if_invalid: "Merge into single string literal: \">font = \\\"Inter, sans-serif\\\";\""
+
+  3_statement_termination:
+    check: "Does every property, @import, @font, and slot; end with ';'?"
+    action_if_invalid: "Append ';' before closing brace or newline"
+
+  4_text_wrapping:
+    check: "Does every multiline text node specify an explicit wrapping width?"
+    rule: "Text with length > 40 chars MUST define 'width:' or 'size:'"
+    action_if_invalid: "Add 'width: 480px;' or 'size: 480px hug;'"
+
+  5_offset_spacing:
+    check: "Is every 'offset' keyword followed by whitespace rather than a colon?"
+    invalid_token: "offset:"
+    valid_token: "offset "
+    action_if_invalid: "Remove the colon after offset"
+
+  6_badge_margins:
+    check: "Is badge/pill container width >= 1.20x raw text width?"
+    rule: "Text width ~80px requires container width >= 100px"
+    action_if_invalid: "Increase container width or padding to prevent SVG clipping"
+
+  7_vibrant_alphas:
+    check: "Are neon/glow radial gradient center stop opacities >= 0.25?"
+    rule: "alpha(color, < 0.25) appears washed out or gray in SVG sRGB interpolation"
+    action_if_invalid: "Boost center stop opacity to 0.30 - 0.45"
+
+  8_fill_vs_color:
+    check: "Do shapes use 'fill:' and text elements use 'color:'?"
+    action_if_invalid: "Change fill: to color: on text nodes"
+
+  9_no_css_hallucinations:
+    check: "Are CSS display, flexbox, div, span, and rgba completely absent?"
+    action_if_invalid: "Replace with stack, rect, and alpha()"

@@ -1,0 +1,62 @@
+# TOAD DSL — Relational Layout Solver & DAG Mathematics
+# Schema Version: 3.0
+
+topological_sort:
+  algorithm: "3-Color Depth-First Search (DFS)"
+  node_states:
+    WHITE: "Unvisited node"
+    GRAY: "Currently evaluating in active recursion stack"
+    BLACK: "Fully resolved [x, y, w, h]"
+  cycle_detection:
+    condition: "Encountering a GRAY node during traversal"
+    error_code: "LINT-CIRCULAR-DEPENDENCY"
+    fatal_message: "Circular layout dependency detected between #{source} and #{target}"
+
+anchor_mathematics:
+  coordinate_system:
+    origin: [0, 0]  # Top-left of canvas or parent container
+    axes: "+X points right, +Y points down"
+
+  edge_formulas:
+    below:
+      target_box: [tx, ty, tw, th]
+      element_box: [x, y, w, h]
+      formula_x: "tx + dx"
+      formula_y: "ty + th + dy"
+
+    above:
+      formula_x: "tx + dx"
+      formula_y: "ty - h - dy"
+
+    right_of:
+      formula_x: "tx + tw + dx"
+      formula_y: "ty + dy"
+
+    left_of:
+      formula_x: "tx - w - dx"
+      formula_y: "ty + dy"
+
+    center_of:
+      formula_x: "tx + ((tw - w) / 2) + dx"
+      formula_y: "ty + ((th - h) / 2) + dy"
+
+    top_left_of:
+      formula_x: "tx + dx"
+      formula_y: "ty + dy"
+
+    top_right_of:
+      formula_x: "tx + tw - w + dx"
+      formula_y: "ty + dy"
+
+    bottom_left_of:
+      formula_x: "tx + dx"
+      formula_y: "ty + th - h + dy"
+
+    bottom_right_of:
+      formula_x: "tx + tw - w + dx"
+      formula_y: "ty + th - h + dy"
+
+invariants:
+  - "Parent bounds MUST resolve before child percentage coordinates can compute"
+  - "Canvas root serves as ultimate ancestor fallback target for coordinates"
+  - "Floating elements without 'at:' default to (0, 0) relative to parent"

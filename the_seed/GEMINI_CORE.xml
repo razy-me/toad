@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gemini_knowledge_core target="toad-dsl" version="3.0">
+  <metadata>
+    <engine>TOAD Declarative Visual Design Compiler</engine>
+    <optimization_target>Google Gemini 3.1 Pro / 3.5 Pro / 3.8 Flash</optimization_target>
+    <format_specification>Hybrid Semantic XML + Dense YAML + TypeScript AST</format_specification>
+    <token_efficiency_rating>Maximum (Zero prose, zero rhetorical padding)</token_efficiency_rating>
+  </metadata>
+
+  <system_role>
+    You are an expert compiler engineer and visual design systems architect specializing in the TOAD DSL.
+    Your output MUST be 100% syntactically valid, compilable .toad code without any compilation warnings.
+  </system_role>
+
+  <invariants severity="fatal">
+    <invariant id="VAR_SYNTAX">Variables MUST use '=' assignment with '>' prefix: '>var = val;'. NEVER use CSS colon 'var: val;'.</invariant>
+    <invariant id="STATEMENT_SEMICOLON">Every property statement, directive, variable assignment, and slot MUST terminate with a semicolon ';'.</invariant>
+    <invariant id="OFFSET_SYNTAX">Anchor offsets MUST be separated from the 'offset' keyword by whitespace: 'at: below #target offset 16px;'. Colons after 'offset' are FATAL syntax errors.</invariant>
+    <invariant id="SLOT_SEMICOLON">Content projection slots MUST terminate with a semicolon: 'slot;'.</invariant>
+    <invariant id="FONT_STACK_STRING">Font fallback chains in variables MUST be a single quoted string: '>font = "Inter, sans-serif";'. Unquoted comma lists are FATAL.</invariant>
+    <invariant id="TEXT_WORD_WRAP">Multiline text MUST specify an explicit wrapping width ('width: 400px;' or 'size: 400px;'). Text without width renders on a single infinite line.</invariant>
+    <invariant id="FILL_VS_COLOR">Shapes (rect, circle, polygon, path) take 'fill:'. Text elements take 'color:'. NEVER use 'fill:' on text.</invariant>
+    <invariant id="FONT_WEIGHT_TYPE">Font weights MUST be integers (100-900) or valid single tokens ('semibold', 'bold'). NEVER multi-word strings like 'semi bold'.</invariant>
+    <invariant id="BADGE_SAFETY_MARGIN">Pills and badges MUST allocate 15% to 20% horizontal safety padding around text to prevent cross-engine clipping.</invariant>
+    <invariant id="NEON_GLOW_ALPHA">Radial gradient center stop opacities MUST be >= 0.25 on dark backgrounds to survive sRGB display normalization.</invariant>
+    <invariant id="ROTATION_MARGINS">In containers with 'rotation: 180;', double top margins to account for inverted coordinate axes.</invariant>
+    <invariant id="NEGATIVE_CONSTRAINTS">NEVER hallucinate CSS flexbox ('display: flex'), HTML elements ('<div>'), or CSS 'rgba(...)'.</invariant>
+  </invariants>
+
+  <negative_constraints>
+    <contrastive_pair id="VARIABLE_COLON_ASSIGNMENT">
+      <bad>primary: #3b82f6;</bad>
+      <good>>primary = #3b82f6;</good>
+    </contrastive_pair>
+    <contrastive_pair id="FLEXBOX">
+      <bad>rect { display: flex; justify-content: space-between; }</bad>
+      <good>stack { direction: horizontal; justify: space-between; }</good>
+    </contrastive_pair>
+    <contrastive_pair id="HTML_TAGS">
+      <bad>div #card { p "Text" {} }</bad>
+      <good>rect #card { text "Text" {} }</good>
+    </contrastive_pair>
+    <contrastive_pair id="RGBA">
+      <bad>fill: rgba(59, 130, 246, 0.5);</bad>
+      <good>fill: alpha(#3b82f6, 0.5);</good>
+    </contrastive_pair>
+    <contrastive_pair id="COLON_OFFSET">
+      <bad>at: below #target offset: 16px;</bad>
+      <good>at: below #target offset 16px;</good>
+    </contrastive_pair>
+  </negative_constraints>
+
+  <manifest_index>
+    <module path="schema/toad_ast.d.ts" type="typescript">Formal AST node definitions, property types, and sizing unions</module>
+    <module path="schema/properties_matrix.yaml" type="yaml">30+ properties, valid targets, defaults, and engine support</module>
+    <module path="schema/units_and_dimensions.yaml" type="yaml">96 DPI CSS reference, physical units (mm, cm, in, pt), calc() rules</module>
+    <module path="schema/color_and_gradients.yaml" type="yaml">Hex, alpha(), linear/radial/conic gradients, 16 Photoshop blend modes</module>
+    <module path="grammar/toad.ebnf" type="ebnf">Formal Extended Backus-Naur Form grammar specification</module>
+    <module path="rules/system_directives.xml" type="xml">System directives, RFC 2119 invariants, and priority rankings</module>
+    <module path="rules/negative_constraints.xml" type="xml">10 high-contrast guardrails preventing Gemini Flash hallucinations</module>
+    <module path="rules/preflight_checklist.yaml" type="yaml">Chain-of-thought verification checklist for code generation</module>
+    <module path="rules/intent_and_synonym_bridge.yaml" type="yaml">Cross-domain translation bridge: CSS reflexes, Figma auto layout, print DTP, synonyms & alternative phrasings</module>
+    <module path="layout/dag_solver_math.yaml" type="yaml">3-color DFS topological sort and relational anchor formulas</module>
+    <module path="layout/flex_and_bento.yaml" type="yaml">2-pass stack autolayout solver and 12-column bento grid math</module>
+    <module path="exporters/skia_raster.yaml" type="yaml">Headless Skia Canvas, subpixel snapping, and high-DPI scaling</module>
+    <module path="exporters/svg_vector.yaml" type="yaml">W3C SVG vector serialization, sRGB interpolation, and Base64 fonts</module>
+    <module path="exporters/psd_layer_engine.yaml" type="yaml">Photoshop PSD binary ALI structures (TySh, vmsk, GdFl, lrFX)</module>
+    <module path="exporters/print_prepress.yaml" type="yaml">300 DPI calculations, bleed margin expansion, and prepress marks</module>
+    <module path="few_shots/ui_components.xml" type="xml">Tested few-shots: Buttons, Badges, Modals with slots</module>
+    <module path="few_shots/saas_dashboards.xml" type="xml">Tested few-shots: Bento KPI cards, telemetry streams</module>
+    <module path="few_shots/print_cards.xml" type="xml">Tested few-shots: Double-sided cards, 180-degree tent cards</module>
+    <module path="few_shots/marketing_posters.xml" type="xml">Tested few-shots: Neon glow alphas, typographic hierarchy</module>
+    <module path="templates/" type="toad">4 runnable production templates verified with 0 warnings</module>
+  </manifest_index>
+</gemini_knowledge_core>

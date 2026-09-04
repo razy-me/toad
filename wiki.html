@@ -1,0 +1,2049 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>toad — Entwickler-Wiki & Syntax-Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /*
+      Sleek & Smart Design System mit 100% einheitlicher Helligkeitsebene:
+      - Moderne Sticky-Sidebar Navigation mit dynamischem Scroll-Tracking
+      - Schöne Karten, Tabellen, strukturierte Code-Boxen mit 1-Klick-Kopierfunktion
+      - Identische Helligkeitsebene (~75-80% Luminanz) für ALLE Texte, Header, Icons & Links
+      - Keine isolierten "Lichtspitzen" oder weißen Blendeffekte, die über Nachbarbereiche strahlen
+    */
+    :root {
+      /* Hintergrund: Dein edles, tiefes Wein-Anthrazit #1e0b0e */
+      --bg: #1e0b0e;
+      --bg-surface: #281216;
+      --bg-surface-elevated: #351a20;
+      --bg-code: #140709;
+      --border: #4a2128;
+      --border-subtle: #68303a;
+
+      /* Perfekt abgestimmte Typografie mit Fließtext #fd91a1 */
+      --text-main: #fd91a1;     /* Exakt deine Fließtext-Farbe #fd91a1 */
+      --text-heading: #ffe4e8;  /* Helles, klares Puder-Weiß für Überschriften */
+      --text-label: #fda4b2;    /* Sanftes Himbeer-Rose für Labels */
+
+      /* Akzente */
+      --c-cyan: #fda4b2;        /* Primär-Akzent passend zu #fd91a1 */
+      --c-teal: #f47287;        /* Kräftigeres Korall-Rose */
+      --c-purple: #e879f9;      /* Weiches Pastell-Magenta */
+      --c-amber: #fcd34d;       /* Warmes Gold */
+      --c-blue: #fca5a5;        /* Sanftes Lachs */
+
+      --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', Consolas, monospace;
+      --sidebar-w: 260px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.7;
+      font-size: 15px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Scrollbars (sanft abgetönt) */
+    ::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-subtle);
+      border-radius: 4px;
+    }
+
+    .app-container {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sleeke Sidebar */
+    aside.sidebar {
+      width: var(--sidebar-w);
+      height: 100vh;
+      position: sticky;
+      top: 0;
+      background: var(--bg-surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      z-index: 50;
+    }
+
+    .brand {
+      padding: 22px 20px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .brand-badge {
+      width: 30px;
+      height: 30px;
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--c-cyan);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--c-cyan);
+      font-family: var(--font-mono);
+    }
+
+    .brand-title {
+      font-weight: 700;
+      font-size: 17px;
+      letter-spacing: -0.01em;
+      color: var(--text-heading);
+    }
+
+    .brand-version {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      background: var(--bg-surface-elevated);
+      color: var(--c-cyan);
+      padding: 2px 7px;
+      border-radius: 999px;
+      margin-left: auto;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .nav-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 18px 12px;
+    }
+
+    .nav-group {
+      margin-bottom: 22px;
+    }
+
+    .nav-header {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-label);
+      font-weight: 700;
+      padding: 0 10px 6px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      color: var(--text-main);
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 13.5px;
+      font-weight: 500;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .nav-item:hover {
+      background: var(--bg-surface-elevated);
+      color: var(--c-cyan);
+    }
+
+    .nav-item.active {
+      background: var(--bg-surface-elevated);
+      color: var(--c-cyan);
+      font-weight: 600;
+      border-left: 2px solid var(--c-cyan);
+    }
+
+    /* Sidebar Search Input */
+    .sidebar-search {
+      padding: 12px 14px 6px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .search-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 7px 10px;
+      color: var(--text-label);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+
+    .search-btn:hover {
+      border-color: var(--c-cyan);
+      color: var(--text-heading);
+      background: rgba(253, 145, 161, 0.08);
+    }
+
+    .search-btn-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .kbd-shortcut {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 10.5px;
+      font-family: var(--font-mono);
+      color: var(--c-cyan);
+      font-weight: 600;
+    }
+
+    /* Wiki Spotlight Modal Overlay */
+    .wiki-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(14, 4, 7, 0.75);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 1000;
+      display: none;
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 12vh;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+    }
+
+    .wiki-overlay.open {
+      display: flex;
+      opacity: 1;
+    }
+
+    .wiki-modal {
+      width: 100%;
+      max-width: 620px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(253, 145, 161, 0.15);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      max-height: 70vh;
+      animation: modalSlide 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes modalSlide {
+      from { transform: translateY(-12px) scale(0.98); opacity: 0; }
+      to { transform: translateY(0) scale(1); opacity: 1; }
+    }
+
+    .wiki-search-header {
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-surface-elevated);
+    }
+
+    .wiki-search-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-size: 15px;
+      color: var(--text-heading);
+      font-family: inherit;
+    }
+
+    .wiki-search-input::placeholder {
+      color: var(--text-label);
+      font-size: 14px;
+    }
+
+    .wiki-results {
+      overflow-y: auto;
+      padding: 8px;
+      max-height: 50vh;
+    }
+
+    .wiki-result-group-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-label);
+      padding: 10px 12px 4px;
+    }
+
+    .wiki-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 12px;
+      border-radius: 7px;
+      cursor: pointer;
+      color: var(--text-main);
+      text-decoration: none;
+      transition: all 0.1s ease;
+      margin-bottom: 2px;
+    }
+
+    .wiki-item:hover, .wiki-item.selected {
+      background: var(--bg-surface-elevated);
+      color: var(--text-heading);
+      border-left: 2.5px solid var(--c-cyan);
+      padding-left: 9.5px;
+    }
+
+    .wiki-item-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .wiki-item-code {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 13.5px;
+      color: var(--c-cyan);
+    }
+
+    .wiki-item-desc {
+      font-size: 12.5px;
+      color: var(--text-label);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .wiki-tag {
+      font-size: 10.5px;
+      font-family: var(--font-mono);
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      color: var(--text-label);
+      padding: 2px 7px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    .wiki-empty {
+      padding: 36px 20px;
+      text-align: center;
+      color: var(--text-label);
+      font-size: 13.5px;
+    }
+
+    .wiki-footer {
+      padding: 10px 18px;
+      background: var(--bg-code);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11.5px;
+      color: var(--text-label);
+      font-family: var(--font-mono);
+    }
+
+    .wiki-footer kbd {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 3px;
+      padding: 1px 4px;
+      font-size: 10px;
+      color: var(--c-cyan);
+    }
+
+    /* Target pulse animation */
+    @keyframes wikiTargetPulse {
+      0% { box-shadow: 0 0 0 0 rgba(253, 145, 161, 0.6); }
+      70% { box-shadow: 0 0 0 10px rgba(253, 145, 161, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(253, 145, 161, 0); }
+    }
+
+    .target-highlight {
+      animation: wikiTargetPulse 1.8s ease-out;
+      border-color: var(--c-cyan) !important;
+    }
+
+    /* Content Area */
+    main.content {
+      flex: 1;
+      max-width: 880px;
+      padding: 44px 56px 90px;
+      margin: 0 auto;
+    }
+
+    .hero {
+      margin-bottom: 40px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-surface);
+      color: var(--c-cyan);
+      border: 1px solid var(--border-subtle);
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      font-family: var(--font-mono);
+    }
+
+    /* Überschriften: Moderat dimensioniert, gleiche Helligkeit wie der Text */
+    h1 {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text-heading);
+      margin-bottom: 10px;
+    }
+
+    .lead {
+      font-size: 16px;
+      color: var(--text-main);
+      max-width: 700px;
+      line-height: 1.65;
+    }
+
+    section {
+      margin-bottom: 54px;
+      scroll-margin-top: 36px;
+    }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--text-heading);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h2::before {
+      content: "";
+      display: inline-block;
+      width: 3px;
+      height: 17px;
+      background: var(--c-cyan);
+      border-radius: 2px;
+    }
+
+    h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-heading);
+      margin: 22px 0 10px;
+    }
+
+    p {
+      color: var(--text-main);
+      margin-bottom: 14px;
+    }
+
+    /* Sleeke Cards */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+      margin: 18px 0 24px;
+    }
+
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .card h4 {
+      font-size: 14.5px;
+      font-weight: 600;
+      color: var(--text-heading);
+      margin-bottom: 6px;
+    }
+
+    .card p {
+      font-size: 13.5px;
+      color: var(--text-main);
+      margin: 0;
+    }
+
+    /* Code Blocks */
+    .code-block {
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 14px 0 22px;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
+    }
+
+    .code-header {
+      background: var(--bg-surface);
+      padding: 9px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-label);
+    }
+
+    .copy-btn {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 3px 10px;
+      border-radius: 4px;
+      font-size: 11.5px;
+      cursor: pointer;
+      font-family: var(--font-sans);
+      transition: all 0.15s;
+    }
+
+    .copy-btn:hover {
+      color: #ffffff;
+      background: #4a2128;
+      border-color: var(--c-cyan);
+    }
+
+    pre {
+      padding: 16px;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 13.5px;
+      line-height: 1.65;
+      color: #e2e8f0;            /* Klares, neutrales Code-Weiß/Grau */
+    }
+
+    /* Standard / "Normale" Code-Syntaxfarben */
+    .kw { color: #569cd6; font-weight: 600; }          /* Keywords: Klassisches VS-Code-Blau */
+    .dir { color: #c586c0; font-weight: 600; }         /* Direktiven: Violett */
+    .elem { color: #4ec9b0; font-weight: 600; }        /* Elemente: Türkis / Mint */
+    .prop { color: #9cdcfe; }                          /* Properties: Helles Himmelblau */
+    .val { color: #ce9178; }                           /* Strings & Werte: Warmes Orange/Lachs */
+    .num { color: #b5cea8; }                           /* Zahlen & Maße: Helles Salbeigrün */
+    .id { color: #dcdcaa; font-weight: 500; }          /* IDs (#id): Sanftes Goldgelb */
+    .var { color: #4fc1ff; }                           /* Variablen (>var): Klares Cyan */
+    .func { color: #dcdcaa; }                          /* Funktionen: Gelb */
+    .comm { color: #6a9955; font-style: italic; }      /* Kommentare: Klassisches Grün */
+
+    code:not(pre code) {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      background: var(--bg-surface-elevated);
+      color: var(--text-heading);
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+
+    /* Tabellen */
+    .table-wrapper {
+      overflow-x: auto;
+      margin: 16px 0 22px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-surface);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+      text-align: left;
+    }
+
+    th {
+      background: var(--bg-surface-elevated);
+      color: var(--text-heading);
+      font-weight: 700;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-main);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Info Callouts */
+    .callout {
+      border-left: 4px solid var(--c-cyan);
+      background: var(--bg-surface);
+      padding: 14px 18px;
+      border-radius: 0 8px 8px 0;
+      margin: 18px 0;
+      border-top: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .callout p {
+      margin: 0;
+      color: var(--text-main);
+      font-size: 14px;
+    }
+
+    .callout-title {
+      font-weight: 700;
+      color: var(--c-cyan);
+      margin-bottom: 3px;
+      font-size: 12.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Visualizer Diagram */
+    .rel-diagram {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      margin: 18px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .diagram-box {
+      border: 1.5px dashed var(--c-cyan);
+      background: var(--bg-surface-elevated);
+      color: var(--c-cyan);
+      font-weight: 600;
+      padding: 10px 22px;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+    }
+
+    .diagram-arrow {
+      color: var(--text-label);
+      font-size: 12px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .diagram-arrow::before, .diagram-arrow::after {
+      content: "";
+      display: inline-block;
+      width: 20px;
+      height: 1px;
+      background: var(--border-subtle);
+    }
+
+    .diagram-child {
+      border: 1.5px solid var(--c-teal);
+      background: var(--bg-surface-elevated);
+      color: var(--c-teal);
+      font-weight: 600;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+    }
+
+    /* Responsive */
+    @media (max-width: 860px) {
+      .app-container {
+        flex-direction: column;
+      }
+      aside.sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+      main.content {
+        padding: 28px 18px 60px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+  <!-- Sleeke Sticky Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-badge">w</div>
+      <div class="brand-title">toad wiki</div>
+      <div class="brand-version">v1.1</div>
+    </div>
+
+    <div class="sidebar-search">
+      <button class="search-btn" onclick="openWikiModal()" title="Syntax und Keywords suchen (Ctrl+K)">
+        <div class="search-btn-left">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <span>Wiki-Suche...</span>
+        </div>
+        <span class="kbd-shortcut">Ctrl K</span>
+      </button>
+    </div>
+    
+    <nav class="nav-scroll">
+      <div class="nav-group">
+        <div class="nav-header">Überblick</div>
+        <a href="#quickstart" class="nav-item active">1. Schnellstart & CLI</a>
+        <a href="#structure" class="nav-item">2. Dateistruktur & Presets</a>
+        <a href="#variables" class="nav-item">3. Variablen & Tokens</a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-header">Elemente & Formen</div>
+        <a href="#shapes" class="nav-item">4. Formen (Star, Triangle...)</a>
+        <a href="#icons" class="nav-item">4b. Vektor-Icons (Lucide)</a>
+        <a href="#text" class="nav-item">5. Typografie & Kerning</a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-header">Layout & Styling</div>
+        <a href="#positioning" class="nav-item">6. Positionierung & Math</a>
+        <a href="#transforms" class="nav-item">7. 2D-Transformationen</a>
+        <a href="#colors-gradients" class="nav-item">8. Farben & Gradienten</a>
+        <a href="#images" class="nav-item">9. Bilder (Images)</a>
+        <a href="#groups-grid" class="nav-item">10. Auto-Layout (Stack/Grid)</a>
+        <a href="#components" class="nav-item">11. Komponenten & Slots</a>
+        <a href="#psd-features" class="nav-item">12. Native PSD Features</a>
+        <a href="#master-examples" class="nav-item">13. Praxis-Beispiele</a>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="content">
+    <div class="hero">
+      <div class="hero-tag">ENTWICKLER-WIKI &amp; SYNTAX-GUIDE · v1.1</div>
+      <h1>toad Entwickler-Wiki</h1>
+      <p class="lead">
+        Eine deklarative Design-Sprache, die strukturierte Layouts in pixelgenaue Multi-Scale-Bilder (PNG/JPG/WebP/SVG) und native, editierbare Photoshop-Dateien (.psd) kompiliert. Dezentral über <code>toad &lt;name&gt;</code> von jedem Ordner aus nutzbar.
+      </p>
+    </div>
+
+    <!-- 1. Quickstart -->
+    <section id="quickstart">
+      <h2>1. Schnellstart, Projekt-Initialisierung &amp; CLI</h2>
+      <p>Mit <code>toad init</code> erstellst du in Sekunden ein neues, sofort einsatzbereites Design-Projekt (inkl. automatischer Projekt-Nummerierung, Starter-Template und <code>package.json</code>). Der Compiler liest die in der Datei definierten Export-Optionen (Formate, Presets, Seitenverhältnis, Auflösung) automatisch aus. Ein einfacher Aufruf reicht:</p>
+      
+      <div class="code-block">
+        <div class="code-header">
+          <span>Terminal (PowerShell / Bash / CMD)</span>
+          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+        </div>
+        <pre><code><span class="comm"># 1. Neues Projekt scaffolden (erstellt z.B. toad-project-1/ mit main.toad & package.json)</span>
+toad init
+
+<span class="comm"># Oder mit individuellem Projektnamen:</span>
+toad init mein-banner
+
+<span class="comm"># 2. Dateiname ohne Extension aufrufen — gestaffelte, tiefenbegrenzte Suche findet das Dokument automatisch</span>
+toad logo
+toad social_card
+
+<span class="comm"># 3. Bestimmte Formate exportieren (Komma oder Leerzeichen als Trenner)</span>
+toad logo -f svg
+toad logo -f <span class="val">"svg, png, psd"</span>
+toad logo -f all -s 2
+
+<span class="comm"># 4. Statische Code-Analyse & Linter</span>
+toad lint logo
+
+<span class="comm"># 5. Automatischer Code-Formatter (Alias: toad format)</span>
+toad fmt logo
+
+<span class="comm"># 6. Live-Preview mit Browser Hot Reload (kein F5 nötig)</span>
+toad logo -w
+
+<span class="comm"># 7. In bestimmten Ordner exportieren</span>
+toad logo -o ./dist
+toad logo -o .    <span class="comm"># in aktuellen Terminal-Ordner</span></code></pre>
+      </div>
+
+      <div class="card-grid">
+        <div class="card">
+          <h4><code>toad init [name]</code></h4>
+          <p>Scaffoldet ein schlüsselfertiges Projekt mit Starter-Template und npm-Scripts für <code>dev</code> und <code>build</code>.</p>
+        </div>
+        <div class="card">
+          <h4><code>Gestaffelte Namenssuche</code></h4>
+          <p><code>lint</code>, <code>format</code> &amp; Co. akzeptieren den blo&szlig;en Dokumentnamen — eine gestaffelte, tiefenbegrenzte Ordnersuche findet die Datei.</p>
+        </div>
+        <div class="card">
+          <h4><code>Plattform-Presets</code></h4>
+          <p>Direkte Unterstützung von <code>preset: og-image;</code>, <code>preset: instagram-story;</code> etc. im <code>canvas</code>.</p>
+        </div>
+        <div class="card">
+          <h4><code>-w, --watch</code></h4>
+          <p>Reagiert live auf Änderungen via SSE. Enthält interaktive Zoom-Controls und einen 1-Klick-Button zum direkten Öffnen des Datei-Ordners im Explorer.</p>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Format-Flag</th>
+              <th>Was wird exportiert</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>-f png</code></td>
+              <td>PNG mit voller Alpha-Transparenz</td>
+            </tr>
+            <tr>
+              <td><code>-f jpg</code></td>
+              <td>Komprimiertes JPEG (Qualität via <code>-q 90</code>)</td>
+            </tr>
+            <tr>
+              <td><code>-f webp</code></td>
+              <td>Modernes komprimiertes WebP</td>
+            </tr>
+            <tr>
+              <td><code>-f svg</code></td>
+              <td>Skalierbare Vektor-SVG</td>
+            </tr>
+            <tr>
+              <td><code>-f psd</code></td>
+              <td>Nativer Photoshop-Layer-Stack mit Vektor-Masken &amp; Textebenen</td>
+            </tr>
+            <tr>
+              <td><code>-f image</code></td>
+              <td><strong>Shortcut:</strong> PNG + JPG + WebP + SVG gleichzeitig</td>
+            </tr>
+            <tr>
+              <td><code>-f all</code></td>
+              <td><strong>Alles:</strong> PNG + JPG + WebP + PSD + SVG gleichzeitig</td>
+            </tr>
+            <tr>
+              <td><code>-f "svg, png, psd"</code></td>
+              <td>Beliebige Kombi (kommagetrennt oder mit Leerzeichen)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 2. Dateistruktur, Canvas & Presets -->
+    <section id="structure">
+      <h2>2. Dateistruktur, Canvas &amp; Plattform-Presets</h2>
+      <p>Jede <code>.toad</code>-Datei definiert am Anfang den <code>canvas</code>-Block. Hier legst du Plattform-Presets, Seitenverhältnis, Ziel-Auflösung, Exportformate und Hintergrund fest:</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>banner.toad</span>
+          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+        </div>
+        <pre><code><span class="dir">@import</span> <span class="val">"./tokens.toad"</span>;
+<span class="dir">@font</span> <span class="val">"./fonts/Inter.ttf"</span> <span class="kw">as</span> <span class="val">"Inter"</span>;
+
+<span class="comm">// Option A: Sofortiges Social-Media & Web-Preset</span>
+<span class="kw">canvas</span> <span class="val">"OpenGraph-Image"</span> {
+  <span class="prop">preset</span>: <span class="val">og-image</span>;            <span class="comm">// 1200x630 (auch: twitter-header, instagram-post, instagram-story, youtube-thumbnail)</span>
+  <span class="prop">export</span>: <span class="val">all</span>;                 <span class="comm">// Exportiert PNG, JPG, WebP, SVG und PSD</span>
+  <span class="prop">background</span>: <span class="val">#0f172a</span>;
+}
+
+<span class="comm">// Option B: Dynamisches Seitenverhältnis & Auflösung</span>
+<span class="kw">canvas</span> <span class="val">"Brand Identity"</span> {
+  <span class="prop">ratio</span>: <span class="val">16:9</span>;                 <span class="comm">// '16:9', '1:1', '9:16', '4:5', '21:9', etc.</span>
+  <span class="prop">resolution</span>: <span class="val">1080p</span>;           <span class="comm">// Presets: sd, hd, fhd, 1080p, qhd, 4k, 8k</span>
+  <span class="prop">export</span>: <span class="val">image</span>;               <span class="comm">// Macros: 'all' oder 'image' (png, jpg, webp, svg)</span>
+  <span class="prop">quality</span>: <span class="val">85%</span>;                <span class="comm">// entspricht: compress: 15%;</span>
+  <span class="prop">background</span>: <span class="kw">transparent</span>;     <span class="comm">// Volle Alpha-Transparenz</span>
+}
+
+<span class="comm">// Option C: Feste Pixel-Dimensionen</span>
+<span class="kw">canvas</span> <span class="val">"Custom Banner"</span> {
+  <span class="prop">width</span>: <span class="val">1200px</span>;
+  <span class="prop">height</span>: <span class="val">630px</span>;
+  <span class="prop">export</span>: <span class="val">png</span>, <span class="val">webp</span>;
+  <span class="prop">background</span>: <span class="val">#0f172a</span>;
+}
+
+<span class="comm">// Option D: Druckvorstufe, CMYK &amp; Schnittmarken</span>
+<span class="kw">canvas</span> <span class="val">"Business-Card"</span> {
+  <span class="prop">size</span>: <span class="num">85mm</span> <span class="num">55mm</span>;             <span class="comm">// Print-Einheiten: 'mm', 'cm', 'in', 'pt'</span>
+  <span class="prop">dpi</span>: <span class="num">300</span>;                    <span class="comm">// Ziel-Druckauflösung (Standard: 96)</span>
+  <span class="prop">bleed</span>: <span class="num">3mm</span>;                  <span class="comm">// Beschnittzugabe um die Trim-Box</span>
+  <span class="prop">crop-marks</span>: <span class="val">true</span>;            <span class="comm">// Schnittmarken &amp; Passkreuze rendern</span>
+  <span class="prop">color-mode</span>: <span class="val">cmyk</span>;            <span class="comm">// 'cmyk' Farbmodus</span>
+  <span class="prop">background</span>: <span class="func">cmyk</span>(<span class="num">0</span>, <span class="num">0</span>, <span class="num">0</span>, <span class="num">0.05</span>);
+}
+
+<span class="comm">// Option E: Multi-Canvas (Mehrseitige Dokumente)</span>
+<span class="kw">canvas</span> <span class="val">"Front"</span> {
+  <span class="prop">size</span>: <span class="num">85mm</span> <span class="num">55mm</span>;
+  <span class="elem">rect</span> <span class="val">"logo"</span> { <span class="prop">at</span>: <span class="num">20mm</span> <span class="num">15mm</span>; <span class="prop">size</span>: <span class="num">40mm</span> <span class="num">20mm</span>; <span class="prop">fill</span>: <span class="val">#38bdf8</span>; }
+}
+
+<span class="kw">canvas</span> <span class="val">"Back"</span> {
+  <span class="prop">size</span>: <span class="num">85mm</span> <span class="num">55mm</span>;
+  <span class="elem">rect</span> <span class="val">"qr"</span> { <span class="prop">at</span>: <span class="num">30mm</span> <span class="num">15mm</span>; <span class="prop">size</span>: <span class="num">25mm</span> <span class="num">25mm</span>; <span class="prop">fill</span>: <span class="val">#0f172a</span>; }
+}</code></pre>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Preset Name</th>
+              <th>Dimensionen</th>
+              <th>Verwendungszweck</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>og-image</code></td>
+              <td>1200 &times; 630 px</td>
+              <td>OpenGraph Link-Vorschau (Twitter, LinkedIn, Slack, Facebook)</td>
+            </tr>
+            <tr>
+              <td><code>banner</code></td>
+              <td>1920 &times; 1080 px</td>
+              <td>Vollfl&auml;chiges Web-/Full-HD-Banner</td>
+            </tr>
+            <tr>
+              <td><code>twitter-header</code></td>
+              <td>1500 &times; 500 px</td>
+              <td>X / Twitter Profil-Header</td>
+            </tr>
+            <tr>
+              <td><code>instagram-post</code> / <code>insta-post</code></td>
+              <td>1080 &times; 1080 px</td>
+              <td>Quadratischer Instagram Post (1:1)</td>
+            </tr>
+            <tr>
+              <td><code>instagram-story</code> / <code>insta-story</code></td>
+              <td>1080 &times; 1920 px</td>
+              <td>Instagram / TikTok Story (9:16)</td>
+            </tr>
+            <tr>
+              <td><code>youtube-thumbnail</code></td>
+              <td>1280 &times; 720 px</td>
+              <td>YouTube Video Thumbnail (16:9 HD)</td>
+            </tr>
+            <tr>
+              <td><code>github-banner</code></td>
+              <td>1280 &times; 640 px</td>
+              <td>GitHub Repository Social Preview Card</td>
+            </tr>
+            <tr>
+              <td><code>dribbble-shot</code></td>
+              <td>1600 &times; 1200 px</td>
+              <td>Dribbble High-Res Design Showcase (4:3)</td>
+            </tr>
+            <tr>
+              <td><code>app-icon</code> / <code>avatar</code> / <code>favicon</code></td>
+              <td>1024&times;1024 / 400&times;400 / 32&times;32 px</td>
+              <td>App-Icon-, Profilbild- und Favicon-Größen</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 3. Variablen -->
+    <section id="variables">
+      <h2>3. Variablen & Tokens (&gt;)</h2>
+      <p>Definiere wiederverwendbare Farben, Schriftarten oder Abstände mit einem vorangestellten <code>&gt;</code> (oder alternativ <code>$</code>):</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>tokens.toad</span>
+          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+        </div>
+        <pre><code><span class="id">&gt;primary</span> = <span class="val">#38bdf8</span>;
+<span class="id">&gt;accent</span> = <span class="val">#818cf8</span>;
+<span class="id">&gt;radius-lg</span> = <span class="val">16px</span>;
+<span class="id">&gt;font-main</span> = <span class="val">"Inter"</span>;
+
+<span class="kw">rect</span> <span class="id">#box</span> {
+  <span class="prop">size</span>: <span class="val">200px</span> <span class="val">100px</span>;
+  <span class="prop">fill</span>: <span class="id">&gt;primary</span>;
+  <span class="prop">radius</span>: <span class="id">&gt;radius-lg</span>;
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- 4. Formen -->
+    <section id="shapes">
+      <h2>4. Formen (Shapes &amp; Primitive)</h2>
+      <p>toad bietet vielseitige Vektor-Grundformen mit nativer Photoshop-Ebenen- und SVG-Unterstützung.</p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Typ</th>
+              <th>Beschreibung</th>
+              <th>Wichtigste Eigenschaften</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>rect</code></td>
+              <td>Rechteck oder abgerundetes Rechteck</td>
+              <td><code>size</code>, <code>fill</code>, <code>radius</code>, <code>border-radius</code>, <code>stroke</code></td>
+            </tr>
+            <tr>
+              <td><code>circle</code></td>
+              <td>Kreis oder Ellipse</td>
+              <td><code>radius</code> oder <code>size: W H</code>, <code>fill</code></td>
+            </tr>
+            <tr>
+              <td><code>star</code></td>
+              <td>5-zackiger Stern mit dynamischen Vektorpunkten</td>
+              <td><code>size</code>, <code>fill</code>, <code>stroke</code>, <code>rotation</code></td>
+            </tr>
+            <tr>
+              <td><code>triangle</code></td>
+              <td>Gleichschenkliges Dreieck</td>
+              <td><code>size</code>, <code>fill</code>, <code>stroke</code>, <code>rotation</code></td>
+            </tr>
+            <tr>
+              <td><code>arrow</code></td>
+              <td>Gerichteter Pfeil</td>
+              <td><code>size</code>, <code>fill</code>, <code>stroke</code>, <code>rotation</code></td>
+            </tr>
+            <tr>
+              <td><code>cross</code></td>
+              <td>Symmetrisches Plus- / Kreuz-Symbol</td>
+              <td><code>size</code>, <code>fill</code>, <code>stroke</code>, <code>rotation</code></td>
+            </tr>
+            <tr>
+              <td><code>polygon</code></td>
+              <td>Freiform-Vielzack (relativ zur Mitte)</td>
+              <td><code>points</code>, <code>radius: 14px</code> (mathematisch gerundet)</td>
+            </tr>
+            <tr>
+              <td><code>path</code></td>
+              <td>Freie SVG Bézier-Pfade (M, L, C, Q, S, T, A, Z)</td>
+              <td><code>d</code>, <code>stroke-cap</code>, <code>stroke-join</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>shapes.toad</span>
+          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+        </div>
+        <pre><code><span class="comm">// 1. Vektor-Primitive mit automatischer Größenanpassung</span>
+<span class="kw">star</span> <span class="id">#favorite</span> {
+  <span class="prop">at</span>: (<span class="val">50px</span>, <span class="val">50px</span>);
+  <span class="prop">size</span>: <span class="val">48px</span> <span class="val">48px</span>;
+  <span class="prop">fill</span>: <span class="val">#f59e0b</span>;
+  <span class="prop">rotation</span>: <span class="val">15deg</span>;
+}
+
+<span class="kw">arrow</span> <span class="id">#nextStep</span> {
+  <span class="prop">at</span>: <span class="kw">right of</span> <span class="id">#favorite</span> <span class="prop">offset</span> <span class="val">24px</span>;
+  <span class="prop">size</span>: <span class="val">60px</span> <span class="val">40px</span>;
+  <span class="prop">fill</span>: <span class="val">#38bdf8</span>;
+}
+
+<span class="comm">// 2. Abgerundetes Rechteck mit 4 individuellen Ecken</span>
+<span class="kw">rect</span> <span class="id">#card</span> {
+  <span class="prop">at</span>: (<span class="val">50px</span>, <span class="val">140px</span>);
+  <span class="prop">size</span>: <span class="val">400px</span> <span class="val">250px</span>;
+  <span class="prop">fill</span>: <span class="val">#142036</span>;
+  <span class="prop">border-radius</span>: [<span class="val">32px</span>, <span class="val">12px</span>, <span class="val">32px</span>, <span class="val">12px</span>];
+  <span class="prop">stroke</span>: <span class="val">#233554</span> <span class="val">2px</span>;
+}
+
+<span class="comm">// 3. Freier SVG-Bézier-Pfad</span>
+<span class="kw">path</span> <span class="id">#vectorWave</span> {
+  <span class="prop">at</span>: (<span class="val">50px</span>, <span class="val">420px</span>);
+  <span class="prop">d</span>: <span class="val">"M 0 50 Q 150 0 300 50 T 600 50"</span>;
+  <span class="prop">stroke</span>: <span class="val">#38bdf8</span> <span class="val">4px</span>;
+  <span class="prop">stroke-cap</span>: <span class="kw">round</span>;
+  <span class="prop">fill</span>: <span class="kw">transparent</span>;
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- 4b. Vektor-Icons -->
+    <section id="icons">
+      <h2>4b. Integrierte Vektor-Icons (Lucide)</h2>
+      <p>Mit dem <code>icon</code>-Element kannst du direkt auf eine integrierte Bibliothek hochauflösender Vektor-Icons zugreifen:</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>icons.toad</span>
+          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+        </div>
+        <pre><code><span class="comm">// Verfügbare Icons: search, check, x, arrow-right, arrow-left, arrow-up, arrow-down, home, user, settings</span>
+<span class="kw">icon</span> <span class="id">#searchIcon</span> {
+  <span class="prop">iconName</span>: <span class="val">"search"</span>;
+  <span class="prop">size</span>: <span class="val">32px</span>;
+  <span class="prop">fill</span>: <span class="val">#38bdf8</span>;
+  <span class="prop">at</span>: (<span class="val">40px</span>, <span class="val">40px</span>);
+}
+
+<span class="kw">icon</span> <span class="id">#checkBadge</span> {
+  <span class="prop">iconName</span>: <span class="val">"check"</span>;
+  <span class="prop">size</span>: <span class="val">24px</span>;
+  <span class="prop">fill</span>: <span class="val">#10b981</span>;
+  <span class="prop">at</span>: <span class="kw">right of</span> <span class="id">#searchIcon</span> <span class="prop">offset</span> <span class="val">16px</span>;
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- 5. Text & Typografie -->
+    <section id="text">
+      <h2>5. Text, Typografie &amp; Kerning</h2>
+      <p>Texte werden über die Skia-Engine millimetergenau ausgemessen und in Photoshop als <strong>echte, editierbare Textebenen</strong> exportiert.</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>typography.toad</span>
+          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+        </div>
+        <pre><code><span class="kw">text</span> <span class="id">#headline</span> {
+  <span class="prop">at</span>: (<span class="val">80px</span>, <span class="val">120px</span>);
+  <span class="prop">size</span>: <span class="val">600px</span>;                  <span class="comm">// Feste Breite aktiviert automatischen Wortumbruch</span>
+  <span class="prop">content</span>: <span class="val">"toad Compiler: Die Zukunft des deklarativen Designs."</span>;
+  
+  <span class="prop">font-family</span>: <span class="val">"Inter"</span>;
+  <span class="prop">font-size</span>: <span class="val">36px</span>;
+  <span class="prop">font-weight</span>: <span class="val">700</span>;             <span class="comm">// 100-900 oder 'bold', 'normal'</span>
+  <span class="prop">line-height</span>: <span class="val">1.25</span>;
+  <span class="prop">letter-spacing</span>: <span class="val">1.5px</span>;        <span class="comm">// Tracking / Kerning (auch: tracking: 1.5px;)</span>
+  <span class="prop">text-transform</span>: <span class="kw">uppercase</span>;    <span class="comm">// 'uppercase', 'lowercase', 'capitalize', 'none'</span>
+  <span class="prop">font-features</span>: <span class="val">"liga" 1, "smcp" 1</span>; <span class="comm">// OpenType-Features (Ligaturen, Kapitälchen)</span>
+  <span class="prop">font-variation</span>: <span class="val">"wght" 700 "wdth" 85</span>; <span class="comm">// Variable Font Achsen</span>
+  <span class="prop">align</span>: <span class="kw">justify</span>;               <span class="comm">// 'left', 'center', 'right', 'justify'</span>
+  <span class="prop">hanging-punctuation</span>: <span class="val">true</span>;    <span class="comm">// Optischer Randausgleich für Satzzeichen</span>
+  <span class="prop">color</span>: <span class="val">#ffffff</span>;
+}</code></pre>
+      </div>
+
+      <div class="callout">
+        <div class="callout-title">Tipp zu OpenType, Blocksatz &amp; Zeilenumbruch</div>
+        <p>Wird <code>align: justify</code> oder <code>font-features</code> gesetzt, berechnet die Skia-Engine den Wort- und Glyphenabstand präzise und exportiert die Absätze direkt als formatierte Photoshop-Textlayer.</p>
+      </div>
+    </section>
+
+    <!-- 6. Positionierung & Math Solver -->
+    <section id="positioning">
+      <h2>6. Positionierung, Math-Solver &amp; calc()</h2>
+      <p>Positioniere Elemente relational oder nutze mathematische Berechnungen direkt im Code:</p>
+
+      <div class="rel-diagram">
+        <div class="diagram-box">#title (Referenz-Element)</div>
+        <div class="diagram-arrow">at: below #title offset 16px</div>
+        <div class="diagram-child">#subtitle (Folge-Element)</div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>positioning_and_math.toad</span>
+          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+        </div>
+        <pre><code><span class="comm">// 1. Relationale Positionierung</span>
+<span class="prop">at</span>: <span class="kw">below</span> <span class="id">#headline</span> <span class="prop">offset</span> <span class="val">20px</span>;
+<span class="prop">at</span>: <span class="kw">right of</span> <span class="id">#avatar</span> <span class="prop">offset</span> <span class="val">12px</span>;
+<span class="prop">at</span>: <span class="kw">inside</span> <span class="id">#card</span> <span class="prop">offset</span> <span class="val">20px</span>;
+<span class="prop">at</span>: <span class="kw">center of canvas</span>;
+
+<span class="comm">// 2. Dynamische Math-Berechnungen (calc)</span>
+<span class="kw">rect</span> <span class="id">#fluidBox</span> {
+  <span class="prop">size</span>: <span class="func">calc</span>(<span class="val">100% - 60px</span>) <span class="func">calc</span>(<span class="val">50% + 20px</span>);
+  <span class="prop">fill</span>: <span class="val">#1e293b</span>;
+}
+
+<span class="comm">// 3. Margins &amp; Ebenen-Reihenfolge (2D-Offsets gehören in at:, z.B. at: below #id offset -20px;)</span>
+<span class="kw">rect</span> <span class="id">#offsetItem</span> {
+  <span class="prop">margin</span>: <span class="val">16px</span> <span class="val">24px</span>;          <span class="comm">// Außenabstand</span>
+  <span class="prop">z-index</span>: <span class="val">10</span>;                <span class="comm">// Ebenen-Reihenfolge</span>
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- 7. 2D-Transformationen -->
+    <section id="transforms">
+      <h2>7. 2D-Transformationen</h2>
+      <p>Jedes Element unterstützt 2D-Affine-Transformationen für Skalierung, Scherung und Rotation:</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>transforms.toad</span>
+          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+        </div>
+        <pre><code><span class="kw">rect</span> <span class="id">#tiltedCard</span> {
+  <span class="prop">size</span>: <span class="val">200px</span> <span class="val">200px</span>;
+  <span class="prop">fill</span>: <span class="val">#3b82f6</span>;
+  <span class="prop">radius</span>: <span class="val">16px</span>;
+  
+  <span class="prop">rotation</span>: <span class="val">45deg</span>;             <span class="comm">// Drehung in Grad</span>
+  <span class="prop">scale</span>: <span class="val">1.2</span> <span class="val">0.8</span>;              <span class="comm">// 2D-Skalierung (X Y) oder einheitlich: scale: 1.2;</span>
+  <span class="prop">skewX</span>: <span class="val">15deg</span>;                <span class="comm">// Horizontale Scherung</span>
+  <span class="prop">skewY</span>: <span class="val">5deg</span>;                 <span class="comm">// Vertikale Scherung</span>
+  <span class="prop">transform-origin</span>: <span class="kw">center</span>;    <span class="comm">// 'center', '50% 50%' oder Pixel '(100px, 100px)'</span>
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- 8. Farben & Gradienten -->
+    <section id="colors-gradients">
+      <h2>8. Farben, Gradienten (Linear, Radial, Conic) &amp; Effekte</h2>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>styles.toad</span>
+          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+        </div>
+        <pre><code><span class="id">&gt;primary</span> = <span class="val">#38bdf8</span>;
+
+<span class="kw">rect</span> <span class="id">#styledBox</span> {
+  <span class="prop">size</span>: <span class="val">500px</span> <span class="val">300px</span>;
+  
+  <span class="comm">// 1. Farb-Modelle: Hex, RGB, HSL, CMYK &amp; Transformationen</span>
+  <span class="prop">fill</span>: <span class="kw">alpha</span>(<span class="id">&gt;primary</span>, <span class="val">0.15</span>);
+  <span class="prop">stroke</span>: <span class="kw">lighten</span>(<span class="id">&gt;primary</span>, <span class="val">20%</span>) <span class="val">2px</span>;
+  <span class="comm">// fill: cmyk(0%, 50%, 100%, 0%); // Volle CMYK-Unterstützung</span>
+  
+  <span class="comm">// 2. Farbverläufe (Linear, Radial oder Conic)</span>
+  <span class="comm">// fill: linear-gradient(135deg, #0f172a, #38bdf8);</span>
+  <span class="comm">// fill: radial-gradient(circle, #38bdf8 0%, #0f172a 100%);</span>
+  <span class="comm">// fill: conic-gradient(from 45deg, #f43f5e, #8b5cf6, #06b6d4, #f43f5e);</span>
+  
+  <span class="comm">// 3. Photoshop Layer FX (Ebenenstile mit nativem PSD fx-Mapping)</span>
+  <span class="prop">shadow</span>: <span class="val">0px 20px 40px rgba(0, 0, 0, 0.4)</span>;      <span class="comm">// Drop Shadow</span>
+  <span class="prop">inner-shadow</span>: <span class="val">0px 4px 10px rgba(0, 0, 0, 0.3)</span>;  <span class="comm">// Innerer Schatten</span>
+  <span class="prop">glow</span>: <span class="val">16px #60a5fa</span>;                             <span class="comm">// Schein nach außen</span>
+  <span class="prop">inner-glow</span>: <span class="val">8px #ffffff</span>;                        <span class="comm">// Schein nach innen</span>
+  <span class="prop">bevel</span>: <span class="val">inner-bevel 6px</span>;                         <span class="comm">// Abgeflachte Kante &amp; Relief</span>
+  <span class="prop">stroke-style</span>: <span class="val">inside 3px #1e3a8a</span>;               <span class="comm">// Ebenenstil-Kontur</span>
+  <span class="prop">overlay</span>: <span class="val">#2563eb</span>;                               <span class="comm">// Farb- / Verlaufsüberlagerung</span>
+  
+  <span class="comm">// 4. Deckkraft, Blend-Mode &amp; Filter</span>
+  <span class="prop">opacity</span>: <span class="val">0.95</span>;
+  <span class="prop">blend-mode</span>: <span class="kw">overlay</span>;
+  <span class="prop">filter</span>: <span class="kw">blur</span>(<span class="val">10px</span>) <span class="kw">saturate</span>(<span class="val">1.4</span>);
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- 9. Bilder & Fit-Modi -->
+    <section id="images">
+      <h2>9. Bilder (Images)</h2>
+      <p>Bilder unterstützen automatische Skalierungsmodi:</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>image.toad</span>
+          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+        </div>
+        <pre><code><span class="kw">image</span> <span class="id">#heroImage</span> {
+  <span class="prop">at</span>: <span class="kw">center of canvas</span>;
+  <span class="prop">size</span>: <span class="val">600px</span> <span class="val">400px</span>;
+  <span class="prop">src</span>: <span class="val">"./assets/photo.jpg"</span>;
+  <span class="prop">fit</span>: <span class="kw">cover</span>;                  <span class="comm">// 'cover', 'contain', 'fill' oder 'none'</span>
+  <span class="prop">radius</span>: <span class="val">16px</span>;
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- 10. Gruppen, Stack & Grid -->
+    <section id="groups-grid">
+      <h2>10. Layout-Container (Stack mit Hug/Fill, Grid &amp; Gruppen)</h2>
+      
+      <h3>Auto-Layout Stack mit 'hug' und 'fill'</h3>
+      <p>Ordnet Kindelemente automatisch vertikal oder horizontal mit konfigurierbarem <code>gap</code> und <code>padding</code> an. Mit <code>hug</code> passt sich die Container-Größe an den Inhalt an, während <code>fill</code> den restlichen Platz ausfüllt:</p>
+      
+      <div class="code-block">
+        <div class="code-header">
+          <span>stack.toad</span>
+          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+        </div>
+        <pre><code><span class="kw">stack</span> <span class="id">#navigationBar</span> {
+  <span class="prop">at</span>: (<span class="val">40px</span>, <span class="val">40px</span>);
+  <span class="prop">size</span>: <span class="val">800px hug</span>;             <span class="comm">// 'hug' schrumpft/wächst automatisch mit den Kindern</span>
+  <span class="prop">direction</span>: <span class="kw">horizontal</span>;       <span class="comm">// 'horizontal' oder 'vertical'</span>
+  <span class="prop">align</span>: <span class="kw">center</span>;               <span class="comm">// Cross-axis: 'start', 'center', 'end'</span>
+  <span class="prop">gap</span>: <span class="val">16px</span>;
+  <span class="prop">padding</span>: <span class="val">12px</span> <span class="val">24px</span>;
+  <span class="prop">fill</span>: <span class="val">#1e293b</span>;
+  <span class="prop">radius</span>: <span class="val">24px</span>;
+  
+  <span class="kw">rect</span> { <span class="prop">size</span>: <span class="val">fill 40px</span>; <span class="prop">fill</span>: <span class="val">#334155</span>; <span class="prop">radius</span>: <span class="val">8px</span>; } <span class="comm">// 'fill' füllt restlichen Platz</span>
+  <span class="kw">text</span> { <span class="prop">content</span>: <span class="val">"Home"</span>; <span class="prop">font-weight</span>: <span class="val">700</span>; <span class="prop">color</span>: <span class="val">#38bdf8</span>; }
+}</code></pre>
+      </div>
+
+      <h3>Gruppen (Groups) &amp; Grid</h3>
+      <div class="code-block">
+        <div class="code-header">
+          <span>grid.toad</span>
+          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+        </div>
+        <pre><code><span class="kw">grid</span> <span class="id">#gallery</span> {
+  <span class="prop">at</span>: <span class="kw">center of canvas</span>;
+  <span class="prop">columns</span>: <span class="val">3</span>;
+  <span class="prop">gap</span>: <span class="val">16px</span>;
+  
+  <span class="kw">rect</span> { <span class="prop">size</span>: <span class="val">150px</span> <span class="val">150px</span>; <span class="prop">fill</span>: <span class="val">#1e293b</span>; }
+  <span class="kw">rect</span> { <span class="prop">size</span>: <span class="val">150px</span> <span class="val">150px</span>; <span class="prop">fill</span>: <span class="val">#1e293b</span>; }
+  <span class="kw">rect</span> { <span class="prop">size</span>: <span class="val">150px</span> <span class="val">150px</span>; <span class="prop">fill</span>: <span class="val">#1e293b</span>; }
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- 11. Komponenten & Slots -->
+    <section id="components">
+      <h2>11. Komponenten &amp; Content-Slots (slot;)</h2>
+      <p>Erstelle wiederverwendbare Komponenten mit Parametern und projiziere beliebige Kindelemente über <code>slot;</code> direkt an die gewünschte Stelle:</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>components_and_slots.toad</span>
+          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+        </div>
+        <pre><code>component Card(title = "Default Title", bg = #1e293b) {
+  group {
+    rect #cardBg {
+      size: 400px 240px;
+      fill: >bg;
+      radius: 16px;
+      shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    text #cardTitle {
+      at: inside #cardBg offset 20px;
+      content: >title;
+      font-size: 20px;
+      font-weight: bold;
+      color: #ffffff;
+    }
+    slot; // Übergebene Kindelemente werden genau hier injiziert
+  }
+}
+
+<span class="comm">// 2. Komponente aufrufen und Kindelemente in den Slot übergeben</span>
+Card(<span class="val">"Analytics Card"</span>, <span class="val">#0f172a</span>) {
+  <span class="kw">icon</span> {
+    <span class="prop">iconName</span>: <span class="val">"check"</span>;
+    <span class="prop">size</span>: <span class="val">24px</span>;
+    <span class="prop">fill</span>: <span class="val">#10b981</span>;
+    <span class="prop">at</span>: <span class="kw">inside parent offset</span> <span class="val">20px</span>;
+    <span class="prop">margin</span>: <span class="val">60px 0 0 0</span>;
+  }
+  <span class="kw">text</span> {
+    <span class="prop">at</span>: <span class="kw">right of previous offset</span> <span class="val">10px</span>;
+    <span class="prop">content</span>: <span class="val">"Alle Systeme laufen fehlerfrei"</span>;
+    <span class="prop">color</span>: <span class="val">#94a3b8</span>;
+  }
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- 12. PSD Native Features -->
+    <section id="psd-features">
+      <h2>12. Native Photoshop (.psd) Bearbeitbarkeit</h2>
+      <p>Beim Export nach PSD (<code>export: psd;</code> oder <code>toad datei -f psd</code>) generiert der Compiler <strong>keine flachen Pixel-Raster</strong>, sondern echte, native Photoshop-Strukturen:</p>
+
+      <div class="card-grid">
+        <div class="card">
+          <h4><code>Live-Vektor-Formen</code></h4>
+          <p>Rechtecke, Kreise, Polygone und Pfade werden als Formebenen mit Bézier-Ankerpunkten angelegt. Verlustfrei transformierbar (<code>Strg+T</code>).</p>
+        </div>
+        <div class="card">
+          <h4><code>Live-Eckenrundung</code></h4>
+          <p>Eckenrundungen von Rechtecken lassen sich im Photoshop Eigenschaften-Bedienfeld (Properties) nachträglich über 4 separate Regler verändern.</p>
+        </div>
+        <div class="card">
+          <h4><code>Vektor-Verläufe</code></h4>
+          <p>Linear- und Radial-Gradients öffnen direkt den nativen Photoshop Verlaufs-Editor mit Farbstopps, Deckkraftstopps und Winkelrad.</p>
+        </div>
+        <div class="card">
+          <h4><code>fx-Ebenenstile (Layer FX)</code></h4>
+          <p>Schatten (<code>shadow:</code>, <code>inner-shadow:</code>), Schein (<code>glow:</code>, <code>inner-glow:</code>), Kantenrelief (<code>bevel:</code>), Kontur (<code>stroke-style:</code>) und Überlagerung (<code>overlay:</code>) werden als native Photoshop Layer FX mit <code>fx</code>-Badge angelegt.</p>
+        </div>
+        <div class="card">
+          <h4><code>Editierbarer Text</code></h4>
+          <p>Echte Photoshop Type Layers mit PostScript-Schriftart, Schriftgröße, Zeilenabstand (Leading) und Ausrichtung (inkl. Blocksatz / Justification). Editierbar mit dem Textwerkzeug (<code>T</code>).</p>
+        </div>
+        <div class="card">
+          <h4><code>Schnittmasken & Ordner</code></h4>
+          <p><code>clip: true;</code> wird als native Photoshop Schnittmaske angelegt. Gruppen und Stacks werden zu hierarchischen Ebenen-Ordnern.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 13. Master Examples -->
+    <section id="master-examples">
+      <h2>13. Komplexe Praxis-Beispiele (Masterclass)</h2>
+      <p>Hier siehst du, wie Variablen, Komponenten, Layouting (Stack) und Text zusammenarbeiten, um vollständige Designs modular aufzubauen.</p>
+
+      <h3>Beispiel 1: Modernes Social-Media Banner</h3>
+      <div class="code-block">
+        <div class="code-header">
+          <span>social_card.toad</span>
+          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+        </div>
+        <pre><code><span class="comm">// --- 1. Farben & Variablen ---</span>
+<span class="var">>bgLight</span> = <span class="val">#f8fafc</span>;
+<span class="var">>bgDark</span> = <span class="val">#0f172a</span>;
+<span class="var">>primary</span> = <span class="val">#3b82f6</span>;
+
+<span class="comm">// --- 2. Canvas Definition ---</span>
+<span class="elem">canvas</span> <span class="val">"Social-Card"</span> {
+  <span class="prop">ratio</span>: <span class="val">16:9</span>;
+  <span class="prop">resolution</span>: <span class="val">1080p</span>;
+  <span class="prop">export</span>: <span class="val">webp</span>;
+  <span class="prop">quality</span>: <span class="val">90%</span>;
+  <span class="prop">background</span>: <span class="func">linear-gradient</span>(<span class="val">135deg</span>, <span class="var">>bgDark</span>, <span class="func">darken</span>(<span class="var">>bgDark</span>, <span class="val">20%</span>));
+}
+
+<span class="comm">// --- 3. Wiederverwendbare Komponenten ---</span>
+<span class="elem">component</span> <span class="func">Badge</span>(<span class="prop">text</span> = <span class="val">"NEW"</span>, <span class="prop">bgColor</span> = <span class="var">>primary</span>) {
+  <span class="elem">stack</span> <span class="id">#badgeContainer</span> {
+    <span class="prop">direction</span>: <span class="val">horizontal</span>;
+    <span class="prop">padding</span>: [<span class="val">8px</span>, <span class="val">16px</span>, <span class="val">8px</span>, <span class="val">16px</span>];
+    <span class="prop">radius</span>: <span class="val">32px</span>;
+    <span class="prop">fill</span>: <span class="var">>bgColor</span>;
+
+    <span class="elem">text</span> {
+      <span class="prop">content</span>: <span class="var">>text</span>;
+      <span class="prop">font-family</span>: <span class="val">"Inter"</span>;
+      <span class="prop">font-size</span>: <span class="val">18px</span>;
+      <span class="prop">font-weight</span>: <span class="val">bold</span>;
+      <span class="prop">color</span>: <span class="val">#ffffff</span>;
+    }
+  }
+}
+
+<span class="comm">// --- 4. Auto-Layout Zusammenbau ---</span>
+<span class="elem">stack</span> <span class="id">#mainContent</span> {
+  <span class="prop">direction</span>: <span class="val">vertical</span>;
+  <span class="prop">gap</span>: <span class="val">32px</span>;
+  <span class="prop">at</span>: <span class="val">center of canvas</span>;
+  
+  <span class="elem">Badge</span> <span class="id">#versionBadge</span> {
+    <span class="prop">text</span>: <span class="val">"v2.0 RELEASE"</span>;
+    <span class="prop">bgColor</span>: <span class="val">#10b981</span>;
+  }
+
+  <span class="elem">text</span> <span class="id">#title</span> {
+    <span class="prop">content</span>: <span class="val">"Declarative Design für Developer."</span>;
+    <span class="prop">font-family</span>: <span class="val">"Inter"</span>;
+    <span class="prop">font-size</span>: <span class="val">82px</span>;
+    <span class="prop">font-weight</span>: <span class="val">800</span>;
+    <span class="prop">color</span>: <span class="val">#ffffff</span>;
+    <span class="prop">size</span>: <span class="val">1000px</span>; <span class="comm">// Maximalbreite für Umbruch</span>
+  }
+}
+
+<span class="comm">// --- 5. Absolute Highlights ---</span>
+<span class="elem">circle</span> <span class="id">#glow</span> {
+  <span class="prop">size</span>: <span class="val">600px 600px</span>;
+  <span class="prop">fill</span>: <span class="func">radial-gradient</span>(<span class="val">center</span>, <span class="func">rgba</span>(<span class="val">59</span>, <span class="val">130</span>, <span class="val">246</span>, <span class="val">0.4</span>), <span class="val">transparent</span>);
+  <span class="prop">filter</span>: <span class="func">blur</span>(<span class="val">80px</span>);
+  <span class="prop">blend-mode</span>: <span class="val">screen</span>;
+  <span class="prop">at</span>: <span class="val">right of</span> <span class="id">#mainContent</span> <span class="prop">offset</span> <span class="val">-150px</span>;
+}</code></pre>
+      </div>
+
+      <div class="callout">
+        <div class="callout-title">Tipp zur LLM Nutzung</div>
+        <p>Wenn du diesen Codeblock kopierst und einer KI gibst (z.B. ChatGPT oder Claude) wird sie das Muster sofort verstehen und dir 100% syntaktisch korrekte TOAD-Dateien für deine Use-Cases generieren können.</p>
+      </div>
+
+      <h3 id="bauhaus-poster">Beispiel 2: Bauhaus Ausstellungsplakat (Weimar 1923)</h3>
+      <p>Konstruktivistische Präzisionsgeometrie mit 17 parallelen Vektor-Ribbons (SVG Arc <code>A</code>-Befehle), semantischen Farb-Tokens und typografischer Hierarchie mit <code>Haettenschweiler</code>.</p>
+      <div class="code-block">
+        <div class="code-header">
+          <span>bauhaus_1923.toad</span>
+          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+        </div>
+        <pre><code><span class="comm">// Bauhaus Exhibition Poster (Weimar, 1923)</span>
+<span class="var">>bgCream</span> = <span class="val">#e5decc</span>;
+<span class="var">>terracotta</span> = <span class="val">#b5633a</span>;
+<span class="var">>black</span> = <span class="val">#1e1c1a</span>;
+
+<span class="elem">canvas</span> <span class="val">"Bauhaus-1923"</span> {
+  <span class="prop">size</span>: <span class="val">700px 1000px</span>;
+  <span class="prop">background</span>: <span class="var">>bgCream</span>;
+  <span class="prop">export</span>: <span class="val">all</span>;
+}
+
+<span class="comm">// Titel-Typografie</span>
+<span class="elem">text</span> <span class="id">#title</span> {
+  <span class="prop">content</span>: <span class="val">"BAUHAUS"</span>;
+  <span class="prop">font-family</span>: <span class="val">"Haettenschweiler"</span>;
+  <span class="prop">font-size</span>: <span class="val">56px</span>;
+  <span class="prop">font-weight</span>: <span class="val">700</span>;
+  <span class="prop">color</span>: <span class="var">>black</span>;
+  <span class="prop">letter-spacing</span>: <span class="val">1px</span>;
+  <span class="prop">at</span>: (<span class="val">40px</span>, <span class="val">45px</span>);
+}
+
+<span class="elem">rect</span> <span class="id">#topRule</span> {
+  <span class="prop">size</span>: <span class="val">620px 3.5px</span>;
+  <span class="prop">fill</span>: <span class="var">>black</span>;
+  <span class="prop">at</span>: (<span class="val">40px</span>, <span class="val">110px</span>);
+}
+
+<span class="elem">circle</span> <span class="id">#sunCircle</span> {
+  <span class="prop">size</span>: <span class="val">192px</span>;
+  <span class="prop">fill</span>: <span class="var">>terracotta</span>;
+  <span class="prop">at</span>: (<span class="val">40px</span>, <span class="val">164px</span>);
+}
+
+<span class="comm">// 17 konzentrische Schlangenlinien-Vektorbahnen</span>
+<span class="elem">path</span> <span class="id">#serpentineLines</span> {
+  <span class="prop">d</span>: <span class="val">"M 232 370 L 232 446 A 11 11 0 0 0 254 446 L 254 370 A 203 203 0 0 1 660 370 L 660 680 M 220 370 L 220 446 A 23 23 0 0 0 266 446 L 266 370 A 191 191 0 0 1 648 370 L 648 680 M 208 370 L 208 446 A 35 35 0 0 0 278 446 L 278 370 A 179 179 0 0 1 636 370 L 636 680 M 196 370 L 196 446 A 47 47 0 0 0 290 446 L 290 370 A 167 167 0 0 1 624 370 L 624 680 M 184 370 L 184 446 A 59 59 0 0 0 302 446 L 302 370 A 155 155 0 0 1 612 370 L 612 680 M 172 370 L 172 446 A 71 71 0 0 0 314 446 L 314 370 A 143 143 0 0 1 600 370 L 600 680 M 160 370 L 160 446 A 83 83 0 0 0 326 446 L 326 370 A 131 131 0 0 1 588 370 L 588 680 M 148 370 L 148 446 A 95 95 0 0 0 338 446 L 338 370 A 119 119 0 0 1 576 370 L 576 680 M 136 370 L 136 446 A 107 107 0 0 0 350 446 L 350 370 A 107 107 0 0 1 564 370 L 564 680 M 124 370 L 124 446 A 119 119 0 0 0 362 446 L 362 370 A 95 95 0 0 1 552 370 L 552 680 M 112 370 L 112 446 A 131 131 0 0 0 374 446 L 374 370 A 83 83 0 0 1 540 370 L 540 680 M 100 370 L 100 446 A 143 143 0 0 0 386 446 L 386 370 A 71 71 0 0 1 528 370 L 528 680 M 88 370 L 88 446 A 155 155 0 0 0 398 446 L 398 370 A 59 59 0 0 1 516 370 L 516 680 M 76 370 L 76 446 A 167 167 0 0 0 410 446 L 410 370 A 47 47 0 0 1 504 370 L 504 680 M 64 370 L 64 446 A 179 179 0 0 0 422 446 L 422 370 A 35 35 0 0 1 492 370 L 492 680 M 52 370 L 52 446 A 191 191 0 0 0 434 446 L 434 370 A 23 23 0 0 1 480 370 L 480 680 M 40 370 L 40 446 A 203 203 0 0 0 446 446 L 446 370 A 11 11 0 0 1 468 370 L 468 680"</span>;
+  <span class="prop">size</span>: <span class="val">700px 1000px</span>;
+  <span class="prop">stroke</span>: <span class="var">>black</span> <span class="val">4.5px</span>;
+  <span class="prop">fill</span>: <span class="val">transparent</span>;
+  <span class="prop">at</span>: (<span class="val">0</span>, <span class="val">0</span>);
+}
+
+<span class="elem">rect</span> <span class="id">#stripe1</span> { <span class="prop">size</span>: <span class="val">660px 9.5px</span>; <span class="prop">fill</span>: <span class="var">>terracotta</span>; <span class="prop">at</span>: (<span class="val">40px</span>, <span class="val">680px</span>); }
+<span class="elem">rect</span> <span class="id">#stripe2</span> { <span class="prop">size</span>: <span class="val">660px 9.5px</span>; <span class="prop">fill</span>: <span class="var">>terracotta</span>; <span class="prop">at</span>: (<span class="val">40px</span>, <span class="val">710px</span>); }
+<span class="elem">rect</span> <span class="id">#stripe3</span> { <span class="prop">size</span>: <span class="val">660px 9.5px</span>; <span class="prop">fill</span>: <span class="var">>terracotta</span>; <span class="prop">at</span>: (<span class="val">40px</span>, <span class="val">740px</span>); }
+<span class="elem">rect</span> <span class="id">#stripe4</span> { <span class="prop">size</span>: <span class="val">660px 9.5px</span>; <span class="prop">fill</span>: <span class="var">>terracotta</span>; <span class="prop">at</span>: (<span class="val">40px</span>, <span class="val">770px</span>); }
+<span class="elem">rect</span> <span class="id">#stripe5</span> { <span class="prop">size</span>: <span class="val">660px 9.5px</span>; <span class="prop">fill</span>: <span class="var">>terracotta</span>; <span class="prop">at</span>: (<span class="val">40px</span>, <span class="val">800px</span>); }
+
+<span class="elem">path</span> <span class="id">#rightSemicircle</span> {
+  <span class="prop">d</span>: <span class="val">"M 700 425 A 230 230 0 0 0 700 885 Z"</span>;
+  <span class="prop">size</span>: <span class="val">700px 1000px</span>;
+  <span class="prop">fill</span>: <span class="var">>terracotta</span>;
+  <span class="prop">at</span>: (<span class="val">0</span>, <span class="val">0</span>);
+}
+
+<span class="elem">rect</span> <span class="id">#bottomRule</span> {
+  <span class="prop">size</span>: <span class="val">620px 3.5px</span>;
+  <span class="prop">fill</span>: <span class="var">>black</span>;
+  <span class="prop">at</span>: (<span class="val">40px</span>, <span class="val">895px</span>);
+}
+
+<span class="elem">text</span> <span class="id">#dateText</span> {
+  <span class="prop">content</span>: <span class="val">"JULY - SEPTEMBER 1923"</span>;
+  <span class="prop">font-family</span>: <span class="val">"Haettenschweiler"</span>;
+  <span class="prop">font-size</span>: <span class="val">24px</span>;
+  <span class="prop">font-weight</span>: <span class="val">700</span>;
+  <span class="prop">color</span>: <span class="var">>black</span>;
+  <span class="prop">letter-spacing</span>: <span class="val">1px</span>;
+  <span class="prop">align</span>: <span class="val">right</span>;
+  <span class="prop">size</span>: <span class="val">620px hug</span>;
+  <span class="prop">at</span>: (<span class="val">40px</span>, <span class="val">908px</span>);
+}</code></pre>
+      </div>
+
+      <h3 id="soul-poster">Beispiel 3: Vintage Soul Music Poster (1979)</h3>
+      <p>5:7 Poster-Format, organische mehrstufige Linear-Gradienten, typografische Schriftzüge ("SOUL") als Vektorkurven und 35mm-Filmkorn-Textur.</p>
+      <div class="code-block">
+        <div class="code-header">
+          <span>soul_poster.toad</span>
+          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+        </div>
+        <pre><code><span class="comm">// Vintage Soul Music Poster (1979 Live Recording)</span>
+<span class="var">>bgDark</span>     = <span class="val">#131315</span>;
+<span class="var">>cream</span>      = <span class="val">#d1c2aa</span>;
+<span class="var">>terracotta</span> = <span class="val">#8d2e24</span>;
+
+<span class="var">>gradOuter</span> = <span class="func">linear-gradient</span>(<span class="val">180deg</span>, <span class="val">#d2c4ac 0%</span>, <span class="val">#d0c0a6 16%</span>, <span class="val">#c8a58e 28%</span>, <span class="val">#ab5646 48%</span>, <span class="val">#8d2e24 70%</span>, <span class="val">#85261d 100%</span>);
+<span class="var">>gradInner</span> = <span class="func">linear-gradient</span>(<span class="val">180deg</span>, <span class="val">#d2c4ac 0%</span>, <span class="val">#cebe9f 10%</span>, <span class="val">#bf947c 22%</span>, <span class="val">#a54f40 42%</span>, <span class="val">#8d2e24 64%</span>, <span class="val">#85261d 100%</span>);
+
+<span class="elem">canvas</span> <span class="val">"Soul-Poster-1979"</span> {
+  <span class="prop">size</span>: <span class="val">1000px 1400px</span>;
+  <span class="prop">background</span>: <span class="var">>bgDark</span>;
+  <span class="prop">export</span>: <span class="val">all</span>;
+  <span class="prop">quality</span>: <span class="val">95</span>;
+}
+
+<span class="comm">// Vertikale Säulen mit Creme-Rahmen</span>
+<span class="elem">path</span> <span class="id">#col1Pillar</span> {
+  <span class="prop">d</span>: <span class="val">"M 18 0 L 205 0 L 205 851 L 164 851 C 64 851, 61 1008, 27 1008 L 0 1008 L 0 18 A 18 18 0 0 1 18 0 Z"</span>;
+  <span class="prop">size</span>: <span class="val">205px 1008px</span>;
+  <span class="prop">fill</span>: <span class="var">>gradOuter</span>;
+  <span class="prop">stroke</span>: <span class="var">>cream</span> <span class="val">3.5px</span>;
+  <span class="prop">at</span>: (<span class="val">45px</span>, <span class="val">35px</span>);
+}
+
+<span class="comm">// Typografische Letterforms ("SOUL")</span>
+<span class="elem">path</span> <span class="id">#letterS</span> {
+  <span class="prop">d</span>: <span class="val">"M 0 157 L 27 157 C 61 157, 64 0, 164 0 L 205 0 L 205 91 L 191 91 C 157 91, 155 248, 55 248 L 0 248 Z"</span>;
+  <span class="prop">size</span>: <span class="val">205px 248px</span>;
+  <span class="prop">fill</span>: <span class="var">>cream</span>;
+  <span class="prop">at</span>: (<span class="val">45px</span>, <span class="val">886px</span>);
+}
+
+<span class="elem">circle</span> <span class="id">#letterO</span> {
+  <span class="prop">size</span>: <span class="val">279px</span>;
+  <span class="prop">fill</span>: <span class="var">>cream</span>;
+  <span class="prop">at</span>: (<span class="val">258px</span>, <span class="val">858.5px</span>);
+}
+
+<span class="elem">circle</span> <span class="id">#dotO</span> {
+  <span class="prop">size</span>: <span class="val">62px</span>;
+  <span class="prop">fill</span>: <span class="var">>terracotta</span>;
+  <span class="prop">at</span>: (<span class="val">366.5px</span>, <span class="val">967px</span>);
+}
+
+<span class="comm">// Vintage Filmkorn Textur-Overlay</span>
+<span class="elem">image</span> <span class="id">#filmGrain</span> {
+  <span class="prop">src</span>: <span class="val">"./grain.png"</span>;
+  <span class="prop">size</span>: <span class="val">1000px 1400px</span>;
+  <span class="prop">at</span>: (<span class="val">0px</span>, <span class="val">0px</span>);
+  <span class="prop">opacity</span>: <span class="val">0.22</span>;
+  <span class="prop">blend-mode</span>: <span class="val">overlay</span>;
+}</code></pre>
+      </div>
+
+      <h3 id="kamekura-poster">Beispiel 4: Yusaku Kamekura Tokyo Poster (1968)</h3>
+      <p>Komplexe kubische Bézier-Kurven, Textur-Maskierung (<code>mask: #shapeId</code>), subtile Falzlinien, japanische Typografie (<code>Yu Gothic</code>) und geometrisches Ausstellungs-Logo.</p>
+      <div class="code-block">
+        <div class="code-header">
+          <span>kamekura_poster.toad</span>
+          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+        </div>
+        <pre><code><span class="comm">// Japanese Exhibition Poster (1968) - Yusaku Kamekura</span>
+<span class="var">>bgPaper</span> = <span class="val">#eff2f5</span>;
+<span class="var">>inkBlue</span> = <span class="val">#1a3258</span>;
+
+<span class="elem">canvas</span> <span class="val">"Tokyo-Olympic-Kamekura"</span> {
+  <span class="prop">size</span>: <span class="val">1000px 1400px</span>;
+  <span class="prop">background</span>: <span class="var">>bgPaper</span>;
+  <span class="prop">export</span>: <span class="val">all</span>;
+  <span class="prop">quality</span>: <span class="val">95</span>;
+}
+
+<span class="elem">rect</span> <span class="id">#frameBorder</span> {
+  <span class="prop">size</span>: <span class="val">920px 1156px</span>;
+  <span class="prop">fill</span>: <span class="val">transparent</span>;
+  <span class="prop">stroke</span>: <span class="var">>inkBlue</span> <span class="val">1.5px</span>;
+  <span class="prop">at</span>: (<span class="val">40px</span>, <span class="val">40px</span>);
+}
+
+<span class="comm">// Haupt-Band als Bézier-Pfad</span>
+<span class="elem">path</span> <span class="id">#serpentineBase</span> {
+  <span class="prop">d</span>: <span class="val">"M 77.4 0.0 C 104.4 0.0, 204.8 0.0, 240.0 0.0 ... Z"</span>;
+  <span class="prop">size</span>: <span class="val">920px 1156px</span>;
+  <span class="prop">fill</span>: <span class="var">>inkBlue</span>;
+  <span class="prop">at</span>: (<span class="val">40px</span>, <span class="val">40px</span>);
+}
+
+<span class="comm">// Gemustertes Reispapier mit Maske auf das Band begrenzt</span>
+<span class="elem">image</span> <span class="id">#serpentinePaperTexture</span> {
+  <span class="prop">src</span>: <span class="val">"./paper_texture.png"</span>;
+  <span class="prop">size</span>: <span class="val">1000px 1400px</span>;
+  <span class="prop">at</span>: (<span class="val">0px</span>, <span class="val">0px</span>);
+  <span class="prop">opacity</span>: <span class="val">0.65</span>;
+  <span class="prop">blend-mode</span>: <span class="val">overlay</span>;
+  <span class="prop">mask</span>: <span class="id">#serpentineBase</span>;
+}
+
+<span class="comm">// Typografie</span>
+<span class="elem">text</span> <span class="id">#titleText</span> {
+  <span class="prop">content</span>: <span class="val">"東京オリンピックの公式ポスタ (亀倉 雄策)"</span>;
+  <span class="prop">font-family</span>: <span class="val">"Yu Gothic"</span>;
+  <span class="prop">font-size</span>: <span class="val">30px</span>;
+  <span class="prop">font-weight</span>: <span class="val">bold</span>;
+  <span class="prop">color</span>: <span class="var">>inkBlue</span>;
+  <span class="prop">at</span>: (<span class="val">42px</span>, <span class="val">1272px</span>);
+}</code></pre>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Interactive Wiki Spotlight Modal Overlay -->
+<div class="wiki-overlay" id="wikiModalOverlay" onclick="handleOverlayClick(event)">
+  <div class="wiki-modal" onclick="event.stopPropagation()">
+    <div class="wiki-search-header">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--c-cyan)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" id="wikiSearchInput" class="wiki-search-input" placeholder="Syntax, Properties, Keywords oder Presets suchen... (z.B. psd, star, calc, at:, gradient, og-image)" autocomplete="off" spellcheck="false" />
+      <span class="kbd-shortcut" style="cursor:pointer" onclick="closeWikiModal()">ESC</span>
+    </div>
+
+    <div class="wiki-results" id="wikiResultsList">
+      <!-- Dynamically Populated -->
+    </div>
+
+    <div class="wiki-footer">
+      <div><kbd>↑</kbd> <kbd>↓</kbd> Navigieren &nbsp; <kbd>↵</kbd> Auswählen &nbsp; <kbd>ESC</kbd> Schließen</div>
+      <div><span>toad Syntax Wiki</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Comprehensive Wiki Search Database Index
+  const wikiIndex = [
+    // 1. Quickstart & CLI
+    { title: "toad init [name]", category: "CLI", desc: "Scaffoldet ein neues, schlüsselfertiges Projekt mit Starter-Template & package.json", link: "#quickstart", tag: "CLI" },
+    { title: "toad <name> -w", category: "CLI", desc: "Live Preview mit SSE Hot-Reload, Zoom-Controls & 1-Klick-Ordner-Button", link: "#quickstart", tag: "CLI" },
+    { title: "toad lint <name>", category: "CLI", desc: "Statische AST-Code-Analyse (prüft auf nicht-deklarierte Variablen, doppelte IDs etc.)", link: "#quickstart", tag: "CLI" },
+    { title: "toad fmt [name]", category: "CLI", desc: "Automatischer AST-Code-Formatter für saubere Einrückung und Semikolons", link: "#quickstart", tag: "CLI" },
+    { title: "-f, --format <formats>", category: "CLI", desc: "Exportformate: png, jpg, webp, svg, psd, image, all", link: "#quickstart", tag: "CLI" },
+    { title: "-s, --scale <multiplier>", category: "CLI", desc: "Multi-Scale-Faktor (z.B. -s 2 für Retina, -s 4 für Print)", link: "#quickstart", tag: "CLI" },
+    { title: "-o, --out <dir>", category: "CLI", desc: "Zielverzeichnis für die gerenderten Export-Dateien festlegen", link: "#quickstart", tag: "CLI" },
+
+    // 2. Dateistruktur & Canvas
+    { title: "canvas { ... }", category: "Struktur", desc: "Wurzel-Container jeder .toad Datei mit Dimensionen und Export-Regeln", link: "#structure", tag: "Canvas" },
+    { title: "preset: <name>", category: "Canvas", desc: "Plattform-Preset (og-image, twitter-header, instagram-post, youtube-thumbnail...)", link: "#structure", tag: "Preset" },
+    { title: "aspect-ratio: 16:9", category: "Canvas", desc: "Seitenverhältnis für automatische Höhen- oder Breitenberechnung", link: "#structure", tag: "Canvas" },
+    { title: "dpi: 300", category: "Canvas", desc: "DPI-Auflösungsmetadaten (z.B. für Print-Exporte)", link: "#structure", tag: "Canvas" },
+    { title: "@import \"path.toad\";", category: "Direktive", desc: "Modulare Multi-Datei-Architektur für Design-Tokens und Komponenten", link: "#structure", tag: "Syntax" },
+    { title: "@font \"Inter.ttf\" as \"Inter\";", category: "Direktive", desc: "Lokale Schriftartendatei in die Skia/Canvas-Font-Engine laden", link: "#structure", tag: "Font" },
+
+    // 3. Variablen & Tokens
+    { title: ">variable = value;", category: "Variablen", desc: "Kanonische Variablen-Deklaration mit '>' Prefix und '=' Zuweisung", link: "#variables", tag: "Tokens" },
+    { title: "$variable = value;", category: "Variablen", desc: "Alternative Variablen-Deklaration (rückwärtskompatibel)", link: "#variables", tag: "Tokens" },
+    { title: "alpha(>color, 0.5)", category: "Farben", desc: "Farb-Funktion zum Einstellen der Transparenz (0.0 bis 1.0)", link: "#variables", tag: "Funktion" },
+    { title: "lighten(>color, 15%)", category: "Farben", desc: "Hellt eine Farbe um einen prozentualen Wert auf", link: "#variables", tag: "Funktion" },
+    { title: "darken(>color, 20%)", category: "Farben", desc: "Dunkelt eine Farbe um einen prozentualen Wert ab", link: "#variables", tag: "Funktion" },
+
+    // 4. Formen & Icons
+    { title: "rect { ... }", category: "Formen", desc: "Rechteck mit optionalem einheitlichem oder individuellem Eckenradius", link: "#shapes", tag: "Primitive" },
+    { title: "circle { ... }", category: "Formen", desc: "Kreis oder Ellipse (size: 100px; oder size: 120px 80px;)", link: "#shapes", tag: "Primitive" },
+    { title: "star { ... }", category: "Formen", desc: "5-zackiger Vektorstern mit goldenem Schnitt", link: "#shapes", tag: "Primitive" },
+    { title: "triangle { ... }", category: "Formen", desc: "Gleichschenkliges Vektor-Dreieck", link: "#shapes", tag: "Primitive" },
+    { title: "arrow { ... }", category: "Formen", desc: "Vektor-Pfeil mit konfigurierbarer Ausrichtung", link: "#shapes", tag: "Primitive" },
+    { title: "cross { ... }", category: "Formen", desc: "Symmetrisches Plus-/Kreuz-Vektor-Icon", link: "#shapes", tag: "Primitive" },
+    { title: "polygon { points: [...]; }", category: "Formen", desc: "Beliebige Punkt-Vektoren mit nativem Eckenradius (radius: 8px;)", link: "#shapes", tag: "Primitive" },
+    { title: "path { d: \"M...\"; }", category: "Formen", desc: "Freiform SVG-Pfad-String mit voller Vektor-Unterstützung", link: "#shapes", tag: "Primitive" },
+    { title: "icon { iconName: \"...\"; }", category: "Icons", desc: "Integrierte Lucide-Vektor-Icons (search, check, settings, home, arrow-right...)", link: "#icons", tag: "Icon" },
+
+    // 5. Typografie
+    { title: "text { content: \"...\"; }", category: "Typografie", desc: "Text-Element mit automatischer Skia-Zeilenumbruch-Messung", link: "#text", tag: "Text" },
+    { title: "font-family: \"Inter\";", category: "Typografie", desc: "Schriftart angeben (Systemschriften oder via @font geladen)", link: "#text", tag: "Text" },
+    { title: "font-size: 24px;", category: "Typografie", desc: "Schriftgröße in Pixeln", link: "#text", tag: "Text" },
+    { title: "font-weight: 700 / bold;", category: "Typografie", desc: "Schriftgewichtung (100–900 oder bold, normal, medium)", link: "#text", tag: "Text" },
+    { title: "letter-spacing: 1.5px;", category: "Typografie", desc: "Zeichenabstand / Tracking in Pixeln", link: "#text", tag: "Text" },
+    { title: "line-height: 1.4;", category: "Typografie", desc: "Zeilenhöhe (Multiplikator oder Pixel)", link: "#text", tag: "Text" },
+    { title: "text-transform: uppercase;", category: "Typografie", desc: "Groß-/Kleinschreibung (uppercase, lowercase, capitalize)", link: "#text", tag: "Text" },
+    { title: "text-align: center;", category: "Typografie", desc: "Horizontale Textausrichtung (left, center, right, justify)", link: "#text", tag: "Text" },
+
+    // 6. Layout, Math & Positioning
+    { title: "at: center of canvas;", category: "Layout", desc: "Element horizontal und vertikal exakt auf dem Canvas zentrieren", link: "#positioning", tag: "Position" },
+    { title: "at: below #id offset 16px;", category: "Layout", desc: "Relationale Platzierung unterhalb eines Referenz-Elements", link: "#positioning", tag: "Position" },
+    { title: "at: right of #id offset 12px;", category: "Layout", desc: "Relationale Platzierung rechts neben einem Referenz-Element", link: "#positioning", tag: "Position" },
+    { title: "at: inside #parent offset 24px;", category: "Layout", desc: "Platzierung oben-links im Inneren des Eltern-Containers mit Inset", link: "#positioning", tag: "Position" },
+    { title: "calc(100% - 40px)", category: "Math", desc: "Integrierter mathematischer Solver für dynamische Größenberechnungen", link: "#positioning", tag: "Math" },
+    { title: "z-index: 10;", category: "Layout", desc: "Explizite Tiefenebene für Überlappungen und Stapelreihenfolge", link: "#positioning", tag: "Layout" },
+
+    // 7. 2D Transformationen
+    { title: "rotation: 45deg;", category: "Transforms", desc: "2D-Drehung in Grad (deg) oder Radianten (rad)", link: "#transforms", tag: "2D" },
+    { title: "scale: 1.2 0.8;", category: "Transforms", desc: "2D-Skalierung entlang der X- und Y-Achse", link: "#transforms", tag: "2D" },
+    { title: "skewX: 12deg; skewY: 5deg;", category: "Transforms", desc: "2D-Scherung / Neigung von Vektorformen", link: "#transforms", tag: "2D" },
+    { title: "transform-origin: center;", category: "Transforms", desc: "Dreh- und Skalierungsursprung (center, top-left, bottom-right...)", link: "#transforms", tag: "2D" },
+
+    // 8. Farben, Gradienten & Effekte
+    { title: "linear-gradient(45deg, #f00 0%, #00f 100%)", category: "Gradients", desc: "Linearer Farbverlauf mit konfigurierbarem Winkel und Color-Stops", link: "#colors-gradients", tag: "Farben" },
+    { title: "radial-gradient(circle, #f00 0%, #00f 100%)", category: "Gradients", desc: "Radialer Farbverlauf von Innen nach Außen", link: "#colors-gradients", tag: "Farben" },
+    { title: "conic-gradient(from 90deg, #f00 0%, #00f 100%)", category: "Gradients", desc: "Konischer Winkel-Farbverlauf (z.B. für Farbkreise oder Radar-Effekte)", link: "#colors-gradients", tag: "Farben" },
+    { title: "cmyk(c, m, y, k) / cmyk(c%, m%, y%, k%)", category: "Farben", desc: "Vollwertiges CMYK-Farbmodell für Druckvorstufe und Print-Exporte", link: "#colors-gradients", tag: "Farben" },
+    { title: "shadow: 0 10px 30px rgba(0,0,0,0.5);", category: "Effekte", desc: "Schlagschatten (wird in Photoshop als natives fx Layer-Effect exportiert)", link: "#colors-gradients", tag: "Effekt" },
+    { title: "inner-shadow: 0 4px 8px rgba(0,0,0,0.4);", category: "Effekte", desc: "Innerer Schatten (effects.innerShadow im Photoshop Layer FX Stack)", link: "#colors-gradients", tag: "Effekt" },
+    { title: "glow: 16px #38bdf8; / inner-glow:", category: "Effekte", desc: "Schein nach außen / innen (effects.outerGlow & innerGlow)", link: "#colors-gradients", tag: "Effekt" },
+    { title: "bevel: inner-bevel 6px;", category: "Effekte", desc: "Abgeflachte Kante & Relief (effects.bevel in Photoshop)", link: "#colors-gradients", tag: "Effekt" },
+    { title: "stroke-style: inside 2px #fff;", category: "Effekte", desc: "Ebenenstil-Kontur (effects.stroke) unabhängig von Vektorkonturen", link: "#colors-gradients", tag: "Effekt" },
+    { title: "font-features: \"liga\" 1, \"smcp\" 1;", category: "Typografie", desc: "OpenType-Features (Ligaturen, echte Kapitälchen, Zahlenstile)", link: "#text", tag: "Text" },
+    { title: "font-variation: \"wght\" 700 \"wdth\" 85;", category: "Typografie", desc: "Variable Font Achsensteuerung für dynamische Schriftstärken & Breiten", link: "#text", tag: "Text" },
+    { title: "align: justify;", category: "Typografie", desc: "Blocksatz mit dynamischer Wortabstandsberechnung & Photoshop Justification", link: "#text", tag: "Text" },
+    { title: "bleed: 3mm; crop-marks: true;", category: "Canvas", desc: "Beschnittzugabe, Schnittmarken & Passkreuze für den professionellen Druck", link: "#structure", tag: "Print" },
+    { title: "canvas \"Front\" { ... } canvas \"Back\" { ... }", category: "Canvas", desc: "Mehrseitige Dokumente mit automatischer Page-Asset-Generierung", link: "#structure", tag: "Canvas" },
+    { title: "filter: blur(12px) brightness(1.2);", category: "Effekte", desc: "CSS-Filterkette (wird in PSD als native Adjustment Layers exportiert)", link: "#colors-gradients", tag: "Filter" },
+    { title: "clip: true;", category: "Effekte", desc: "Clipping-Maske für Kind-Elemente an der Container-Form", link: "#colors-gradients", tag: "Maske" },
+
+    // 9. Auto-Layout
+    { title: "stack { direction: vertical; ... }", category: "Auto-Layout", desc: "Flexibler Stack-Container für automatischen vertikalen/horizontalen Fluss", link: "#groups-grid", tag: "Layout" },
+    { title: "grid { columns: 3; gap: 16px; }", category: "Auto-Layout", desc: "Automatisches Spalten-Grid mit automatischem Zeilenumbruch", link: "#groups-grid", tag: "Layout" },
+    { title: "gap: 16px 24px;", category: "Auto-Layout", desc: "Abstand zwischen Kind-Elementen in Stack und Grid", link: "#groups-grid", tag: "Layout" },
+    { title: "padding: 24px;", category: "Auto-Layout", desc: "Innenabstand für Container-Boxen", link: "#groups-grid", tag: "Layout" },
+
+    // 10. Komponenten & Slots
+    { title: "component Name(arg1, arg2) { ... }", category: "Komponenten", desc: "Wiederverwendbare Design-Komponenten mit Parametern", link: "#components", tag: "Modul" },
+    { title: "slot;", category: "Komponenten", desc: "Platzhalter-Slot innerhalb einer Komponente für dynamische Kind-Elemente", link: "#components", tag: "Modul" },
+
+    // 11. Native Photoshop PSD
+    { title: "vectorMask & Bézier-Pfade", category: "Photoshop PSD", desc: "Echte Vektorpfade mit Ankerpunkten für das Direktauswahl-Werkzeug (A)", link: "#psd-features", tag: "PSD" },
+    { title: "keyOriginRRectRadii", category: "Photoshop PSD", desc: "Live-Eckenradius-Regler direkt im Photoshop Eigenschaften-Bedienfeld", link: "#psd-features", tag: "PSD" },
+    { title: "Photoshop Layer FX (fx)", category: "Photoshop PSD", desc: "Vollständiges Layer-FX-Mapping (dropShadow, innerShadow, outerGlow, innerGlow, bevel, stroke, solidFill)", link: "#psd-features", tag: "PSD" },
+    { title: "Adjustment Layers", category: "Photoshop PSD", desc: "Helligkeit/Kontrast, Gradationskurven und Farbton/Sättigung als editierbare Ebenen", link: "#psd-features", tag: "PSD" },
+    { title: "Native Type Layers", category: "Photoshop PSD", desc: "Voll editierbare Textebenen mit PostScript-Font-Mapping für das Text-Werkzeug (T)", link: "#psd-features", tag: "PSD" },
+
+    // 12. Best Practice Master-Poster
+    { title: "Bauhaus Exhibition Poster 1923", category: "Praxis-Beispiele", desc: "Konstruktivistische Vektor-Ribbons (SVG Arc A), Haettenschweiler Typo & harmonische Farbpalette", link: "#bauhaus-poster", tag: "Template" },
+    { title: "Vintage Soul Music Poster 1979", category: "Praxis-Beispiele", desc: "5:7 Poster, organische Multi-Stop-Gradients, gezeichnete Buchstaben & Filmkorn-Overlay", link: "#soul-poster", tag: "Template" },
+    { title: "Yusaku Kamekura Tokyo Poster 1968", category: "Praxis-Beispiele", desc: "Kubische Bézier-Pfade, Textur-Maskierung (mask: #id) & japanische Typografie", link: "#kamekura-poster", tag: "Template" }
+  ];
+
+  let selectedIndex = 0;
+  let currentFilteredList = [];
+
+  function copyCode(btn) {
+    const codeBlock = btn.closest('.code-block').querySelector('pre code');
+    const text = codeBlock.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      const orig = btn.innerText;
+      btn.innerText = 'Kopiert!';
+      btn.style.color = 'var(--c-teal)';
+      setTimeout(() => {
+        btn.innerText = orig;
+        btn.style.color = '';
+      }, 1500);
+    });
+  }
+
+  // Active Link Observer (Scroll-Spy)
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.getAttribute('id');
+        document.querySelectorAll('.nav-item').forEach(link => {
+          if (link.getAttribute('href') === `#${id}`) {
+            link.classList.add('active');
+          } else {
+            link.classList.remove('active');
+          }
+        });
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+
+  document.querySelectorAll('section').forEach(sec => observer.observe(sec));
+
+  // Wiki Search Spotlight Functions
+  function openWikiModal(initialQuery = '') {
+    const overlay = document.getElementById('wikiModalOverlay');
+    const input = document.getElementById('wikiSearchInput');
+    overlay.classList.add('open');
+    if (initialQuery) {
+      input.value = initialQuery;
+    }
+    renderWikiResults(input.value);
+    setTimeout(() => {
+      input.focus();
+      input.select();
+    }, 50);
+  }
+
+  function closeWikiModal() {
+    const overlay = document.getElementById('wikiModalOverlay');
+    overlay.classList.remove('open');
+  }
+
+  function handleOverlayClick(e) {
+    if (e.target.id === 'wikiModalOverlay') {
+      closeWikiModal();
+    }
+  }
+
+  function renderWikiResults(query) {
+    const list = document.getElementById('wikiResultsList');
+    const q = query.trim().toLowerCase();
+
+    if (!q) {
+      currentFilteredList = wikiIndex.slice(0, 15);
+    } else {
+      currentFilteredList = wikiIndex.filter(item => {
+        return item.title.toLowerCase().includes(q) ||
+               item.desc.toLowerCase().includes(q) ||
+               item.category.toLowerCase().includes(q) ||
+               item.tag.toLowerCase().includes(q);
+      });
+    }
+
+    if (currentFilteredList.length === 0) {
+      list.innerHTML = `<div class="wiki-empty">Keine Treffer für "<strong>${escapeHtml(query)}</strong>" gefunden.<br><span style="font-size:12px;opacity:0.7">Probiere es mit Keywords wie <code>psd</code>, <code>star</code>, <code>at:</code>, <code>gradient</code> oder <code>preset</code></span></div>`;
+      selectedIndex = -1;
+      return;
+    }
+
+    selectedIndex = 0;
+    let html = '';
+    let currentCategory = '';
+
+    currentFilteredList.forEach((item, index) => {
+      if (item.category !== currentCategory) {
+        currentCategory = item.category;
+        html += `<div class="wiki-result-group-title">${currentCategory}</div>`;
+      }
+      const isSel = index === selectedIndex ? 'selected' : '';
+      html += `
+        <div class="wiki-item ${isSel}" data-index="${index}" onclick="selectWikiItem(${index})">
+          <div class="wiki-item-left">
+            <span class="wiki-item-code">${highlightMatch(item.title, q)}</span>
+            <span class="wiki-item-desc">${highlightMatch(item.desc, q)}</span>
+          </div>
+          <span class="wiki-tag">${item.tag}</span>
+        </div>
+      `;
+    });
+
+    list.innerHTML = html;
+  }
+
+  function highlightMatch(text, query) {
+    if (!query) return escapeHtml(text);
+    const escapedText = escapeHtml(text);
+    const escapedQ = escapeHtml(query);
+    const regex = new RegExp(`(${escapedQ.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    return escapedText.replace(regex, '<span style="color:var(--text-heading);background:rgba(253,145,161,0.25);border-radius:2px;padding:0 2px">$1</span>');
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function fastScrollTo(targetEl, durationMs = 160) {
+    const targetY = targetEl.getBoundingClientRect().top + window.pageYOffset - 30;
+    const startY = window.pageYOffset;
+    const diff = targetY - startY;
+    
+    if (Math.abs(diff) < 20 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      window.scrollTo(0, targetY);
+      return;
+    }
+
+    const startTime = performance.now();
+    function step(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(1, elapsed / durationMs);
+      // Fast Quartic Ease-Out curve for instant snappiness
+      const ease = 1 - Math.pow(1 - progress, 4);
+      window.scrollTo(0, startY + diff * ease);
+
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
+  function selectWikiItem(index) {
+    if (index >= 0 && index < currentFilteredList.length) {
+      const item = currentFilteredList[index];
+      closeWikiModal();
+      const targetEl = document.querySelector(item.link);
+      if (targetEl) {
+        fastScrollTo(targetEl, 160);
+        targetEl.classList.remove('target-highlight');
+        void targetEl.offsetWidth; // trigger reflow
+        targetEl.classList.add('target-highlight');
+      }
+    }
+  }
+
+  // Keyboard Shortcuts (Ctrl+K, Cmd+K, Slash, Arrow Keys, Enter, Esc)
+  window.addEventListener('keydown', (e) => {
+    const overlay = document.getElementById('wikiModalOverlay');
+    const isModalOpen = overlay.classList.contains('open');
+
+    // Ctrl+K / Cmd+K or Slash to Open Search
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      if (isModalOpen) closeWikiModal();
+      else openWikiModal();
+      return;
+    }
+
+    if (e.key === '/' && !isModalOpen && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+      e.preventDefault();
+      openWikiModal();
+      return;
+    }
+
+    if (isModalOpen) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeWikiModal();
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (currentFilteredList.length > 0) {
+          selectedIndex = (selectedIndex + 1) % currentFilteredList.length;
+          updateSelectionHighlight();
+        }
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (currentFilteredList.length > 0) {
+          selectedIndex = (selectedIndex - 1 + currentFilteredList.length) % currentFilteredList.length;
+          updateSelectionHighlight();
+        }
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (selectedIndex >= 0) {
+          selectWikiItem(selectedIndex);
+        }
+      }
+    }
+  });
+
+  function updateSelectionHighlight() {
+    const items = document.querySelectorAll('.wiki-item');
+    items.forEach((item, idx) => {
+      if (idx === selectedIndex) {
+        item.classList.add('selected');
+        item.scrollIntoView({ block: 'nearest' });
+      } else {
+        item.classList.remove('selected');
+      }
+    });
+  }
+
+  // Search input live typing listener
+  document.getElementById('wikiSearchInput').addEventListener('input', (e) => {
+    renderWikiResults(e.target.value);
+  });
+</script>
+
+</body>
+</html>

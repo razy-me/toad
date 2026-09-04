@@ -1,0 +1,397 @@
+# ==============================================================================
+# TOAD DSL — Intent, Synonym & Mental Model Translation Bridge
+# Format: Dense YAML (Optimized for Google Gemini 3.1 Pro / 3.5 Pro / 3.8 Flash)
+# Purpose: Direct zero-shot translation of user intents, CSS/Web reflexes,
+#          Figma auto-layout mental models, and print/DTP terminology into
+#          100% compliant, canonical TOAD DSL syntax.
+# ==============================================================================
+
+version: "3.0"
+target_compiler: "TOAD DSL"
+
+# ------------------------------------------------------------------------------
+# SECTION 1: CSS & WEB DEVELOPMENT REFLEX BRIDGES
+# ------------------------------------------------------------------------------
+css_web_reflexes:
+  - concept: "Flexbox Container"
+    css_reflex: "display: flex; flex-direction: row | column;"
+    canonical_toad: "stack { direction: horizontal | vertical; }"
+    rule: "NEVER emit display: flex. ALWAYS use stack with direction."
+
+  - concept: "Flex Alignment"
+    css_reflex: "align-items: center | flex-start | flex-end;"
+    canonical_toad: "align: center | start | end;"
+    rule: "Valid values are start, center, end. Omit flex- prefix."
+
+  - concept: "Flex Distribution"
+    css_reflex: "justify-content: space-between | center | flex-start | flex-end;"
+    canonical_toad: "justify: space-between | center | start | end;"
+    rule: "Valid values are start, center, end, space-between."
+
+  - concept: "Flex Gap"
+    css_reflex: "gap: 16px; row-gap: 16px; column-gap: 16px;"
+    canonical_toad: "gap: 16px;"
+    rule: "TOAD stacks support unified gap: <unit>;."
+
+  - concept: "Background Color"
+    css_reflex: "background-color: #1e293b; background: #1e293b;"
+    canonical_toad: "fill: #1e293b;"
+    rule: "Shapes use fill:. Background color is always fill: on rect, circle, artboard."
+
+  - concept: "Text Color"
+    css_reflex: "color: #ffffff;"
+    canonical_toad: "color: #ffffff;"
+    rule: "Text elements use color: (or fill:). Canonical preference is color:."
+
+  - concept: "Border Radius"
+    css_reflex: "border-radius: 8px; border-radius: 9999px;"
+    canonical_toad: "corner-radius: 8px; corner-radius: 9999px;"
+    rule: "NEVER use border-radius. ALWAYS use corner-radius:."
+
+  - concept: "Borders & Strokes"
+    css_reflex: "border: 1px solid #e2e8f0;"
+    canonical_toad: "stroke: #e2e8f0; stroke-width: 1px;"
+    rule: "Decompose CSS border into stroke: <color>; and stroke-width: <unit>;."
+
+  - concept: "Box Shadow / Drop Shadow"
+    css_reflex: "box-shadow: 0 4px 12px rgba(0,0,0,0.15);"
+    canonical_toad: "shadow: 0 4px 12px alpha(#000000, 0.15);"
+    rule: "Decompose into x-offset, y-offset, blur, and color. NEVER use rgba(). Use alpha()."
+
+  - concept: "Glow Effect"
+    css_reflex: "box-shadow: 0 0 24px #22c55e;"
+    canonical_toad: "shadow: 0 0 24px alpha(#22c55e, 0.45);"
+    rule: "Zero x/y offsets with high blur and vibrant alpha (>= 0.25)."
+
+  - concept: "Opacity / Transparency"
+    css_reflex: "opacity: 0.5;"
+    canonical_toad: "opacity: 0.5; | alpha(#color, 0.5)"
+    rule: "Element opacity supported via opacity: <0.0-1.0>;. Color transparency via alpha()."
+
+  - concept: "Absolute Positioning"
+    css_reflex: "position: absolute; top: 20px; left: 40px;"
+    canonical_toad: "at: [40px, 20px];"
+    rule: "Coordinate array [X, Y]. Top-left origin."
+
+  - concept: "Relative Anchoring"
+    css_reflex: "margin-top: 16px; (relative to previous element)"
+    canonical_toad: "at: below #previous offset 16px;"
+    rule: "No colon after offset! Format: at: <rel> #id offset <dim>;"
+
+  - concept: "Centering in Parent"
+    css_reflex: "margin: 0 auto; top: 50%; left: 50%; transform: translate(-50%, -50%);"
+    canonical_toad: "at: center of canvas; | at: center of #parent;"
+    rule: "Use explicit relational anchor: center of <target>."
+
+  - concept: "CSS Variables"
+    css_reflex: ":root { --primary: #3b82f6; } color: var(--primary);"
+    canonical_toad: ">primary = #3b82f6; color: >primary;"
+    rule: "Declare with >var = value;. Reference with >var. NEVER use var(--x) or colon assignment."
+
+  - concept: "Text Wrapping"
+    css_reflex: "white-space: normal; max-width: 400px;"
+    canonical_toad: "text \"Multiline content...\" { width: 400px; }"
+    rule: "Multiline text MUST specify width: or size:. Without width, text renders on single unbounded line."
+
+  - concept: "Font Family"
+    css_reflex: "font-family: Inter, -apple-system, sans-serif;"
+    canonical_toad: "font-family: \"Inter, -apple-system, sans-serif\";"
+    rule: "Font fallback stacks MUST be wrapped in a single quoted string."
+
+# ------------------------------------------------------------------------------
+# SECTION 2: FIGMA & UI DESIGN TOOL BRIDGES
+# ------------------------------------------------------------------------------
+figma_design_reflexes:
+  - figma_term: "Auto Layout (Horizontal)"
+    toad_mapping: "stack { direction: horizontal; }"
+    notes: "Children flow from left to right."
+
+  - figma_term: "Auto Layout (Vertical)"
+    toad_mapping: "stack { direction: vertical; }"
+    notes: "Children flow from top to bottom."
+
+  - figma_term: "Item Spacing"
+    toad_mapping: "gap: <value>;"
+    notes: "Space between consecutive auto-layout items."
+
+  - figma_term: "Padding (Horizontal / Vertical)"
+    toad_mapping: "padding: <value>; | padding: [top, right, bottom, left];"
+    notes: "Internal inset of containers and stacks."
+
+  - figma_term: "Corner Radius"
+    toad_mapping: "corner-radius: <value>;"
+    notes: "Controls rounded corners on rect and containers."
+
+  - figma_term: "Pill / Full Rounding"
+    toad_mapping: "corner-radius: 9999px;"
+    notes: "Produces fully rounded capsule pill shapes."
+
+  - figma_term: "Clip Content"
+    toad_mapping: "clip: true;"
+    notes: "Masks children exceeding the container bounds."
+
+  - figma_term: "Fill Container (Auto width/height)"
+    toad_mapping: "width: 100%; | fill available space via stack child stretch"
+    notes: "Child adapts to parent constraints."
+
+  - figma_term: "Hug Contents"
+    toad_mapping: "Automatic in stack based on child intrinsic bounding boxes"
+    notes: "Parent stack dimensions shrink-wrap children."
+
+  - figma_term: "Component Instance & Children Slot"
+    toad_mapping: "component Name { ... slot; } -> Name #instance { ... }"
+    notes: "Content projection uses slot; statement."
+
+  - figma_term: "Color Tokens / Styles"
+    toad_mapping: ">tokenName = #hex;"
+    notes: "Global variable declarations at file or root level."
+
+  - figma_term: "Drop Shadow Effect"
+    toad_mapping: "shadow: <dx> <dy> <blur> <color>;"
+    notes: "Standard elevation shadow."
+
+  - figma_term: "Inner Shadow Effect"
+    toad_mapping: "shadow: inset <dx> <dy> <blur> <color>;"
+    notes: "Inset shadow for pressed or recessed states."
+
+  - figma_term: "Blend Mode (Multiply, Screen, Overlay)"
+    toad_mapping: "blend-mode: multiply | screen | overlay | ...;"
+    notes: "16 standard blend modes supported."
+
+# ------------------------------------------------------------------------------
+# SECTION 3: PRINT, DTP & PREPRESS BRIDGES
+# ------------------------------------------------------------------------------
+print_dtp_reflexes:
+  - print_term: "Bleed Margin"
+    toad_mapping: "bleed: 3mm; (on artboard or canvas)"
+    notes: "Extended canvas area trimmed post-printing."
+
+  - print_term: "Trim Box"
+    toad_mapping: "canvas / artboard declared size (e.g. size: [210mm, 297mm];)"
+    notes: "The final trimmed physical page boundary."
+
+  - print_term: "Physical Units"
+    toad_mapping: "mm, cm, in, pt"
+    notes: "Native physical unit parser converts at 96 DPI screen / 300 DPI prepress."
+
+  - print_term: "Prepress Crop Marks"
+    toad_mapping: "marks: crop | registration | all;"
+    notes: "Prepress cutting guides for commercial printers."
+
+  - print_term: "Tent Card / Inverted Flap"
+    toad_mapping: "rotation: 180; (with double top margin for coordinate inversion)"
+    notes: "Flips bottom artboard for foldable tabletop print collateral."
+
+  - print_term: "Safe Zone Padding"
+    toad_mapping: "inset margin (e.g. 5mm inside trim box)"
+    notes: "Crucial content kept clear of cutting blade tolerances."
+
+# ------------------------------------------------------------------------------
+# SECTION 4: NATURAL LANGUAGE INTENT & ALTERNATIVE PHRASINGS
+# ------------------------------------------------------------------------------
+intent_mappings:
+  - user_intent: "Center this on the canvas"
+    canonical_syntax: "at: center of canvas;"
+    alternatives:
+      - "Put in the middle of the page"
+      - "Center horizontally and vertically"
+      - "Place at canvas center"
+
+  - user_intent: "Align horizontally with the title"
+    canonical_syntax: "at: center-x of #title;"
+    alternatives:
+      - "Match horizontal center of title"
+      - "Keep aligned with title center"
+
+  - user_intent: "Put 24px below the navbar"
+    canonical_syntax: "at: below #navbar offset 24px;"
+    alternatives:
+      - "Place underneath the navigation bar with 24px gap"
+      - "Position after #navbar with 24px spacing"
+      - "Stack 24px under #navbar"
+
+  - user_intent: "Place side-by-side to the right of the icon"
+    canonical_syntax: "at: right of #icon offset 12px;"
+    alternatives:
+      - "Beside the icon with 12px margin"
+      - "To the right of #icon"
+      - "Adjacent to #icon"
+
+  - user_intent: "Create a pill-shaped badge"
+    canonical_syntax: |
+      rect #badge {
+        width: 120px;
+        height: 32px;
+        corner-radius: 9999px;
+        fill: alpha(#3b82f6, 0.15);
+        stroke: #3b82f6;
+        stroke-width: 1px;
+        text "Active" {
+          color: #3b82f6;
+          font-size: 13px;
+          font-weight: 600;
+          at: center of #badge;
+        }
+      }
+    alternatives:
+      - "Capsule badge"
+      - "Rounded tag"
+      - "Status chip"
+    safety_rule: "Container MUST be 15-20% wider than text metric to prevent clipping."
+
+  - user_intent: "Create a dark neon glow card"
+    canonical_syntax: |
+      rect #card {
+        size: [360px, 200px];
+        corner-radius: 16px;
+        fill: #0d1117;
+        stroke: alpha(#00f5a0, 0.3);
+        stroke-width: 1px;
+        shadow: 0 0 32px alpha(#00f5a0, 0.35);
+      }
+    alternatives:
+      - "Cyberpunk glowing card"
+      - "Dark mode luminescent container"
+      - "Green ambient glow panel"
+    safety_rule: "Glow center alpha MUST be >= 0.25 to stay visible across sRGB normalization."
+
+  - user_intent: "Wrap a long paragraph"
+    canonical_syntax: |
+      text "This is a multiline description that automatically wraps to subsequent lines." {
+        width: 420px;
+        font-size: 15px;
+        line-height: 1.6;
+        color: #94a3b8;
+      }
+    alternatives:
+      - "Multiline text paragraph"
+      - "Bounded text block"
+      - "Description with word wrap"
+    safety_rule: "Explicit width: or size: REQUIRED. Single unbounded line if omitted."
+
+  - user_intent: "Create a 3-item horizontal row with even spacing"
+    canonical_syntax: |
+      stack {
+        direction: horizontal;
+        justify: space-between;
+        align: center;
+        width: 100%;
+        # Item 1, Item 2, Item 3
+      }
+    alternatives:
+      - "Horizontal navbar items"
+      - "Spread items across width"
+      - "Flex row space between"
+
+  - user_intent: "Define a reusable card template with interchangeable body"
+    canonical_syntax: |
+      component MetricCard {
+        size: [280px, 160px];
+        corner-radius: 12px;
+        fill: #1e293b;
+        padding: 20px;
+        slot;
+      }
+    alternatives:
+      - "Card component with children"
+      - "Composable container"
+      - "Transclusion slot template"
+
+# ------------------------------------------------------------------------------
+# SECTION 5: PROPERTY SYNONYM & KEYWORD DISAMBIGUATION DICTIONARY
+# ------------------------------------------------------------------------------
+property_synonym_dictionary:
+  fill:
+    synonyms: ["background", "background-color", "bgColor", "bg", "paint"]
+    canonical: "fill"
+    valid_on: ["rect", "circle", "polygon", "path", "artboard", "canvas"]
+    note: "Do not use on text elements."
+
+  color:
+    synonyms: ["textColor", "fontColor", "text-color", "fgColor", "foreground"]
+    canonical: "color"
+    valid_on: ["text"]
+    note: "Controls font glyph rendering color."
+
+  corner-radius:
+    synonyms: ["borderRadius", "border-radius", "radius", "roundness", "rounded"]
+    canonical: "corner-radius"
+    valid_on: ["rect"]
+    note: "Accepts single value or array of 4 corners."
+
+  stroke:
+    synonyms: ["border-color", "borderColor", "outlineColor", "outline"]
+    canonical: "stroke"
+    valid_on: ["rect", "circle", "polygon", "path"]
+    note: "Sets border/line paint color."
+
+  stroke-width:
+    synonyms: ["border-width", "borderWidth", "lineWidth", "thickness"]
+    canonical: "stroke-width"
+    valid_on: ["rect", "circle", "polygon", "path"]
+    note: "Sets border/line thickness in units."
+
+  gap:
+    synonyms: ["spacing", "itemSpacing", "gutter", "row-gap", "column-gap"]
+    canonical: "gap"
+    valid_on: ["stack"]
+    note: "Spacing between items in auto-layout."
+
+  direction:
+    synonyms: ["flexDirection", "flex-direction", "orientation", "flow"]
+    canonical: "direction"
+    valid_values: ["horizontal", "vertical"]
+    valid_on: ["stack"]
+
+  align:
+    synonyms: ["alignItems", "align-items", "cross-axis-align"]
+    canonical: "align"
+    valid_values: ["start", "center", "end"]
+    valid_on: ["stack"]
+
+  justify:
+    synonyms: ["justifyContent", "justify-content", "main-axis-align"]
+    canonical: "justify"
+    valid_values: ["start", "center", "end", "space-between"]
+    valid_on: ["stack"]
+
+  rotation:
+    synonyms: ["rotate", "angle", "orientation", "transform-rotate"]
+    canonical: "rotation"
+    valid_on: ["rect", "circle", "text", "group", "stack", "artboard"]
+    note: "Specified in degrees (e.g. 180 or 180deg)."
+
+  slot:
+    synonyms: ["children", "outlet", "content", "body", "projection"]
+    canonical: "slot;"
+    valid_on: ["component"]
+    note: "Content projection placeholder. MUST terminate with semicolon."
+
+# ------------------------------------------------------------------------------
+# SECTION 6: FATAL PITFALLS TO PREVENT
+# ------------------------------------------------------------------------------
+fatal_pitfalls:
+  - pitfall: "Using colon for variable declarations"
+    bad_code: "primary: #3b82f6;"
+    fixed_code: ">primary = #3b82f6;"
+    explanation: "TOAD variables use >var = value;."
+
+  - pitfall: "Putting colon after offset keyword"
+    bad_code: "at: below #title offset: 16px;"
+    fixed_code: "at: below #title offset 16px;"
+    explanation: "offset is followed by space, never a colon."
+
+  - pitfall: "Missing wrapping width on paragraph"
+    bad_code: "text \"A very long description that spans multiple sentences...\" { font-size: 16px; }"
+    fixed_code: "text \"A very long description that spans multiple sentences...\" { width: 400px; font-size: 16px; }"
+    explanation: "Text without explicit width renders on a single infinite horizontal line."
+
+  - pitfall: "Specifying at: coordinates inside a stack"
+    bad_code: "stack { text \"A\" { at: [0, 0]; } text \"B\" {} }"
+    fixed_code: "stack { text \"A\" {} text \"B\" {} }"
+    explanation: "Stack children are auto-positioned by layout pass. Explicit at: causes layout conflict."
+
+  - pitfall: "Unquoted font stack list"
+    bad_code: ">font = \"Inter\", sans-serif;"
+    fixed_code: ">font = \"Inter, sans-serif\";"
+    explanation: "Font fallback stack MUST be a single string literal."

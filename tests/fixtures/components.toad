@@ -1,0 +1,62 @@
+// tests/fixtures/components.toad
+// Reusable component definitions for toad compiler
+
+@import "./tokens.toad";
+
+component Badge(label = "New", bg = >accent, textColor = #ffffff) {
+  group {
+    rect {
+      size: 80px 28px;
+      fill: >bg;
+      border-radius: >radiusSm;
+    }
+    text {
+      content: >label;
+      at: center of parent;
+      font-size: >fontSizeSm;
+      font-weight: bold;
+      fill: >textColor;
+    }
+  }
+}
+
+component Button(label = "Click Me", width = 160px, height = 44px, variant = >primary) {
+  group {
+    rect {
+      size: >width >height;
+      fill: >variant;
+      border-radius: >radiusMd;
+    }
+    text {
+      content: >label;
+      at: center of parent;
+      font-size: >fontSizeBase;
+      font-weight: 600;
+      fill: #ffffff;
+    }
+  }
+}
+
+component Arrow(size = 180px, color = >primary) {
+  polygon {
+    points: [ (0px, -60px), (60px, 0px), (20px, 0px), (20px, 60px), (-20px, 60px), (-20px, 0px), (-60px, 0px) ];
+    size: >size >size;
+    fill: >color;
+  }
+}
+
+component Avatar(size = 96px, src = "avatar.png", borderColor = #ffffff) {
+  group {
+    circle {
+      radius: 48px;
+      stroke: >borderColor 3px solid;
+      fill: #2563eb;
+    }
+    image {
+      src: >src;
+      size: >size >size;
+      fit: cover;
+      clip: true;
+    }
+  }
+}

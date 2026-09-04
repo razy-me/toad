@@ -1,0 +1,187 @@
+# TOAD DSL — Complete Property Matrix
+# Schema Version: 3.0
+# Target Engines: Skia (PNG/WebP), SVG, Photoshop PSD
+
+properties:
+  size:
+    types: [dimension, "dim dim", "hug", "fill", "hug dim", "dim hug"]
+    targets: [rect, image, group, stack, grid, text]
+    default: "unbounded"
+    behavior: "For shapes/containers sets [w, h]. For text sets multiline word-wrap bounding box."
+    engine_support: { skia: full, svg: full, psd: full }
+
+  width:
+    types: [dimension, "hug", "fill", percentage]
+    targets: [rect, image, group, stack, grid, text]
+    default: null
+    behavior: "Explicit horizontal dimension or text word-wrap boundary."
+    engine_support: { skia: full, svg: full, psd: full }
+
+  height:
+    types: [dimension, "hug", "fill", percentage]
+    targets: [rect, image, group, stack, grid]
+    default: null
+    behavior: "Explicit vertical dimension."
+    engine_support: { skia: full, svg: full, psd: full }
+
+  fill:
+    types: [hex_color, alpha_fn, linear_gradient, radial_gradient, conic_gradient, transparent]
+    targets: [rect, circle, polygon, path]
+    forbidden_targets: [text]
+    default: transparent
+    note: "Use color: for text elements."
+    engine_support: { skia: full, svg: "sRGB interpolation", psd: "SoCo / GdFl vector descriptors" }
+
+  color:
+    types: [hex_color, alpha_fn]
+    targets: [text]
+    forbidden_targets: [rect, circle, polygon, path]
+    default: "#000000"
+    note: "Controls glyph rendering color in TySh and SVG <text>."
+    engine_support: { skia: full, svg: full, psd: "TySh EngineData RunArray" }
+
+  stroke:
+    types: [string_descriptor, "color width style"]
+    targets: [rect, circle, polygon, path]
+    default: null
+    example: "#3b82f6 2px solid"
+    engine_support: { skia: full, svg: full, psd: "vsms vector stroke descriptor" }
+
+  stroke-width:
+    types: [dimension, number]
+    targets: [rect, circle, polygon, path]
+    default: 1px
+    engine_support: { skia: full, svg: full, psd: full }
+
+  border-radius:
+    alias: [radius]
+    types: [dimension, number, "[dim, dim, dim, dim]"]
+    targets: [rect]
+    default: 0
+    engine_support: { skia: full, svg: "rx/ry", psd: "keyOriginRRectRadii" }
+
+  font-family:
+    types: [string_literal]
+    targets: [canvas, text]
+    default: "OS-dependent fallback or canvas default"
+    rule: "MUST be a single string literal when defining fallback chain: \"Inter, sans-serif\""
+    engine_support: { skia: "GlobalFonts", svg: "Embedded Base64 @font-face", psd: "PostScript FontSet" }
+
+  font-size:
+    types: [dimension, number]
+    targets: [text]
+    default: 16px
+    rule: "Controls glyph scale. Does NOT control word-wrap box."
+    engine_support: { skia: full, svg: full, psd: "TySh FontSize" }
+
+  font-weight:
+    types: [integer, enum_token]
+    valid_values: [100, 200, 300, 400, 500, 600, 700, 800, 900, thin, light, normal, medium, semibold, bold, extrabold, black]
+    forbidden_values: ["semi bold", "extra bold"]
+    targets: [text]
+    default: 400
+    engine_support: { skia: full, svg: full, psd: full }
+
+  line-height:
+    types: [number, dimension]
+    targets: [text]
+    default: 1.2
+    behavior: "Multiplies font-size or sets absolute baseline distance."
+    engine_support: { skia: full, svg: "dy accumulator", psd: "TySh Leading" }
+
+  letter-spacing:
+    types: [dimension, number]
+    targets: [text]
+    default: 0
+    engine_support: { skia: full, svg: letter-spacing, psd: "TySh Tracking (1/1000 em)" }
+
+  at:
+    types: [relational_anchor, coordinate_pair]
+    targets: [all]
+    forbidden_in: [stack_children]
+    syntax: "at: [edge] of [target] [offset [dx] [dy]];"
+    rule: "offset MUST be space-separated. Colon after offset is a FATAL syntax error."
+    engine_support: { skia: DAG, svg: DAG, psd: DAG }
+
+  rotation:
+    types: [number, deg_dimension]
+    targets: [all]
+    default: 0
+    note: "Rotates coordinate system around element pivot. 180deg requires doubled top margins."
+    engine_support: { skia: "ctx.rotate", svg: "transform=\"rotate(...)\"", psd: "Matrix transform" }
+
+  opacity:
+    types: [number, percentage]
+    targets: [all]
+    default: 1.0
+    engine_support: { skia: full, svg: "opacity", psd: "Layer Record Opacity" }
+
+  fill-opacity:
+    types: [number, percentage]
+    targets: [rect, circle, polygon, path]
+    default: 1.0
+    note: "Photoshop fill opacity: makes fill transparent without reducing stroke or drop shadow."
+    engine_support: { skia: composite_emulation, svg: compound, psd: "Native fillOpacity (0-255)" }
+
+  blend-mode:
+    alias: [blendMode]
+    types: [enum_token]
+    valid_values: [normal, multiply, screen, overlay, darken, lighten, color-dodge, color-burn, hard-light, soft-light, difference, exclusion, hue, saturation, color, luminosity]
+    targets: [all]
+    default: normal
+    engine_support: { skia: globalCompositeOperation, svg: mix-blend-mode, psd: "Native Blend Mode 4-char key" }
+
+  shadow:
+    types: [shadow_descriptor, "x y blur color", "x y blur spread color"]
+    targets: [rect, circle, polygon, path, text]
+    default: null
+    engine_support: { skia: shadowFilter, svg: "feDropShadow (300% subregion)", psd: "lrFX dsgn" }
+
+  filter:
+    types: [css_filter_chain]
+    targets: [all]
+    valid_functions: [blur, saturate, brightness, contrast, grayscale, sepia, invert, hue-rotate]
+    engine_support: { skia: full, svg: full, psd: rasterized_effect }
+
+  direction:
+    types: [enum_token]
+    valid_values: [horizontal, vertical, row, column]
+    targets: [stack]
+    default: vertical
+    engine_support: { skia: autolayout, svg: autolayout, psd: autolayout }
+
+  gap:
+    types: [dimension, number]
+    targets: [stack, grid]
+    default: 0px
+    engine_support: { skia: autolayout, svg: autolayout, psd: autolayout }
+
+  justify:
+    types: [enum_token]
+    valid_values: [flex-start, center, flex-end, space-between, space-around]
+    targets: [stack]
+    default: flex-start
+    engine_support: { skia: autolayout, svg: autolayout, psd: autolayout }
+
+  align:
+    types: [enum_token]
+    valid_values: [flex-start, center, flex-end, stretch]
+    targets: [stack]
+    default: flex-start
+    engine_support: { skia: autolayout, svg: autolayout, psd: autolayout }
+
+  layer-color:
+    types: [enum_token]
+    valid_values: [red, orange, yellow, green, blue, violet, gray, none]
+    targets: [all]
+    default: none
+    note: "Photoshop layer panel label color."
+    engine_support: { skia: ignore, svg: ignore, psd: "Layer Record Flag 1-7" }
+
+  lock:
+    types: [enum_token]
+    valid_values: [position, transparency, composite, all]
+    targets: [all]
+    default: none
+    note: "Photoshop layer lock protection."
+    engine_support: { skia: ignore, svg: ignore, psd: "Protected layer flags" }

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1080 1350" width="1080" height="1350">
+  <defs>
+    <filter id="filter_1" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="30" />
+    </filter>
+    <radialGradient id="rad_grad_1" cx="50%" cy="50%" r="50%" fx="50%" fy="50%" color-interpolation="sRGB">
+      <stop offset="0%" stop-color="#00d9f5" stop-opacity="0.35" />
+      <stop offset="45%" stop-color="#7928ca" stop-opacity="0.2" />
+      <stop offset="75%" stop-color="#000000" stop-opacity="0" />
+    </radialGradient>
+    <filter id="filter_2" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="40" />
+    </filter>
+    <radialGradient id="rad_grad_2" cx="50%" cy="50%" r="50%" fx="50%" fy="50%" color-interpolation="sRGB">
+      <stop offset="0%" stop-color="#00f5a0" stop-opacity="0.3" />
+      <stop offset="70%" stop-color="#000000" stop-opacity="0" />
+    </radialGradient>
+    <filter id="filter_3" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="20" stdDeviation="25" flood-color="rgba(0, 0, 0, 0.6)" />
+    </filter>
+    <filter id="filter_4" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="10" stdDeviation="15" flood-color="rgba(0, 245, 160, 0.4)" />
+    </filter>
+    <linearGradient id="lin_grad_3" x1="15%" y1="15%" x2="85%" y2="85%" color-interpolation="sRGB">
+      <stop offset="0%" stop-color="#00f5a0" />
+      <stop offset="100%" stop-color="#00d9f5" />
+    </linearGradient>
+  </defs>
+  <rect width="100%" height="100%" fill="#050811" />
+ <rect x="450" y="-150" width="750" height="750" fill="url(#rad_grad_1)" id="glowTopRight" filter="url(#filter_1)" />
+ <rect x="-200" y="450" width="800" height="800" fill="url(#rad_grad_2)" id="glowCenterLeft" filter="url(#filter_2)" />
+  <g id="heroHeader">
+ <rect x="90" y="120" width="200" height="36" rx="9999" ry="9999" fill="rgba(0, 245, 160, 0.15)" stroke="rgba(0, 245, 160, 0.5)" stroke-width="1" id="pillRelease" />
+    <text x="90" y="235" font-family="Inter, -apple-system, sans-serif" font-size="64" font-weight="900" font-style="normal" text-anchor="start" letter-spacing="-1" xml:space="preserve" fill="#ffffff" id="headlineMain"><tspan x="90" dy="0">DETERMINISTIC GRAPHICS FOR SOFTWARE</tspan><tspan x="90" dy="70.4">ENGINEERS</tspan></text>
+    <text x="90" y="1130" font-family="Inter, -apple-system, sans-serif" font-size="22" font-weight="400" font-style="normal" text-anchor="start" xml:space="preserve" fill="#94a3b8" id="subHeadline"><tspan x="90" dy="0">Compile high-performance declarative layouts directly into native layered Photoshop PSDs, standalone vector SVGs,</tspan><tspan x="90" dy="33">and subpixel-crisp raster images.</tspan></text>
+  </g>
+ <rect x="90" y="1988" width="900" height="380" rx="20" ry="20" fill="#0d132290" stroke="#00f5a030" stroke-width="1" id="heroCard" filter="url(#filter_3)" />
+  <g id="footerCallout">
+ <rect x="90" y="2424" width="260" height="60" rx="12" ry="12" fill="url(#lin_grad_3)" id="ctaButton" filter="url(#filter_4)" />
+    <text x="382" y="2435" font-family="Inter, -apple-system, sans-serif" font-size="13" font-weight="600" font-style="normal" text-anchor="start" letter-spacing="0.8" xml:space="preserve" fill="#94a3b8" id="footerMeta">OPEN SOURCE COMPILER ARCHITECTURE • BUILT FOR AUTOMATED ASSET GENERATION AT SCALE</text>
+  </g>
+</svg>
