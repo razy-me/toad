@@ -4,8 +4,10 @@ node_modules/
 # Build output
 dist/
 *.tsbuildinfo
-.next/
-website/.next/
+
+# Local scratch / playground
+scratch/
+dev/
 
 # Test artifacts
 tests/dist/
