@@ -270,44 +270,58 @@ Modal("Confirmation Dialog") {
 
 ---
 
-## Documentation Index
+## Documentation & The Seed
 
-- ⭐ **[AI Master Router & Rules (`llm_docs/01_ROUTER_AND_SYSTEM_RULES.md`)](./llm_docs/01_ROUTER_AND_SYSTEM_RULES.md):** Central AI router, pre-flight syntax checklist, and fast rules (~400 tokens).
-- 📐 **[Grammar, AST & Property Matrix (`llm_docs/02_GRAMMAR_AST_AND_PROPERTIES.md`)](./llm_docs/02_GRAMMAR_AST_AND_PROPERTIES.md):** Formal EBNF, lexer tokens, TypeScript AST interfaces, and 21-property default matrix.
-- 🧮 **[Layout, Positioning & Math (`llm_docs/03_LAYOUT_POSITIONING_AND_MATH.md`)](./llm_docs/03_LAYOUT_POSITIONING_AND_MATH.md):** Bounding boxes, ASCII diagrams, relational anchors, stacks (`hug`/`fill`), grid & execution trace.
-- 🎨 **[Graphics, Shapes & Effects (`llm_docs/04_GRAPHICS_SHAPES_AND_EFFECTS.md`)](./llm_docs/04_GRAPHICS_SHAPES_AND_EFFECTS.md):** Colors, gradients, geometric shapes, Lucide icons, 2D transforms, filters & glassmorphism.
-- 🔤 **[Typography & Fonts (`llm_docs/05_TYPOGRAPHY_FONTS_AND_TEXT.md`)](./llm_docs/05_TYPOGRAPHY_FONTS_AND_TEXT.md):** Skia text metrics, `@font` directive, OpenType features, variable fonts & Photoshop type layers.
-- 🧩 **[Components, Slots & Imports (`llm_docs/06_COMPONENTS_SLOTS_AND_IMPORTS.md`)](./llm_docs/06_COMPONENTS_SLOTS_AND_IMPORTS.md):** Parameterized components, default values, content projection via `slot;` & `@import`.
-- 🎛️ **[Exporters, PSD & Prepress (`llm_docs/07_EXPORTERS_PSD_AND_PRINT.md`)](./llm_docs/07_EXPORTERS_PSD_AND_PRINT.md):** Raster (PNG/JPG/WebP), SVG, native Photoshop ALI keys (`vmsk`, `keyOriginRRectRadii`, `GdFl`, `lrFX`) & prepress (CMYK, 300 DPI, bleed, crop marks).
-- ⚙️ **[CLI, LSP & Tooling (`llm_docs/08_CLI_LSP_AND_TOOLING.md`)](./llm_docs/08_CLI_LSP_AND_TOOLING.md):** CLI commands, watch mode with SSE hot-reload, linter, formatter & LSP server.
-- 📚 **[Cookbook & Master Templates (`llm_docs/09_COOKBOOK_AND_TEMPLATES.md`)](./llm_docs/09_COOKBOOK_AND_TEMPLATES.md):** 100% test-verified design templates, real-world case studies (Bauhaus 1923, Vintage Soul Music 1979, Yusaku Kamekura Tokyo Poster 1968), and code recipes.
-- 🔬 **[Internals, Debugging & Pitfalls (`llm_docs/10_INTERNALS_DEBUGGING_AND_PITFALLS.md`)](./llm_docs/10_INTERNALS_DEBUGGING_AND_PITFALLS.md):** 7-stage compiler pipeline deep-dive + top 15 anti-patterns + troubleshooting playbook.
-- 🌐 **[Interactive Developer Wiki (`wiki.html`)](./wiki.html):** Visual web handbook with Ctrl+K spotlight search.
+The repository features a complete, self-contained architecture manual and production cookbook under [`the_seed/`](./the_seed/README.md):
+
+- 🌿 **[The Seed Master Manual (`the_seed/README.md`)](./the_seed/README.md):** Architectural specification, 12 golden commandments, and navigation map.
+- 📐 **[01. Core Syntax & Language (`the_seed/01_CORE_SYNTAX_AND_LANGUAGE/`)](./the_seed/01_CORE_SYNTAX_AND_LANGUAGE/):** Formal EBNF grammar, token lexer, variables, canvas definitions, and expressions.
+- 🧮 **[02. Layout & Positioning (`the_seed/02_LAYOUT_AND_POSITIONING/`)](./the_seed/02_LAYOUT_AND_POSITIONING/):** Relational positioning DAG, flex stacks (`hug`/`fill`), and bento grid layout math.
+- 🎨 **[03. Graphics, Shapes & Effects (`the_seed/03_GRAPHICS_SHAPES_AND_EFFECTS/`)](./the_seed/03_GRAPHICS_SHAPES_AND_EFFECTS/):** Primitives, Bézier paths, radial/linear gradients, drop shadows, and clipping masks.
+- 🔤 **[04. Typography & Fonts (`the_seed/04_TYPOGRAPHY_AND_FONTS/`)](./the_seed/04_TYPOGRAPHY_AND_FONTS/):** Skia text measurement, multi-line wrapping, OpenType font features, and variable fonts.
+- 🧩 **[05. Components & Modularity (`the_seed/05_COMPONENTS_AND_MODULARITY/`)](./the_seed/05_COMPONENTS_AND_MODULARITY/):** Parametric components, slot projection (`slot;`), and `@import` token sharing.
+- 🎛️ **[06. Exporters & Rendering (`the_seed/06_EXPORTERS_AND_RENDERING/`)](./the_seed/06_EXPORTERS_AND_RENDERING/):** Skia rasterizer (PNG/JPG/WebP), SVG export, native Photoshop PSD layer engine, and 300 DPI prepress with bleed.
+- 🛡️ **[07. LLM Rules & Pitfalls (`the_seed/07_LLM_RULES_AND_PITFALLS/`)](./the_seed/07_LLM_RULES_AND_PITFALLS/):** Anti-pattern catalog, troubleshooting trees, and automated pre-flight checklists.
+- 📚 **[08. Production Templates (`the_seed/08_PRODUCTION_TEMPLATES/`)](./the_seed/08_PRODUCTION_TEMPLATES/):** Ready-to-use production designs (UI Kits, Dashboards, Event Tent Cards, Marketing Posters).
+- 🌐 **[Interactive Developer Wiki (`wiki.html`)](./wiki.html):** Standalone visual web handbook with fast search.
 
 ---
 
-## Production Masterpieces & Best Practices
+## Website & Documentation App (`website/`)
 
-Real-world verified posters demonstrating the power and flexibility of the TOAD DSL:
+A modern Next.js showcase and interactive playground is included in the [`website/`](./website) directory:
+- **Interactive Playground**: Write and preview `.toad` designs live in the browser.
+- **Showcase Gallery**: Inspect multi-format exports (SVG, PNG, PSD) side-by-side.
+- **Documentation Viewer**: Browse all language features with syntax-highlighted examples.
 
-1. **Bauhaus Exhibition Poster 1923 (`C:\toad\dist_bauhaus\bauhaus_1923.toad`)**  
-   - **Techniques**: Constructivist geometry, 17 concentric serpentine vector ribbon tracks (`path` with SVG arc `A` commands), semantic palette tokens (`>terracotta`, `>bgCream`, `>black`), precise geometric typography (`Haettenschweiler`), and balanced rhythm.
-   - **Reference**: See [`llm_docs/09_COOKBOOK_AND_TEMPLATES.md`](./llm_docs/09_COOKBOOK_AND_TEMPLATES.md#4-production-masterpiece-bauhaus-exhibition-poster-1923).
+To run the documentation site locally:
+```bash
+cd website
+npm install
+npm run dev
+```
 
-2. **Vintage Soul Music Poster 1979 (`C:\toad\soul-poster\soul_poster.toad`)**  
-   - **Techniques**: 5:7 aspect ratio poster format (1000x1400), organic multi-stop linear gradients simulating concave pillar arches, custom typographic letterforms ("SOUL") crafted via pure vector paths (`path`) and geometric shapes (`circle`), and 35mm film grain overlay texture with blend-modes.
-   - **Reference**: See [`llm_docs/09_COOKBOOK_AND_TEMPLATES.md`](./llm_docs/09_COOKBOOK_AND_TEMPLATES.md#5-production-masterpiece-vintage-soul-music-poster-1979).
+---
 
-3. **Yusaku Kamekura Tokyo Exhibition Poster 1968 (`C:\toad\kamekura-tokyo-poster\kamekura_poster.toad`)**  
-   - **Techniques**: Iconic serpentine cubic Bézier curves (`path`), dynamic paper texture masking with ink-wash effect (`mask: #serpentineBase`), subtle hairline fold crease accent lines, Japanese typography (`Yu Gothic`), and geometric logo paths.
-   - **Reference**: See [`llm_docs/09_COOKBOOK_AND_TEMPLATES.md`](./llm_docs/09_COOKBOOK_AND_TEMPLATES.md#6-production-masterpiece-yusaku-kamekura-tokyo-poster-1968).
+## Production Templates
+
+Battle-tested design templates are included in [`the_seed/08_PRODUCTION_TEMPLATES/`](./the_seed/08_PRODUCTION_TEMPLATES/):
+
+1. **[UI Kit & Components (`01_ui_kit_components.toad`)](./the_seed/08_PRODUCTION_TEMPLATES/01_ui_kit_components.toad)**  
+   - Comprehensive component library showcasing buttons, input fields, badges, and toggle switches built with auto-layout stacks.
+2. **[SaaS Metrics Dashboard (`02_saas_metrics_dashboard.toad`)](./the_seed/08_PRODUCTION_TEMPLATES/02_saas_metrics_dashboard.toad)**  
+   - Dark-mode analytics dashboard featuring bento grids, KPI cards, vector charts, and status indicators.
+3. **[Event Tent Card Multi-Side (`03_event_tent_card_multiside.toad`)](./the_seed/08_PRODUCTION_TEMPLATES/03_event_tent_card_multiside.toad)**  
+   - Multi-canvas print layout with physical dimensions, 180° rotated tent card panels, and CMYK/bleed prepress setup.
+4. **[Marketing Hero Poster (`04_marketing_hero_poster.toad`)](./the_seed/08_PRODUCTION_TEMPLATES/04_marketing_hero_poster.toad)**  
+   - High-impact promotional poster utilizing multi-stop radial gradients, glowing accents, and typography styling.
 
 ---
 
 ## Development & Testing
 
 ```bash
-# Run full Vitest test suite (880 tests across 48 test files)
+# Run full Vitest test suite (929 tests across 64 test files)
 npm test
 
 # Build TypeScript to dist/
