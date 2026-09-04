@@ -10,7 +10,6 @@
   },
   "files": [
     "dist",
-    "scripts",
     "README.md",
     "wiki.html"
   ],
@@ -32,7 +31,6 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "start": "node dist/cli.js",
-    "postinstall": "node scripts/patch-ag-psd.cjs",
     "prepack": "npm run build"
   },
   "dependencies": {
