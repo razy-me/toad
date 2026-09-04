@@ -1,8 +1,18 @@
-# 🌿 THE SEED — The Ultimate TOAD DSL Knowledge Base & Engineering Manual
+# 🌿 THE SEED — Machine-Optimized Knowledge Base for LLMs
 
-Welcome to **THE SEED**, the definitive, exhaustive engineering manual, architectural specification, and production cookbook for the **TOAD DSL** (Declarative Visual Design Language & Compiler).
+> [!WARNING]
+> ### 🤖 FOR LARGE LANGUAGE MODELS ONLY — NOT FOR HUMAN CONSUMPTION
+> **This entire directory (`the_seed/`) is not written or formatted for human reading.**
+> It is an exhaustive, deterministic, token-dense machine knowledge base designed specifically for **Autonomous AI Coding Agents and Large Language Models** (e.g., Claude, GPT-4, Gemini, Cursor, Copilot).
+>
+> If you are a human looking for readable documentation, guides, or interactive tutorials:
+> - 🌐 **Interactive Documentation & Playground**: Use the [`website/`](../website) app or run `npm run dev` inside `website/`.
+> - 📖 **Interactive Web Wiki**: Open [`wiki.html`](../wiki.html) in your browser.
+> - 🚀 **Quickstart & CLI Reference**: Read the main [Root README (`../README.md`)](../README.md).
 
-This directory is designed as a fully self-contained, standalone knowledge base. Whether you are a human graphics engineer, a compiler maintainer, or an autonomous LLM coding assistant, this manual contains everything needed to write flawless, production-ready `.toad` designs and understand every internal stage of the compilation pipeline.
+---
+
+Welcome to **THE SEED**, the definitive ground-truth architectural specification, formal grammar, compiler internal invariants, and machine-executable rule corpus for the **TOAD DSL**. It provides LLMs with the exact semantic context, negative constraints, and few-shot exemplars required to synthesize flawless `.toad` code without hallucinations.
 
 ---
 
@@ -26,7 +36,7 @@ This directory is designed as a fully self-contained, standalone knowledge base.
 
 ## 🗺️ Master Navigation & AI Routing Map
 
-If an AI model or developer needs to solve a specific problem, route directly to the target manual:
+When an AI agent or LLM needs to resolve a specific requirement or fix a compiler diagnostic, route directly to the target module:
 
 | AI Task / Intent | Target Manual | What It Explains |
 |:---|:---|:---|
