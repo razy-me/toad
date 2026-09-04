@@ -1,39 +1,58 @@
+<div align="center">
+
+<img src="./branding/logo-toad-logo-master-dark.png" alt="TOAD DSL Logo" width="480"/>
+
 # toad — Declarative Design DSL Compiler & Exporter
 
-> A modern declarative Domain-Specific Language (DSL) that compiles structured `.toad` design files into pixel-accurate multi-scale images (**PNG**, **JPG**, **WebP**), scalable vector graphics (**SVG**), and native layered Photoshop documents (**PSD**) with live editable vector shapes, gradients, and layer styles.
+**Code Your Canvas. Design at the speed of code.**
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20.0.0-339933.svg?style=flat-square&logo=nodedotjs&logoColor=white)](https://nodejs.org)
+[![Tests](https://img.shields.io/badge/Tests-929%20Passing-10b981.svg?style=flat-square&logo=vitest&logoColor=white)](./tests)
+[![Formats](https://img.shields.io/badge/Export-PNG%20%7C%20SVG%20%7C%20PSD%20%7C%20WebP%20%7C%20JPG-38bdf8.svg?style=flat-square)](https://github.com/razy-me/toad)
+[![Website](https://img.shields.io/badge/Website-Live%20Showcase-8b5cf6.svg?style=flat-square)](./website)
+
+<p align="center">
+  A high-performance declarative Domain-Specific Language (DSL) that compiles structured <code>.toad</code> design files into pixel-accurate multi-scale images (<b>PNG</b>, <b>JPG</b>, <b>WebP</b>), scalable vector graphics (<b>SVG</b>), and native layered Photoshop documents (<b>PSD</b>) with editable vector shapes, gradients, and layer styles.
+</p>
+
+[Quickstart](#-quickstart) • [Features](#-features) • [CLI Reference](#-cli-reference) • [Documentation](#-documentation--the-seed) • [Website](#-website--playground) • [Templates](#-production-templates)
+
+</div>
 
 ---
 
-## Features
+## ✨ Features
 
-- 🎨 **Declarative DSL Syntax:** Clean, human-readable syntax with variables (`>primary = #3b82f6;`), directives (`@import`, `@font`), reusable components (`component Button(...)`), component slots (`slot;`), and multi-canvas pages (`canvas "Front" { ... } canvas "Back" { ... }`).
-- 🚀 **Built-in Project Scaffolding:** Create new ready-to-run projects instantly using `toad init` (auto-generates sequential project names or custom names).
-- ⚡ **Zero-Config Global CLI:** Run `toad <name>` from any directory without specifying file paths or extensions.
-- 🔄 **Live Hot Reload & Web Preview:** Run `toad <name> -w` to open an instant browser preview powered by Server-Sent Events (SSE) that updates automatically when files change, complete with zoom controls and an integrated 1-click "Open Folder" button.
-- 📐 **Relational Positioning & Auto-Layout:** Position elements relationally (`at: below #title offset 16px;`, `at: center of canvas;`), flow them sequentially with `stack` and `grid`, and use `fill` / `hug` sizing modes.
-- 🖨️ **Print Prepress & Bleed:** Physical print units (`mm`, `cm`, `in`, `pt`, converted at the CSS-reference 96 DPI), print metadata (`dpi`, `bleed`, `crop-marks`, `color-mode`), automated Media/Trim Box expansion, and corner crop marks with registration crosshairs. `cmyk(...)` colors parse cleanly, but output is always RGB — requested CMYK values are converted to sRGB (no true CMYK encoding).
-- 🧮 **Math & Expressions:** Built-in `calc(...)` support (e.g. `calc(100% - 40px)`), percentage sizing against parent/canvas, 2D negative offsets, margins, and `z-index` layering.
-- ⭐ **Built-in Shapes & Icons:** First-class vector primitives (`star`, `triangle`, `arrow`, `cross`, `polygon`, `path`) and built-in Lucide icons (`icon { iconName: 'search'; }`).
-- 🌀 **2D Transforms & Advanced Gradients:** Full 2D transform support (`scale`, `skewX`, `skewY`, `transform-origin`, `rotation`) and gradients (`linear-gradient`, `radial-gradient`, `conic-gradient`).
-- 🔤 **Advanced OpenType & Typography:** OpenType font features (`font-features: "liga" 1, "smcp" 1;`), variable fonts (`font-variation: "wght" 700 "wdth" 85;`), justified alignment (`align: justify;`), `hanging-punctuation`, tracking (`letter-spacing`), `text-transform`, and line-height.
-- 📱 **Canvas Platform Presets:** Instant canvas dimensioning with built-in presets (`og-image`, `twitter-header`, `instagram-post`, `instagram-story`, `youtube-thumbnail`, `dribbble-shot`, `github-banner`, etc.).
-- 🎛️ **Photoshop (.psd) Native Vector Shape Layers & Layer FX:**
-  - True Bézier vector masks with editable anchor points (`A` tool in Photoshop) for `rect`, `circle`, and `polygon`, plus straight-line shapes (`star`, `triangle`, `arrow`, `cross`) converted to bezier knots; generic `path d` strings and icons still rasterize into the composite.
-  - Live corner radius controls (`keyOriginRRectRadii`) in Photoshop's Properties panel.
+- 🎨 **Declarative DSL Syntax:** Human-readable syntax with scoped variables (`>primary = #3b82f6;`), directives (`@import`, `@font`), reusable components (`component Button(...)`), component slots (`slot;`), and multi-canvas artboards (`canvas "Front" { ... } canvas "Back" { ... }`).
+- 🚀 **Zero-Config Scaffolding:** Create ready-to-run projects instantly using `toad init` with automated directory structure and starter designs.
+- ⚡ **Autonomous File Resolver:** Run `toad <name>` from any directory without hunting down file paths or extensions.
+- 🔄 **Live Hot Reload & Web Preview:** Run `toad <name> -w` or `toad dev <name>` to launch an instant browser preview with Server-Sent Events (SSE), live reloads on change, zoom controls, and a 1-click "Open Folder" action.
+- 📐 **Relational Positioning DAG:** Position elements relationally (`at: below #title offset 16px;`, `at: center of canvas;`), flow items sequentially with flex `stack` and `grid`, and take advantage of `fill` and `hug` auto-sizing.
+- 🖨️ **Print Prepress & Bleed:** Physical units (`mm`, `cm`, `in`, `pt`), print metadata (`dpi`, `bleed`, `crop-marks`, `color-mode`), automated Media/Trim Box expansion, and corner crop marks with registration crosshairs.
+- 🧮 **Math & Expressions:** Built-in `calc(...)` (e.g. `calc(100% - 40px)`), percentage sizing against parent or canvas, 2D offsets, margins, and automatic `z-index` layering.
+- ⭐ **Built-in Shapes & Icons:** First-class vector primitives (`rect`, `circle`, `star`, `triangle`, `arrow`, `cross`, `polygon`, `path`) and built-in Lucide icons (`icon { iconName: "search"; }`).
+- 🌀 **2D Transforms & Advanced Gradients:** Full 2D transforms (`scale`, `skewX`, `skewY`, `transform-origin`, `rotation`) and smooth CSS/Skia gradients (`linear-gradient`, `radial-gradient`, `conic-gradient`).
+- 🔤 **Advanced OpenType & Typography:** OpenType features (`font-features: "liga" 1, "smcp" 1;`), variable fonts (`font-variation: "wght" 700 "wdth" 85;`), paragraph justification (`align: justify;`), `hanging-punctuation`, letter tracking (`letter-spacing`), and word wrapping.
+- 📱 **Platform Presets:** Instant artboard dimensions with built-in presets (`og-image`, `twitter-header`, `instagram-post`, `instagram-story`, `youtube-thumbnail`, `github-banner`, etc.).
+- 🎛️ **Photoshop (.psd) Native Vector Layers & Layer FX:**
+  - True Bézier vector masks with editable anchor points (`A` tool in Photoshop) for `rect`, `circle`, and `polygon`.
+  - Live corner radius controls (`keyOriginRRectRadii`) in Photoshop's native Properties panel.
   - Native linear & radial vector gradients via Photoshop's Gradient Editor.
-  - Full Photoshop Layer FX (`dropShadow`, `innerShadow`, `outerGlow`, `innerGlow`, `bevel`, `stroke`, `solidFill` / `colorOverlay`).
-  - Native Adjustment Layers (Brightness/Contrast, Hue/Saturation, B&W, Invert, Photo Filter) and separate FX layers for CSS filter chains.
-  - Native editable Type Layers with PostScript font mapping (`Inter-Bold`, `Arial-BoldMT`, etc.) and paragraph justification.
-  - Clipping masks (`clip: true`) and layer groups (`group`, `stack`).
-- 📸 **Photo Editing & Post-Processing Mode:** Declare a photograph as the canvas with `canvas photo "image.jpg"`—image dimensions are auto-detected from PNG/JPEG/WebP headers without needing explicit size declarations. Includes high-precision per-pixel tone & color grading (exposure compensation via $2^{\text{EV}}$, contrast centered at mid-gray, brightness, Rec.709 saturation, warmth/white-balance, highlights, shadows, vignette) and local radial adjustments (`adjust #spot { at: (x, y); radius: 100px; feather: 40px; exposure: 0.5; }`) for dodge & burn retouches.
-- 🌐 **Comprehensive Multi-Format Export:** Single-command export for `png`, `jpg`, `webp`, `svg`, `psd`, multi-canvas page splitting, or bundles: `image` (PNG+JPG+WebP+SVG) and `all` (Everything + PSD).
+  - Full Photoshop Layer FX (`dropShadow`, `innerShadow`, `outerGlow`, `innerGlow`, `bevel`, `stroke`, `colorOverlay`).
+  - Native Type Layers with PostScript font mapping (`Inter-Bold`, `Arial-BoldMT`, etc.) and paragraph justification.
+  - Native Clipping masks (`clip: true`) and layer groups (`group`, `stack`).
+- 📸 **Photo Grading Mode:** Declare photographs as canvases (`canvas photo "image.jpg"`). High-precision per-pixel tone & color grading (exposure compensation via $2^{\text{EV}}$, contrast, saturation, warmth, vignette) and local dodge & burn retouching (`adjust #spot { ... }`).
+- 🌐 **Comprehensive Multi-Format Export:** Export `png`, `jpg`, `webp`, `svg`, `psd`, or smart bundles (`image` and `all`) in a single run.
 
 ---
 
-## Quickstart
+## 🚀 Quickstart
 
 ### 1. Installation
 ```bash
+git clone https://github.com/razy-me/toad.git
+cd toad
 npm install
 npm run build
 npm link
@@ -170,22 +189,22 @@ toad hero -w
 
 ---
 
-## CLI Reference
+## 💻 CLI Reference
 
-| Command / Flag | Description | Example |
+| Command / Option | Description | Example |
 |---|---|---|
 | `toad init [name]` | Scaffolds a new project (`toad-project-X` or custom name) | `toad init` or `toad init banner` |
 | `toad <name>` | Compiles entry file automatically finding it on disk | `toad hero` |
-| `toad lint <name>` | Static linter checking for undeclared variables, duplicate IDs & syntax; accepts document names via the tiered file search | `toad lint hero` |
-| `toad format [name]` (alias `fmt`) | Code formatter standardizing indentation, colons & whitespace (`-c, --check` verifies without writing); accepts document names too | `toad fmt hero` |
-| `toad dev [name]` | Watch mode live preview server; `-p, --port <number>` sets the port (default `3000`, auto-increments when busy) | `toad dev hero -p 4000` |
-| `-f, --format <formats>` | Formats: `png`, `jpg`, `webp`, `svg`, `psd`, `image`, `all`; unknown tokens warn and are skipped | `toad hero -f all` |
-| `-s, --scale <number>` | Multi-scale multiplier (e.g. `1`, `2`, `4`, `0.5`) | `toad hero -s 2` |
+| `toad dev [name]` | Watch mode live preview server with Hot Reload (SSE) | `toad dev hero -p 4000` |
+| `toad lint <name>` | Static linter checking for undeclared variables & syntax errors | `toad lint hero` |
+| `toad format [name]` (alias `fmt`) | Formats code (`-c, --check` verifies formatting) | `toad fmt hero` |
+| `-f, --format <formats>` | Formats: `png`, `jpg`, `webp`, `svg`, `psd`, `image`, `all` | `toad hero -f all` |
+| `-s, --scale <number>` | Multi-scale multiplier (e.g. `1`, `2`, `4`) | `toad hero -s 2` |
 | `-q, --quality <number>` | JPG / WebP quality (`1` to `100` or `0.85`) | `toad hero -q 90` |
 | `-o, --out <dir>` | Output directory (defaults to directory of `.toad` file) | `toad hero -o ./dist` |
-| `-w, --watch` | Watch mode with SSE hot-reload web preview & 1-click "Ordner" button | `toad hero -w` |
+| `-w, --watch` | Watch mode with SSE hot-reload web preview & 1-click folder button | `toad hero -w` |
 | `--dpi <number>` | Target DPI resolution for print conversion (e.g. `300`, `150`) | `toad flyer --dpi 300` |
-| `--bleed <dimension>` | Print bleed margin override; accepts px/mm/cm/in/pt and converts at the canvas DPI | `toad flyer --bleed 3mm` |
+| `--bleed <dimension>` | Print bleed margin override (e.g. `3mm`, `0.125in`) | `toad flyer --bleed 3mm` |
 | `--fonts <dir>` | Load local `.ttf` / `.otf` font directory | `toad hero --fonts ./fonts` |
 
 ---
