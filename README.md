@@ -2,9 +2,9 @@
 
 <img src="./branding/logo-toad-logo-master-dark.png" alt="TOAD DSL Logo" width="480"/>
 
-# toad — Declarative Design DSL Compiler & Exporter
+# toad
 
-**Code Your Canvas. Design at the speed of code.**
+### Design graphics at the speed of code.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20.0.0-339933.svg?style=flat-square&logo=nodedotjs&logoColor=white)](https://nodejs.org)
@@ -13,37 +13,42 @@
 [![Website](https://img.shields.io/badge/Website-Live%20Showcase-8b5cf6.svg?style=flat-square)](./website)
 
 <p align="center">
-  A high-performance declarative Domain-Specific Language (DSL) that compiles structured <code>.toad</code> design files into pixel-accurate multi-scale images (<b>PNG</b>, <b>JPG</b>, <b>WebP</b>), scalable vector graphics (<b>SVG</b>), and native layered Photoshop documents (<b>PSD</b>) with editable vector shapes, gradients, and layer styles.
+  <b>TOAD</b> is a modern design language and standalone compiler for makers, developers, and visual designers.<br/>
+  Write clean, declarative code and compile directly into crisp images (<b>PNG, JPG, WebP</b>), scalable vectors (<b>SVG</b>), and fully-layered Photoshop files (<b>PSD</b>) with native vector shapes, gradients, and editable text.
 </p>
 
-[Quickstart](#-quickstart) • [Features](#-features) • [CLI Reference](#-cli-reference) • [Documentation](#-documentation--the-seed) • [Website](#-website--playground) • [Templates](#-production-templates)
+[Why TOAD?](#-why-toad) • [Quickstart](#-quickstart) • [Syntax at a Glance](#-syntax-at-a-glance) • [CLI Commands](#-cli-commands) • [Website & Docs](#-website--playground)
 
 </div>
 
 ---
 
-## ✨ Features
+## 🤔 Why TOAD?
 
-- 🎨 **Declarative DSL Syntax:** Human-readable syntax with scoped variables (`>primary = #3b82f6;`), directives (`@import`, `@font`), reusable components (`component Button(...)`), component slots (`slot;`), and multi-canvas artboards (`canvas "Front" { ... } canvas "Back" { ... }`).
-- 🚀 **Zero-Config Scaffolding:** Create ready-to-run projects instantly using `toad init` with automated directory structure and starter designs.
-- ⚡ **Autonomous File Resolver:** Run `toad <name>` from any directory without hunting down file paths or extensions.
-- 🔄 **Live Hot Reload & Web Preview:** Run `toad <name> -w` or `toad dev <name>` to launch an instant browser preview with Server-Sent Events (SSE), live reloads on change, zoom controls, and a 1-click "Open Folder" action.
-- 📐 **Relational Positioning DAG:** Position elements relationally (`at: below #title offset 16px;`, `at: center of canvas;`), flow items sequentially with flex `stack` and `grid`, and take advantage of `fill` and `hug` auto-sizing.
-- 🖨️ **Print Prepress & Bleed:** Physical units (`mm`, `cm`, `in`, `pt`), print metadata (`dpi`, `bleed`, `crop-marks`, `color-mode`), automated Media/Trim Box expansion, and corner crop marks with registration crosshairs.
-- 🧮 **Math & Expressions:** Built-in `calc(...)` (e.g. `calc(100% - 40px)`), percentage sizing against parent or canvas, 2D offsets, margins, and automatic `z-index` layering.
-- ⭐ **Built-in Shapes & Icons:** First-class vector primitives (`rect`, `circle`, `star`, `triangle`, `arrow`, `cross`, `polygon`, `path`) and built-in Lucide icons (`icon { iconName: "search"; }`).
-- 🌀 **2D Transforms & Advanced Gradients:** Full 2D transforms (`scale`, `skewX`, `skewY`, `transform-origin`, `rotation`) and smooth CSS/Skia gradients (`linear-gradient`, `radial-gradient`, `conic-gradient`).
-- 🔤 **Advanced OpenType & Typography:** OpenType features (`font-features: "liga" 1, "smcp" 1;`), variable fonts (`font-variation: "wght" 700 "wdth" 85;`), paragraph justification (`align: justify;`), `hanging-punctuation`, letter tracking (`letter-spacing`), and word wrapping.
-- 📱 **Platform Presets:** Instant artboard dimensions with built-in presets (`og-image`, `twitter-header`, `instagram-post`, `instagram-story`, `youtube-thumbnail`, `github-banner`, etc.).
-- 🎛️ **Photoshop (.psd) Native Vector Layers & Layer FX:**
-  - True Bézier vector masks with editable anchor points (`A` tool in Photoshop) for `rect`, `circle`, and `polygon`.
-  - Live corner radius controls (`keyOriginRRectRadii`) in Photoshop's native Properties panel.
-  - Native linear & radial vector gradients via Photoshop's Gradient Editor.
-  - Full Photoshop Layer FX (`dropShadow`, `innerShadow`, `outerGlow`, `innerGlow`, `bevel`, `stroke`, `colorOverlay`).
-  - Native Type Layers with PostScript font mapping (`Inter-Bold`, `Arial-BoldMT`, etc.) and paragraph justification.
-  - Native Clipping masks (`clip: true`) and layer groups (`group`, `stack`).
-- 📸 **Photo Grading Mode:** Declare photographs as canvases (`canvas photo "image.jpg"`). High-precision per-pixel tone & color grading (exposure compensation via $2^{\text{EV}}$, contrast, saturation, warmth, vignette) and local dodge & burn retouching (`adjust #spot { ... }`).
-- 🌐 **Comprehensive Multi-Format Export:** Export `png`, `jpg`, `webp`, `svg`, `psd`, or smart bundles (`image` and `all`) in a single run.
+Design tools like Figma and Photoshop are great for freeform exploration, but they quickly fall short when you want **version control, programmatic automation, reusable design tokens, and reproducible assets**. 
+
+HTML/CSS rendering (like Puppeteer or headless Chrome) is heavy, memory-hungry, and can't produce native Photoshop documents or clean vector layers.
+
+**TOAD gives you the best of both worlds:**
+- ✍️ **Code-first simplicity**: Design with clean, intuitive syntax instead of wrestling with heavy GUI apps.
+- ⚡ **Lightning-fast compilation**: Powered by high-speed native 2D rendering (@napi-rs/canvas) without needing a browser.
+- 📂 **Real Photoshop export**: Exports true `.psd` files with editable vector shapes, live rounded corners, gradient layers, and real text layers — ready to open in Photoshop.
+- 🔄 **Delightful developer experience**: Built-in hot reload, live browser preview via Server-Sent Events, instant project scaffolding, and intelligent file finding.
+
+---
+
+## ✨ Highlights
+
+- 🎨 **Declarative & Modular:** Variables (`>primary = #3b82f6;`), reusable components (`component Button(...)`), slot projections (`slot;`), and multi-canvas pages in a single file.
+- 🚀 **Instant Setup:** Run `toad init` to generate a ready-to-run template in seconds.
+- ⚡ **Zero-Fuss CLI:** Just run `toad hero` — it automatically finds `hero.toad` in your project, builds it, and outputs your files.
+- 🔄 **Live Hot Reload:** Run `toad hero -w` or `toad dev hero` to preview changes in real time in your browser as you type.
+- 📐 **Intuitive Layout Engine:** Position things naturally (`at: below #title offset 16px;`, `at: center of canvas;`), or stack and grid elements with automatic flex sizing (`hug` / `fill`).
+- 🖨️ **Print-Ready (Prepress):** Works in real physical units (`mm`, `cm`, `in`, `pt`), automated bleed margins, and precision crop marks.
+- ⭐ **Rich Graphics Toolkit:** Built-in primitives (`rect`, `circle`, `star`, `polygon`, Bézier `path`), Lucide icons, 2D transforms, and smooth gradients.
+- 🔤 **Deep Typography:** Multi-line text wrapping, custom fonts (`@font`), OpenType features, variable font axes, and justification.
+- 📸 **Photo Grading:** Drop in photos (`canvas photo "image.jpg"`), adjust exposure, contrast, saturation, and add dodge & burn spots directly in code.
+- 📦 **One-Command Exports:** Generate PNG, JPG, WebP, SVG, and PSD side-by-side with a single build command.
 
 ---
 
@@ -60,14 +65,19 @@ npm link
 
 ### 2. Initializing a New Project
 ```bash
-# Auto-generates sequential folder (e.g. toad-project-1/) with starter template and package.json
+# Creates a new folder (e.g. toad-project-1/) with a ready-to-run template
 toad init
 
-# Or specify a custom project name
+# Or give it a custom name
 toad init my-banner
 ```
 
-### 3. DSL Syntax Example (`hero.toad`)
+---
+
+## 🎨 Syntax at a Glance
+
+Here is what a complete `.toad` file looks like (`hero.toad`):
+
 ```toad
 >bg = #0f172a;
 >primary = #38bdf8;
@@ -173,25 +183,27 @@ text #caption {
 }
 ```
 
-### 5. Compiling & Exporting
+### Compiling & Previewing
 ```bash
-# Build declared formats automatically
+# Build automatically in all formats declared in the .toad file
 toad hero
 
-# Build specific formats
+# Build specific formats or high-resolution scales
 toad hero -f svg
 toad hero -f "png, psd"
 toad hero -f all -s 2
 
-# Start Live-Reload Watch Server with instant browser preview
+# Start watch mode with instant live browser preview
 toad hero -w
 ```
 
 ---
 
-## 💻 CLI Reference
+## 💻 CLI Commands
 
-| Command / Option | Description | Example |
+Run `toad` from anywhere in your terminal:
+
+| Command / Option | What It Does | Example |
 |---|---|---|
 | `toad init [name]` | Scaffolds a new project (`toad-project-X` or custom name) | `toad init` or `toad init banner` |
 | `toad <name>` | Compiles entry file automatically finding it on disk | `toad hero` |
@@ -289,36 +301,35 @@ Modal("Confirmation Dialog") {
 
 ---
 
-## Documentation & The Seed
+## 🌐 Website & Playground
 
-The repository features a complete, self-contained architecture manual and production cookbook under [`the_seed/`](./the_seed/README.md):
+We built a complete companion web app inside [`website/`](./website) so you can explore TOAD visually:
+- 🎮 **Live Playground**: Test and tweak `.toad` snippets right in your browser.
+- 🖼️ **Showcase Gallery**: Compare exported PNG, SVG, and PSD assets side-by-side.
+- 📖 **Interactive Docs**: Browse syntax guides and code recipes.
 
-- 🌿 **[The Seed Master Manual (`the_seed/README.md`)](./the_seed/README.md):** Architectural specification, 12 golden commandments, and navigation map.
-- 📐 **[01. Core Syntax & Language (`the_seed/01_CORE_SYNTAX_AND_LANGUAGE/`)](./the_seed/01_CORE_SYNTAX_AND_LANGUAGE/):** Formal EBNF grammar, token lexer, variables, canvas definitions, and expressions.
-- 🧮 **[02. Layout & Positioning (`the_seed/02_LAYOUT_AND_POSITIONING/`)](./the_seed/02_LAYOUT_AND_POSITIONING/):** Relational positioning DAG, flex stacks (`hug`/`fill`), and bento grid layout math.
-- 🎨 **[03. Graphics, Shapes & Effects (`the_seed/03_GRAPHICS_SHAPES_AND_EFFECTS/`)](./the_seed/03_GRAPHICS_SHAPES_AND_EFFECTS/):** Primitives, Bézier paths, radial/linear gradients, drop shadows, and clipping masks.
-- 🔤 **[04. Typography & Fonts (`the_seed/04_TYPOGRAPHY_AND_FONTS/`)](./the_seed/04_TYPOGRAPHY_AND_FONTS/):** Skia text measurement, multi-line wrapping, OpenType font features, and variable fonts.
-- 🧩 **[05. Components & Modularity (`the_seed/05_COMPONENTS_AND_MODULARITY/`)](./the_seed/05_COMPONENTS_AND_MODULARITY/):** Parametric components, slot projection (`slot;`), and `@import` token sharing.
-- 🎛️ **[06. Exporters & Rendering (`the_seed/06_EXPORTERS_AND_RENDERING/`)](./the_seed/06_EXPORTERS_AND_RENDERING/):** Skia rasterizer (PNG/JPG/WebP), SVG export, native Photoshop PSD layer engine, and 300 DPI prepress with bleed.
-- 🛡️ **[07. LLM Rules & Pitfalls (`the_seed/07_LLM_RULES_AND_PITFALLS/`)](./the_seed/07_LLM_RULES_AND_PITFALLS/):** Anti-pattern catalog, troubleshooting trees, and automated pre-flight checklists.
-- 📚 **[08. Production Templates (`the_seed/08_PRODUCTION_TEMPLATES/`)](./the_seed/08_PRODUCTION_TEMPLATES/):** Ready-to-use production designs (UI Kits, Dashboards, Event Tent Cards, Marketing Posters).
-- 🌐 **[Interactive Developer Wiki (`wiki.html`)](./wiki.html):** Standalone visual web handbook with fast search.
-
----
-
-## Website & Documentation App (`website/`)
-
-A modern Next.js showcase and interactive playground is included in the [`website/`](./website) directory:
-- **Interactive Playground**: Write and preview `.toad` designs live in the browser.
-- **Showcase Gallery**: Inspect multi-format exports (SVG, PNG, PSD) side-by-side.
-- **Documentation Viewer**: Browse all language features with syntax-highlighted examples.
-
-To run the documentation site locally:
+To run it locally:
 ```bash
 cd website
 npm install
 npm run dev
 ```
+Then open [http://localhost:3030](http://localhost:3030) in your browser.
+
+---
+
+## 🌿 The Seed (Machine Knowledge Base)
+
+For developers and AI coding agents, the repository includes **[`the_seed/`](./the_seed/README.md)** — an exhaustive, deterministic technical specification and grammar manual:
+
+- 📐 **[01. Core Syntax & Grammar](./the_seed/01_CORE_SYNTAX_AND_LANGUAGE/):** EBNF grammar, token streams, and AST definitions.
+- 🧮 **[02. Layout & Positioning](./the_seed/02_LAYOUT_AND_POSITIONING/):** Relational anchors, DAG resolution, and bento grids.
+- 🎨 **[03. Graphics & Shapes](./the_seed/03_GRAPHICS_SHAPES_AND_EFFECTS/):** Paths, gradients, shadows, and masks.
+- 🔤 **[04. Typography & Fonts](./the_seed/04_TYPOGRAPHY_AND_FONTS/):** Font metrics, OpenType, and text layout.
+- 🧩 **[05. Components & Slots](./the_seed/05_COMPONENTS_AND_MODULARITY/):** Parametric components and slot projection.
+- 🎛️ **[06. Exporters & Rendering](./the_seed/06_EXPORTERS_AND_RENDERING/):** Skia rasterizer, SVG vectors, and PSD engine.
+- 📚 **[08. Ready-to-Use Templates](./the_seed/08_PRODUCTION_TEMPLATES/):** Tested real-world examples (UI kits, analytics dashboards, and print cards).
+- 🌐 **[Offline HTML Handbook (`wiki.html`)](./wiki.html):** Standalone single-file documentation with instant search.
 
 ---
 
