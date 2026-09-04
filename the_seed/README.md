@@ -63,18 +63,18 @@ Every developer and AI model writing `.toad` code must strictly abide by these i
 ## 🚀 Quick Start & CLI Invocations
 
 ```bash
-# 1. Compile a document to all supported formats (PNG, JPG, WebP, SVG, PSD) at 1x and 2x
-node dist/cli.js build "design.toad"
+# 1. Compile a document to all supported formats (PNG, JPG, WebP, SVG, PSD)
+toad "design.toad"
 
 # 2. Build specific scale and format
-node dist/cli.js build "design.toad" -s 2 -f svg -f png
+toad "design.toad" -s 2 -f "svg, png"
 
 # 3. Start live preview server with Hot Reload (SSE)
-node dist/cli.js dev "design.toad" --port 3000
+toad dev "design.toad" --port 3000
 
 # 4. Format and lint TOAD code
-node dist/cli.js format "design.toad" --write
-node dist/cli.js lint "design.toad"
+toad format "design.toad"
+toad lint "design.toad"
 ```
 
 Dive into the module directories above to explore the complete documentation!
