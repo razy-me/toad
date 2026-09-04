@@ -1,0 +1,48 @@
+// tests/fixtures/logo.toad
+// Pure Monochrome 2D Logo Mark for "toad" — Seamless Pen Integrated into "d"
+
+>black = #000000;
+>white = #ffffff;
+
+canvas "toad Logo" {
+  width: 1000px;
+  height: 1000px;
+  background: >black;
+}
+
+// 1. Äußeres asymmetrisches Rechteck (Rechte Ecken dezenter verrundet mit 36px)
+rect #bowlOuter {
+  at: (320px, 430px);
+  size: 340px 280px;
+  border-radius: [140px, 36px, 36px, 140px];
+  fill: >white;
+}
+
+// 2. Innerer Negativraum (Rechte Ecken dezenter verrundet mit 20px)
+rect #bowlInner {
+  at: (380px, 490px);
+  size: 180px 160px;
+  border-radius: [80px, 20px, 20px, 80px];
+  fill: >black;
+}
+
+// 3. Stift-Kopf (Kompakter & unten abgerundet)
+rect #stemTopCap {
+  at: (560px, 270px);
+  size: 100px 135px;
+  border-radius: [50px, 50px, 14px, 14px];
+  fill: >white;
+}
+
+// 4. Dreiecks-Stiftspitze (Exakt 14px Radius)
+polygon #pencilTip {
+  at: (560px, 730px);
+  size: 100px 90px;
+  points: [
+    (-50px, -45px),
+    (50px, -45px),
+    (0px, 45px)
+  ];
+  radius: 14px;
+  fill: >white;
+}

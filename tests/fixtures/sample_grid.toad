@@ -1,0 +1,18 @@
+// tests/fixtures/sample_grid.toad
+canvas {
+  width: 800px;
+  height: 600px;
+}
+
+grid #cardGrid {
+  at: (40px, 40px);
+  columns: 3;
+  gap: 20px;
+
+  rect { size: 220px 140px; fill: #3b82f6; }
+  rect { size: 220px 140px; fill: #10b981; }
+  rect { size: 220px 140px; fill: #f59e0b; }
+  rect { size: 220px 140px; fill: #ef4444; }
+  rect { size: 220px 140px; fill: #8b5cf6; }
+  rect { size: 220px 140px; fill: #ec4899; }
+}

@@ -1,0 +1,85 @@
+// tests/fixtures/hero_banner.toad
+// Scenario 3: Hero Banner with Nested Components & Polygon Accents
+
+@import "./tokens.toad";
+@import "./components.toad";
+
+canvas "Hero Campaign" {
+  width: 1600px;
+  height: 900px;
+  background: linear-gradient(to right, #020617, #0f172a, #1e293b);
+}
+
+// Geometric Polygon Background Accents (Local center-relative coordinates)
+polygon #bgHexagon1 {
+  at: (1300px, 200px);
+  size: 320px 320px;
+  points: [ (0px, -160px), (138px, -80px), (138px, 80px), (0px, 160px), (-138px, 80px), (-138px, -80px) ];
+  fill: linear-gradient(180deg, #3b82f630, #1d4ed810);
+  stroke: #3b82f650 2px solid;
+}
+
+polygon #bgHexagon2 {
+  at: (1450px, 450px);
+  size: 200px 200px;
+  points: [ (0px, -100px), (86px, -50px), (86px, 50px), (0px, 100px), (-86px, 50px), (-86px, -50px) ];
+  fill: linear-gradient(180deg, #f59e0b25, #ef444410);
+  stroke: #f59e0b40 1px solid;
+}
+
+// Main Content Section
+group #heroContent {
+  at: (120px, 200px);
+  size: 800px 500px;
+
+  Badge #heroBadge {
+    label: "NEXT GENERATION";
+    bg: #2563eb;
+    textColor: #ffffff;
+  }
+
+  text #heroTitle {
+    at: below #heroBadge offset 24px;
+    size: 780px;
+    content: "Vector Precision Meets Raster Power in One Unified Engine";
+    font-size: 52px;
+    font-weight: 900;
+    line-height: 1.15;
+    fill: #ffffff;
+  }
+
+  text #heroBody {
+    at: below #heroTitle offset 20px;
+    size: 680px;
+    content: "Design seamlessly in code. Export to production rasters at 1x, 2x, 4x, or inspect full layered PSDs in Adobe Photoshop.";
+    font-size: 20px;
+    font-weight: 400;
+    line-height: 1.5;
+    fill: >textMuted;
+  }
+
+  group #ctaGroup {
+    at: below #heroBody offset 36px;
+
+    Button #primaryBtn {
+      label: "Start Building";
+      width: 180px;
+      height: 52px;
+      variant: #3b82f6;
+    }
+
+    Button #secondaryBtn {
+      at: right of #primaryBtn offset 16px;
+      label: "Explore Docs";
+      width: 160px;
+      height: 52px;
+      variant: #334155;
+    }
+
+    Arrow #nextArrow {
+      at: right of #secondaryBtn offset 20px;
+      size: 48px;
+      color: #94a3b8;
+    }
+  }
+}

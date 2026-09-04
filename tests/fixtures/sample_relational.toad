@@ -1,0 +1,29 @@
+// tests/fixtures/sample_relational.toad
+canvas {
+  width: 1000px;
+  height: 600px;
+}
+
+rect #anchor {
+  at: (100px, 100px);
+  size: 200px 100px;
+  fill: #3b82f6;
+}
+
+rect #rightChild {
+  at: right of #anchor offset 20px;
+  size: 150px 100px;
+  fill: #10b981;
+}
+
+rect #belowChild {
+  at: below #anchor offset 30px;
+  size: 200px 80px;
+  fill: #f59e0b;
+}
+
+rect #centerChild {
+  at: center of #anchor;
+  size: 80px 40px;
+  fill: #ef4444;
+}

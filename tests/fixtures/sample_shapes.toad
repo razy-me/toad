@@ -1,0 +1,41 @@
+// tests/fixtures/sample_shapes.toad
+canvas {
+  width: 800px;
+  height: 600px;
+  background: #ffffff;
+}
+
+rect #myRect {
+  at: (20px, 20px);
+  size: 200px 100px;
+  fill: #3b82f6;
+  border-radius: 8px;
+  stroke: #1d4ed8 2px solid;
+}
+
+circle #myCircle {
+  at: (260px, 20px);
+  radius: 50px;
+  fill: #10b981;
+}
+
+polygon #myPolygon {
+  at: (450px, 70px);
+  size: 100px 100px;
+  points: [ (0px, -50px), (50px, 50px), (-50px, 50px) ];
+  fill: #f59e0b;
+}
+
+text #myText {
+  at: (20px, 160px);
+  content: "The quick brown fox jumps over the lazy dog";
+  font-size: 24px;
+  fill: #0f172a;
+}
+
+image #myImage {
+  at: (20px, 220px);
+  size: 300px 200px;
+  src: "sample.png";
+  fit: cover;
+}

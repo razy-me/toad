@@ -1,0 +1,106 @@
+// tests/fixtures/product_banner.toad
+// Scenario 2: Product Showcase Banner (1920x1080)
+
+@import "./tokens.toad";
+
+canvas "Product Showcase" {
+  width: 1920px;
+  height: 1080px;
+  background: #090d16;
+}
+
+// Banner Header
+group #headerGroup {
+  at: (120px, 80px);
+
+  text #tagline {
+    content: "COLLECTION 2026";
+    font-size: 14px;
+    font-weight: bold;
+    fill: >secondary;
+  }
+
+  text #mainHeading {
+    at: below #tagline offset 12px;
+    content: "Curated Hardware & Pro Audio Series";
+    font-size: 44px;
+    font-weight: 800;
+    fill: #ffffff;
+  }
+}
+
+// Product Card Component with currentColor propagation
+component ProductCard(title = "Item", price = "$199", tag = "NEW", cardBg = #161f30) {
+  group {
+    color: #60a5fa; // sets currentColor for children
+
+    rect {
+      size: 520px 360px;
+      fill: >cardBg;
+      border-radius: 12px;
+      stroke: currentColor 1px solid;
+      filter: drop-shadow(0px 8px 24px #00000060);
+    }
+
+    rect #productImageHolder {
+      at: (20px, 20px);
+      size: 480px 200px;
+      fill: #1e293b;
+      border-radius: 8px;
+      clip: true;
+
+      image {
+        src: "./assets/product.png";
+        size: 480px 200px;
+        fit: cover;
+      }
+    }
+
+    text #productTitle {
+      at: (24px, 240px);
+      content: >title;
+      font-size: 22px;
+      font-weight: 700;
+      fill: #ffffff;
+    }
+
+    text #productPrice {
+      at: below #productTitle offset 8px;
+      content: >price;
+      font-size: 18px;
+      font-weight: 600;
+      fill: currentColor; // inherits #60a5fa
+    }
+
+    rect #badge {
+      at: (420px, 240px);
+      size: 76px 28px;
+      fill: #22c55e20;
+      border-radius: 6px;
+      stroke: #22c55e 1px solid;
+
+      text {
+        at: center of parent;
+        content: >tag;
+        font-size: 12px;
+        font-weight: bold;
+        fill: #22c55e;
+      }
+    }
+  }
+}
+
+// Uniform Tile Grid of 6 product cards (3 columns, 2 rows)
+grid #productGrid {
+  at: (120px, 220px);
+  columns: 3;
+  gap: 24px;
+  flow: row;
+
+  ProductCard { title: "Studio Monitor X1"; price: "$499"; tag: "HOT"; }
+  ProductCard { title: "Analog Synth Pro"; price: "$899"; tag: "LIMITED"; }
+  ProductCard { title: "Tube Preamp 73"; price: "$349"; tag: "NEW"; }
+  ProductCard { title: "Dynamic Mic M8"; price: "$189"; tag: "POPULAR"; }
+  ProductCard { title: "Audio Interface 8x8"; price: "$599"; tag: "SALE"; }
+  ProductCard { title: "Mastering Headphones"; price: "$299"; tag: "NEW"; }
+}

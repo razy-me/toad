@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1600 900" width="1600" height="900">
+  <defs>
+    <linearGradient id="lin_grad_1" x1="50%" y1="0%" x2="50%" y2="100%" color-interpolation="sRGB">
+      <stop offset="0%" stop-color="#020617" />
+      <stop offset="50%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#1e293b" />
+    </linearGradient>
+    <linearGradient id="lin_grad_2" x1="50%" y1="0%" x2="50%" y2="100%" color-interpolation="sRGB">
+      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.188" />
+      <stop offset="100%" stop-color="#1d4ed8" stop-opacity="0.063" />
+    </linearGradient>
+    <linearGradient id="lin_grad_3" x1="50%" y1="0%" x2="50%" y2="100%" color-interpolation="sRGB">
+      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.145" />
+      <stop offset="100%" stop-color="#ef4444" stop-opacity="0.063" />
+    </linearGradient>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#lin_grad_1)" />
+ <polygon points="1460,200 1620,280 1620,440 1460,520 1300,440 1300,280" fill="url(#lin_grad_2)" stroke="#3b82f650" stroke-width="2" id="bgHexagon1" />
+ <polygon points="1550,450 1650,500 1650,600 1550,650 1450,600 1450,500" fill="url(#lin_grad_3)" stroke="#f59e0b40" stroke-width="1" id="bgHexagon2" />
+  <g id="heroContent">
+    <g id="heroBadge">
+ <rect x="120" y="200" width="80" height="28" rx="4" ry="4" fill="#2563eb" id="__auto_1" />
+      <text x="123" y="216.5" font-family="sans-serif" font-size="12" font-weight="bold" font-style="normal" text-anchor="start" xml:space="preserve" fill="#ffffff" id="__auto_2">NEXT GENERATION</text>
+    </g>
+    <text x="120" y="294" font-family="sans-serif" font-size="52" font-weight="900" font-style="normal" text-anchor="start" xml:space="preserve" fill="#ffffff" id="heroTitle"><tspan x="120" dy="0">Vector Precision Meets Raster Power in</tspan><tspan x="120" dy="59.8">One Unified Engine</tspan></text>
+    <text x="120" y="1068" font-family="sans-serif" font-size="20" font-weight="400" font-style="normal" text-anchor="start" xml:space="preserve" fill="#94a3b8" id="heroBody"><tspan x="120" dy="0">Design seamlessly in code. Export to production rasters at 1x, 2x, 4x, or inspect full layered PSDs in Adobe</tspan><tspan x="120" dy="30">Photoshop.</tspan></text>
+    <g id="ctaGroup">
+      <g id="primaryBtn">
+ <rect x="120" y="1768" width="180" height="52" rx="8" ry="8" fill="#3b82f6" id="__auto_3" />
+        <text x="172.5" y="1797" font-family="sans-serif" font-size="16" font-weight="600" font-style="normal" text-anchor="start" xml:space="preserve" fill="#ffffff" id="__auto_4">Start Building</text>
+      </g>
+      <g id="secondaryBtn">
+ <rect x="316" y="1768" width="160" height="52" rx="8" ry="8" fill="#334155" id="__auto_5" />
+        <text x="360.5" y="1797" font-family="sans-serif" font-size="16" font-weight="600" font-style="normal" text-anchor="start" xml:space="preserve" fill="#ffffff" id="__auto_6">Explore Docs</text>
+      </g>
+ <polygon points="520,1768 544,1792 528,1792 528,1816 512,1816 512,1792 496,1792" fill="#94a3b8" id="nextArrow" />
+    </g>
+  </g>
+</svg>

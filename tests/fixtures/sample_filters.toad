@@ -1,0 +1,33 @@
+// tests/fixtures/sample_filters.toad
+canvas {
+  width: 800px;
+  height: 400px;
+}
+
+rect #box1 {
+  at: (20px, 20px);
+  size: 150px 150px;
+  fill: #3b82f6;
+  filter: blur(10px);
+}
+
+rect #box2 {
+  at: (200px, 20px);
+  size: 150px 150px;
+  fill: #ef4444;
+  filter: saturate(2) brightness(1.2);
+}
+
+rect #box3 {
+  at: (380px, 20px);
+  size: 150px 150px;
+  fill: #10b981;
+  filter: drop-shadow(4px 4px 8px #00000080);
+}
+
+rect #box4 {
+  at: (560px, 20px);
+  size: 150px 150px;
+  fill: #8b5cf6;
+  filter: grayscale(80%) contrast(1.5);
+}

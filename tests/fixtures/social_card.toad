@@ -1,0 +1,91 @@
+// tests/fixtures/social_card.toad
+// Scenario 1: Social Media Card (1200x630)
+
+@import "./tokens.toad";
+@import "./components.toad";
+
+canvas "Social Card" {
+  width: 1200px;
+  height: 630px;
+  background: linear-gradient(135deg, #0f172a, #1e1b4b, #311042);
+}
+
+// Background decorative overlay
+rect #bgGlow {
+  at: (800px, -100px);
+  size: 600px 600px;
+  fill: radial-gradient(circle, #3b82f640, #9333ea20, transparent);
+  border-radius: >radiusFull;
+  filter: blur(40px);
+}
+
+// Card Container
+group #cardContainer {
+  at: (80px, 80px);
+  size: 1040px 470px;
+
+  // Header Badge
+  Badge #featuredBadge {
+    label: "ANNOUNCEMENT";
+    bg: >accent;
+    textColor: #000000;
+  }
+
+  // Multi-line Headline with Skia auto-wrapping
+  text #headline {
+    at: below #featuredBadge offset 20px;
+    size: 700px;
+    content: "Introducing toad: The Declarative Design DSL Compiler for High-Performance Visual Production";
+    font-family: >fontFamilySans;
+    font-size: 38px;
+    font-weight: 700;
+    line-height: 1.25;
+    fill: >textLight;
+  }
+
+  // Subtitle / description
+  text #description {
+    at: below #headline offset 16px;
+    size: 650px;
+    content: "Compile declarative design templates to multi-scale PNG/JPG and native layered Photoshop PSD files instantly with zero runtime overhead.";
+    font-family: >fontFamilySans;
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 1.4;
+    fill: >textMuted;
+  }
+
+  // Author Group
+  group #authorInfo {
+    at: below #description offset 32px;
+
+    Avatar #authorAvatar {
+      size: 56px;
+      src: "./assets/avatar.png";
+      borderColor: >primary;
+    }
+
+    text #authorName {
+      at: right of #authorAvatar offset 16px;
+      content: "Design Systems Engineering";
+      font-size: 16px;
+      font-weight: 600;
+      fill: >textLight;
+    }
+
+    text #authorHandle {
+      at: below #authorName offset 4px;
+      content: "@toad_engine • 5 min read";
+      font-size: 14px;
+      font-weight: 400;
+      fill: >textMuted;
+    }
+  }
+
+  // Decorative Accent Icon
+  Arrow #accentArrow {
+    at: (820px, 120px);
+    size: 140px;
+    color: #3b82f680;
+  }
+}
