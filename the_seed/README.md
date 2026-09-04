@@ -6,7 +6,6 @@
 > It is an exhaustive, deterministic, token-dense machine knowledge base designed specifically for **Autonomous AI Coding Agents and Large Language Models** (e.g., Claude, GPT-4, Gemini, Cursor, Copilot).
 >
 > If you are a human looking for readable documentation, guides, or interactive tutorials:
-> - 🌐 **Interactive Documentation & Playground**: Use the [`website/`](../website) app or run `npm run dev` inside `website/`.
 > - 📖 **Interactive Web Wiki**: Open [`wiki.html`](../wiki.html) in your browser.
 > - 🚀 **Quickstart & CLI Reference**: Read the main [Root README (`../README.md`)](../README.md).
 

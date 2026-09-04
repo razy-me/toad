@@ -4,7 +4,7 @@
 > ### 🤖 FOR GOOGLE GEMINI & AI AGENTS ONLY — NOT FOR HUMAN CONSUMPTION
 > **This file is an automated context and instruction file for Google Gemini and AI coding agents.**
 > It defines the core persona, critical syntax enforcement rules, negative constraints, and pre-flight checklists that AI models must follow when reading or modifying this repository.
-> It is not intended as human documentation. Humans should refer to [`README.md`](./README.md) or [`website/`](./website).
+> It is not intended as human documentation. Humans should refer to [`README.md`](./README.md).
 
 ---
 
