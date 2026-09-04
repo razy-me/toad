@@ -1,7 +1,5 @@
 <div align="center">
 
-<img src="./branding/logo-toad-logo-master-dark.png" alt="TOAD DSL Logo" width="480"/>
-
 # toad
 
 ### Design graphics at the speed of code.
