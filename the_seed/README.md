@@ -1,89 +1,35 @@
-# 🌿 THE SEED — Machine-Optimized Knowledge Base for LLMs
+# 🌿 THE SEED — Machine-Optimized Knowledge Base
 
 > [!WARNING]
-> ### 🤖 FOR LARGE LANGUAGE MODELS ONLY — NOT FOR HUMAN CONSUMPTION
-> **This entire directory (`the_seed/`) is not written or formatted for human reading.**
-> It is an exhaustive, deterministic, token-dense machine knowledge base designed specifically for **Autonomous AI Coding Agents and Large Language Models** (e.g., Claude, GPT-4, Gemini, Cursor, Copilot).
+> ### 🤖 FOR LLMs & AI CODING AGENTS ONLY — NOT FOR HUMAN READING
+> **This directory is not formatted for human consumption.**
+> It is an exhaustive, deterministic technical specification and rule set built specifically for **Autonomous AI Agents & Large Language Models** (Gemini, Claude, GPT-4, Cursor) to generate 100% valid `.toad` code without hallucinations.
 >
-> If you are a human looking for readable documentation, guides, or interactive tutorials:
-> - 📖 **Interactive Web Wiki**: Open [`wiki.html`](../wiki.html) in your browser.
-> - 🚀 **Quickstart & CLI Reference**: Read the main [Root README (`../README.md`)](../README.md).
+> 📖 Humans should read [`../README.md`](../README.md) or open [`../wiki.html`](../wiki.html).
 
 ---
 
-Welcome to **THE SEED**, the definitive ground-truth architectural specification, formal grammar, compiler internal invariants, and machine-executable rule corpus for the **TOAD DSL**. It provides LLMs with the exact semantic context, negative constraints, and few-shot exemplars required to synthesize flawless `.toad` code without hallucinations.
+## 🗺️ Navigation Map
+
+| Module | Contents |
+|:---|:---|
+| [01_CORE_SYNTAX_AND_LANGUAGE](./01_CORE_SYNTAX_AND_LANGUAGE/) | EBNF grammar, token lexer, variables, canvas |
+| [02_LAYOUT_AND_POSITIONING](./02_LAYOUT_AND_POSITIONING/) | Relational DAG placement, flex stacks, bento grids |
+| [03_GRAPHICS_SHAPES_AND_EFFECTS](./03_GRAPHICS_SHAPES_AND_EFFECTS/) | Vector paths, gradients, shadows, filters |
+| [04_TYPOGRAPHY_AND_FONTS](./04_TYPOGRAPHY_AND_FONTS/) | Text measurement, line wrapping, OpenType features |
+| [05_COMPONENTS_AND_MODULARITY](./05_COMPONENTS_AND_MODULARITY/) | Reusable components, slot projections, `@import` |
+| [06_EXPORTERS_AND_RENDERING](./06_EXPORTERS_AND_RENDERING/) | Skia rasterizer, SVG, Photoshop PSD layer engine |
+| [07_LLM_RULES_AND_PITFALLS](./07_LLM_RULES_AND_PITFALLS/) | Top anti-patterns, troubleshooting playbook |
+| [08_PRODUCTION_TEMPLATES](./08_PRODUCTION_TEMPLATES/) | 4 verified production `.toad` templates |
 
 ---
 
-> [!IMPORTANT]
-> ### 🤖 LLM System Prompt Snippet (Copy-Paste for AI Models)
-> When initializing an AI coding assistant (Gemini, Claude, GPT-4, Cursor) to generate TOAD code, include this system prompt:
-> ```text
-> You are an expert TOAD DSL code generator. You MUST strictly follow these rules:
-> 1. Variables: Declare with `>name = value;`. NEVER use `:` for assignment.
-> 2. Termination: Every statement, property, and `slot;` MUST end with a semicolon `;`.
-> 3. Typography: `font-size: 24px;` sets glyph size; `size: 400px;` sets word-wrap width.
-> 4. Font Stacks: MUST be a single string literal: `>font = "Inter, sans-serif";`.
-> 5. Anchoring: `at: below #target offset 16px;` (space after offset, NEVER a colon).
-> 6. Fill vs Color: Shapes use `fill:`, text elements use `color:`.
-> 7. Badges: Always allocate 15-20% horizontal safety padding around badge text.
-> 8. Neon Glows: Center stop opacity MUST be >= 0.25 (e.g. `alpha(>cyan, 0.35)`).
-> 9. Negative Constraints: NEVER output CSS flexbox (`display: flex`), HTML tags (`<div>`), or CSS `rgba()`.
-> ```
+## ⚡ Core Rules (Quick Reference)
 
----
-
-## 🗺️ Master Navigation & AI Routing Map
-
-When an AI agent or LLM needs to resolve a specific requirement or fix a compiler diagnostic, route directly to the target module:
-
-| AI Task / Intent | Target Manual | What It Explains |
-|:---|:---|:---|
-| **Declare variables, math, canvas** | [01_CORE_SYNTAX_AND_LANGUAGE](./01_CORE_SYNTAX_AND_LANGUAGE/) | Token grammar, `calc()`, variable scoping, canvas dimensions |
-| **Position elements, create stacks/grids** | [02_LAYOUT_AND_POSITIONING](./02_LAYOUT_AND_POSITIONING/) | `at:` relational anchors, DAG topology, flex stacks, bento grids |
-| **Draw shapes, gradients, glows, masks** | [03_GRAPHICS_SHAPES_AND_EFFECTS](./03_GRAPHICS_SHAPES_AND_EFFECTS/) | Vector paths, sRGB gradients, drop shadows, blend modes |
-| **Format multiline text & custom fonts** | [04_TYPOGRAPHY_AND_FONTS](./04_TYPOGRAPHY_AND_FONTS/) | Word-wrapping, OpenType features, Base64 font embedding |
-| **Build reusable components & design systems** | [05_COMPONENTS_AND_MODULARITY](./05_COMPONENTS_AND_MODULARITY/) | `component`, `slot;`, `@import`, token sharing |
-| **Debug raster, SVG, PSD, or Print output** | [06_EXPORTERS_AND_RENDERING](./06_EXPORTERS_AND_RENDERING/) | Skia Canvas, SVG sRGB fix, Photoshop TySh/vmsk, 300 DPI prepress |
-| **Avoid LLM bugs, fix compiler errors** | [07_LLM_RULES_AND_PITFALLS](./07_LLM_RULES_AND_PITFALLS/) | Top 20 anti-patterns, troubleshooting trees, 8pt grid rules |
-| **Start from tested, production templates** | [08_PRODUCTION_TEMPLATES](./08_PRODUCTION_TEMPLATES/) | 4 production-grade, 100% verified `.toad` templates |
-
----
-
-## ⚡ The 12 Golden Commandments of TOAD DSL
-
-Every developer and AI model writing `.toad` code must strictly abide by these immutable rules:
-
-1. **Variables Use Assignment (`=`)**: Declare variables as `>brandPrimary = #3b82f6;`. Never use colons for variable declaration. Reference variables with `>var`.
-2. **Every Statement Ends in Semicolon (`;`)**: Properties, directives, slot declarations (`slot;`), and variable statements must terminate with a semicolon.
-3. **Typography Glyph Size vs. Word-Wrap Boundary**: `font-size: 24px;` controls the glyph scale. `size: 400px;` (or `size: 400px hug;`) defines the multi-line word-wrap container. Without `size:`, text flows on a single infinite line.
-4. **Font Stacks Must Be a Single String Literal**: When chaining fonts or fallbacks, write `>fontStack = "Inter, 'Segoe UI', sans-serif";`. Never use unquoted comma lists (`>font = "Inter", sans-serif;` is a fatal syntax error).
-5. **Declare Fonts Explicitly**: Always use `@font "./fonts/..." as "Name" normal;` or specify `font-family:` on the `canvas` block. Never rely on OS-specific default fallbacks (e.g. Windows DirectWrite defaulting to condensed `Agency FB` while browsers default to wide `Arial`).
-6. **Badge & Pill Safety Margins**: Always plan 15–20% horizontal safety padding around text in pills, tags, and buttons. Never hardcode container width to the bare glyph boundary.
-7. **Relational Anchoring Syntax**: Anchor elements with explicit contexts: `at: below #hero offset 16px;` or `at: center of canvas;`. Never put a colon after `offset`.
-8. **Shapes Use `fill:`, Texts Use `color:`**: Rectangles, circles, and paths take `fill:`; text elements take `color:`.
-9. **Glow Center Alphas $\ge 0.25$**: For neon/glow effects on dark backgrounds, use center stop alphas of at least $0.25$ (e.g. `alpha(>brandGreen, 0.35) 0%`) so they remain vibrant across sRGB screens without gamma attenuation.
-10. **180°-Rotated Containers Require Extra Top Margin**: In groups with `rotation: 180deg;`, positive $Y$ coordinates push elements upward toward the card boundary on screen. Double the top/bottom boundary margins to prevent collisions.
-11. **Slots Must Terminate with Semicolon**: Content projection insertion points MUST be written as `slot;`. Omitting the semicolon causes a parse error on the enclosing closing brace.
-12. **Negative Constraints**: NEVER hallucinate CSS flexbox (`display: flex`), HTML elements (`<div>`), or CSS `rgba(...)` syntax. Use `stack`, `rect`, and `alpha(#hex, a)`.
-
----
-
-## 🚀 Quick Start & CLI Invocations
-
-```bash
-# 1. Compile a document to all supported formats (PNG, JPG, WebP, SVG, PSD)
-toad "design.toad"
-
-# 2. Build specific scale and format
-toad "design.toad" -s 2 -f "svg, png"
-
-# 3. Start live preview server with Hot Reload (SSE)
-toad dev "design.toad" --port 3000
-
-# 4. Format and lint TOAD code
-toad format "design.toad"
-toad lint "design.toad"
-```
-
-Dive into the module directories above to explore the complete documentation!
+1. **Variables**: `>var = value;` (never `:`).
+2. **Termination**: Every statement ends with a semicolon `;`.
+3. **Typography**: `font-size: 24px;` sets glyph scale; `size: 400px;` sets word-wrap container.
+4. **Font Stacks**: Must be a single quoted string (`>font = "Inter, sans-serif";`).
+5. **Anchoring**: `at: below #target offset 16px;` (space after `offset`, never a colon).
+6. **Shapes vs Text**: Shapes use `fill:`, text uses `color:`.
+7. **Negative Constraints**: No CSS flexbox (`display: flex`), no HTML (`<div>`), no `rgba()`. Use `stack`, `rect`, and `alpha(#hex, a)`.
