@@ -51,5 +51,17 @@
     <rule id="INV-010" severity="warning">
       <statement>In containers with 'rotation: 180;', invert coordinate expectations and double top margins to avoid clipping the parent boundary.</statement>
     </rule>
+
+    <rule id="INV-011" severity="fatal">
+      <statement>Every .toad visual artifact design generation task MUST fuse visual DNA from a minimum of 3 Creative Personas (Module 09) and a minimum of 3 Corporate Design Systems (Module 10) as a strict floor (more are actively encouraged, e.g. 6 Personas + 4 Corporate Systems; no upper limit). The file MUST start with the Multi-DNA Inspiration Matrix header declaring all selected entities and inherited attributes.</statement>
+    </rule>
+
+    <rule id="INV-012" severity="fatal">
+      <statement>AI-slop design tropes are strictly forbidden universally across ALL media formats (print, posters, banners, logos, UI, business cards): No aimless purple/cyan radial blur clouds, no meaningless bento-grid boxing, no centered multi-line body copy, no floating 3D debris, no Corporate Memphis figures, and NO horror vacui clutter (less is more: reserve 40-60% calm whitespace). Strictly obey rules/anti_ai_slop_heuristics.xml and rules/anti_ai_slop_donts.yaml across all design tasks.</statement>
+    </rule>
+
+    <rule id="INV-013" severity="error">
+      <statement>Project 'fonts/' Directory Synchronization &amp; Photopea Drag-and-Drop Readiness: The AI MUST maintain an active local 'fonts/' directory for every project at all times. Every custom font family and weight declared via '@font' or referenced in 'font-family:' must have its corresponding font binary (.ttf, .otf, or .woff2) stored and kept synchronized in the project's 'fonts/' folder. This ensures users can instantly drag-and-drop the font files into Photopea (or Photoshop) for 100% native glyph, weight, ligature, and layout rendering without missing font warnings or fallback replacement.</statement>
+    </rule>
   </invariants>
 </system_directives>

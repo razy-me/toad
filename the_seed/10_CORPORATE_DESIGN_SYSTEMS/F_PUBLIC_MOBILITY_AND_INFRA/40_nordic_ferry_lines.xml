@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<corporate_design id="nordic_ferry_lines" industry_domain="public_mobility_and_infra" category="F_PUBLIC_MOBILITY_AND_INFRA" version="1.0">
+  <brand_meta>
+    <company_name>Nordic Ferry Lines</company_name>
+    <product_name>Zero-Emission Island Ferries</product_name>
+    <industry>Schifffahrt &amp; Insel-Logistik</industry>
+    <profile>Elektro-Fährverbindungen zwischen Dänemark, Schweden und den Schärengärten.</profile>
+    <tone_of_voice>Maritim, sauber, skandinavisch klar, naturschonend.</tone_of_voice>
+  </brand_meta>
+
+  <tags>
+    <tag>faehre</tag>
+    <tag>schifffahrt</tag>
+    <tag>skandinavien</tag>
+    <tag>nordic-blue</tag>
+    <tag>insel</tag>
+  </tags>
+
+  <design_tokens>
+    <colors>
+      <color token="ferryBlue" hex="#0284C7" role="Wasserstraße" />
+      <color token="deckWhite" hex="#FFFFFF" role="Schiffsdeck" />
+      <color token="hullNavy" hex="#0F172A" role="Rumpf-Farbe" />
+    </colors>
+    <typography>
+      <primary_font>&quot;Montserrat&quot;, sans-serif</primary_font>
+      <h1 scale="Bold (700), 34px" />
+      <body scale="Regular (400), 14px, Color #0F172A" />
+    </typography>
+    <geometry>
+      <card_radius>10px</card_radius>
+      <button_radius>6px</button_radius>
+      <grid_gap>20px</grid_gap>
+    </geometry>
+    <shadows>
+      <ambient>none</ambient>
+    </shadows>
+  </design_tokens>
+
+  <brand_rules>
+    <dos>
+      <do>Klares Meeresblau (#0284C7) mit sauberem Schiffsweiß koppeln.</do>
+    </dos>
+    <donts>
+      <dont>Keine unruhigen Schraffuren.</dont>
+    </donts>
+  </brand_rules>
+
+  <toad_component_blueprint lang="toad"><![CDATA[
+canvas {
+  size: 900px 560px;
+  fill: #F0F9FF;
+  font-family: "Montserrat, sans-serif";
+}
+
+>blue = #0284C7;
+>navy = #0F172A;
+
+rect #ferryCard {
+  at: center of canvas;
+  size: 800px 460px;
+  fill: #FFFFFF;
+  stroke: >blue;
+  stroke-width: 1px;
+  radius: 10px;
+}
+
+text #ferryHeader {
+  at: top left of #ferryCard offset 36px 36px;
+  content: "NORDIC FERRY LINES // ZERO-EMISSION FLEET";
+  font-size: 13px;
+  font-weight: 700;
+  color: >blue;
+}
+
+text #ferryTitle {
+  at: below #ferryHeader offset 16px;
+  content: "Täglich lautlos durch die Schären – mit Batterieantrieb";
+  font-size: 28px;
+  font-weight: 700;
+  color: >navy;
+}
+  ]]></toad_component_blueprint>
+
+  <routing_triggers>
+    <trigger>ferry line brand</trigger>
+    <trigger>maritime transport styleguide</trigger>
+    <trigger>electric ship flyer</trigger>
+    <trigger>nordic ferry</trigger>
+    <trigger>island logistics banner</trigger>
+  </routing_triggers>
+</corporate_design>

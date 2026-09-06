@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<corporate_design id="atelier_nordstrikk" industry_domain="luxury_and_fashion" category="E_LUXURY_AND_FASHION" version="1.0">
+  <brand_meta>
+    <company_name>Atelier Nordstrikk Oslo</company_name>
+    <product_name>Reine Merinowoll-Strickwaren</product_name>
+    <industry>Modedesign / Nachhaltiger Strick</industry>
+    <profile>Norwegisches Designstudio für schwere, zeitlose Fischerpullover aus mulesingfreier Merinowolle.</profile>
+    <tone_of_voice>Wärmend, rau, puristisch, wettererprobt, skandinavisch.</tone_of_voice>
+  </brand_meta>
+
+  <tags>
+    <tag>strick</tag>
+    <tag>merinowolle</tag>
+    <tag>norwegen</tag>
+    <tag>wollweiss</tag>
+    <tag>slow-fashion</tag>
+  </tags>
+
+  <design_tokens>
+    <colors>
+      <color token="woolWhite" hex="#F5F3EF" role="Ungewaschene Rohwolle" />
+      <color token="fjordNavy" hex="#1E293B" role="Norwegisches Seemannsblau" />
+      <color token="heatherOat" hex="#D6C7B2" role="Haferflocken-Melange" />
+    </colors>
+    <typography>
+      <primary_font>&quot;Plus Jakarta Sans&quot;, sans-serif</primary_font>
+      <h1 scale="Medium (500), 34px" />
+      <body scale="Regular (400), 15px, Color #1E293B" />
+    </typography>
+    <geometry>
+      <card_radius>8px</card_radius>
+      <button_radius>4px</button_radius>
+      <grid_gap>24px</grid_gap>
+    </geometry>
+    <shadows>
+      <ambient>none</ambient>
+    </shadows>
+  </design_tokens>
+
+  <brand_rules>
+    <dos>
+      <do>Wollweiß (#F5F3EF) mit Fjord-Navy (#1E293B) ruhig kombinieren.</do>
+    </dos>
+    <donts>
+      <dont>Keine grellen synthetischen Modefarben.</dont>
+    </donts>
+  </brand_rules>
+
+  <toad_component_blueprint lang="toad"><![CDATA[
+canvas {
+  size: 880px 580px;
+  fill: #F5F3EF;
+  font-family: "Plus Jakarta Sans, sans-serif";
+}
+
+>navy = #1E293B;
+
+rect #woolCard {
+  at: center of canvas;
+  size: 780px 480px;
+  fill: #FFFFFF;
+  stroke: #E5E1D8;
+  stroke-width: 1px;
+  radius: 8px;
+}
+
+text #woolHeader {
+  at: top left of #woolCard offset 40px 40px;
+  content: "NORDSTRIKK // OSLO MERINO KNITWEAR";
+  font-size: 13px;
+  font-weight: 600;
+  color: #8C7A6B;
+}
+
+text #woolTitle {
+  at: below #woolHeader offset 14px;
+  content: "Handgestrickt für Generationen im Polarwind";
+  font-size: 30px;
+  font-weight: 600;
+  color: >navy;
+}
+  ]]></toad_component_blueprint>
+
+  <routing_triggers>
+    <trigger>knitwear brand identity</trigger>
+    <trigger>scandinavian woolen fashion</trigger>
+    <trigger>slow fashion styleguide</trigger>
+    <trigger>nordstrikk</trigger>
+    <trigger>merino wool banner</trigger>
+  </routing_triggers>
+</corporate_design>

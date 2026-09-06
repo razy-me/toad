@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<corporate_design id="urbanleaf_salad" industry_domain="consumer_food_and_lifestyle" category="D_CONSUMER_FOOD_AND_LIFESTYLE" version="1.0">
+  <brand_meta>
+    <company_name>UrbanLeaf Bowls &amp; Greens</company_name>
+    <product_name>Zero-Waste Quinoa &amp; Greens Bowl</product_name>
+    <industry>Gastronomie / Fast Casual</industry>
+    <profile>Schnelle, ultragesunde Bowl-Bar für urbane Berufstätige mit Mehrweg-Pfandsystem.</profile>
+    <tone_of_voice>Frisch, urban, schnell, gesundheitsbewusst, modern.</tone_of_voice>
+  </brand_meta>
+
+  <tags>
+    <tag>bowls</tag>
+    <tag>salad</tag>
+    <tag>avocado-green</tag>
+    <tag>fast-casual</tag>
+    <tag>urban</tag>
+  </tags>
+
+  <design_tokens>
+    <colors>
+      <color token="avocadoGreen" hex="#65A30D" role="Frisches Blattgrün" />
+      <color token="beetrootPink" hex="#BE185D" role="Rote Beete Akzent" />
+      <color token="cleanWhite" hex="#FFFFFF" role="Ladenbau-Weiß" />
+    </colors>
+    <typography>
+      <primary_font>&quot;Inter&quot;, sans-serif</primary_font>
+      <h1 scale="Bold (700), 34px" />
+      <body scale="Regular (400), 14px, Color #1E293B" />
+    </typography>
+    <geometry>
+      <card_radius>16px</card_radius>
+      <button_radius>9999px</button_radius>
+      <grid_gap>16px</grid_gap>
+    </geometry>
+    <shadows>
+      <ambient>none</ambient>
+    </shadows>
+  </design_tokens>
+
+  <brand_rules>
+    <dos>
+      <do>Knackiges Blattgrün (#65A30D) mit Roter Beete (#BE185D) koppeln.</do>
+    </dos>
+    <donts>
+      <dont>Keine fettigen Fast-Food-Gelbtöne.</dont>
+    </donts>
+  </brand_rules>
+
+  <toad_component_blueprint lang="toad"><![CDATA[
+canvas {
+  size: 880px 560px;
+  fill: #F7FEE7;
+  font-family: "Inter, sans-serif";
+}
+
+>green = #65A30D;
+>pink = #BE185D;
+
+rect #bowlCard {
+  at: center of canvas;
+  size: 780px 460px;
+  fill: #FFFFFF;
+  radius: 16px;
+}
+
+text #bowlHeader {
+  at: top left of #bowlCard offset 36px 36px;
+  content: "URBANLEAF // FRESH CRUNCH BOWLS";
+  font-size: 13px;
+  font-weight: 700;
+  color: >green;
+}
+
+text #bowlTitle {
+  at: below #bowlHeader offset 14px;
+  content: "Wild Salmon & Sesame Avocado Bowl";
+  font-size: 30px;
+  font-weight: 700;
+  color: #1E293B;
+}
+  ]]></toad_component_blueprint>
+
+  <routing_triggers>
+    <trigger>salad bowl restaurant brand</trigger>
+    <trigger>fast casual healthy styleguide</trigger>
+    <trigger>fresh food bar poster</trigger>
+    <trigger>urbanleaf</trigger>
+    <trigger>zero waste lunch menu</trigger>
+  </routing_triggers>
+</corporate_design>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<specification module="03_troubleshooting_playbook" target="toad-dsl" version="3.0">
+  <metadata>
+    <description>Diagnostic trees for syntax, layout DAG cycles, visual discrepancies, and CLI debugging toolkit</description>
+  </metadata>
+
+  <diagnostic_trees>
+    <tree name="syntax_and_parse_failures">
+      <step issue="Unexpected token ':'">Check for var assignment (>var = val;) or colon after offset (offset 10px;).</step>
+      <step issue="Unexpected token ','">Font fallback commas must be inside single string (">font = 'Inter, sans-serif';").</step>
+      <step issue="Expected ';' after slot">Slot must terminate with semicolon (slot;).</step>
+    </tree>
+
+    <tree name="layout_and_dag_failures">
+      <step issue="Circular layout dependency">Identify cycle in report and break mutual dependency with landmark absolute anchor.</step>
+      <step issue="Overlapping elements in stack">Remove explicit 'at:' from stack children so 'gap:' controls spacing.</step>
+      <step issue="Element at (0, 0)">Target ID does not exist or has typo.</step>
+    </tree>
+
+    <tree name="visual_discrepancies">
+      <step issue="Colors muted in SVG">Ensure color-interpolation="sRGB" and radial glow center alpha >= 0.25.</step>
+      <step issue="Text clipped in SVG">Register font via @font or add 15%-20% safety padding.</step>
+      <step issue="Shadow cut off">Verify filter bounds are expanded (x="-100%" y="-100%" width="300%" height="300%").</step>
+      <step issue="Text too high inside pill/badge">Canvas renders text from top baseline. Apply Cap-Height Offset (+1.5px to +2.5px at 1x, +3-5px at 2x) or run pixel-scan verification script.</step>
+      <step issue="Text misaligned with adjacent icon">Align glyph center to icon bounding center. Never assume identical y-coordinate results in visual center alignment.</step>
+    </tree>
+  </diagnostic_trees>
+
+  <cli_debugging_toolkit>
+    <command syntax="toad compile design.toad --debug" description="Print AST and layout evaluation metrics" />
+    <command syntax="toad compile design.toad -o wireframe.png --show-bounds" description="Draw bounding boxes (red), anchor vectors (blue), padding/margin (green)" />
+    <command syntax="toad compile design.toad -o output.svg --pretty" description="Inspect formatted SVG XML structure" />
+    <command syntax="toad check design.toad" description="Check syntax and validation without writing files" />
+  </cli_debugging_toolkit>
+</specification>

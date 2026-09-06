@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<specification module="03_filters_shadows_and_glows" target="toad-dsl" version="3.0">
+  <metadata>
+    <description>CSS-compatible filters, elevation drop shadows, outer glow effects, and SVG filter fidelity</description>
+  </metadata>
+
+  <filter_functions>
+    <filter name="blur" args="radius" example="blur(8px)" description="Gaussian blur standard deviation" />
+    <filter name="drop-shadow" args="dx dy blur color" example="drop-shadow(0 12px 32px alpha(#000000, 0.4))" description="Elevation shadow" />
+    <filter name="opacity" args="0.0-1.0 or percent" example="opacity(0.85)" description="Alpha attenuation" />
+    <filter name="brightness" args="multiplier" example="brightness(1.1)" description="Linear brightness scaling" />
+    <filter name="contrast" args="multiplier" example="contrast(1.5)" description="Contrast enhancement" />
+    <filter name="saturate" args="multiplier" example="saturate(1.3)" description="Chromatic saturation multiplier" />
+    <filter name="grayscale" args="0.0-1.0 or percent" example="grayscale(100%)" description="Monochrome desaturation" />
+    <filter name="sepia" args="0.0-1.0 or percent" example="sepia(80%)" description="Photographic sepia matrix" />
+    <filter name="invert" args="0.0-1.0 or percent" example="invert(100%)" description="Inverts color channels" />
+    <filter name="hue-rotate" args="angle" example="hue-rotate(90deg)" description="Rotates hue around color wheel" />
+  </filter_functions>
+
+  <drop_shadows>
+    <shorthand_syntax>shadow: 0 8px 24px alpha(#000000, 0.4);</shorthand_syntax>
+    <elevation_tokens>
+      <level rank="1" name="shadowSm" value="0 2px 4px alpha(#000000, 0.1)" use="Cards, Badges" />
+      <level rank="2" name="shadowMd" value="0 8px 20px alpha(#000000, 0.25)" use="Hover / Floating Tiles" />
+      <level rank="3" name="shadowLg" value="0 20px 48px alpha(#000000, 0.45)" use="Modals, Popovers" />
+    </elevation_tokens>
+  </drop_shadows>
+
+  <outer_glows>
+    <description>Non-directional shadows (dx=0, dy=0) with luminous tinted color.</description>
+    <example><![CDATA[rect #neonPill { size: 140px 32px; fill: #87CC2E; radius: 16px; shadow: 0 0 20px alpha(#87CC2E, 0.45); }]]></example>
+  </outer_glows>
+
+  <svg_filter_fidelity>
+    <fix name="color_interpolation">TOAD sets color-interpolation-filters="sRGB" to prevent gamma crushing transparent colors.</fix>
+    <fix name="expanded_subregions">TOAD expands filter bounds to x="-50%" y="-50%" width="200%" height="200%" to avoid clipping large blurs.</fix>
+  </svg_filter_fidelity>
+</specification>

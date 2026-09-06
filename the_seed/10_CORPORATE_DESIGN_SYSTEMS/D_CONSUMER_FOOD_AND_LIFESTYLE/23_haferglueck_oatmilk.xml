@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<corporate_design id="haferglueck_oatmilk" industry_domain="consumer_food_and_lifestyle" category="D_CONSUMER_FOOD_AND_LIFESTYLE" version="1.0">
+  <brand_meta>
+    <company_name>Haferglück Bio-Milch</company_name>
+    <product_name>Haferdrink Barista Edition</product_name>
+    <industry>Lebensmittel / Vegane Milchalternativen</industry>
+    <profile>Pflanzliche Bio-Milch aus regionalem Haferanbau, schäumt perfekt im Kaffee.</profile>
+    <tone_of_voice>Fröhlich, unkompliziert, zukunftsorientiert, nachhaltig mit einem Lächeln.</tone_of_voice>
+  </brand_meta>
+
+  <tags>
+    <tag>hafermilch</tag>
+    <tag>vegan</tag>
+    <tag>bio</tag>
+    <tag>oat-yellow</tag>
+    <tag>lifestyle</tag>
+  </tags>
+
+  <design_tokens>
+    <colors>
+      <color token="oatCream" hex="#FFF8ED" role="Milchschaum-Canvas" />
+      <color token="sunYellow" hex="#FBBF24" role="Reife Haferfelder, Fröhlichkeit" />
+      <color token="earthBrown" hex="#451A03" role="Schokolade, Typo-Kontrast" />
+    </colors>
+    <typography>
+      <primary_font>&quot;Fredoka One&quot;, &quot;Plus Jakarta Sans&quot;, sans-serif</primary_font>
+      <h1 scale="Bold (800), 38px" />
+      <body scale="Regular (400), 16px, Color #451A03" />
+    </typography>
+    <geometry>
+      <card_radius>24px</card_radius>
+      <button_radius>9999px</button_radius>
+      <grid_gap>20px</grid_gap>
+    </geometry>
+    <shadows>
+      <ambient>Weicher Schatten</ambient>
+    </shadows>
+  </design_tokens>
+
+  <brand_rules>
+    <dos>
+      <do>Runde, lockere Formen und warme Hafer-Gelbtöne (#FBBF24) einsetzen.</do>
+    </dos>
+    <donts>
+      <dont>Keine industriell-sterilen Grau- oder Schwarztöne.</dont>
+    </donts>
+  </brand_rules>
+
+  <toad_component_blueprint lang="toad"><![CDATA[
+canvas {
+  size: 880px 580px;
+  fill: #FFF8ED;
+  font-family: "Plus Jakarta Sans, sans-serif";
+}
+
+>yellow = #FBBF24;
+>brown = #451A03;
+
+rect #oatCard {
+  at: center of canvas;
+  size: 780px 480px;
+  fill: #FFFFFF;
+  stroke: >yellow;
+  stroke-width: 2px;
+  radius: 24px;
+}
+
+text #oatBrand {
+  at: top left of #oatCard offset 40px 40px;
+  content: "HAFERGLÜCK // BIO BARISTA EDITION";
+  font-size: 14px;
+  font-weight: 800;
+  color: >yellow;
+}
+
+text #oatClaim {
+  at: below #oatBrand offset 14px;
+  content: "100% Pflanzlich. Perfekt geschäumt.";
+  font-size: 34px;
+  font-weight: 800;
+  color: >brown;
+}
+  ]]></toad_component_blueprint>
+
+  <routing_triggers>
+    <trigger>oatmilk brand design</trigger>
+    <trigger>vegan food packaging</trigger>
+    <trigger>plant-based drink styleguide</trigger>
+    <trigger>haferglueck</trigger>
+    <trigger>organic breakfast banner</trigger>
+  </routing_triggers>
+</corporate_design>

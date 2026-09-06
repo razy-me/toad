@@ -441,8 +441,16 @@ export class Parser {
         return { type: 'RectElement', ...base };
       case 'circle':
         return { type: 'CircleElement', ...base };
-      case 'text':
-        return { type: 'TextElement', text: textShorthand, ...base };
+      case 'text': {
+        const hasContentProp = properties.some(p => p.name === 'content' || p.name === 'text');
+        let effectiveName = name;
+        let effectiveText = textShorthand;
+        if (hasContentProp && textShorthand && !name) {
+          effectiveName = textShorthand;
+          effectiveText = undefined;
+        }
+        return { type: 'TextElement', text: effectiveText, ...base, name: effectiveName };
+      }
       case 'polygon':
         return { type: 'PolygonElement', ...base };
       case 'path':

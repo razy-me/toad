@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1200 630" width="2400" height="1260">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="0 0 1200 630" width="2400" height="1260">
   <defs>
     <linearGradient id="lin_grad_1" x1="15%" y1="15%" x2="85%" y2="85%" color-interpolation="sRGB">
       <stop offset="0%" stop-color="#0f172a" />
@@ -22,15 +22,15 @@
  <rect x="800" y="-100" width="600" height="600" rx="9999" ry="9999" fill="url(#rad_grad_2)" id="bgGlow" filter="url(#filter_1)" />
   <g id="cardContainer">
     <g id="featuredBadge">
- <rect x="80" y="80" width="80" height="28" rx="4" ry="4" fill="#f59e0b" id="__auto_1" />
-      <text x="86.5" y="96.5" font-family="sans-serif" font-size="12" font-weight="bold" font-style="normal" text-anchor="start" xml:space="preserve" fill="#000000" id="__auto_2">ANNOUNCEMENT</text>
+ <rect x="80" y="80" width="80" height="28" rx="4" ry="4" fill="#f59e0b" />
+      <text x="86.5" y="98.5" font-family="sans-serif" font-size="12" font-weight="bold" font-style="normal" text-anchor="start" xml:space="preserve" fill="#000000">ANNOUNCEMENT</text>
     </g>
     <text x="80" y="158" font-family="'Inter', sans-serif" font-size="38" font-weight="700" font-style="normal" text-anchor="start" xml:space="preserve" fill="#f8fafc" id="headline"><tspan x="80" dy="0">Introducing toad: The Declarative Design DSL</tspan><tspan x="80" dy="47.5">Compiler for High-Performance Visual Production</tspan></text>
     <text x="80" y="858" font-family="'Inter', sans-serif" font-size="18" font-weight="400" font-style="normal" text-anchor="start" xml:space="preserve" fill="#94a3b8" id="description"><tspan x="80" dy="0">Compile declarative design templates to multi-scale PNG/JPG and native layered Photoshop PSD files instantly</tspan><tspan x="80" dy="25.2">with zero runtime overhead.</tspan></text>
     <g id="authorInfo">
       <g id="authorAvatar">
- <circle cx="128" cy="1574" r="48" fill="#2563eb" stroke="#3b82f6" stroke-width="3" id="__auto_3" />
- <image x="80" y="1526" width="56" height="56" href="./assets/avatar.png" preserveAspectRatio="xMidYMid slice" id="__auto_4" />
+ <circle cx="128" cy="1574" r="48" fill="#2563eb" stroke="#3b82f6" stroke-width="3" />
+ <image x="80" y="1526" width="56" height="56" href="./assets/avatar.png" preserveAspectRatio="xMidYMid slice" />
       </g>
       <text x="192" y="1539" font-family="sans-serif" font-size="16" font-weight="600" font-style="normal" text-anchor="start" xml:space="preserve" fill="#f8fafc" id="authorName">Design Systems Engineering</text>
       <text x="192" y="1561" font-family="sans-serif" font-size="14" font-weight="400" font-style="normal" text-anchor="start" xml:space="preserve" fill="#94a3b8" id="authorHandle">@toad_engine • 5 min read</text>

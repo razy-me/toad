@@ -24,7 +24,9 @@
     <invariant id="BADGE_SAFETY_MARGIN">Pills and badges MUST allocate 15% to 20% horizontal safety padding around text to prevent cross-engine clipping.</invariant>
     <invariant id="NEON_GLOW_ALPHA">Radial gradient center stop opacities MUST be >= 0.25 on dark backgrounds to survive sRGB display normalization.</invariant>
     <invariant id="ROTATION_MARGINS">In containers with 'rotation: 180;', double top margins to account for inverted coordinate axes.</invariant>
+    <invariant id="MANDATORY_MULTI_DNA_FUSION">Every visual design task MUST select and fuse at least 3 Creative Personas (Module 09) and at least 3 Corporate Design Systems (Module 10) as a strict floor (more are actively encouraged, e.g. 6 Personas + 4 Corporate Systems; no upper limit). Code generation MUST start with the inspiration comment block declaring all selected entities and their specific inherited traits.</invariant>
     <invariant id="NEGATIVE_CONSTRAINTS">NEVER hallucinate CSS flexbox ('display: flex'), HTML elements ('<div>'), or CSS 'rgba(...)'.</invariant>
+    <invariant id="FONT_DIR_PHOTOPEA_SYNC">Every project MUST maintain an active, updated local 'fonts/' directory containing physical font binaries (.ttf/.otf) for all custom fonts used in the design, enabling immediate drag-and-drop font loading into Photopea without missing font alerts or broken typography.</invariant>
   </invariants>
 
   <negative_constraints>
@@ -58,6 +60,8 @@
     <module path="grammar/toad.ebnf" type="ebnf">Formal Extended Backus-Naur Form grammar specification</module>
     <module path="rules/system_directives.xml" type="xml">System directives, RFC 2119 invariants, and priority rankings</module>
     <module path="rules/negative_constraints.xml" type="xml">10 high-contrast guardrails preventing Gemini Flash hallucinations</module>
+    <module path="rules/anti_ai_slop_heuristics.xml" type="xml">Exhaustive anti-AI-slop heuristics, telltale sensory indicators, and domain-specific Don'ts</module>
+    <module path="rules/anti_ai_slop_donts.yaml" type="yaml">Dense anti-AI-slop negative constraint lookup matrix and signature triggers</module>
     <module path="rules/preflight_checklist.yaml" type="yaml">Chain-of-thought verification checklist for code generation</module>
     <module path="rules/intent_and_synonym_bridge.yaml" type="yaml">Cross-domain translation bridge: CSS reflexes, Figma auto layout, print DTP, synonyms & alternative phrasings</module>
     <module path="layout/dag_solver_math.yaml" type="yaml">3-color DFS topological sort and relational anchor formulas</module>
@@ -71,5 +75,9 @@
     <module path="few_shots/print_cards.xml" type="xml">Tested few-shots: Double-sided cards, 180-degree tent cards</module>
     <module path="few_shots/marketing_posters.xml" type="xml">Tested few-shots: Neon glow alphas, typographic hierarchy</module>
     <module path="templates/" type="toad">4 runnable production templates verified with 0 warnings</module>
+    <module path="09_CREATIVE_PERSONAS_AND_STYLES/index.yaml" type="yaml">50 machine-optimized creative personas, tag index and domain routing</module>
+    <module path="09_CREATIVE_PERSONAS_AND_STYLES/router.xml" type="xml">Semantic decision engine and intent-matching routes for artistic styles</module>
+    <module path="10_CORPORATE_DESIGN_SYSTEMS/index.yaml" type="yaml">50 machine-optimized corporate design systems, company profiles, token specs, and tag matrix</module>
+    <module path="10_CORPORATE_DESIGN_SYSTEMS/router.xml" type="xml">Corporate identity router and industry decision tree</module>
   </manifest_index>
 </gemini_knowledge_core>

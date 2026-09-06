@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<corporate_design id="physiowell_reha" industry_domain="health_and_life_sciences" category="C_HEALTH_AND_LIFE_SCIENCES" version="1.0">
+  <brand_meta>
+    <company_name>PhysioWell Rehazentrum</company_name>
+    <product_name>Sportphysiotherapie &amp; Bewegungstherapie</product_name>
+    <industry>Physiotherapie &amp; Rehabilitation</industry>
+    <profile>Modernes Trainings- und Rehazentrum für Leistungssportler und postoperative Patienten.</profile>
+    <tone_of_voice>Motivierend, aktivierend, anatomisch fundiert, empathisch.</tone_of_voice>
+  </brand_meta>
+
+  <tags>
+    <tag>physiotherapie</tag>
+    <tag>reha</tag>
+    <tag>sport</tag>
+    <tag>orange-vital</tag>
+    <tag>bewegung</tag>
+  </tags>
+
+  <design_tokens>
+    <colors>
+      <color token="vitalOrange" hex="#F97316" role="Dynamik, Muskulatur, Vitalität" />
+      <color token="slateCharcoal" hex="#1E293B" role="Trainingsgeräte-Grund" />
+      <color token="lightSlate" hex="#F8FAFC" role="Karten-Flächen" />
+    </colors>
+    <typography>
+      <primary_font>&quot;Barlow&quot;, sans-serif</primary_font>
+      <h1 scale="Bold (700), 36px" />
+      <body scale="Regular (400), 15px, Color #334155" />
+    </typography>
+    <geometry>
+      <card_radius>12px</card_radius>
+      <button_radius>8px</button_radius>
+      <grid_gap>20px</grid_gap>
+    </geometry>
+    <shadows>
+      <ambient>none</ambient>
+    </shadows>
+  </design_tokens>
+
+  <brand_rules>
+    <dos>
+      <do>Vitales Orange (#F97316) als Bewegungssignal nutzen.</do>
+    </dos>
+    <donts>
+      <dont>Keine kränkliche, passive Farbwelt.</dont>
+    </donts>
+  </brand_rules>
+
+  <toad_component_blueprint lang="toad"><![CDATA[
+canvas {
+  size: 900px 560px;
+  fill: #F8FAFC;
+  font-family: "Barlow, sans-serif";
+}
+
+>orange = #F97316;
+>dark = #1E293B;
+
+rect #rehaCard {
+  at: center of canvas;
+  size: 800px 460px;
+  fill: #FFFFFF;
+  stroke: #E2E8F0;
+  stroke-width: 1px;
+  radius: 12px;
+}
+
+text #rehaHeader {
+  at: top left of #rehaCard offset 36px 36px;
+  content: "PHYSIOWELL // SPORT-REHABILITATION";
+  font-size: 14px;
+  font-weight: 700;
+  color: >orange;
+}
+
+text #rehaTitle {
+  at: below #rehaHeader offset 14px;
+  content: "Zurück zu voller Beweglichkeit & Leistung";
+  font-size: 32px;
+  font-weight: 700;
+  color: >dark;
+}
+  ]]></toad_component_blueprint>
+
+  <routing_triggers>
+    <trigger>physiotherapy corporate design</trigger>
+    <trigger>rehab center styleguide</trigger>
+    <trigger>sports clinic banner</trigger>
+    <trigger>physiowell</trigger>
+    <trigger>movement therapy flyer</trigger>
+  </routing_triggers>
+</corporate_design>

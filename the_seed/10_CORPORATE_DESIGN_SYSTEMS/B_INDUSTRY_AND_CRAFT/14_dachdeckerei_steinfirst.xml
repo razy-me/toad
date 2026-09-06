@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<corporate_design id="dachdeckerei_steinfirst" industry_domain="industry_and_craft" category="B_INDUSTRY_AND_CRAFT" version="1.0">
+  <brand_meta>
+    <company_name>Steinfirst Dach &amp; Fassade</company_name>
+    <product_name>Meisterbetrieb für Steildach und Schiefer</product_name>
+    <industry>Handwerk / Dachdeckerei</industry>
+    <profile>Spezialist für Schieferdeckungen, Flachdachabdichtungen und energetische Dachsanierung.</profile>
+    <tone_of_voice>Wetterfest, verlässlich, schwindelfrei, traditionsbewusst.</tone_of_voice>
+  </brand_meta>
+
+  <tags>
+    <tag>dachdeckerei</tag>
+    <tag>schiefer</tag>
+    <tag>ziegelrot</tag>
+    <tag>wetterfest</tag>
+    <tag>handwerk</tag>
+  </tags>
+
+  <design_tokens>
+    <colors>
+      <color token="slateGray" hex="#334155" role="Naturschiefer-Grund" />
+      <color token="terracotta" hex="#C2410C" role="Tonziegel-Rot" />
+      <color token="skyMuted" hex="#E2E8F0" role="Himmelweiß" />
+    </colors>
+    <typography>
+      <primary_font>&quot;Montserrat&quot;, sans-serif</primary_font>
+      <h1 scale="Bold (700), 32px" />
+      <body scale="Regular (400), 14px, Color #F8FAFC" />
+    </typography>
+    <geometry>
+      <card_radius>6px</card_radius>
+      <button_radius>4px</button_radius>
+      <grid_gap>16px</grid_gap>
+    </geometry>
+    <shadows>
+      <ambient>none</ambient>
+    </shadows>
+  </design_tokens>
+
+  <brand_rules>
+    <dos>
+      <do>Schiefer-Anthrazit mit Ziegelrot kombinieren.</do>
+    </dos>
+    <donts>
+      <dont>Keine grellen Neonfarben.</dont>
+    </donts>
+  </brand_rules>
+
+  <toad_component_blueprint lang="toad"><![CDATA[
+canvas {
+  size: 900px 560px;
+  fill: #1E293B;
+  font-family: "Montserrat, sans-serif";
+}
+
+>terracotta = #C2410C;
+>white = #FFFFFF;
+
+rect #roofCard {
+  at: center of canvas;
+  size: 820px 460px;
+  fill: #334155;
+  radius: 6px;
+}
+
+text #roofTitle {
+  at: top left of #roofCard offset 32px 32px;
+  content: "STEINFIRST // MEISTERBETRIEB FÜR DACH & SCHIEFER";
+  font-size: 14px;
+  font-weight: 700;
+  color: >terracotta;
+}
+
+text #roofHeadline {
+  at: below #roofTitle offset 16px;
+  content: "Schutz vor jedem Unwetter – seit 1978";
+  font-size: 30px;
+  font-weight: 700;
+  color: >white;
+}
+  ]]></toad_component_blueprint>
+
+  <routing_triggers>
+    <trigger>roofing corporate brand</trigger>
+    <trigger>slate tiles roof flyer</trigger>
+    <trigger>craftsman roof service</trigger>
+    <trigger>steinfirst</trigger>
+    <trigger>terracotta roofer banner</trigger>
+  </routing_triggers>
+</corporate_design>

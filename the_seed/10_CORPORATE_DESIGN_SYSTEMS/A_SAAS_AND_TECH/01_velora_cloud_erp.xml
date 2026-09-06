@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<corporate_design id="velora_cloud_erp" industry_domain="saas_and_tech" category="A_SAAS_AND_TECH" version="1.0">
+  <brand_meta>
+    <company_name>Velora Software GmbH</company_name>
+    <product_name>Velora Cloud ERP</product_name>
+    <industry>B2B SaaS / Cloud ERP für KMU</industry>
+    <profile>Familiär geleitetes Softwareunternehmen mit ca. 100 Mitarbeitern. 30 Jahre ERP-Erfahrung gepaart mit moderner Agilität.</profile>
+    <tone_of_voice>Direktes, sympathisches „Du“, partnerschaftlich, bodenständig, transparent, keine Beraterfloskeln.</tone_of_voice>
+  </brand_meta>
+
+  <tags>
+    <tag>erp</tag>
+    <tag>kmu</tag>
+    <tag>cloud-software</tag>
+    <tag>familiär</tag>
+    <tag>pill-ui</tag>
+  </tags>
+
+  <design_tokens>
+    <colors>
+      <color token="brandGreen" hex="#79B828" role="Kernmarke, Logo, Highlights, Status, FABs" />
+      <color token="ctaAubergine" hex="#6D213F" role="Primäre Konversion (Demo/Testen), Hero-Banner, Komplementärkontrast" />
+      <color token="greenTint" hex="#EBF7DC" role="Icon-Flächen, Feature-Pills, Badges, dezente Hover-States" />
+      <color token="darkSlate" hex="#1F2428" role="Headlines H1/H2, ersetzt hartes Rein-Schwarz für beste Lesbarkeit" />
+      <color token="bodySlate" hex="#495057" role="Fließtext und Kartentexte, optimal scannbar" />
+      <color token="bgSoft" hex="#F8F9FA" role="Extrem softes Hellgrau/Off-White für visuelle Schichtung" />
+      <color token="cardWhite" hex="#FFFFFF" role="Hintergrundflächen für Feature-Karten und Navigations-Header" />
+    </colors>
+    <typography>
+      <primary_font>&quot;Plus Jakarta Sans&quot;, &quot;Inter&quot;, sans-serif</primary_font>
+      <h1 scale="Extra-Bold (800), 38px-44px, Line-Height: 1.15" />
+      <body scale="Regular (400), 15px-16px, Line-Height: 1.55, Color #495057" />
+    </typography>
+    <geometry>
+      <card_radius>18px (weiche Kanten auf #F8F9FA)</card_radius>
+      <button_radius>9999px (konsequenter Pill-Shape)</button_radius>
+      <grid_gap>24px</grid_gap>
+    </geometry>
+    <shadows>
+      <ambient>Weiche Ambient-Shadows (0 4px 20px alpha(#000000, 0.04)) statt harter Rahmen</ambient>
+    </shadows>
+  </design_tokens>
+
+  <brand_rules>
+    <dos>
+      <do>Aubergine (#6D213F) gezielt als Konversions-Highlight für primäre Aktionen nutzen.</do>
+      <do>Icons immer mit dem dezenten, quadratisch abgerundeten Lindgrün-Container (#EBF7DC) hinterlegen.</do>
+      <do>Pill-Shape (radius: 9999px;) konsequent bei allen Buttons und Meta-Badges einhalten.</do>
+      <do>Großzügigen Weißraum rund um Inhaltsmodule und Teaserblöcke wahren.</do>
+    </dos>
+    <donts>
+      <dont>Keine scharfen Kanten (0px Radius) bei Buttons oder Cards.</dont>
+      <dont>Kein kaltes B2B-Königsblau oder grelles Neongrün verwenden.</dont>
+      <dont>Keine überladenen, textlastigen Cards ohne Icon-Anker.</dont>
+      <dont>Keine generischen Stockfotos im Nadelstreifenanzug – Fokus bleibt auf Team &amp; Software.</dont>
+    </donts>
+  </brand_rules>
+
+  <toad_component_blueprint lang="toad"><![CDATA[
+canvas {
+  size: 960px 640px;
+  fill: #F8F9FA;
+  font-family: "Plus Jakarta Sans, sans-serif";
+}
+
+>brandGreen = #79B828;
+>ctaAubergine = #6D213F;
+>greenTint = #EBF7DC;
+>darkSlate = #1F2428;
+>bodySlate = #495057;
+>bgWhite = #FFFFFF;
+
+rect #floatingHeader {
+  at: top center of canvas offset 0px 32px;
+  size: 880px 64px;
+  fill: >bgWhite;
+  radius: 9999px;
+}
+
+text #brandLogo {
+  at: left center of #floatingHeader offset 32px 0px;
+  content: "VELORA";
+  font-size: 22px;
+  font-weight: 800;
+  color: >brandGreen;
+}
+
+rect #headerCtaBtn {
+  at: right center of #floatingHeader offset -12px 0px;
+  size: 190px 44px;
+  fill: >ctaAubergine;
+  radius: 9999px;
+}
+
+text #headerCtaLabel {
+  at: center of #headerCtaBtn;
+  content: "Kostenlos testen";
+  font-size: 14px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+rect #heroCard {
+  at: below #floatingHeader offset 32px;
+  size: 880px 460px;
+  fill: >bgWhite;
+  radius: 18px;
+}
+
+rect #featurePill {
+  at: top left of #heroCard offset 40px 40px;
+  size: 190px 28px;
+  fill: >greenTint;
+  radius: 9999px;
+}
+
+text #featurePillText {
+  at: center of #featurePill;
+  content: "CLOUD ERP FÜR KMU";
+  font-size: 11px;
+  font-weight: 700;
+  color: >brandGreen;
+}
+
+text #heroHeadline {
+  at: below #featurePill offset 18px;
+  size: 560px;
+  content: "Einfach, flexibel und nah am Mittelstand.";
+  font-size: 38px;
+  font-weight: 800;
+  color: >darkSlate;
+}
+
+text #heroSubtext {
+  at: below #heroHeadline offset 16px;
+  size: 540px;
+  content: "Mit Velora steuerst Du Warenwirtschaft, CRM und Finanzen in einer einzigen intuitiven Cloud-Plattform – von einem Team, das Dich versteht.";
+  font-size: 16px;
+  color: >bodySlate;
+}
+
+rect #primaryActionBtn {
+  at: below #heroSubtext offset 32px;
+  size: 230px 52px;
+  fill: >ctaAubergine;
+  radius: 9999px;
+}
+
+text #primaryActionLabel {
+  at: center of #primaryActionBtn;
+  content: "Jetzt Demo vereinbaren";
+  font-size: 14px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+rect #iconBoxSample {
+  at: top right of #heroCard offset -40px 40px;
+  size: 56px 56px;
+  fill: >greenTint;
+  radius: 10px;
+}
+
+text #iconSampleGlyph {
+  at: center of #iconBoxSample;
+  content: "⚙";
+  font-size: 28px;
+  color: >brandGreen;
+}
+  ]]></toad_component_blueprint>
+
+  <routing_triggers>
+    <trigger>velora cloud erp</trigger>
+    <trigger>mittelstand erp</trigger>
+    <trigger>kmu cloud software</trigger>
+    <trigger>pill button ui</trigger>
+    <trigger>aubergine green branding</trigger>
+  </routing_triggers>
+</corporate_design>

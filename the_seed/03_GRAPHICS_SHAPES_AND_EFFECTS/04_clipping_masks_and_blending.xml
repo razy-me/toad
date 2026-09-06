@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<specification module="04_clipping_masks_and_blending" target="toad-dsl" version="3.0">
+  <metadata>
+    <description>Clipping masks, sibling stencil mechanics, container overflow clipping, and Photoshop blend modes</description>
+  </metadata>
+
+  <sibling_clipping_mask>
+    <concept>An element marked with 'clip: true;' acts as a stencil mask for the immediately following sibling element.</concept>
+    <example><![CDATA[
+circle #avatarMask {
+    at: (40px, 40px);
+    size: 96px;
+    clip: true; // Mask stencil
+}
+image #userPhoto {
+    at: (40px, 40px);
+    size: 96px 96px;
+    src: "./assets/portrait.jpg";
+}
+    ]]></example>
+    <exporter_mapping>
+      <svg>Generates clipPath definition and attaches clip-path="url(#...)" to sibling</svg>
+      <skia>Executes ctx.save(), clip(), renders sibling, then ctx.restore()</skia>
+      <psd>Attaches native vector mask (vmsk) to target layer</psd>
+    </exporter_mapping>
+  </sibling_clipping_mask>
+
+  <overflow_clipping>
+    <example><![CDATA[
+group #clippedCard {
+    size: 400px 300px;
+    radius: 20px;
+    overflow: hidden; // Automatically clips nested children
+    image #bg { size: 500px 400px; at: (-20px, -20px); src: "./landscape.jpg"; }
+}
+    ]]></example>
+  </overflow_clipping>
+
+  <blend_modes>
+    <mode name="multiply" math="C = A * B" use="Darkening overlays, risograph" psd_ali="mul " />
+    <mode name="screen" math="C = 1 - (1 - A)(1 - B)" use="Light rays, glows on dark" psd_ali="scrn" />
+    <mode name="overlay" math="Multiply + Screen" use="Cinematic contrast grading" psd_ali="over" />
+    <mode name="darken" math="min(A, B)" use="Preserves darker pixels" psd_ali="dark" />
+    <mode name="lighten" math="max(A, B)" use="Preserves brighter pixels" psd_ali="lite" />
+    <mode name="color-dodge" math="B / (1 - A)" use="High-intensity neon/metallic" psd_ali="div " />
+    <mode name="color-burn" math="1 - (1 - B) / A" use="Deep saturated shadows" psd_ali="idiv" />
+    <mode name="difference" math="|A - B|" use="Inverted geometric artboards" psd_ali="diff" />
+    <mode name="exclusion" math="Softer difference" use="Modernist editorial contrast" psd_ali="smud" />
+  </blend_modes>
+</specification>

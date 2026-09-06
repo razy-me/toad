@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<specification module="03_imports_and_design_tokens" target="toad-dsl" version="3.0">
+  <metadata>
+    <description>Modular @import directives, token centralization, circular import safety, and theme switching</description>
+  </metadata>
+
+  <import_directive>
+    <syntax>@import "./tokens/colors.toad";</syntax>
+    <rules>
+      <rule>Paths must be quoted strings and end with a semicolon.</rule>
+      <rule>Relative paths resolve relative to importing file directory.</rule>
+      <rule>Circular dependencies are tracked in a set and deduplicated automatically without error.</rule>
+    </rules>
+  </import_directive>
+
+  <token_architecture>
+    <example><![CDATA[
+// tokens/theme_dark.toad
+>bgBase = #0C120E;
+>bgSurface = #152018;
+>brandPrimary = #87CC2E;
+>textHeadline = #F5F8F5;
+>textBody = #9EB0A3;
+>borderDefault = alpha(#87CC2E, 0.25);
+>spaceMd = 16px;
+    ]]></example>
+  </token_architecture>
+
+  <theme_switching>
+    <pattern><![CDATA[
+// Swapping themes by commenting/uncommenting token files
+@import "./tokens/theme_dark.toad";
+// @import "./tokens/theme_light.toad";
+
+canvas "App" {
+    size: 1200px 800px;
+    background: >bgBase;
+}
+    ]]></pattern>
+  </theme_switching>
+</specification>

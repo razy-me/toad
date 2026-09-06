@@ -30,6 +30,9 @@ export class DependencyGraph {
   public warnings: string[] = [];
 
   public addElement(element: ResolvedElementNode, prevSiblingId?: string, parentId?: string): void {
+    if (!element.id) {
+      (element as any).isSyntheticId = true;
+    }
     const id = element.id || `__auto_${++this.syntheticIdCounter}`;
     element.id = id;
 

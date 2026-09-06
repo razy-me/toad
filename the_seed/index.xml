@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<the_seed_manifest version="3.0" target="gemini_family">
+  <metadata>
+    <engine>TOAD Declarative Visual Design Compiler</engine>
+    <format>100% Machine-Optimized Semantic XML + Dense YAML</format>
+    <purpose>Exhaustive deterministic technical specifications for Autonomous AI Agents and LLMs</purpose>
+  </metadata>
+
+  <modules>
+    <module id="01" name="01_CORE_SYNTAX_AND_LANGUAGE">EBNF grammar, token lexer, variables, math, and canvas declarations</module>
+    <module id="02" name="02_LAYOUT_AND_POSITIONING">Relational DAG placement, flex autolayout stacks, and Bento grid systems</module>
+    <module id="03" name="03_GRAPHICS_SHAPES_AND_EFFECTS">Vector paths, gradients, filters, shadows, glows, and clipping masks</module>
+    <module id="04" name="04_TYPOGRAPHY_AND_FONTS">Text measurement, word wrapping, font embedding, OpenType features</module>
+    <module id="05" name="05_COMPONENTS_AND_MODULARITY">Reusable components, slot composition, and @import token systems</module>
+    <module id="06" name="06_EXPORTERS_AND_RENDERING">Skia rasterizer, SVG vector engine, Photoshop PSD layer serializer, prepress CMYK</module>
+    <module id="07" name="07_LLM_RULES_AND_PITFALLS">Prompt injection guidelines, top 20 anti-patterns, troubleshooting diagnostic trees</module>
+    <module id="08" name="08_PRODUCTION_TEMPLATES">Runnable verified production templates</module>
+    <module id="09" name="09_CREATIVE_PERSONAS_AND_STYLES">50 machine-optimized artist and designer styles (XML/YAML)</module>
+    <module id="10" name="10_CORPORATE_DESIGN_SYSTEMS">50 machine-optimized corporate design systems and brand kits (XML/YAML)</module>
+  </modules>
+</the_seed_manifest>

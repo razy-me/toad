@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<specification module="02_stacks_and_autolayout" target="toad-dsl" version="3.0">
+  <metadata>
+    <description>Auto-layout stack system, direction flow, spacing, padding, and sizing modes (hug, fill, fixed)</description>
+  </metadata>
+
+  <stack_declaration>
+    <example><![CDATA[
+stack #navbar {
+    at: (40px, 40px);
+    width: 820px;
+    height: 64px;
+    direction: horizontal;
+    gap: 16px;
+    padding: 0 24px;
+    align-items: center;
+    justify-content: space-between;
+    background: #19271D;
+    radius: 12px;
+
+    icon #logo { size: 32px; iconName: "star"; fill: #87CC2E; }
+    text #navTitle { content: "Velora Nova"; font-size: 18px; color: #ffffff; }
+    rect #ctaButton { size: 140px 36px; fill: #87CC2E; radius: 8px; }
+}
+    ]]></example>
+  </stack_declaration>
+
+  <properties>
+    <property name="direction" values="horizontal, vertical" description="Primary flow axis of children" />
+    <property name="gap" type="dimension" example="16px" description="Uniform spacing between consecutive children" />
+    <property name="padding" type="dimension_tuple" example="0 24px" description="Internal boundary inset around children" />
+    <property name="align-items / align" values="start, center, end, stretch" description="Cross-axis alignment" />
+    <property name="justify-content / justify" values="start, center, end, space-between" description="Main-axis distribution" />
+    <property name="wrap" type="boolean" example="false" description="Enables multi-line wrapping" />
+  </properties>
+
+  <sizing_modes>
+    <mode name="fixed" syntax="width: 400px; height: 100px;" description="Explicit static dimension" />
+    <mode name="hug" syntax="size: hug hug;" description="Shrinkwraps content; container bounds adjust automatically to enclose children plus padding and gaps">
+      <example><![CDATA[
+stack #tagPill {
+    direction: horizontal;
+    gap: 8px;
+    padding: 6px 16px;
+    size: hug hug;
+    background: alpha(#87CC2E, 0.15);
+    radius: 16px;
+
+    circle #statusDot { size: 8px; fill: #87CC2E; }
+    text #tagLabel { content: "LIVE SESSION"; font-size: 11px; font-weight: 700; color: #87CC2E; }
+}
+      ]]></example>
+    </mode>
+    <mode name="fill" syntax="width: fill;" description="Flex proportional expansion; consumes all remaining available space along parent stack axis">
+      <example><![CDATA[
+stack #cardHeader {
+    width: 600px;
+    direction: horizontal;
+    gap: 16px;
+
+    text #title {
+        width: fill;
+        content: "High-Throughput Streaming Engine";
+        font-size: 20px;
+    }
+    rect #badge {
+        width: 100px;
+        size: 100px 28px;
+    }
+}
+      ]]></example>
+    </mode>
+  </sizing_modes>
+</specification>

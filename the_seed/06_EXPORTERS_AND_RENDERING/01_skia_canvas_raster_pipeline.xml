@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<specification module="01_skia_canvas_raster_pipeline" target="toad-dsl" version="3.0">
+  <metadata>
+    <description>Headless Skia Canvas rasterization pipeline, subpixel precision, node drawing, multi-scale export, and Porter-Duff compositing</description>
+    <source_compiler_file>src/renderer/rasterCanvas.ts</source_compiler_file>
+  </metadata>
+
+  <pipeline_phases>
+    <phase number="1" name="context_init">SKCanvas instantiated at (W * S, H * S) with scale multiplier S (@1x - @4x)</phase>
+    <phase number="2" name="global_transform">ctx.scale(S, S) maps logical coords to device pixels</phase>
+    <phase number="3" name="node_traversal">Depth-first traversal ordered by calculated z-index and DOM sequence</phase>
+    <phase number="4" name="state_management">Isolated ctx.save() / ctx.restore() transactions per node</phase>
+  </pipeline_phases>
+
+  <subpixel_snapping>
+    <fills>Snapped to full integer pixel boundaries (Math.round)</fills>
+    <strokes>Center coordinate adjusted by +0.5px when stroke-width is 1px for crisp pixel boundary alignment</strokes>
+  </subpixel_snapping>
+
+  <node_rendering>
+    <shapes>Transform pivot, clipping, drop shadows before draw, fill path, stroke path with lineCap/lineJoin</shapes>
+    <text>GlobalFonts registration, alphabetic baseline calculation (y_baseline = y_box + valignShift + ascent), sequential line wrapping</text>
+    <images>Skia native codecs with bilinear/bicubic filtering; object-fit: cover | contain | fill</images>
+  </node_rendering>
+
+  <multi_scale_export scales="@1x, @2x, @3x, @4x">
+    <description>Glyph vectors render at native N-x resolution without bitmap upsampling artifacts.</description>
+  </multi_scale_export>
+
+  <compositing_and_blend_modes>
+    <mode name="normal" op="source-over" formula="Cs + Cb(1 - alpha_s)" />
+    <mode name="multiply" op="multiply" formula="Cs * Cb" />
+    <mode name="screen" op="screen" formula="Cs + Cb - (Cs * Cb)" />
+    <mode name="overlay" op="overlay" formula="Hard light with inverted backdrop/source" />
+    <mode name="plus-lighter" op="lighter" formula="min(Cs + Cb, 1.0)" />
+    <mode name="destination-out" op="destination-out" formula="Backdrop erased by source silhouette" />
+  </compositing_and_blend_modes>
+</specification>

@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<corporate_design id="omnidrive_iot" industry_domain="saas_and_tech" category="A_SAAS_AND_TECH" version="1.0">
+  <brand_meta>
+    <company_name>OmniDrive Telematics</company_name>
+    <product_name>OmniFleet IoT Platform</product_name>
+    <industry>Flottenmanagement &amp; Nutzfahrzeug-Sensorik</industry>
+    <profile>Telematik-Lösungen für Speditionen, Echtzeit-GPS, Reifendruck &amp; Fahrzeiten.</profile>
+    <tone_of_voice>Zuverlässig, straßenerprobt, robust, direkt.</tone_of_voice>
+  </brand_meta>
+
+  <tags>
+    <tag>telematik</tag>
+    <tag>iot</tag>
+    <tag>flottenmanagement</tag>
+    <tag>amber</tag>
+    <tag>sensorik</tag>
+  </tags>
+
+  <design_tokens>
+    <colors>
+      <color token="roadDark" hex="#111827" role="Asphalt-Canvas" />
+      <color token="amberWarning" hex="#F59E0B" role="Warnstufen, Tankstände, Wartung" />
+      <color token="routeCyan" hex="#0284C7" role="GPS-Routen, aktive Fahrzeuge" />
+      <color token="cardSurface" hex="#1F2937" role="Fahrzeug-Kacheln" />
+    </colors>
+    <typography>
+      <primary_font>&quot;Barlow&quot;, &quot;Roboto&quot;, sans-serif</primary_font>
+      <h1 scale="Bold (700), 34px, Line-Height: 1.2" />
+      <body scale="Regular (400), 14px, Line-Height: 1.5, Color #E5E7EB" />
+    </typography>
+    <geometry>
+      <card_radius>6px (robuste Industrie-Form)</card_radius>
+      <button_radius>4px</button_radius>
+      <grid_gap>16px</grid_gap>
+    </geometry>
+    <shadows>
+      <ambient>none</ambient>
+    </shadows>
+  </design_tokens>
+
+  <brand_rules>
+    <dos>
+      <do>Hohen Kontrast für schlechte Lichtverhältnisse in LKW-Fahrerkabinen bieten.</do>
+      <do>Warnmeldungen in Amber (#F59E0B) hervorheben.</do>
+      <do>Robuste Kacheln mit 6px Radius nutzen.</do>
+    </dos>
+    <donts>
+      <dont>Keine filigranen, feinen Haarlinien.</dont>
+      <dont>Keine übertriebenen Mode-Glows.</dont>
+    </donts>
+  </brand_rules>
+
+  <toad_component_blueprint lang="toad"><![CDATA[
+canvas {
+  size: 960px 560px;
+  fill: #111827;
+  font-family: "Barlow, sans-serif";
+}
+
+>roadDark = #111827;
+>amber = #F59E0B;
+>routeCyan = #0284C7;
+>cardSurface = #1F2937;
+
+rect #truckCard {
+  at: center of canvas;
+  size: 880px 460px;
+  fill: >cardSurface;
+  stroke: #374151;
+  stroke-width: 1px;
+  radius: 6px;
+}
+
+text #truckHeader {
+  at: top left of #truckCard offset 32px 28px;
+  content: "OMNIDRIVE FLEET // LKW-42 • MAN TGX 18.510";
+  font-size: 16px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+text #gpsLocation {
+  at: below #truckHeader offset 10px;
+  content: "A3 NÜRNBERG -> FRANKFURT • KM 182.4 • 84 KM/H";
+  font-size: 13px;
+  color: >routeCyan;
+}
+
+rect #fuelWarning {
+  at: below #gpsLocation offset 24px;
+  size: 320px 48px;
+  fill: alpha(>amber, 0.15);
+  stroke: >amber;
+  stroke-width: 1px;
+  radius: 4px;
+}
+
+text #fuelText {
+  at: center of #fuelWarning;
+  content: "RESTREICHWEITE: 140 KM • TANKEN";
+  font-size: 12px;
+  font-weight: 700;
+  color: >amber;
+}
+  ]]></toad_component_blueprint>
+
+  <routing_triggers>
+    <trigger>fleet management brand</trigger>
+    <trigger>telematics iot dashboard</trigger>
+    <trigger>truck logistics banner</trigger>
+    <trigger>industrial sensor card</trigger>
+    <trigger>omnidrive vehicle ui</trigger>
+  </routing_triggers>
+</corporate_design>

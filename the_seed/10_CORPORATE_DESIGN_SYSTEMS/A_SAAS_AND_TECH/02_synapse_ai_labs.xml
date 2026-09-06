@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<corporate_design id="synapse_ai_labs" industry_domain="saas_and_tech" category="A_SAAS_AND_TECH" version="1.0">
+  <brand_meta>
+    <company_name>Synapse AI Labs</company_name>
+    <product_name>Synapse Neural Compute Fabric</product_name>
+    <industry>DeepTech / Generative AI Research</industry>
+    <profile>Führendes KI-Forschungslabor mit Fokus auf neuronale Architekturen und Enterprise-Inferenz.</profile>
+    <tone_of_voice>Visionär, intellektuell präzise, quantenphysikalisch inspiriert, sachlich-selbstbewusst.</tone_of_voice>
+  </brand_meta>
+
+  <tags>
+    <tag>ki</tag>
+    <tag>deeptech</tag>
+    <tag>neural</tag>
+    <tag>indigo</tag>
+    <tag>bento-grid</tag>
+  </tags>
+
+  <design_tokens>
+    <colors>
+      <color token="deepSpace" hex="#0B0F19" role="Canvas-Hintergrund, Tiefe des neuronalen Raums" />
+      <color token="neuralIndigo" hex="#6366F1" role="Primärmarke, Synapsen-Verbindungen, Glows" />
+      <color token="synapseCyan" hex="#06B6D4" role="Datenströme, Inferenz-Raten, Telemetrie" />
+      <color token="surfaceDark" hex="#111827" role="Bento-Container und Kacheln" />
+      <color token="pureLight" hex="#F8FAFC" role="Headlines und primäre Messwerte" />
+    </colors>
+    <typography>
+      <primary_font>&quot;Space Grotesk&quot;, &quot;Inter&quot;, sans-serif</primary_font>
+      <h1 scale="Bold (700), 40px, Line-Height: 1.15" />
+      <body scale="Regular (400), 14px, Line-Height: 1.6, Color #94A3B8" />
+    </typography>
+    <geometry>
+      <card_radius>12px</card_radius>
+      <button_radius>6px</button_radius>
+      <grid_gap>16px</grid_gap>
+    </geometry>
+    <shadows>
+      <ambient>Subtiler Neonglow alpha(#6366F1, 0.25)</ambient>
+    </shadows>
+  </design_tokens>
+
+  <brand_rules>
+    <dos>
+      <do>Dunklen Hintergrund (#0B0F19) als Raum für leuchtende Datenpfade nutzen.</do>
+      <do>Bento-Raster mit präzisen 1px Bordüren (alpha(#FFFFFF, 0.10)) gliedern.</do>
+      <do>Inferenz-Metriken (z.B. &apos;4.2ms LATENCY&apos;) in Monospace-Tags anzeigen.</do>
+    </dos>
+    <donts>
+      <dont>Keine hellen, blendend weißen Volltonflächen.</dont>
+      <dont>Keine unsauberen Cartoon-Illustrationen.</dont>
+      <dont>Keine reißerischen Marketing-Schreie.</dont>
+    </donts>
+  </brand_rules>
+
+  <toad_component_blueprint lang="toad"><![CDATA[
+canvas {
+  size: 960px 600px;
+  fill: #0B0F19;
+  font-family: "Space Grotesk, sans-serif";
+}
+
+>deepSpace = #0B0F19;
+>neuralIndigo = #6366F1;
+>synapseCyan = #06B6D4;
+>surface = #111827;
+>border = #1F2937;
+>textWhite = #F8FAFC;
+>textMuted = #94A3B8;
+
+rect #brandHeader {
+  at: top left of canvas offset 32px 32px;
+  size: 896px 48px;
+  fill: none;
+}
+
+text #logoText {
+  at: left center of #brandHeader;
+  content: "SYNAPSE // LABS";
+  font-size: 18px;
+  font-weight: 700;
+  color: >textWhite;
+}
+
+rect #statusPill {
+  at: right center of #brandHeader;
+  size: 140px 28px;
+  fill: alpha(>synapseCyan, 0.12);
+  stroke: >synapseCyan;
+  stroke-width: 1px;
+  radius: 14px;
+}
+
+text #statusLabel {
+  at: center of #statusPill;
+  content: "CLUSTER READY";
+  font-size: 10px;
+  font-weight: 700;
+  color: >synapseCyan;
+}
+
+rect #bentoMain {
+  at: below #brandHeader offset 24px;
+  size: 580px 420px;
+  fill: >surface;
+  stroke: >border;
+  stroke-width: 1px;
+  radius: 12px;
+}
+
+text #bentoTitle {
+  at: top left of #bentoMain offset 28px 28px;
+  content: "NEURAL CORE FABRIC";
+  font-size: 24px;
+  font-weight: 700;
+  color: >textWhite;
+}
+
+text #bentoDesc {
+  at: below #bentoTitle offset 12px;
+  size: 520px;
+  content: "High-throughput transformer pipeline with zero memory fragmentation across distributed GPU clusters.";
+  font-size: 14px;
+  color: >textMuted;
+}
+
+rect #bentoSide {
+  at: right of #bentoMain offset 20px;
+  size: 296px 420px;
+  fill: >surface;
+  stroke: >border;
+  stroke-width: 1px;
+  radius: 12px;
+}
+
+text #metricNumber {
+  at: center of #bentoSide offset 0px -40px;
+  content: "99.4 %";
+  font-size: 48px;
+  font-weight: 700;
+  color: >neuralIndigo;
+}
+
+text #metricLabel {
+  at: below #metricNumber offset 8px;
+  content: "INFERENCE EFFICIENCY";
+  font-size: 11px;
+  font-weight: 600;
+  color: >synapseCyan;
+}
+  ]]></toad_component_blueprint>
+
+  <routing_triggers>
+    <trigger>ai research brand</trigger>
+    <trigger>deeptech corporate identity</trigger>
+    <trigger>neural bento grid</trigger>
+    <trigger>machine learning saas</trigger>
+    <trigger>synapse dark ui</trigger>
+  </routing_triggers>
+</corporate_design>

@@ -23,6 +23,7 @@ import {
 import { FontLoader } from './fontLoader.js';
 import { resolveSharedImage, splitUnsafeFilterFns, sanitizeFilterCss } from './imageCache.js';
 import { svgPathToBezierPaths } from './vectorPathParser.js';
+import { resolveHumanLayerName, formatTextLayerName, sanitizeTextSnippet, LayerNamingContext } from '../utils/layerNaming.js';
 
 /**
  * Extracts polygon vertices from a straight-line SVG path (M/L/Z commands
@@ -175,6 +176,7 @@ export interface PsdExportOptions {
   dpi?: number;
   basePath?: string;
   generateThumbnail?: boolean;
+  humanizeLayerNames?: boolean;
 }
 
 export class PsdExporter {
@@ -226,8 +228,23 @@ export class PsdExporter {
 
     // 2. Build PSD Layers for Layout Nodes
     const rootNodes = layout.nodes.filter(n => !n.parentId && !n.parent);
-    for (const node of (rootNodes.length > 0 ? rootNodes : layout.nodes)) {
-      const layer = await this.buildPsdLayer(node, scale, options.basePath, effectiveDpi);
+    const nodesToRender = rootNodes.length > 0 ? rootNodes : layout.nodes;
+    const rootSiblingCounts = new Map<string, number>();
+    for (const n of nodesToRender) {
+      rootSiblingCounts.set(n.type, (rootSiblingCounts.get(n.type) || 0) + 1);
+    }
+
+    for (let i = 0; i < nodesToRender.length; i++) {
+      const node = nodesToRender[i]!;
+      const rootContext: LayerNamingContext = {
+        parentName: layout.canvas.name || 'Canvas',
+        parentType: 'canvas',
+        siblingIndex: i,
+        totalSiblings: nodesToRender.length,
+        siblingCountsByType: rootSiblingCounts,
+        humanizeLayerNames: options.humanizeLayerNames,
+      };
+      const layer = await this.buildPsdLayer(node, scale, options.basePath, effectiveDpi, IDENTITY_MATRIX, rootContext, options);
       if (layer) {
         psdChildren.push(layer);
       }
@@ -310,14 +327,16 @@ export class PsdExporter {
     scale: number,
     basePath?: string,
     dpi = 72,
-    parentMatrix: Matrix2D = IDENTITY_MATRIX
+    parentMatrix: Matrix2D = IDENTITY_MATRIX,
+    context?: LayerNamingContext,
+    options?: PsdExportOptions
   ): Promise<Layer | null> {
-    const layer = await this.buildPsdLayerInternal(node, scale, basePath, dpi, parentMatrix);
+    const layer = await this.buildPsdLayerInternal(node, scale, basePath, dpi, parentMatrix, context, options);
     if (!layer || !node.maskNode) return layer;
 
     // Create a clipping mask group
     // In Photoshop, a clipping mask needs a base layer and a clipped layer.
-    const maskLayer = await this.buildPsdLayerInternal(node.maskNode, scale, basePath, dpi, parentMatrix);
+    const maskLayer = await this.buildPsdLayerInternal(node.maskNode, scale, basePath, dpi, parentMatrix, context, options);
     if (!maskLayer) return layer;
     
     maskLayer.clipping = false; // Base mask layer
@@ -335,7 +354,9 @@ export class PsdExporter {
     scale: number,
     basePath?: string,
     dpi = 72,
-    parentMatrix: Matrix2D = IDENTITY_MATRIX
+    parentMatrix: Matrix2D = IDENTITY_MATRIX,
+    context?: LayerNamingContext,
+    options?: PsdExportOptions
   ): Promise<Layer | null> {
     const localMat = getNodeLocalMatrix(node);
     const currentMat = localMat ? multiplyMatrix(parentMatrix, localMat) : parentMatrix;
@@ -374,8 +395,10 @@ export class PsdExporter {
       height = Math.max(1, bottom - top);
     }
 
-    const defaultName = node.type.charAt(0).toUpperCase() + node.type.slice(1);
-    const layerName = node.name || node.id || defaultName;
+    const layerName = resolveHumanLayerName(node, {
+      ...context,
+      humanizeLayerNames: options?.humanizeLayerNames,
+    });
     const opacity = node.opacity ?? 1;
     const blendMode = mapBlendModeToPsd(node.style.blendMode);
 
@@ -396,10 +419,23 @@ export class PsdExporter {
       if (node.children && node.children.length > 0) {
         let isCurrentMaskActive = false;
 
+        const childCountsByType = new Map<string, number>();
+        for (const child of node.children) {
+          childCountsByType.set(child.type, (childCountsByType.get(child.type) || 0) + 1);
+        }
+
         for (let i = 0; i < node.children.length; i++) {
           const childNode = node.children[i]!;
           const isMask = childNode.style.clip === true || (childNode as any).clip === true;
-          const childLayer = await this.buildPsdLayer(childNode, scale, basePath, dpi, currentMat);
+          const childContext: LayerNamingContext = {
+            parentName: layerName,
+            parentType: node.type,
+            siblingIndex: i,
+            totalSiblings: node.children.length,
+            siblingCountsByType: childCountsByType,
+            humanizeLayerNames: options?.humanizeLayerNames,
+          };
+          const childLayer = await this.buildPsdLayer(childNode, scale, basePath, dpi, currentMat, childContext, options);
           if (childLayer) {
             // Apply Photoshop clipping mask hierarchy
             if (isMask) {
@@ -421,7 +457,7 @@ export class PsdExporter {
           name: `${layerName} Background`,
           children: undefined
         };
-        const bgLayer = await this.buildPsdLayerInternal(bgNode, scale, basePath, dpi, currentMat);
+        const bgLayer = await this.buildPsdLayerInternal(bgNode, scale, basePath, dpi, currentMat, context, options);
         if (bgLayer) {
           childLayers.unshift(bgLayer);
         }
@@ -499,7 +535,18 @@ export class PsdExporter {
       } else if (justification === 'right') {
         anchorX = node.x + node.width;
       }
-      const baselineY = node.y + (node.textLayout?.ascent || baseFontSize);
+      const opticalOffset = node.textLayout?.opticalCenterOffset ?? 0;
+      const lineCount = node.textLayout?.lines?.length || 1;
+      const isMiddle = node.style.verticalAlign === 'middle';
+      let baselineY: number;
+      if (isMiddle) {
+        baselineY = node.y + (node.height - (lineCount - 1) * baseLineHeight) / 2 + opticalOffset;
+      } else {
+        const valignShift = node.style.verticalAlign === 'bottom'
+          ? Math.max(0, node.height - (node.textLayout?.height ?? 0))
+          : 0;
+        baselineY = node.y + valignShift + (node.textLayout?.ascent || baseFontSize);
+      }
 
       const transformedAnchor = transformPoint(currentMat, anchorX, baselineY);
       const tx = transformedAnchor.x * scale;
@@ -516,8 +563,29 @@ export class PsdExporter {
 
       const effects = this.buildLayerEffects(node, scale);
 
+      const hasExplicitName = Boolean(
+        node.name &&
+        node.name.trim() !== '' &&
+        node.name !== node.id &&
+        node.name !== node.type &&
+        !node.name.startsWith('__auto_') &&
+        !node.name.startsWith('inst')
+      );
+
+      let textLayerName = layerName;
+      if (options?.humanizeLayerNames === true) {
+        if (hasExplicitName) {
+          textLayerName = node.name.trim();
+        } else if (textContent) {
+          const snippet = sanitizeTextSnippet(textContent, 30);
+          textLayerName = formatTextLayerName(snippet);
+        }
+      } else if (textContent) {
+        textLayerName = textContent.slice(0, 30) || layerName;
+      }
+
       const textLayer: Layer = {
-        name: textContent.slice(0, 30) || layerName,
+        name: textLayerName,
         top,
         left,
         right,
@@ -1067,7 +1135,6 @@ export class PsdExporter {
       const fw = node.textLayout?.fontWeight || 'normal';
       const fs = node.textLayout?.fontStyle || 'normal';
       ctx.font = `${fs === 'italic' || fs === 'oblique' ? 'italic ' : ''}${fw} ${fontSize}px "${fontFamily}"`;
-      ctx.textBaseline = 'top';
 
       if (node.style.fill || node.fill) {
         const fill = node.style.fill || node.fill;
@@ -1080,9 +1147,37 @@ export class PsdExporter {
         ctx.fillStyle = node.style.color || '#000000';
       }
 
+      const align = node.style.align || 'left';
+      if (align === 'center') {
+        ctx.textAlign = 'center';
+      } else if (align === 'right') {
+        ctx.textAlign = 'right';
+      } else {
+        ctx.textAlign = 'left';
+      }
+
+      let anchorX = node.x;
+      if (align === 'center') anchorX = node.x + node.width / 2;
+      if (align === 'right') anchorX = node.x + node.width;
+
+      const tlHeight = node.textLayout?.height ?? 0;
+      const opticalOffset = node.textLayout?.opticalCenterOffset ?? 0;
+      const lineCount = node.textLayout?.lines?.length || 1;
+      const isMiddle = node.style.verticalAlign === 'middle';
+
+      if (isMiddle) {
+        ctx.textBaseline = 'alphabetic';
+      } else {
+        ctx.textBaseline = 'top';
+      }
+
+      const baselineY0 = isMiddle
+        ? node.y + (node.height - (lineCount - 1) * lineHeight) / 2 + opticalOffset
+        : node.y + (node.style.verticalAlign === 'bottom' ? Math.max(0, node.height - tlHeight) : 0);
+
       if (node.textLayout && node.textLayout.lines) {
         for (let i = 0; i < node.textLayout.lines.length; i++) {
-          ctx.fillText(node.textLayout.lines[i]!, node.x, node.y + i * lineHeight);
+          ctx.fillText(node.textLayout.lines[i]!, anchorX, baselineY0 + i * lineHeight);
         }
       }
     } else if (node.type === 'rect') {

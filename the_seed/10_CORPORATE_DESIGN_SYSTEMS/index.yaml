@@ -1,0 +1,1426 @@
+# 🌿 THE SEED — MODULE 10: CORPORATE DESIGN SYSTEMS
+# Machine-optimized Corporate Design & Brand Kit Matrix for Google Gemini (TOAD DSL)
+# Version: 1.0.0
+# Total Systems: 50
+
+metadata:
+  target_engine: "TOAD Declarative Visual Design Language"
+  optimization: "Google Gemini 3.1 Pro / 3.5 Pro / 3.8 Flash"
+  format: "Dense YAML + Semantic XML Brand Kits"
+  lookup_rule: "Search by company name, industry tag, or trigger phrase to inherit brand tokens."
+
+categories:
+  A_SAAS_AND_TECH:
+    title: "SaaS, Cloud Software & Enterprise Tech"
+    systems_count: 8
+  B_INDUSTRY_AND_CRAFT:
+    title: "Industry, Manufacturing & Traditional Craft"
+    systems_count: 7
+  C_HEALTH_AND_LIFE_SCIENCES:
+    title: "Health, Clinics & Life Sciences"
+    systems_count: 7
+  D_CONSUMER_FOOD_AND_LIFESTYLE:
+    title: "Consumer Food, Beverages & Lifestyle Brands"
+    systems_count: 8
+  E_LUXURY_AND_FASHION:
+    title: "Luxury Goods, Haute Horlogerie & Fashion"
+    systems_count: 7
+  F_PUBLIC_MOBILITY_AND_INFRA:
+    title: "Public Sector, Mobility & Infrastructure"
+    systems_count: 7
+  G_ENTERTAINMENT_SPORTS_AND_COMMUNITY:
+    title: "Entertainment, Sports, Culture & Community"
+    systems_count: 6
+
+tag_index:
+  "achtsam":
+    - id: "aether_mental_health"
+      company: "Aether Seelenraum Klinik"
+      path: "C_HEALTH_AND_LIFE_SCIENCES/22_aether_mental_health.xml"
+  "aligner":
+    - id: "dentapur_zahnmedizin"
+      company: "DentaPur Zahnzentrum"
+      path: "C_HEALTH_AND_LIFE_SCIENCES/19_dentapur_zahnmedizin.xml"
+  "alpen":
+    - id: "alpenkraeuter_tee"
+      company: "AlpenKräuter Manufaktur"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/26_alpenkraeuter_tee.xml"
+    - id: "alpine_rescue_tirol"
+      company: "Bergrettung Tirol Notruf 140"
+      path: "F_PUBLIC_MOBILITY_AND_INFRA/44_alpine_rescue_tirol.xml"
+  "amber":
+    - id: "omnidrive_iot"
+      company: "OmniDrive Telematics"
+      path: "A_SAAS_AND_TECH/07_omnidrive_iot.xml"
+  "amber-gold":
+    - id: "brauhaus_hopfenstolz"
+      company: "Brauhaus Hopfenstolz"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/24_brauhaus_hopfenstolz.xml"
+  "amt":
+    - id: "landkreis_buergerportal"
+      company: "Landkreis Bürgerportal Online"
+      path: "F_PUBLIC_MOBILITY_AND_INFRA/41_landkreis_buergerportal.xml"
+  "anzug":
+    - id: "sartoria_marchese"
+      company: "Sartoria Marchese Napoli"
+      path: "E_LUXURY_AND_FASHION/34_sartoria_marchese.xml"
+  "apotheke":
+    - id: "sanitas_apotheke"
+      company: "Sanitas Apothekenverbund"
+      path: "C_HEALTH_AND_LIFE_SCIENCES/21_sanitas_apotheke.xml"
+  "architektur":
+    - id: "nordholz_architektur"
+      company: "NordHolz Architektur & Bau"
+      path: "B_INDUSTRY_AND_CRAFT/10_nordholz_architektur.xml"
+    - id: "glaswerk_oberland"
+      company: "Glaswerk Oberland GmbH"
+      path: "B_INDUSTRY_AND_CRAFT/15_glaswerk_oberland.xml"
+  "arthouse":
+    - id: "filmforum_arthouse"
+      company: "Filmforum Arthouse Kino"
+      path: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/48_filmforum_arthouse.xml"
+  "arztpraxis":
+    - id: "cura_telemedizin"
+      company: "Cura TeleHealth"
+      path: "C_HEALTH_AND_LIFE_SCIENCES/16_cura_telemedizin.xml"
+  "avocado-green":
+    - id: "urbanleaf_salad"
+      company: "UrbanLeaf Bowls & Greens"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/28_urbanleaf_salad.xml"
+  "baeckerei":
+    - id: "brotecht_baeckerei"
+      company: "BrotEcht Naturbäckerei"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/30_brotecht_baeckerei.xml"
+  "barrierefrei":
+    - id: "landkreis_buergerportal"
+      company: "Landkreis Bürgerportal Online"
+      path: "F_PUBLIC_MOBILITY_AND_INFRA/41_landkreis_buergerportal.xml"
+  "bento-grid":
+    - id: "synapse_ai_labs"
+      company: "Synapse AI Labs"
+      path: "A_SAAS_AND_TECH/02_synapse_ai_labs.xml"
+  "beratung":
+    - id: "sanitas_apotheke"
+      company: "Sanitas Apothekenverbund"
+      path: "C_HEALTH_AND_LIFE_SCIENCES/21_sanitas_apotheke.xml"
+  "bergrettung":
+    - id: "alpine_rescue_tirol"
+      company: "Bergrettung Tirol Notruf 140"
+      path: "F_PUBLIC_MOBILITY_AND_INFRA/44_alpine_rescue_tirol.xml"
+  "bespoke":
+    - id: "sartoria_marchese"
+      company: "Sartoria Marchese Napoli"
+      path: "E_LUXURY_AND_FASHION/34_sartoria_marchese.xml"
+  "bewegung":
+    - id: "physiowell_reha"
+      company: "PhysioWell Rehazentrum"
+      path: "C_HEALTH_AND_LIFE_SCIENCES/20_physiowell_reha.xml"
+  "bier":
+    - id: "brauhaus_hopfenstolz"
+      company: "Brauhaus Hopfenstolz"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/24_brauhaus_hopfenstolz.xml"
+  "bikeshare":
+    - id: "velo_city_bikeshare"
+      company: "VeloCity Bikesharing"
+      path: "F_PUBLIC_MOBILITY_AND_INFRA/42_velo_city_bikeshare.xml"
+  "bildung":
+    - id: "cleverdesk_edtech"
+      company: "CleverDesk Digital"
+      path: "A_SAAS_AND_TECH/06_cleverdesk_edtech.xml"
+  "bio":
+    - id: "haferglueck_oatmilk"
+      company: "Haferglück Bio-Milch"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/23_haferglueck_oatmilk.xml"
+    - id: "alpenkraeuter_tee"
+      company: "AlpenKräuter Manufaktur"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/26_alpenkraeuter_tee.xml"
+  "biotech":
+    - id: "bionova_genomics"
+      company: "BioNova Genomics AG"
+      path: "C_HEALTH_AND_LIFE_SCIENCES/18_bionova_genomics.xml"
+  "blue":
+    - id: "paypulse_fintech"
+      company: "PayPulse Global"
+      path: "A_SAAS_AND_TECH/05_paypulse_fintech.xml"
+  "botendienst":
+    - id: "sanitas_apotheke"
+      company: "Sanitas Apothekenverbund"
+      path: "C_HEALTH_AND_LIFE_SCIENCES/21_sanitas_apotheke.xml"
+  "bouldern":
+    - id: "summit_bouldering"
+      company: "Summit Boulderhalle"
+      path: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/47_summit_bouldering.xml"
+  "bowls":
+    - id: "urbanleaf_salad"
+      company: "UrbanLeaf Bowls & Greens"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/28_urbanleaf_salad.xml"
+  "brauhaus":
+    - id: "brauhaus_hopfenstolz"
+      company: "Brauhaus Hopfenstolz"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/24_brauhaus_hopfenstolz.xml"
+  "bronze":
+    - id: "vulkan_guss_manufaktur"
+      company: "Vulkan Eisen- & Bronzeguss"
+      path: "B_INDUSTRY_AND_CRAFT/12_vulkan_guss_manufaktur.xml"
+  "buergeramt":
+    - id: "landkreis_buergerportal"
+      company: "Landkreis Bürgerportal Online"
+      path: "F_PUBLIC_MOBILITY_AND_INFRA/41_landkreis_buergerportal.xml"
+  "cacao-brown":
+    - id: "schoko_kuvertuere"
+      company: "Chocolat Grand Cru Suisse"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/29_schoko_kuvertuere.xml"
+  "cad":
+    - id: "kruppstahl_maschinenbau"
+      company: "Kruppstahl Präzisionsbau AG"
+      path: "B_INDUSTRY_AND_CRAFT/09_kruppstahl_maschinenbau.xml"
+  "chalk":
+    - id: "summit_bouldering"
+      company: "Summit Boulderhalle"
+      path: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/47_summit_bouldering.xml"
+  "champagner":
+    - id: "maison_vellum_parfum"
+      company: "Maison Vellum Parfumerie"
+      path: "E_LUXURY_AND_FASHION/32_maison_vellum_parfum.xml"
+  "cicd":
+    - id: "streamflow_devops"
+      company: "StreamFlow Systems"
+      path: "A_SAAS_AND_TECH/04_streamflow_devops.xml"
+  "cinematisch":
+    - id: "filmforum_arthouse"
+      company: "Filmforum Arthouse Kino"
+      path: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/48_filmforum_arthouse.xml"
+  "clean":
+    - id: "dentapur_zahnmedizin"
+      company: "DentaPur Zahnzentrum"
+      path: "C_HEALTH_AND_LIFE_SCIENCES/19_dentapur_zahnmedizin.xml"
+  "clean-ui":
+    - id: "paypulse_fintech"
+      company: "PayPulse Global"
+      path: "A_SAAS_AND_TECH/05_paypulse_fintech.xml"
+  "cloud-software":
+    - id: "velora_cloud_erp"
+      company: "Velora Software GmbH"
+      path: "A_SAAS_AND_TECH/01_velora_cloud_erp.xml"
+  "culture":
+    - id: "nexushr_workforce"
+      company: "NexusHR Systems"
+      path: "A_SAAS_AND_TECH/08_nexushr_workforce.xml"
+  "cyan":
+    - id: "cybervault_security"
+      company: "CyberVault Systems"
+      path: "A_SAAS_AND_TECH/03_cybervault_security.xml"
+  "cyan-glow":
+    - id: "bionova_genomics"
+      company: "BioNova Genomics AG"
+      path: "C_HEALTH_AND_LIFE_SCIENCES/18_bionova_genomics.xml"
+  "cyan-ice":
+    - id: "glaswerk_oberland"
+      company: "Glaswerk Oberland GmbH"
+      path: "B_INDUSTRY_AND_CRAFT/15_glaswerk_oberland.xml"
+  "cyber":
+    - id: "pulsar_gaming_arena"
+      company: "Pulsar E-Sports Arena"
+      path: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/46_pulsar_gaming_arena.xml"
+  "cyber-security":
+    - id: "cybervault_security"
+      company: "CyberVault Systems"
+      path: "A_SAAS_AND_TECH/03_cybervault_security.xml"
+  "dachdeckerei":
+    - id: "dachdeckerei_steinfirst"
+      company: "Steinfirst Dach & Fassade"
+      path: "B_INDUSTRY_AND_CRAFT/14_dachdeckerei_steinfirst.xml"
+  "dark-navy":
+    - id: "cybervault_security"
+      company: "CyberVault Systems"
+      path: "A_SAAS_AND_TECH/03_cybervault_security.xml"
+  "deeptech":
+    - id: "synapse_ai_labs"
+      company: "Synapse AI Labs"
+      path: "A_SAAS_AND_TECH/02_synapse_ai_labs.xml"
+  "developer-tools":
+    - id: "streamflow_devops"
+      company: "StreamFlow Systems"
+      path: "A_SAAS_AND_TECH/04_streamflow_devops.xml"
+  "devops":
+    - id: "streamflow_devops"
+      company: "StreamFlow Systems"
+      path: "A_SAAS_AND_TECH/04_streamflow_devops.xml"
+  "diamanten":
+    - id: "solitaire_juwelen"
+      company: "Solitaire Fine Jewelry"
+      path: "E_LUXURY_AND_FASHION/33_solitaire_juwelen.xml"
+  "direct-trade":
+    - id: "rostwerk_kaffee"
+      company: "Röstwerk Kaffeemanufaktur"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/25_rostwerk_kaffee.xml"
+  "disziplin":
+    - id: "kickbox_dojo_kuro"
+      company: "Kuro Martial Arts Dojo"
+      path: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/45_kickbox_dojo_kuro.xml"
+  "dna":
+    - id: "bionova_genomics"
+      company: "BioNova Genomics AG"
+      path: "C_HEALTH_AND_LIFE_SCIENCES/18_bionova_genomics.xml"
+  "dojo":
+    - id: "kickbox_dojo_kuro"
+      company: "Kuro Martial Arts Dojo"
+      path: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/45_kickbox_dojo_kuro.xml"
+  "duft":
+    - id: "maison_vellum_parfum"
+      company: "Maison Vellum Parfumerie"
+      path: "E_LUXURY_AND_FASHION/32_maison_vellum_parfum.xml"
+  "e-rezept":
+    - id: "cura_telemedizin"
+      company: "Cura TeleHealth"
+      path: "C_HEALTH_AND_LIFE_SCIENCES/16_cura_telemedizin.xml"
+  "ebike":
+    - id: "velo_city_bikeshare"
+      company: "VeloCity Bikesharing"
+      path: "F_PUBLIC_MOBILITY_AND_INFRA/42_velo_city_bikeshare.xml"
+  "edel":
+    - id: "solitaire_juwelen"
+      company: "Solitaire Fine Jewelry"
+      path: "E_LUXURY_AND_FASHION/33_solitaire_juwelen.xml"
+  "edtech":
+    - id: "cleverdesk_edtech"
+      company: "CleverDesk Digital"
+      path: "A_SAAS_AND_TECH/06_cleverdesk_edtech.xml"
+  "egovernment":
+    - id: "landkreis_buergerportal"
+      company: "Landkreis Bürgerportal Online"
+      path: "F_PUBLIC_MOBILITY_AND_INFRA/41_landkreis_buergerportal.xml"
+  "eisenbahn":
+    - id: "aerotrain_intercity"
+      company: "AeroTrain European Rail"
+      path: "F_PUBLIC_MOBILITY_AND_INFRA/43_aerotrain_intercity.xml"
+  "elektrotechnik":
+    - id: "elektro_voltmeister"
+      company: "Voltmeister Elektrotechnik GmbH"
+      path: "B_INDUSTRY_AND_CRAFT/13_elektro_voltmeister.xml"
+  "energie":
+    - id: "elektro_voltmeister"
+      company: "Voltmeister Elektrotechnik GmbH"
+      path: "B_INDUSTRY_AND_CRAFT/13_elektro_voltmeister.xml"
+    - id: "stadtwerke_gruenstrom"
+      company: "Stadtwerke GrünStrom"
+      path: "F_PUBLIC_MOBILITY_AND_INFRA/38_stadtwerke_gruenstrom.xml"
+  "erdtöne":
+    - id: "nordholz_architektur"
+      company: "NordHolz Architektur & Bau"
+      path: "B_INDUSTRY_AND_CRAFT/10_nordholz_architektur.xml"
+  "erp":
+    - id: "velora_cloud_erp"
+      company: "Velora Software GmbH"
+      path: "A_SAAS_AND_TECH/01_velora_cloud_erp.xml"
+  "esports":
+    - id: "pulsar_gaming_arena"
+      company: "Pulsar E-Sports Arena"
+      path: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/46_pulsar_gaming_arena.xml"
+  "europa":
+    - id: "aerotrain_intercity"
+      company: "AeroTrain European Rail"
+      path: "F_PUBLIC_MOBILITY_AND_INFRA/43_aerotrain_intercity.xml"
+  "fachwerk":
+    - id: "zimmerei_eichenlaub"
+      company: "Zimmerei & Holzbau Eichenlaub"
+      path: "B_INDUSTRY_AND_CRAFT/11_zimmerei_eichenlaub.xml"
+  "faehre":
+    - id: "nordic_ferry_lines"
+      company: "Nordic Ferry Lines"
+      path: "F_PUBLIC_MOBILITY_AND_INFRA/40_nordic_ferry_lines.xml"
+  "fahrplan":
+    - id: "metro_transvia"
+      company: "Transvia Verkehrsverbund"
+      path: "F_PUBLIC_MOBILITY_AND_INFRA/39_metro_transvia.xml"
+  "familiär":
+    - id: "velora_cloud_erp"
+      company: "Velora Software GmbH"
+      path: "A_SAAS_AND_TECH/01_velora_cloud_erp.xml"
+  "fassade":
+    - id: "glaswerk_oberland"
+      company: "Glaswerk Oberland GmbH"
+      path: "B_INDUSTRY_AND_CRAFT/15_glaswerk_oberland.xml"
+  "fast-casual":
+    - id: "urbanleaf_salad"
+      company: "UrbanLeaf Bowls & Greens"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/28_urbanleaf_salad.xml"
+  "festival":
+    - id: "soundwave_openair"
+      company: "Soundwave OpenAir Festival"
+      path: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/50_soundwave_openair.xml"
+  "film":
+    - id: "filmforum_arthouse"
+      company: "Filmforum Arthouse Kino"
+      path: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/48_filmforum_arthouse.xml"
+  "fintech":
+    - id: "paypulse_fintech"
+      company: "PayPulse Global"
+      path: "A_SAAS_AND_TECH/05_paypulse_fintech.xml"
+  "fisch":
+    - id: "fischerhues_sylt"
+      company: "Fischerhüs Sylt"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/27_fischerhues_sylt.xml"
+  "flottenmanagement":
+    - id: "omnidrive_iot"
+      company: "OmniDrive Telematics"
+      path: "A_SAAS_AND_TECH/07_omnidrive_iot.xml"
+  "forschung":
+    - id: "bionova_genomics"
+      company: "BioNova Genomics AG"
+      path: "C_HEALTH_AND_LIFE_SCIENCES/18_bionova_genomics.xml"
+  "gaming":
+    - id: "pulsar_gaming_arena"
+      company: "Pulsar E-Sports Arena"
+      path: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/46_pulsar_gaming_arena.xml"
+  "geneve":
+    - id: "valmont_geneve_uhren"
+      company: "Valmont & Cie. Genève"
+      path: "E_LUXURY_AND_FASHION/31_valmont_geneve_uhren.xml"
+  "genomik":
+    - id: "bionova_genomics"
+      company: "BioNova Genomics AG"
+      path: "C_HEALTH_AND_LIFE_SCIENCES/18_bionova_genomics.xml"
+  "geothermie":
+    - id: "stadtwerke_gruenstrom"
+      company: "Stadtwerke GrünStrom"
+      path: "F_PUBLIC_MOBILITY_AND_INFRA/38_stadtwerke_gruenstrom.xml"
+  "gesundheit":
+    - id: "cura_telemedizin"
+      company: "Cura TeleHealth"
+      path: "C_HEALTH_AND_LIFE_SCIENCES/16_cura_telemedizin.xml"
+  "giesserei":
+    - id: "vulkan_guss_manufaktur"
+      company: "Vulkan Eisen- & Bronzeguss"
+      path: "B_INDUSTRY_AND_CRAFT/12_vulkan_guss_manufaktur.xml"
+  "glasbau":
+    - id: "glaswerk_oberland"
+      company: "Glaswerk Oberland GmbH"
+      path: "B_INDUSTRY_AND_CRAFT/15_glaswerk_oberland.xml"
+  "glutrot":
+    - id: "vulkan_guss_manufaktur"
+      company: "Vulkan Eisen- & Bronzeguss"
+      path: "B_INDUSTRY_AND_CRAFT/12_vulkan_guss_manufaktur.xml"
+  "gold":
+    - id: "schoko_kuvertuere"
+      company: "Chocolat Grand Cru Suisse"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/29_schoko_kuvertuere.xml"
+    - id: "solitaire_juwelen"
+      company: "Solitaire Fine Jewelry"
+      path: "E_LUXURY_AND_FASHION/33_solitaire_juwelen.xml"
+    - id: "filmforum_arthouse"
+      company: "Filmforum Arthouse Kino"
+      path: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/48_filmforum_arthouse.xml"
+    - id: "symphonia_orchester"
+      company: "Symphonia Staatsorchester"
+      path: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/49_symphonia_orchester.xml"
+  "grasse":
+    - id: "maison_vellum_parfum"
+      company: "Maison Vellum Parfumerie"
+      path: "E_LUXURY_AND_FASHION/32_maison_vellum_parfum.xml"
+  "gruen":
+    - id: "stadtwerke_gruenstrom"
+      company: "Stadtwerke GrünStrom"
+      path: "F_PUBLIC_MOBILITY_AND_INFRA/38_stadtwerke_gruenstrom.xml"
+  "hafermilch":
+    - id: "haferglueck_oatmilk"
+      company: "Haferglück Bio-Milch"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/23_haferglueck_oatmilk.xml"
+  "handwerk":
+    - id: "zimmerei_eichenlaub"
+      company: "Zimmerei & Holzbau Eichenlaub"
+      path: "B_INDUSTRY_AND_CRAFT/11_zimmerei_eichenlaub.xml"
+    - id: "dachdeckerei_steinfirst"
+      company: "Steinfirst Dach & Fassade"
+      path: "B_INDUSTRY_AND_CRAFT/14_dachdeckerei_steinfirst.xml"
+    - id: "brotecht_baeckerei"
+      company: "BrotEcht Naturbäckerei"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/30_brotecht_baeckerei.xml"
+  "haute-horlogerie":
+    - id: "valmont_geneve_uhren"
+      company: "Valmont & Cie. Genève"
+      path: "E_LUXURY_AND_FASHION/31_valmont_geneve_uhren.xml"
+  "holzbau":
+    - id: "nordholz_architektur"
+      company: "NordHolz Architektur & Bau"
+      path: "B_INDUSTRY_AND_CRAFT/10_nordholz_architektur.xml"
+  "holztöne":
+    - id: "zimmerei_eichenlaub"
+      company: "Zimmerei & Holzbau Eichenlaub"
+      path: "B_INDUSTRY_AND_CRAFT/11_zimmerei_eichenlaub.xml"
+  "hopfengruen":
+    - id: "brauhaus_hopfenstolz"
+      company: "Brauhaus Hopfenstolz"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/24_brauhaus_hopfenstolz.xml"
+  "hotel":
+    - id: "palazzo_bellini_hotel"
+      company: "Grand Hotel Palazzo Bellini"
+      path: "E_LUXURY_AND_FASHION/37_palazzo_bellini_hotel.xml"
+  "hr":
+    - id: "nexushr_workforce"
+      company: "NexusHR Systems"
+      path: "A_SAAS_AND_TECH/08_nexushr_workforce.xml"
+  "hubschrauber":
+    - id: "alpine_rescue_tirol"
+      company: "Bergrettung Tirol Notruf 140"
+      path: "F_PUBLIC_MOBILITY_AND_INFRA/44_alpine_rescue_tirol.xml"
+  "ice":
+    - id: "aerotrain_intercity"
+      company: "AeroTrain European Rail"
+      path: "F_PUBLIC_MOBILITY_AND_INFRA/43_aerotrain_intercity.xml"
+  "indie":
+    - id: "soundwave_openair"
+      company: "Soundwave OpenAir Festival"
+      path: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/50_soundwave_openair.xml"
+  "indigo":
+    - id: "synapse_ai_labs"
+      company: "Synapse AI Labs"
+      path: "A_SAAS_AND_TECH/02_synapse_ai_labs.xml"
+  "industrie":
+    - id: "kruppstahl_maschinenbau"
+      company: "Kruppstahl Präzisionsbau AG"
+      path: "B_INDUSTRY_AND_CRAFT/09_kruppstahl_maschinenbau.xml"
+  "insel":
+    - id: "nordic_ferry_lines"
+      company: "Nordic Ferry Lines"
+      path: "F_PUBLIC_MOBILITY_AND_INFRA/40_nordic_ferry_lines.xml"
+  "iot":
+    - id: "omnidrive_iot"
+      company: "OmniDrive Telematics"
+      path: "A_SAAS_AND_TECH/07_omnidrive_iot.xml"
+  "joaillerie":
+    - id: "solitaire_juwelen"
+      company: "Solitaire Fine Jewelry"
+      path: "E_LUXURY_AND_FASHION/33_solitaire_juwelen.xml"
+  "kaffee":
+    - id: "rostwerk_kaffee"
+      company: "Röstwerk Kaffeemanufaktur"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/25_rostwerk_kaffee.xml"
+  "kampfsport":
+    - id: "kickbox_dojo_kuro"
+      company: "Kuro Martial Arts Dojo"
+      path: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/45_kickbox_dojo_kuro.xml"
+  "ki":
+    - id: "synapse_ai_labs"
+      company: "Synapse AI Labs"
+      path: "A_SAAS_AND_TECH/02_synapse_ai_labs.xml"
+  "kino":
+    - id: "filmforum_arthouse"
+      company: "Filmforum Arthouse Kino"
+      path: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/48_filmforum_arthouse.xml"
+  "klassik":
+    - id: "symphonia_orchester"
+      company: "Symphonia Staatsorchester"
+      path: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/49_symphonia_orchester.xml"
+  "klettern":
+    - id: "summit_bouldering"
+      company: "Summit Boulderhalle"
+      path: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/47_summit_bouldering.xml"
+  "klinikum":
+    - id: "st_lukas_klinikum"
+      company: "St. Lukas Universitätsklinikum"
+      path: "C_HEALTH_AND_LIFE_SCIENCES/17_st_lukas_klinikum.xml"
+  "kmu":
+    - id: "velora_cloud_erp"
+      company: "Velora Software GmbH"
+      path: "A_SAAS_AND_TECH/01_velora_cloud_erp.xml"
+  "kommunal":
+    - id: "stadtwerke_gruenstrom"
+      company: "Stadtwerke GrünStrom"
+      path: "F_PUBLIC_MOBILITY_AND_INFRA/38_stadtwerke_gruenstrom.xml"
+  "konzert":
+    - id: "symphonia_orchester"
+      company: "Symphonia Staatsorchester"
+      path: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/49_symphonia_orchester.xml"
+  "kraeuter":
+    - id: "alpenkraeuter_tee"
+      company: "AlpenKräuter Manufaktur"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/26_alpenkraeuter_tee.xml"
+  "krankenhaus":
+    - id: "st_lukas_klinikum"
+      company: "St. Lukas Universitätsklinikum"
+      path: "C_HEALTH_AND_LIFE_SCIENCES/17_st_lukas_klinikum.xml"
+  "kreisverwaltung":
+    - id: "landkreis_buergerportal"
+      company: "Landkreis Bürgerportal Online"
+      path: "F_PUBLIC_MOBILITY_AND_INFRA/41_landkreis_buergerportal.xml"
+  "krustenbraun":
+    - id: "brotecht_baeckerei"
+      company: "BrotEcht Naturbäckerei"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/30_brotecht_baeckerei.xml"
+  "lavendel":
+    - id: "aether_mental_health"
+      company: "Aether Seelenraum Klinik"
+      path: "C_HEALTH_AND_LIFE_SCIENCES/22_aether_mental_health.xml"
+  "lernplattform":
+    - id: "cleverdesk_edtech"
+      company: "CleverDesk Digital"
+      path: "A_SAAS_AND_TECH/06_cleverdesk_edtech.xml"
+  "lifestyle":
+    - id: "haferglueck_oatmilk"
+      company: "Haferglück Bio-Milch"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/23_haferglueck_oatmilk.xml"
+  "lime-neon":
+    - id: "velo_city_bikeshare"
+      company: "VeloCity Bikesharing"
+      path: "F_PUBLIC_MOBILITY_AND_INFRA/42_velo_city_bikeshare.xml"
+  "luxury-food":
+    - id: "schoko_kuvertuere"
+      company: "Chocolat Grand Cru Suisse"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/29_schoko_kuvertuere.xml"
+  "luxus":
+    - id: "maison_vellum_parfum"
+      company: "Maison Vellum Parfumerie"
+      path: "E_LUXURY_AND_FASHION/32_maison_vellum_parfum.xml"
+    - id: "palazzo_bellini_hotel"
+      company: "Grand Hotel Palazzo Bellini"
+      path: "E_LUXURY_AND_FASHION/37_palazzo_bellini_hotel.xml"
+  "magenta":
+    - id: "pulsar_gaming_arena"
+      company: "Pulsar E-Sports Arena"
+      path: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/46_pulsar_gaming_arena.xml"
+  "marina":
+    - id: "monolith_yachting"
+      company: "Monolith Superyachts"
+      path: "E_LUXURY_AND_FASHION/36_monolith_yachting.xml"
+  "marineblau":
+    - id: "fischerhues_sylt"
+      company: "Fischerhüs Sylt"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/27_fischerhues_sylt.xml"
+  "maritim":
+    - id: "fischerhues_sylt"
+      company: "Fischerhüs Sylt"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/27_fischerhues_sylt.xml"
+  "marmor":
+    - id: "palazzo_bellini_hotel"
+      company: "Grand Hotel Palazzo Bellini"
+      path: "E_LUXURY_AND_FASHION/37_palazzo_bellini_hotel.xml"
+  "maschinenbau":
+    - id: "kruppstahl_maschinenbau"
+      company: "Kruppstahl Präzisionsbau AG"
+      path: "B_INDUSTRY_AND_CRAFT/09_kruppstahl_maschinenbau.xml"
+  "massschneiderei":
+    - id: "sartoria_marchese"
+      company: "Sartoria Marchese Napoli"
+      path: "E_LUXURY_AND_FASHION/34_sartoria_marchese.xml"
+  "mehlstaub":
+    - id: "brotecht_baeckerei"
+      company: "BrotEcht Naturbäckerei"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/30_brotecht_baeckerei.xml"
+  "meisterbetrieb":
+    - id: "zimmerei_eichenlaub"
+      company: "Zimmerei & Holzbau Eichenlaub"
+      path: "B_INDUSTRY_AND_CRAFT/11_zimmerei_eichenlaub.xml"
+  "mental-health":
+    - id: "aether_mental_health"
+      company: "Aether Seelenraum Klinik"
+      path: "C_HEALTH_AND_LIFE_SCIENCES/22_aether_mental_health.xml"
+  "merinowolle":
+    - id: "atelier_nordstrikk"
+      company: "Atelier Nordstrikk Oslo"
+      path: "E_LUXURY_AND_FASHION/35_atelier_nordstrikk.xml"
+  "metall":
+    - id: "vulkan_guss_manufaktur"
+      company: "Vulkan Eisen- & Bronzeguss"
+      path: "B_INDUSTRY_AND_CRAFT/12_vulkan_guss_manufaktur.xml"
+  "metro":
+    - id: "metro_transvia"
+      company: "Transvia Verkehrsverbund"
+      path: "F_PUBLIC_MOBILITY_AND_INFRA/39_metro_transvia.xml"
+  "mint":
+    - id: "cura_telemedizin"
+      company: "Cura TeleHealth"
+      path: "C_HEALTH_AND_LIFE_SCIENCES/16_cura_telemedizin.xml"
+  "mobility":
+    - id: "velo_city_bikeshare"
+      company: "VeloCity Bikesharing"
+      path: "F_PUBLIC_MOBILITY_AND_INFRA/42_velo_city_bikeshare.xml"
+  "monaco":
+    - id: "monolith_yachting"
+      company: "Monolith Superyachts"
+      path: "E_LUXURY_AND_FASHION/36_monolith_yachting.xml"
+  "muay-thai":
+    - id: "kickbox_dojo_kuro"
+      company: "Kuro Martial Arts Dojo"
+      path: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/45_kickbox_dojo_kuro.xml"
+  "musik":
+    - id: "soundwave_openair"
+      company: "Soundwave OpenAir Festival"
+      path: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/50_soundwave_openair.xml"
+  "nachhaltig":
+    - id: "nordholz_architektur"
+      company: "NordHolz Architektur & Bau"
+      path: "B_INDUSTRY_AND_CRAFT/10_nordholz_architektur.xml"
+  "napoli":
+    - id: "sartoria_marchese"
+      company: "Sartoria Marchese Napoli"
+      path: "E_LUXURY_AND_FASHION/34_sartoria_marchese.xml"
+  "navy":
+    - id: "sartoria_marchese"
+      company: "Sartoria Marchese Napoli"
+      path: "E_LUXURY_AND_FASHION/34_sartoria_marchese.xml"
+  "neon":
+    - id: "pulsar_gaming_arena"
+      company: "Pulsar E-Sports Arena"
+      path: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/46_pulsar_gaming_arena.xml"
+  "neural":
+    - id: "synapse_ai_labs"
+      company: "Synapse AI Labs"
+      path: "A_SAAS_AND_TECH/02_synapse_ai_labs.xml"
+  "nordic-blue":
+    - id: "nordic_ferry_lines"
+      company: "Nordic Ferry Lines"
+      path: "F_PUBLIC_MOBILITY_AND_INFRA/40_nordic_ferry_lines.xml"
+  "nordsee":
+    - id: "fischerhues_sylt"
+      company: "Fischerhüs Sylt"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/27_fischerhues_sylt.xml"
+  "norwegen":
+    - id: "atelier_nordstrikk"
+      company: "Atelier Nordstrikk Oslo"
+      path: "E_LUXURY_AND_FASHION/35_atelier_nordstrikk.xml"
+  "notruf":
+    - id: "alpine_rescue_tirol"
+      company: "Bergrettung Tirol Notruf 140"
+      path: "F_PUBLIC_MOBILITY_AND_INFRA/44_alpine_rescue_tirol.xml"
+  "oat-yellow":
+    - id: "haferglueck_oatmilk"
+      company: "Haferglück Bio-Milch"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/23_haferglueck_oatmilk.xml"
+  "oepnv":
+    - id: "metro_transvia"
+      company: "Transvia Verkehrsverbund"
+      path: "F_PUBLIC_MOBILITY_AND_INFRA/39_metro_transvia.xml"
+  "onboarding":
+    - id: "nexushr_workforce"
+      company: "NexusHR Systems"
+      path: "A_SAAS_AND_TECH/08_nexushr_workforce.xml"
+  "openair":
+    - id: "soundwave_openair"
+      company: "Soundwave OpenAir Festival"
+      path: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/50_soundwave_openair.xml"
+  "orange":
+    - id: "streamflow_devops"
+      company: "StreamFlow Systems"
+      path: "A_SAAS_AND_TECH/04_streamflow_devops.xml"
+  "orange-vital":
+    - id: "physiowell_reha"
+      company: "PhysioWell Rehazentrum"
+      path: "C_HEALTH_AND_LIFE_SCIENCES/20_physiowell_reha.xml"
+  "orchester":
+    - id: "symphonia_orchester"
+      company: "Symphonia Staatsorchester"
+      path: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/49_symphonia_orchester.xml"
+  "ozeanblau":
+    - id: "monolith_yachting"
+      company: "Monolith Superyachts"
+      path: "E_LUXURY_AND_FASHION/36_monolith_yachting.xml"
+  "parfum":
+    - id: "maison_vellum_parfum"
+      company: "Maison Vellum Parfumerie"
+      path: "E_LUXURY_AND_FASHION/32_maison_vellum_parfum.xml"
+  "payment":
+    - id: "paypulse_fintech"
+      company: "PayPulse Global"
+      path: "A_SAAS_AND_TECH/05_paypulse_fintech.xml"
+  "people-ops":
+    - id: "nexushr_workforce"
+      company: "NexusHR Systems"
+      path: "A_SAAS_AND_TECH/08_nexushr_workforce.xml"
+  "petrol":
+    - id: "summit_bouldering"
+      company: "Summit Boulderhalle"
+      path: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/47_summit_bouldering.xml"
+  "pharmazie":
+    - id: "sanitas_apotheke"
+      company: "Sanitas Apothekenverbund"
+      path: "C_HEALTH_AND_LIFE_SCIENCES/21_sanitas_apotheke.xml"
+  "photovoltaik":
+    - id: "elektro_voltmeister"
+      company: "Voltmeister Elektrotechnik GmbH"
+      path: "B_INDUSTRY_AND_CRAFT/13_elektro_voltmeister.xml"
+  "physiotherapie":
+    - id: "physiowell_reha"
+      company: "PhysioWell Rehazentrum"
+      path: "C_HEALTH_AND_LIFE_SCIENCES/20_physiowell_reha.xml"
+  "pill-ui":
+    - id: "velora_cloud_erp"
+      company: "Velora Software GmbH"
+      path: "A_SAAS_AND_TECH/01_velora_cloud_erp.xml"
+  "platin":
+    - id: "valmont_geneve_uhren"
+      company: "Valmont & Cie. Genève"
+      path: "E_LUXURY_AND_FASHION/31_valmont_geneve_uhren.xml"
+  "präzision":
+    - id: "kruppstahl_maschinenbau"
+      company: "Kruppstahl Präzisionsbau AG"
+      path: "B_INDUSTRY_AND_CRAFT/09_kruppstahl_maschinenbau.xml"
+  "psychotherapie":
+    - id: "aether_mental_health"
+      company: "Aether Seelenraum Klinik"
+      path: "C_HEALTH_AND_LIFE_SCIENCES/22_aether_mental_health.xml"
+  "purple":
+    - id: "nexushr_workforce"
+      company: "NexusHR Systems"
+      path: "A_SAAS_AND_TECH/08_nexushr_workforce.xml"
+  "reha":
+    - id: "physiowell_reha"
+      company: "PhysioWell Rehazentrum"
+      path: "C_HEALTH_AND_LIFE_SCIENCES/20_physiowell_reha.xml"
+  "rot-gruen":
+    - id: "sanitas_apotheke"
+      company: "Sanitas Apothekenverbund"
+      path: "C_HEALTH_AND_LIFE_SCIENCES/21_sanitas_apotheke.xml"
+  "rot-signal":
+    - id: "metro_transvia"
+      company: "Transvia Verkehrsverbund"
+      path: "F_PUBLIC_MOBILITY_AND_INFRA/39_metro_transvia.xml"
+  "royal-blue":
+    - id: "st_lukas_klinikum"
+      company: "St. Lukas Universitätsklinikum"
+      path: "C_HEALTH_AND_LIFE_SCIENCES/17_st_lukas_klinikum.xml"
+  "ruhe":
+    - id: "aether_mental_health"
+      company: "Aether Seelenraum Klinik"
+      path: "C_HEALTH_AND_LIFE_SCIENCES/22_aether_mental_health.xml"
+  "rustikal":
+    - id: "brauhaus_hopfenstolz"
+      company: "Brauhaus Hopfenstolz"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/24_brauhaus_hopfenstolz.xml"
+  "salad":
+    - id: "urbanleaf_salad"
+      company: "UrbanLeaf Bowls & Greens"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/28_urbanleaf_salad.xml"
+  "sauerteig":
+    - id: "brotecht_baeckerei"
+      company: "BrotEcht Naturbäckerei"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/30_brotecht_baeckerei.xml"
+  "schaltschrank":
+    - id: "elektro_voltmeister"
+      company: "Voltmeister Elektrotechnik GmbH"
+      path: "B_INDUSTRY_AND_CRAFT/13_elektro_voltmeister.xml"
+  "schiefer":
+    - id: "dachdeckerei_steinfirst"
+      company: "Steinfirst Dach & Fassade"
+      path: "B_INDUSTRY_AND_CRAFT/14_dachdeckerei_steinfirst.xml"
+  "schifffahrt":
+    - id: "nordic_ferry_lines"
+      company: "Nordic Ferry Lines"
+      path: "F_PUBLIC_MOBILITY_AND_INFRA/40_nordic_ferry_lines.xml"
+  "schmuck":
+    - id: "solitaire_juwelen"
+      company: "Solitaire Fine Jewelry"
+      path: "E_LUXURY_AND_FASHION/33_solitaire_juwelen.xml"
+  "schokolade":
+    - id: "schoko_kuvertuere"
+      company: "Chocolat Grand Cru Suisse"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/29_schoko_kuvertuere.xml"
+  "schule":
+    - id: "cleverdesk_edtech"
+      company: "CleverDesk Digital"
+      path: "A_SAAS_AND_TECH/06_cleverdesk_edtech.xml"
+  "schwarz-rot":
+    - id: "kickbox_dojo_kuro"
+      company: "Kuro Martial Arts Dojo"
+      path: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/45_kickbox_dojo_kuro.xml"
+  "schwerindustrie":
+    - id: "vulkan_guss_manufaktur"
+      company: "Vulkan Eisen- & Bronzeguss"
+      path: "B_INDUSTRY_AND_CRAFT/12_vulkan_guss_manufaktur.xml"
+  "sensorik":
+    - id: "omnidrive_iot"
+      company: "OmniDrive Telematics"
+      path: "A_SAAS_AND_TECH/07_omnidrive_iot.xml"
+  "signalorange":
+    - id: "alpine_rescue_tirol"
+      company: "Bergrettung Tirol Notruf 140"
+      path: "F_PUBLIC_MOBILITY_AND_INFRA/44_alpine_rescue_tirol.xml"
+  "skandinavien":
+    - id: "nordic_ferry_lines"
+      company: "Nordic Ferry Lines"
+      path: "F_PUBLIC_MOBILITY_AND_INFRA/40_nordic_ferry_lines.xml"
+  "skandinavisch":
+    - id: "nordholz_architektur"
+      company: "NordHolz Architektur & Bau"
+      path: "B_INDUSTRY_AND_CRAFT/10_nordholz_architektur.xml"
+  "slow-fashion":
+    - id: "atelier_nordstrikk"
+      company: "Atelier Nordstrikk Oslo"
+      path: "E_LUXURY_AND_FASHION/35_atelier_nordstrikk.xml"
+  "smart-city":
+    - id: "velo_city_bikeshare"
+      company: "VeloCity Bikesharing"
+      path: "F_PUBLIC_MOBILITY_AND_INFRA/42_velo_city_bikeshare.xml"
+  "sonnenuntergang":
+    - id: "soundwave_openair"
+      company: "Soundwave OpenAir Festival"
+      path: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/50_soundwave_openair.xml"
+  "specialty-coffee":
+    - id: "rostwerk_kaffee"
+      company: "Röstwerk Kaffeemanufaktur"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/25_rostwerk_kaffee.xml"
+  "speed":
+    - id: "aerotrain_intercity"
+      company: "AeroTrain European Rail"
+      path: "F_PUBLIC_MOBILITY_AND_INFRA/43_aerotrain_intercity.xml"
+  "spitzenmedizin":
+    - id: "st_lukas_klinikum"
+      company: "St. Lukas Universitätsklinikum"
+      path: "C_HEALTH_AND_LIFE_SCIENCES/17_st_lukas_klinikum.xml"
+  "sport":
+    - id: "physiowell_reha"
+      company: "PhysioWell Rehazentrum"
+      path: "C_HEALTH_AND_LIFE_SCIENCES/20_physiowell_reha.xml"
+    - id: "summit_bouldering"
+      company: "Summit Boulderhalle"
+      path: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/47_summit_bouldering.xml"
+  "stadtwerke":
+    - id: "stadtwerke_gruenstrom"
+      company: "Stadtwerke GrünStrom"
+      path: "F_PUBLIC_MOBILITY_AND_INFRA/38_stadtwerke_gruenstrom.xml"
+  "stahlgrau":
+    - id: "kruppstahl_maschinenbau"
+      company: "Kruppstahl Präzisionsbau AG"
+      path: "B_INDUSTRY_AND_CRAFT/09_kruppstahl_maschinenbau.xml"
+  "steril":
+    - id: "st_lukas_klinikum"
+      company: "St. Lukas Universitätsklinikum"
+      path: "C_HEALTH_AND_LIFE_SCIENCES/17_st_lukas_klinikum.xml"
+  "strick":
+    - id: "atelier_nordstrikk"
+      company: "Atelier Nordstrikk Oslo"
+      path: "E_LUXURY_AND_FASHION/35_atelier_nordstrikk.xml"
+  "superyacht":
+    - id: "monolith_yachting"
+      company: "Monolith Superyachts"
+      path: "E_LUXURY_AND_FASHION/36_monolith_yachting.xml"
+  "swiss":
+    - id: "schoko_kuvertuere"
+      company: "Chocolat Grand Cru Suisse"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/29_schoko_kuvertuere.xml"
+  "sylt":
+    - id: "fischerhues_sylt"
+      company: "Fischerhüs Sylt"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/27_fischerhues_sylt.xml"
+  "tangerine":
+    - id: "cleverdesk_edtech"
+      company: "CleverDesk Digital"
+      path: "A_SAAS_AND_TECH/06_cleverdesk_edtech.xml"
+  "tee":
+    - id: "alpenkraeuter_tee"
+      company: "AlpenKräuter Manufaktur"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/26_alpenkraeuter_tee.xml"
+  "telematik":
+    - id: "omnidrive_iot"
+      company: "OmniDrive Telematics"
+      path: "A_SAAS_AND_TECH/07_omnidrive_iot.xml"
+  "telemedizin":
+    - id: "cura_telemedizin"
+      company: "Cura TeleHealth"
+      path: "C_HEALTH_AND_LIFE_SCIENCES/16_cura_telemedizin.xml"
+  "terminal":
+    - id: "cybervault_security"
+      company: "CyberVault Systems"
+      path: "A_SAAS_AND_TECH/03_cybervault_security.xml"
+  "terrakotta":
+    - id: "rostwerk_kaffee"
+      company: "Röstwerk Kaffeemanufaktur"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/25_rostwerk_kaffee.xml"
+  "transparent":
+    - id: "glaswerk_oberland"
+      company: "Glaswerk Oberland GmbH"
+      path: "B_INDUSTRY_AND_CRAFT/15_glaswerk_oberland.xml"
+  "trommelroestung":
+    - id: "rostwerk_kaffee"
+      company: "Röstwerk Kaffeemanufaktur"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/25_rostwerk_kaffee.xml"
+  "trust":
+    - id: "paypulse_fintech"
+      company: "PayPulse Global"
+      path: "A_SAAS_AND_TECH/05_paypulse_fintech.xml"
+  "uhren":
+    - id: "valmont_geneve_uhren"
+      company: "Valmont & Cie. Genève"
+      path: "E_LUXURY_AND_FASHION/31_valmont_geneve_uhren.xml"
+  "urban":
+    - id: "urbanleaf_salad"
+      company: "UrbanLeaf Bowls & Greens"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/28_urbanleaf_salad.xml"
+  "vegan":
+    - id: "haferglueck_oatmilk"
+      company: "Haferglück Bio-Milch"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/23_haferglueck_oatmilk.xml"
+  "venedig":
+    - id: "palazzo_bellini_hotel"
+      company: "Grand Hotel Palazzo Bellini"
+      path: "E_LUXURY_AND_FASHION/37_palazzo_bellini_hotel.xml"
+  "venetian-red":
+    - id: "palazzo_bellini_hotel"
+      company: "Grand Hotel Palazzo Bellini"
+      path: "E_LUXURY_AND_FASHION/37_palazzo_bellini_hotel.xml"
+  "verkehrsverbund":
+    - id: "metro_transvia"
+      company: "Transvia Verkehrsverbund"
+      path: "F_PUBLIC_MOBILITY_AND_INFRA/39_metro_transvia.xml"
+  "violine":
+    - id: "symphonia_orchester"
+      company: "Symphonia Staatsorchester"
+      path: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/49_symphonia_orchester.xml"
+  "voltgelb":
+    - id: "elektro_voltmeister"
+      company: "Voltmeister Elektrotechnik GmbH"
+      path: "B_INDUSTRY_AND_CRAFT/13_elektro_voltmeister.xml"
+  "weiss":
+    - id: "dentapur_zahnmedizin"
+      company: "DentaPur Zahnzentrum"
+      path: "C_HEALTH_AND_LIFE_SCIENCES/19_dentapur_zahnmedizin.xml"
+  "werft":
+    - id: "monolith_yachting"
+      company: "Monolith Superyachts"
+      path: "E_LUXURY_AND_FASHION/36_monolith_yachting.xml"
+  "wetterfest":
+    - id: "dachdeckerei_steinfirst"
+      company: "Steinfirst Dach & Fassade"
+      path: "B_INDUSTRY_AND_CRAFT/14_dachdeckerei_steinfirst.xml"
+  "wiesengruen":
+    - id: "alpenkraeuter_tee"
+      company: "AlpenKräuter Manufaktur"
+      path: "D_CONSUMER_FOOD_AND_LIFESTYLE/26_alpenkraeuter_tee.xml"
+  "wollweiss":
+    - id: "atelier_nordstrikk"
+      company: "Atelier Nordstrikk Oslo"
+      path: "E_LUXURY_AND_FASHION/35_atelier_nordstrikk.xml"
+  "zahnarzt":
+    - id: "dentapur_zahnmedizin"
+      company: "DentaPur Zahnzentrum"
+      path: "C_HEALTH_AND_LIFE_SCIENCES/19_dentapur_zahnmedizin.xml"
+  "zeitlos":
+    - id: "valmont_geneve_uhren"
+      company: "Valmont & Cie. Genève"
+      path: "E_LUXURY_AND_FASHION/31_valmont_geneve_uhren.xml"
+  "zero-trust":
+    - id: "cybervault_security"
+      company: "CyberVault Systems"
+      path: "A_SAAS_AND_TECH/03_cybervault_security.xml"
+  "ziegelrot":
+    - id: "dachdeckerei_steinfirst"
+      company: "Steinfirst Dach & Fassade"
+      path: "B_INDUSTRY_AND_CRAFT/14_dachdeckerei_steinfirst.xml"
+  "zimmerei":
+    - id: "zimmerei_eichenlaub"
+      company: "Zimmerei & Holzbau Eichenlaub"
+      path: "B_INDUSTRY_AND_CRAFT/11_zimmerei_eichenlaub.xml"
+  "zinc":
+    - id: "streamflow_devops"
+      company: "StreamFlow Systems"
+      path: "A_SAAS_AND_TECH/04_streamflow_devops.xml"
+  "zug":
+    - id: "aerotrain_intercity"
+      company: "AeroTrain European Rail"
+      path: "F_PUBLIC_MOBILITY_AND_INFRA/43_aerotrain_intercity.xml"
+  "ästhetik":
+    - id: "dentapur_zahnmedizin"
+      company: "DentaPur Zahnzentrum"
+      path: "C_HEALTH_AND_LIFE_SCIENCES/19_dentapur_zahnmedizin.xml"
+
+corporate_designs:
+  - id: "velora_cloud_erp"
+    company: "Velora Software GmbH"
+    product: "Velora Cloud ERP"
+    industry: "B2B SaaS / Cloud ERP für KMU"
+    category: "A_SAAS_AND_TECH"
+    file: "A_SAAS_AND_TECH/01_velora_cloud_erp.xml"
+    tags: ["erp", "kmu", "cloud-software", "familiär", "pill-ui"]
+    triggers: ["velora cloud erp", "mittelstand erp", "kmu cloud software", "pill button ui", "aubergine green branding"]
+  - id: "synapse_ai_labs"
+    company: "Synapse AI Labs"
+    product: "Synapse Neural Compute Fabric"
+    industry: "DeepTech / Generative AI Research"
+    category: "A_SAAS_AND_TECH"
+    file: "A_SAAS_AND_TECH/02_synapse_ai_labs.xml"
+    tags: ["ki", "deeptech", "neural", "indigo", "bento-grid"]
+    triggers: ["ai research brand", "deeptech corporate identity", "neural bento grid", "machine learning saas", "synapse dark ui"]
+  - id: "cybervault_security"
+    company: "CyberVault Systems"
+    product: "CyberVault Zero-Trust Guard"
+    industry: "Enterprise Cyber Security"
+    category: "A_SAAS_AND_TECH"
+    file: "A_SAAS_AND_TECH/03_cybervault_security.xml"
+    tags: ["cyber-security", "zero-trust", "dark-navy", "cyan", "terminal"]
+    triggers: ["cyber security design", "zero trust brand", "firewall dashboard", "encrypted terminal", "cybervault defense"]
+  - id: "streamflow_devops"
+    company: "StreamFlow Systems"
+    product: "StreamFlow Orchestrator"
+    industry: "DevOps & Cloud Infrastructure Tooling"
+    category: "A_SAAS_AND_TECH"
+    file: "A_SAAS_AND_TECH/04_streamflow_devops.xml"
+    tags: ["devops", "cicd", "orange", "zinc", "developer-tools"]
+    triggers: ["devops tooling brand", "cicd pipeline card", "developer console", "terminal dashboard", "streamflow engineering"]
+  - id: "paypulse_fintech"
+    company: "PayPulse Global"
+    product: "PayPulse Gateway & API"
+    industry: "FinTech / Payment Gateway"
+    category: "A_SAAS_AND_TECH"
+    file: "A_SAAS_AND_TECH/05_paypulse_fintech.xml"
+    tags: ["fintech", "payment", "blue", "trust", "clean-ui"]
+    triggers: ["fintech corporate design", "payment gateway banner", "neobank card", "digital checkout ui", "paypulse brand"]
+  - id: "cleverdesk_edtech"
+    company: "CleverDesk Digital"
+    product: "CleverDesk Classroom Hub"
+    industry: "EdTech / Schul- & Hochschul-Plattform"
+    category: "A_SAAS_AND_TECH"
+    file: "A_SAAS_AND_TECH/06_cleverdesk_edtech.xml"
+    tags: ["edtech", "schule", "bildung", "tangerine", "lernplattform"]
+    triggers: ["edtech corporate design", "school software card", "classroom learning app", "education dashboard", "cleverdesk hub"]
+  - id: "omnidrive_iot"
+    company: "OmniDrive Telematics"
+    product: "OmniFleet IoT Platform"
+    industry: "Flottenmanagement & Nutzfahrzeug-Sensorik"
+    category: "A_SAAS_AND_TECH"
+    file: "A_SAAS_AND_TECH/07_omnidrive_iot.xml"
+    tags: ["telematik", "iot", "flottenmanagement", "amber", "sensorik"]
+    triggers: ["fleet management brand", "telematics iot dashboard", "truck logistics banner", "industrial sensor card", "omnidrive vehicle ui"]
+  - id: "nexushr_workforce"
+    company: "NexusHR Systems"
+    product: "NexusHR Global People OS"
+    industry: "People Operations & Global Payroll"
+    category: "A_SAAS_AND_TECH"
+    file: "A_SAAS_AND_TECH/08_nexushr_workforce.xml"
+    tags: ["hr", "people-ops", "purple", "onboarding", "culture"]
+    triggers: ["hr corporate identity", "people ops dashboard", "employee welcome card", "workforce payroll brand", "nexushr culture"]
+  - id: "kruppstahl_maschinenbau"
+    company: "Kruppstahl Präzisionsbau AG"
+    product: "TitanMill 5-Achs CNC-Bearbeitungszentrum"
+    industry: "Maschinenbau / Schwerindustrie"
+    category: "B_INDUSTRY_AND_CRAFT"
+    file: "B_INDUSTRY_AND_CRAFT/09_kruppstahl_maschinenbau.xml"
+    tags: ["maschinenbau", "industrie", "stahlgrau", "cad", "präzision"]
+    triggers: ["maschinenbau corporate design", "heavy industry brand", "cnc machining banner", "german engineering styleguide", "kruppstahl"]
+  - id: "nordholz_architektur"
+    company: "NordHolz Architektur & Bau"
+    product: "NordHolz Passivhaus-System"
+    industry: "Architektur & Nachhaltiger Holzbau"
+    category: "B_INDUSTRY_AND_CRAFT"
+    file: "B_INDUSTRY_AND_CRAFT/10_nordholz_architektur.xml"
+    tags: ["architektur", "holzbau", "nachhaltig", "skandinavisch", "erdtöne"]
+    triggers: ["timber architecture brand", "sustainable wooden house", "nordic construction styleguide", "nordholz bau", "green architecture flyer"]
+  - id: "zimmerei_eichenlaub"
+    company: "Zimmerei & Holzbau Eichenlaub"
+    product: "Traditioneller Dachstuhl- & Fachwerkbau"
+    industry: "Handwerk / Zimmerei"
+    category: "B_INDUSTRY_AND_CRAFT"
+    file: "B_INDUSTRY_AND_CRAFT/11_zimmerei_eichenlaub.xml"
+    tags: ["zimmerei", "handwerk", "fachwerk", "holztöne", "meisterbetrieb"]
+    triggers: ["carpentry brand identity", "craftsman styleguide", "timber framing poster", "zimmerei eichenlaub", "artisan woodworker banner"]
+  - id: "vulkan_guss_manufaktur"
+    company: "Vulkan Eisen- & Bronzeguss"
+    product: "Vulkan Industrie-Armaturen & Spezialguss"
+    industry: "Gießerei & Metallurgische Fertigung"
+    category: "B_INDUSTRY_AND_CRAFT"
+    file: "B_INDUSTRY_AND_CRAFT/12_vulkan_guss_manufaktur.xml"
+    tags: ["giesserei", "metall", "glutrot", "bronze", "schwerindustrie"]
+    triggers: ["foundry corporate design", "metallurgy brand", "casting iron factory", "vulkan guss", "heavy metal industrial banner"]
+  - id: "elektro_voltmeister"
+    company: "Voltmeister Elektrotechnik GmbH"
+    product: "Industrie-Schaltanlagen & Gewerbe-PV"
+    industry: "Elektrotechnik / Energieinfrastruktur"
+    category: "B_INDUSTRY_AND_CRAFT"
+    file: "B_INDUSTRY_AND_CRAFT/13_elektro_voltmeister.xml"
+    tags: ["elektrotechnik", "energie", "voltgelb", "schaltschrank", "photovoltaik"]
+    triggers: ["electrical engineering corporate", "photovoltaic installation brand", "switchboard panel layout", "voltmeister", "electrician styleguide"]
+  - id: "dachdeckerei_steinfirst"
+    company: "Steinfirst Dach & Fassade"
+    product: "Meisterbetrieb für Steildach und Schiefer"
+    industry: "Handwerk / Dachdeckerei"
+    category: "B_INDUSTRY_AND_CRAFT"
+    file: "B_INDUSTRY_AND_CRAFT/14_dachdeckerei_steinfirst.xml"
+    tags: ["dachdeckerei", "schiefer", "ziegelrot", "wetterfest", "handwerk"]
+    triggers: ["roofing corporate brand", "slate tiles roof flyer", "craftsman roof service", "steinfirst", "terracotta roofer banner"]
+  - id: "glaswerk_oberland"
+    company: "Glaswerk Oberland GmbH"
+    product: "Structural Glazing & Sicherheitsglas"
+    industry: "Glasbau & Fassadenarchitektur"
+    category: "B_INDUSTRY_AND_CRAFT"
+    file: "B_INDUSTRY_AND_CRAFT/15_glaswerk_oberland.xml"
+    tags: ["glasbau", "fassade", "transparent", "cyan-ice", "architektur"]
+    triggers: ["glass architecture brand", "facade engineering corporate", "transparent glass styleguide", "glaswerk oberland", "curtain wall catalog"]
+  - id: "cura_telemedizin"
+    company: "Cura TeleHealth"
+    product: "Cura App & e-Rezept"
+    industry: "HealthTech / Telemedizin"
+    category: "C_HEALTH_AND_LIFE_SCIENCES"
+    file: "C_HEALTH_AND_LIFE_SCIENCES/16_cura_telemedizin.xml"
+    tags: ["telemedizin", "arztpraxis", "mint", "gesundheit", "e-rezept"]
+    triggers: ["telehealth corporate design", "digital doctor app", "erezept branding", "medical clinic styleguide", "cura health"]
+  - id: "st_lukas_klinikum"
+    company: "St. Lukas Universitätsklinikum"
+    product: "Zentrum für Spitzenmedizin"
+    industry: "Krankenhaus / Klinische Versorgung"
+    category: "C_HEALTH_AND_LIFE_SCIENCES"
+    file: "C_HEALTH_AND_LIFE_SCIENCES/17_st_lukas_klinikum.xml"
+    tags: ["krankenhaus", "klinikum", "royal-blue", "spitzenmedizin", "steril"]
+    triggers: ["hospital signage brand", "clinic corporate identity", "medical center poster", "st lukas klinikum", "emergency room brochure"]
+  - id: "bionova_genomics"
+    company: "BioNova Genomics AG"
+    product: "Sequenzierplattform NovaGene"
+    industry: "Biotechnologie & DNA-Sequenzierung"
+    category: "C_HEALTH_AND_LIFE_SCIENCES"
+    file: "C_HEALTH_AND_LIFE_SCIENCES/18_bionova_genomics.xml"
+    tags: ["genomik", "biotech", "dna", "cyan-glow", "forschung"]
+    triggers: ["biotech styleguide", "genomics corporate design", "dna lab visual identity", "bionova", "scientific research flyer"]
+  - id: "dentapur_zahnmedizin"
+    company: "DentaPur Zahnzentrum"
+    product: "Ästhetische Zahnheilkunde & Aligner"
+    industry: "Zahnmedizin & Kieferorthopädie"
+    category: "C_HEALTH_AND_LIFE_SCIENCES"
+    file: "C_HEALTH_AND_LIFE_SCIENCES/19_dentapur_zahnmedizin.xml"
+    tags: ["zahnarzt", "aligner", "weiss", "ästhetik", "clean"]
+    triggers: ["dental clinic brand", "dentist styleguide", "invisible aligner flyer", "dentapur smile", "aesthetic teeth banner"]
+  - id: "physiowell_reha"
+    company: "PhysioWell Rehazentrum"
+    product: "Sportphysiotherapie & Bewegungstherapie"
+    industry: "Physiotherapie & Rehabilitation"
+    category: "C_HEALTH_AND_LIFE_SCIENCES"
+    file: "C_HEALTH_AND_LIFE_SCIENCES/20_physiowell_reha.xml"
+    tags: ["physiotherapie", "reha", "sport", "orange-vital", "bewegung"]
+    triggers: ["physiotherapy corporate design", "rehab center styleguide", "sports clinic banner", "physiowell", "movement therapy flyer"]
+  - id: "sanitas_apotheke"
+    company: "Sanitas Apothekenverbund"
+    product: "Sanitas Express-Botendienst"
+    industry: "Pharmazie / Apotheke"
+    category: "C_HEALTH_AND_LIFE_SCIENCES"
+    file: "C_HEALTH_AND_LIFE_SCIENCES/21_sanitas_apotheke.xml"
+    tags: ["apotheke", "pharmazie", "rot-gruen", "botendienst", "beratung"]
+    triggers: ["pharmacy styleguide", "apotheke corporate brand", "medicine delivery poster", "sanitas", "pharmaceutical brochure"]
+  - id: "aether_mental_health"
+    company: "Aether Seelenraum Klinik"
+    product: "Achtsamkeitsbasierte Psychotherapie"
+    industry: "Psychosomatik & Mentale Gesundheit"
+    category: "C_HEALTH_AND_LIFE_SCIENCES"
+    file: "C_HEALTH_AND_LIFE_SCIENCES/22_aether_mental_health.xml"
+    tags: ["mental-health", "psychotherapie", "lavendel", "achtsam", "ruhe"]
+    triggers: ["mental health clinic brand", "psychotherapy styleguide", "meditation retreat card", "aether", "mindfulness health brochure"]
+  - id: "haferglueck_oatmilk"
+    company: "Haferglück Bio-Milch"
+    product: "Haferdrink Barista Edition"
+    industry: "Lebensmittel / Vegane Milchalternativen"
+    category: "D_CONSUMER_FOOD_AND_LIFESTYLE"
+    file: "D_CONSUMER_FOOD_AND_LIFESTYLE/23_haferglueck_oatmilk.xml"
+    tags: ["hafermilch", "vegan", "bio", "oat-yellow", "lifestyle"]
+    triggers: ["oatmilk brand design", "vegan food packaging", "plant-based drink styleguide", "haferglueck", "organic breakfast banner"]
+  - id: "brauhaus_hopfenstolz"
+    company: "Brauhaus Hopfenstolz"
+    product: "Fränkisches Kellerbier & Hopfen-IPA"
+    industry: "Getränke / Brauhandwerk"
+    category: "D_CONSUMER_FOOD_AND_LIFESTYLE"
+    file: "D_CONSUMER_FOOD_AND_LIFESTYLE/24_brauhaus_hopfenstolz.xml"
+    tags: ["brauhaus", "bier", "hopfengruen", "amber-gold", "rustikal"]
+    triggers: ["brewery brand identity", "craft beer label design", "bavarian tavern poster", "hopfenstolz", "artisan ale styleguide"]
+  - id: "rostwerk_kaffee"
+    company: "Röstwerk Kaffeemanufaktur"
+    product: "Single Origin Specialty Beans"
+    industry: "Kaffee / Gourmet-Rösterei"
+    category: "D_CONSUMER_FOOD_AND_LIFESTYLE"
+    file: "D_CONSUMER_FOOD_AND_LIFESTYLE/25_rostwerk_kaffee.xml"
+    tags: ["kaffee", "specialty-coffee", "terrakotta", "trommelroestung", "direct-trade"]
+    triggers: ["specialty coffee brand", "coffee bean bag packaging", "roastery styleguide", "rostwerk kaffee", "barista cafe poster"]
+  - id: "alpenkraeuter_tee"
+    company: "AlpenKräuter Manufaktur"
+    product: "Bio-Bergkräutertee"
+    industry: "Tee / Naturheilkunde"
+    category: "D_CONSUMER_FOOD_AND_LIFESTYLE"
+    file: "D_CONSUMER_FOOD_AND_LIFESTYLE/26_alpenkraeuter_tee.xml"
+    tags: ["tee", "alpen", "kraeuter", "wiesengruen", "bio"]
+    triggers: ["herbal tea brand", "alpine organic tea packaging", "botanical infusion styleguide", "alpenkraeuter", "nature remedy flyer"]
+  - id: "fischerhues_sylt"
+    company: "Fischerhüs Sylt"
+    product: "Nordsee-Austern & Krabbenbrötchen"
+    industry: "Gastronomie / Meeresfrüchte"
+    category: "D_CONSUMER_FOOD_AND_LIFESTYLE"
+    file: "D_CONSUMER_FOOD_AND_LIFESTYLE/27_fischerhues_sylt.xml"
+    tags: ["nordsee", "fisch", "marineblau", "sylt", "maritim"]
+    triggers: ["seafood restaurant brand", "maritime fish bistro styleguide", "nordic oyster bar flyer", "fischerhues sylt", "marine culinary menu"]
+  - id: "urbanleaf_salad"
+    company: "UrbanLeaf Bowls & Greens"
+    product: "Zero-Waste Quinoa & Greens Bowl"
+    industry: "Gastronomie / Fast Casual"
+    category: "D_CONSUMER_FOOD_AND_LIFESTYLE"
+    file: "D_CONSUMER_FOOD_AND_LIFESTYLE/28_urbanleaf_salad.xml"
+    tags: ["bowls", "salad", "avocado-green", "fast-casual", "urban"]
+    triggers: ["salad bowl restaurant brand", "fast casual healthy styleguide", "fresh food bar poster", "urbanleaf", "zero waste lunch menu"]
+  - id: "schoko_kuvertuere"
+    company: "Chocolat Grand Cru Suisse"
+    product: "74% Criollo Single Origin Tafel"
+    industry: "Feinkost / Schokolade"
+    category: "D_CONSUMER_FOOD_AND_LIFESTYLE"
+    file: "D_CONSUMER_FOOD_AND_LIFESTYLE/29_schoko_kuvertuere.xml"
+    tags: ["schokolade", "luxury-food", "cacao-brown", "gold", "swiss"]
+    triggers: ["swiss chocolate packaging", "artisan bean to bar brand", "luxury cacao styleguide", "chocolat grand cru", "confectionery gift card"]
+  - id: "brotecht_baeckerei"
+    company: "BrotEcht Naturbäckerei"
+    product: "Holzofen-Roggenlaib mit 48h Teigruhe"
+    industry: "Bäckerei / Handwerk"
+    category: "D_CONSUMER_FOOD_AND_LIFESTYLE"
+    file: "D_CONSUMER_FOOD_AND_LIFESTYLE/30_brotecht_baeckerei.xml"
+    tags: ["baeckerei", "sauerteig", "krustenbraun", "mehlstaub", "handwerk"]
+    triggers: ["bakery corporate design", "sourdough bread styleguide", "artisan baker flyer", "brotecht", "wood oven bread packaging"]
+  - id: "valmont_geneve_uhren"
+    company: "Valmont & Cie. Genève"
+    product: "Chronographe Tourbillon No. 7"
+    industry: "Haute Horlogerie / Luxusuhren"
+    category: "E_LUXURY_AND_FASHION"
+    file: "E_LUXURY_AND_FASHION/31_valmont_geneve_uhren.xml"
+    tags: ["uhren", "haute-horlogerie", "geneve", "platin", "zeitlos"]
+    triggers: ["luxury watch brand", "haute horlogerie styleguide", "swiss timepiece banner", "valmont geneve", "chronograph catalog card"]
+  - id: "maison_vellum_parfum"
+    company: "Maison Vellum Parfumerie"
+    product: "Extrait de Parfum Cuir Blanc"
+    industry: "Haute Parfumerie / Luxuskosmetik"
+    category: "E_LUXURY_AND_FASHION"
+    file: "E_LUXURY_AND_FASHION/32_maison_vellum_parfum.xml"
+    tags: ["parfum", "luxus", "grasse", "champagner", "duft"]
+    triggers: ["luxury perfume brand", "niche fragrance packaging", "haute parfumerie styleguide", "maison vellum", "luxury cosmetics card"]
+  - id: "solitaire_juwelen"
+    company: "Solitaire Fine Jewelry"
+    product: "Fair-Mined Brillant-Solitär"
+    industry: "Haute Joaillerie / Schmuck"
+    category: "E_LUXURY_AND_FASHION"
+    file: "E_LUXURY_AND_FASHION/33_solitaire_juwelen.xml"
+    tags: ["schmuck", "diamanten", "gold", "joaillerie", "edel"]
+    triggers: ["fine jewelry brand", "diamond ring catalog", "haute joaillerie corporate", "solitaire jewels", "luxury engagement card"]
+  - id: "sartoria_marchese"
+    company: "Sartoria Marchese Napoli"
+    product: "Bespoke Herrenanzug (Spalla Camicia)"
+    industry: "Herrenmode / Maßschneiderei"
+    category: "E_LUXURY_AND_FASHION"
+    file: "E_LUXURY_AND_FASHION/34_sartoria_marchese.xml"
+    tags: ["massschneiderei", "bespoke", "anzug", "navy", "napoli"]
+    triggers: ["bespoke tailoring brand", "luxury menswear styleguide", "italian suit flyer", "sartoria marchese", "gentleman wardrobe card"]
+  - id: "atelier_nordstrikk"
+    company: "Atelier Nordstrikk Oslo"
+    product: "Reine Merinowoll-Strickwaren"
+    industry: "Modedesign / Nachhaltiger Strick"
+    category: "E_LUXURY_AND_FASHION"
+    file: "E_LUXURY_AND_FASHION/35_atelier_nordstrikk.xml"
+    tags: ["strick", "merinowolle", "norwegen", "wollweiss", "slow-fashion"]
+    triggers: ["knitwear brand identity", "scandinavian woolen fashion", "slow fashion styleguide", "nordstrikk", "merino wool banner"]
+  - id: "monolith_yachting"
+    company: "Monolith Superyachts"
+    product: "90m Explorer Yacht Projekt Orca"
+    industry: "Marine / Superyacht-Werft"
+    category: "E_LUXURY_AND_FASHION"
+    file: "E_LUXURY_AND_FASHION/36_monolith_yachting.xml"
+    tags: ["superyacht", "werft", "ozeanblau", "monaco", "marina"]
+    triggers: ["superyacht brand", "luxury marine styleguide", "monaco yachting poster", "monolith yachts", "naval architecture brochure"]
+  - id: "palazzo_bellini_hotel"
+    company: "Grand Hotel Palazzo Bellini"
+    product: "Dogen-Suite mit privatem Bootsanleger"
+    industry: "Hospitality / 5-Sterne Luxushotel"
+    category: "E_LUXURY_AND_FASHION"
+    file: "E_LUXURY_AND_FASHION/37_palazzo_bellini_hotel.xml"
+    tags: ["hotel", "venedig", "venetian-red", "marmor", "luxus"]
+    triggers: ["luxury hotel brand", "venetian palace styleguide", "5 star grand hotel brochure", "palazzo bellini", "hospitality room card"]
+  - id: "stadtwerke_gruenstrom"
+    company: "Stadtwerke GrünStrom"
+    product: "100% Regionale Geothermie & Windkraft"
+    industry: "Öffentliche Infrastruktur / Kommunale Energie"
+    category: "F_PUBLIC_MOBILITY_AND_INFRA"
+    file: "F_PUBLIC_MOBILITY_AND_INFRA/38_stadtwerke_gruenstrom.xml"
+    tags: ["stadtwerke", "energie", "gruen", "geothermie", "kommunal"]
+    triggers: ["public utility styleguide", "municipal energy brand", "green power flyer", "stadtwerke", "clean energy banner"]
+  - id: "metro_transvia"
+    company: "Transvia Verkehrsverbund"
+    product: "U-Bahn, Tram & Stadtbusse im Minutentakt"
+    industry: "ÖPNV / Nahverkehr"
+    category: "F_PUBLIC_MOBILITY_AND_INFRA"
+    file: "F_PUBLIC_MOBILITY_AND_INFRA/39_metro_transvia.xml"
+    tags: ["oepnv", "metro", "verkehrsverbund", "rot-signal", "fahrplan"]
+    triggers: ["metro transit brand", "subway timetable poster", "public transport styleguide", "transvia", "tram network banner"]
+  - id: "nordic_ferry_lines"
+    company: "Nordic Ferry Lines"
+    product: "Zero-Emission Island Ferries"
+    industry: "Schifffahrt & Insel-Logistik"
+    category: "F_PUBLIC_MOBILITY_AND_INFRA"
+    file: "F_PUBLIC_MOBILITY_AND_INFRA/40_nordic_ferry_lines.xml"
+    tags: ["faehre", "schifffahrt", "skandinavien", "nordic-blue", "insel"]
+    triggers: ["ferry line brand", "maritime transport styleguide", "electric ship flyer", "nordic ferry", "island logistics banner"]
+  - id: "landkreis_buergerportal"
+    company: "Landkreis Bürgerportal Online"
+    product: "Digitales Bürgeramt & Kfz-Zulassung"
+    industry: "Öffentlicher Sektor / E-Government"
+    category: "F_PUBLIC_MOBILITY_AND_INFRA"
+    file: "F_PUBLIC_MOBILITY_AND_INFRA/41_landkreis_buergerportal.xml"
+    tags: ["buergeramt", "egovernment", "barrierefrei", "amt", "kreisverwaltung"]
+    triggers: ["egovernment corporate design", "citizen service portal", "public sector styleguide", "landkreis amt", "accessible administrative poster"]
+  - id: "velo_city_bikeshare"
+    company: "VeloCity Bikesharing"
+    product: "Smart E-Bike Stationen"
+    industry: "Mikromobilität & Smart City"
+    category: "F_PUBLIC_MOBILITY_AND_INFRA"
+    file: "F_PUBLIC_MOBILITY_AND_INFRA/42_velo_city_bikeshare.xml"
+    tags: ["bikeshare", "ebike", "mobility", "lime-neon", "smart-city"]
+    triggers: ["bikesharing brand", "smart city micromobility", "ebike app flyer", "velocity", "urban cycling styleguide"]
+  - id: "aerotrain_intercity"
+    company: "AeroTrain European Rail"
+    product: "High-Speed Rail 350 km/h"
+    industry: "Fernverkehr / Eisenbahn"
+    category: "F_PUBLIC_MOBILITY_AND_INFRA"
+    file: "F_PUBLIC_MOBILITY_AND_INFRA/43_aerotrain_intercity.xml"
+    tags: ["zug", "eisenbahn", "ice", "speed", "europa"]
+    triggers: ["high speed rail brand", "train network styleguide", "intercity railway poster", "aerotrain", "european rail booking card"]
+  - id: "alpine_rescue_tirol"
+    company: "Bergrettung Tirol Notruf 140"
+    product: "Alpine Luftrettung & Lawineneinsatz"
+    industry: "Notfallrettung & Katastrophenschutz"
+    category: "F_PUBLIC_MOBILITY_AND_INFRA"
+    file: "F_PUBLIC_MOBILITY_AND_INFRA/44_alpine_rescue_tirol.xml"
+    tags: ["bergrettung", "notruf", "signalorange", "alpen", "hubschrauber"]
+    triggers: ["mountain rescue styleguide", "alpine emergency brand", "search and rescue poster", "bergrettung", "helicopter medical banner"]
+  - id: "kickbox_dojo_kuro"
+    company: "Kuro Martial Arts Dojo"
+    product: "Muay Thai & K-1 Kampfsport-Akademie"
+    industry: "Sport / Kampfsport"
+    category: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY"
+    file: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/45_kickbox_dojo_kuro.xml"
+    tags: ["kampfsport", "dojo", "schwarz-rot", "muay-thai", "disziplin"]
+    triggers: ["martial arts gym brand", "boxing dojo styleguide", "muay thai academy flyer", "kuro dojo", "combat sports banner"]
+  - id: "pulsar_gaming_arena"
+    company: "Pulsar E-Sports Arena"
+    product: "Pro-Gaming League & LAN-Hub"
+    industry: "Gaming / E-Sports"
+    category: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY"
+    file: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/46_pulsar_gaming_arena.xml"
+    tags: ["esports", "gaming", "magenta", "neon", "cyber"]
+    triggers: ["esports arena brand", "gaming tournament banner", "cyber league styleguide", "pulsar arena", "lan party poster"]
+  - id: "summit_bouldering"
+    company: "Summit Boulderhalle"
+    product: "Boulder-Routen & Kletterkurse"
+    industry: "Sport / Klettern"
+    category: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY"
+    file: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/47_summit_bouldering.xml"
+    tags: ["bouldern", "klettern", "petrol", "chalk", "sport"]
+    triggers: ["bouldering gym brand", "climbing hall styleguide", "sports club flyer", "summit bouldering", "climb route banner"]
+  - id: "filmforum_arthouse"
+    company: "Filmforum Arthouse Kino"
+    product: "Internationales Independent-Kino"
+    industry: "Kultur / Programmkino"
+    category: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY"
+    file: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/48_filmforum_arthouse.xml"
+    tags: ["kino", "arthouse", "cinematisch", "gold", "film"]
+    triggers: ["arthouse cinema brand", "film festival styleguide", "movie program poster", "filmforum", "indie cinema brochure"]
+  - id: "symphonia_orchester"
+    company: "Symphonia Staatsorchester"
+    product: "Saison-Abonnement Klassik & Romantik"
+    industry: "Kultur / Klassische Musik"
+    category: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY"
+    file: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/49_symphonia_orchester.xml"
+    tags: ["orchester", "klassik", "violine", "gold", "konzert"]
+    triggers: ["orchestra brand identity", "classical symphony styleguide", "philharmonic concert flyer", "symphonia", "music subscription card"]
+  - id: "soundwave_openair"
+    company: "Soundwave OpenAir Festival"
+    product: "3-Tages-Festivalpass & Camping"
+    industry: "Musikfestival / Event"
+    category: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY"
+    file: "G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/50_soundwave_openair.xml"
+    tags: ["festival", "openair", "musik", "sonnenuntergang", "indie"]
+    triggers: ["music festival brand", "openair concert poster", "indie festival styleguide", "soundwave openair", "summer event banner"]

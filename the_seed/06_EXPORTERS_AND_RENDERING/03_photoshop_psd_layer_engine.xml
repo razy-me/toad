@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<specification module="03_photoshop_psd_layer_engine" target="toad-dsl" version="3.0">
+  <metadata>
+    <description>Binary Photoshop PSD encoder, non-destructive layers, TySh EngineData, vector masks, and layer effects</description>
+    <source_compiler_file>src/renderer/psdExporter.ts</source_compiler_file>
+  </metadata>
+
+  <psd_structure_sections>
+    <section number="1" name="file_header">8BPS signature, version 1, channels, W, H, depth (8-bit)</section>
+    <section number="2" name="color_mode_data">Indexed color table (empty for RGB/CMYK)</section>
+    <section number="3" name="image_resources">Resolution info (72/300 DPI), slices, guides</section>
+    <section number="4" name="layer_and_mask_info">Layer count, layer records, vector masks (vmsk), TypeTool EngineData (TySh), layer effects (lrFX)</section>
+    <section number="5" name="composite_image_data">Flattened PackBits RLE-compressed raster for OS thumbnail previews</section>
+  </psd_structure_sections>
+
+  <primitive_translation_table>
+    <mapping toad="text" psd_type="Native Type Layer" ali_blocks="TySh (Type Tool Object), Txt2 (EngineData), luni" />
+    <mapping toad="rect, circle, path" psd_type="Vector Shape Layer" ali_blocks="vmsk (Vector Mask), vsms (Stroke), SoCo (Solid Color) / GdFl (Gradient)" />
+    <mapping toad="image" psd_type="Raster / Smart Object Layer" ali_blocks="RGBA Channel data, clipping mask" />
+    <mapping toad="stack, group" psd_type="Layer Group (Folder)" ali_blocks="lsct (Layer Section Divider: 1=Open, 2=Closed, 3=Close Tag)" />
+  </primitive_translation_table>
+
+  <native_editable_text>
+    <description>Constructs Photoshop EngineData dictionary with RunArray (FontSize, FillColor 0..1, Tracking) and ParagraphArray (Justification, Leading).</description>
+  </native_editable_text>
+
+  <blend_modes_ali_mapping>
+    <map css="normal" psd="norm" />
+    <map css="multiply" psd="mul " />
+    <map css="screen" psd="scrn" />
+    <map css="overlay" psd="over" />
+    <map css="darken" psd="dark" />
+    <map css="lighten" psd="lite" />
+    <map css="color-dodge" psd="div " />
+    <map css="color-burn" psd="idiv" />
+    <map css="difference" psd="diff" />
+    <map css="exclusion" psd="smud" />
+  </blend_modes_ali_mapping>
+</specification>

@@ -1,0 +1,1134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<anti_ai_slop_heuristics target="toad-dsl" version="1.0" engine="gemini_family">
+  <meta>
+    <purpose>Definitive machine-actionable guide to eliminating visible 'AI-Slop' and generic mid-AI design tropes from TOAD DSL and visual generation.</purpose>
+    <core_premise>AI models regress toward the statistical average of their training data (the 'Mid-AI Mean'). Authentic, human-grade design requires deliberate tension, domain-specific craft, informational density, and strict avoidance of synthetic clichés.</core_premise>
+    <golden_rule id="LESS_IS_MORE">WENIGER IST MEHR (Less is More): Das gravierendste Fehlverhalten generativer Modelle ist der 'Horror Vacui' (die panische Angst vor leerem Raum). KI tendiert compulsiv dazu, jeden freien Pixel mit redundanten Badges, Kacheln, Mini-Icons, Zierlinien und Glows vollzustopfen. Wahre visuelle Meisterschaft, Eleganz und professionelle Souveränität entstehen erst durch radikalen Mut zur Lücke, disziplinierten Weißraum (Negative Space) und das bewusste Weglassen von Überflüssigem.</golden_rule>
+    <universal_scope>
+      <mandate>GRUNDSÄTZLICHE &amp; UNIVERSELLE GÜLTIGKEIT FÜR ALLE FORMATE</mandate>
+      <rule>Die Anti-AI-Slop-Regeln gelten ausnahmslos für JEDE Art von Design-Auftrag – egal ob Visitenkarte, Social-Media-Post, A1-Printplakat, Rollup-Banner, Logo, Icon, Magazin-Cover, technisches Diagramm, Mobile-Screen oder Web-Dashboard.</rule>
+      <rule>Es gibt KEINE Bereichsausnahmen. Ein Plakat darf genauso wenig mit sinnlosem Deko-Müll oder violettem Nebel zugemüllt werden wie ein Dashboard oder ein Flyer.</rule>
+    </universal_scope>
+  </meta>
+
+  <!-- ====================================================================== -->
+  <!-- UNIVERSAL AXIOMS (APPLY TO EVERY TOAD CANVAS ACROSS ALL MEDIUMS)       -->
+  <!-- ====================================================================== -->
+  <universal_axioms>
+    <axiom id="UNI-01" severity="fatal">
+      <title>WENIGER IST MEHR (Radikaler Weißraum &amp; Horror-Vacui-Verbot)</title>
+      <statement>Gilt universell für Plakate, Banner, Logos, Karten, UIs und Printmedien: Mindestens 40% bis 60% der Canvas-Fläche müssen beruhigender, sauberer Weißraum (Negative Space) sein. Das vollstopfen von Ecken mit Mini-Badges, Zierpunkten oder Hilfskarten ist streng verboten.</statement>
+    </axiom>
+    <axiom id="UNI-02" severity="fatal">
+      <title>KEIN SCHWEBENDER DEKO-MÜLL (Floating Debris Verbot)</title>
+      <statement>Gilt universell für Social-Assets, Poster, UIs und Banner: Keine frei schwebenden Kreuze (+), Konfetti-Punkte, Drahtgitter-Tori, Chrom-Donuts oder sinnlosen geometrischen Schwebe-Objekte. Jedes gezeichnete Element muss eine greifbare inhaltliche Funktion erfüllen.</statement>
+    </axiom>
+    <axiom id="UNI-03" severity="fatal">
+      <title>KEIN DIFFUSER FARBNEBEL (Purple Haze &amp; Blind Blur Verbot)</title>
+      <statement>Gilt universell: Keine diffusen, unscharfen radialen Farbnebel-Kreise (Magenta/Cyan) hinter Texten oder Objekten ohne physikalisch sichtbare Lichtquelle. Licht muss als Kantenreflex, gerichteter Spotlight oder architektonische Fläche definiert sein.</statement>
+    </axiom>
+    <axiom id="UNI-04" severity="fatal">
+      <title>TYPOGRAFISCHE SOUVERÄNITÄT &amp; FLATTERSATZ-PFLICHT</title>
+      <statement>Gilt universell: Fließtext mit mehr als 2 Zeilen MUSS immer linksbündig (align: left;) stehen – niemals zentriert! Großbuchstaben (ALL CAPS) MÜSSEN immer gesperrt werden (letter-spacing: 0.08em; bis 0.15em;). Niemals Inter/Roboto gedankenlos als Allheilmittel nutzen.</statement>
+    </axiom>
+    <axiom id="UNI-05" severity="fatal">
+      <title>SOLIDE OBERFLÄCHEN STATT GLAS-OVERDOSE &amp; SEIFENSTÜCK-RADIEN</title>
+      <statement>Gilt universell: Keine pauschale Verwandlung aller Flächen in milchige Glasmorphism-Slabs mit 32px-Seifenstück-Radien. Solide, opake Flächen mit disziplinierten 6px–12px Radien (oder scharfen 0px–2px für Editorial/FinTech) bilden das Rückgrat verlässlicher Ästhetik.</statement>
+    </axiom>
+    <axiom id="UNI-06" severity="fatal">
+      <title>DER MONOCHROME 1-BIT-TEST (Substanz vor Effekthascherei)</title>
+      <statement>Gilt universell für Logos, Icons, Vektorgrafiken und Layouts: Das Design muss als reine 1-Bit-Silhouette (100% Schwarz auf 100% Weiß) stark und unverkennbar sein. Ein Entwurf, der ohne Verläufe, Schlagschatten oder Blur in sich zusammenfällt, ist minderwertig.</statement>
+    </axiom>
+    <axiom id="UNI-07" severity="error">
+      <title>KEINE PHRASEN-DRESCHE &amp; HOLLEN BUZZWORDS</title>
+      <statement>Gilt universell für Print, Web, Social Media und B2B-Medien: Verbot von 'Supercharge', 'Seamless', 'Next-Gen'. Immer konkrete, domain-spezifische Begriffe, reale Werkzeuge, Metriken und klare Aussagen verwenden.</statement>
+    </axiom>
+  </universal_axioms>
+
+  <!-- ====================================================================== -->
+  <!-- DOMAIN 1: WEBSITES, LANDING PAGES & UI/UX                             -->
+  <!-- ====================================================================== -->
+  <domain id="web_ui" name="Websites, Landing Pages & User Interfaces">
+
+    <heuristic id="SLOP-WEB-001" severity="fatal">
+      <trope_name>Der violette Darkmode-Nebelsumpf (Purple Haze Syndrome)</trope_name>
+      <visible_telltale_sign>Pechschwarzer Hintergrund (#000000 oder #090A0F) mit 2-3 riesigen, unscharfen kreisförmigen Farbwolken (meist Neon-Lila #8B5CF6 und Cyan #06B6D4) im Hintergrund, die völlig ohne Lichtquelle oder physikalischen Bezug im Raum schweben.</visible_telltale_sign>
+      <why_it_happens>LLMs haben gelernt, dass 'modern SaaS' dunkel ist, und fügen willenlos radiale Unschärfekreise ein, um leeren Raum zu füllen.</why_it_happens>
+      <donts>
+        <dont>Niemals willkürliche, weichgezeichnete Lila/Magenta-Kreise hinter eine generische Headline werfen.</dont>
+        <dont>Keine diffusen Neon-Glows ohne klar definierte, sichtbare Lichtquelle (z. B. Lampe, Screen-Reflexion, Kantenlicht).</dont>
+        <dont>Kein reines, flaches #000000 als Vollton-Hintergrund für B2B- oder Corporate-Websites.</dont>
+      </donts>
+      <dos>
+        <do>Architektonische Oberflächenschichtung verwenden: Differenzierte Nuancen (#0F172A, #1E293B, #334155) oder warmes Off-White/Sand (#F8F9FA, #F4EFEA).</do>
+        <do>Licht als präzisen Kantenreflex (1px Stroke mit Gradient) oder gerichteten Top-Down-Spotlight definieren.</do>
+        <do>Echte Textur, Rasterlinien (Gridlines mit 0.05 Alpha) oder mathematische Rhythmen statt Nebelwolken einsetzen.</do>
+      </dos>
+      <toad_enforcement>
+        <![CDATA[
+// FALSCH (AI-SLOP):
+circle #ambientGlow { at: center; size: 800px; fill: radial(#8B5CF6, transparent); blur: 120px; }
+
+// RICHTIG (PROFESSIONELLES LICHT):
+rect #card {
+  fill: #131722;
+  border: 1px solid alpha(#FFFFFF, 0.08);
+  shadow: 0 20px 40px alpha(#000000, 0.4);
+}
+        ]]>
+      </toad_enforcement>
+    </heuristic>
+
+    <heuristic id="SLOP-WEB-002" severity="fatal">
+      <trope_name>Bento-Grid-Zwangsstörung (Meaningless Bento Overkill)</trope_name>
+      <visible_telltale_sign>Jede einzelne Information – egal ob Textabsatz, Zitat, Logo oder CTA – wird krampfhaft in abgerundete Bento-Boxen mit 1px Glasmorphism-Rahmen gepresst, selbst wenn der Inhalt überhaupt keine tabellarische oder modulare Struktur hat.</visible_telltale_sign>
+      <why_it_happens>Bento-Grids waren 2023 auf Dribbble im Trend; Modelle reproduzieren sie als universellen Default-Container.</why_it_happens>
+      <donts>
+        <dont>Nicht jeden simplen Fließtext oder eine 2-Schritt-Erklärung in ein 6-Boxen-Bento-Raster sperren.</dont>
+        <dont>Keine leeren Bento-Karten mit nur einem Icon und einem 3-Wort-Satz, die nur als optische Füllmasse dienen.</dont>
+        <dont>Keine identischen Glasmorphism-Rahmen (alpha(#fff, 0.1)) auf allen 12 Karten ohne visuelle Hierarchie.</dont>
+      </donts>
+      <dos>
+        <do>Asymmetrische Layouts mit bewusster typografischer Dominanz, Listen, Vergleichstabellen und freistehenden Elementen mischen.</do>
+        <do>Bento-Grids nur für echte multidimensionale Daten-Dashboards oder Feature-Matrizen mit variierenden Größen (1x1, 2x1, 2x2) verwenden.</do>
+        <do>Mindestens eine Hero-Komponente im Grid visuell massiv hervorheben (z. B. durch Vollton-Akzent oder invertierten Kontrast).</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-WEB-003" severity="error">
+      <trope_name>Die Phrasen-Dreschmaschine (Supercharge Your Workflow Syndrom)</trope_name>
+      <visible_telltale_sign>Headlines und Sublines ohne jeden Informationsgehalt: 'Supercharge Your Productivity with Next-Gen Intelligence', 'Unlock Seamless Synergy', 'Empowering Teams Globally'. Null Fakten, null Produktmerkmale, null Preise, null konkreter Nutzen.</visible_telltale_sign>
+      <why_it_happens>LLMs erzeugen generische Marketing-Adjektive, wenn ihnen reale Domain-Fakten fehlen.</why_it_happens>
+      <donts>
+        <dont>Niemals die verbotene Triade verwenden: 'Supercharge', 'Seamless', 'Next-Gen / Revolutionary'.</dont>
+        <dont>Keine Sub-Headlines, die nur aus abstrakten Verben ohne Nennung des konkreten Werkzeugs bestehen.</dont>
+      </donts>
+      <dos>
+        <do>Konkrete Metriken, reale Arbeitsabläufe, Branchenbegriffe und messbare Ergebnisse nennen (z. B. 'Automatische DATEV-Buchung in unter 1,4 Sekunden').</do>
+        <do>Echte Software-UI-Elemente (Tabellen, Formulare, Status-Pills, Tastenkürzel Cmd+K) zeigen statt vager Behauptungen.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-WEB-004" severity="fatal">
+      <trope_name>Der schwebende 3D-Glaswulst (Senseless Floating Glass Torus)</trope_name>
+      <visible_telltale_sign>In der rechten oberen Ecke des Hero-Bereichs schwebt ein chromfarbener oder pastellener Glas-Torus, ein schwebender Würfel mit abgerundeten Ecken oder ein schillerndes Seifenblasen-Band, das absolut gar nichts mit dem Produkt zu tun hat.</visible_telltale_sign>
+      <why_it_happens>KI-Illustratoren fügen bei 'Tech Startup' automatisch 3D-Cinema4D-Render-Klischees ein.</why_it_happens>
+      <donts>
+        <dont>Keine sinnlos im Raum schwebenden geometrischen Körper (Donuts, Kugeln, Röhren) als Hero-Artwork.</dont>
+        <dont>Keine schillernden Perlmutt- oder Regenbogen-Flüssigkeitswellen als Platzhalter für fehlende Produktgrafiken.</dont>
+      </donts>
+      <dos>
+        <do>Echte Produktartefakte abbilden: Realistische Code-Editoren, Daten-Flow-Graphen, Rechnungs-Belege, Diagramme oder interaktive UI-Cards.</do>
+        <do>Wenn abstrakt, dann streng konstruktivistisch, typografisch oder infografisch verankert.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-WEB-005" severity="error">
+      <trope_name>Der Regenbogen-Pill-Button-Wahn</trope_name>
+      <visible_telltale_sign>Jeder CTA ist eine voll abgerundete Pille mit schillerndem Farbverlauf (Pink nach Blau), animiertem Schein, innerem Schatten, äußerem Glow und einem winzigen Pfeil-Icon ->.</visible_telltale_sign>
+      <why_it_happens>Übersättigung von Web-Templates, die 'Engagement' durch visuelles Geschrei erzwingen wollen.</why_it_happens>
+      <donts>
+        <dont>Keine schreienden Dreifach-Gradients auf winzigen Buttons.</dont>
+        <dont>Nicht alle 5 Buttons auf derselben Seite mit gleicher Signalstärke und Glow belegen.</dont>
+      </donts>
+      <dos>
+        <do>Präzise 1-Farben-Primär-CTAs mit hohem Kontrast (z. B. sattes Off-White auf Dark-Canvas oder tiefes Aubergine/Waldgrün).</do>
+        <do>Sekundäre und tertiäre Aktionen als Ghost-Buttons oder simple Text-Links mit Unterstreichung gestalten.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-WEB-006" severity="warning">
+      <trope_name>Die Klon-Pricing-Tabelle mit 'Most Popular' Glow</trope_name>
+      <visible_telltale_sign>Immer exakt 3 Spalten: 'Starter ($9)', 'Pro ($29)' (mit lila Rand 20px nach oben verschoben und Badge 'Most Popular'), 'Enterprise (Custom)'. Immer 5 grüne Häkchen-Listen pro Karte.</visible_telltale_sign>
+      <why_it_happens>Stereotype Kopie der Landingpage-Vorlagen der letzten 8 Jahre.</why_it_happens>
+      <donts>
+        <dont>Keine monotone 3er-Tabelle ohne realistische Funktionsunterschiede.</dont>
+        <dont>Keine Pseudo-Features wie '24/7 Support' und 'Cloud Access' als Hauptargumente.</dont>
+      </donts>
+      <dos>
+        <do>Echte Abrechnungsmodelle (Seat-based, Usage-based, Flatrate, Open-Source Self-Hosted) mit Schiebereglern oder echten Berechnungsformeln abbilden.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-WEB-007" severity="fatal">
+      <trope_name>Der Glasmorphismus-Overdose &amp; Riesenradien-Wahn (Frosted Glass &amp; Giant Radius Syndrome)</trope_name>
+      <visible_telltale_sign>Jede einzelne Karte, Box, Badge und Navbar ist als transluzente Milchglasscheibe gestaltet ('backdrop-filter: blur(16px); fill: alpha(#ffffff, 0.04); border: 1px solid alpha(#ffffff, 0.12);') mit gigantischen, kindlich abgerundeten Ecken ('radius: 24px;' bis '36px;' / rounded-3xl). Oft garniert mit gefakten diagonalen Lichtbrechungskanten und weichgespülten Seifenstück-Silhouetten.</visible_telltale_sign>
+      <why_it_happens>KI verwechselt den Dribbble/Apple-VisionOS-Hype von 2022–2024 mit universeller Modernität. Es ist der billigste generative Reflex, um Tiefe und 'Eleganz' vorzutäuschen, ohne ein echtes Informations-Layout, Typografie oder solide Farbwerte bauen zu müssen.</why_it_happens>
+      <donts>
+        <dont>Niemals pauschal alle Inhaltskarten als milchige, transluzente Glasscheiben anlegen.</dont>
+        <dont>Keine extremen 'Seifenstück-Radien' (24px–36px) auf Standard-Textcontainern, Tabellen oder Formularfeldern.</dont>
+        <dont>Kein transluzentes Milchglas unter Fließtext oder Datenzeilen – wechselnde Hintergründe zerstören die Lesbarkeit und das Kontrastverhältnis.</dont>
+        <dont>Keine schwebenden Frosted-Glass-Navbars als unreflektierter Standard-Reflex für jede Website.</dont>
+      </donts>
+      <dos>
+        <do>Solide, opake Oberflächen mit architektonischer Differenzierung einsetzen: sattes Off-White (#FFFFFF auf #F8F9FA) oder definierte Dark-Layers (#0F172A Canvas, #1E293B Surface, #334155 Elevated).</do>
+        <do>Disziplinierte, funktionale Radien wählen: 6px bis 12px für professionelle B2B- &amp; SaaS-Software; 0px bis 4px für edlen Minimalismus, Editorial und FinTech.</do>
+        <do>Glas-Effekte höchstens als seltenen, singulären Akzent (z. B. ein einzelnes modales Backdrop) einsetzen – niemals als Flächendecker.</do>
+      </dos>
+      <toad_enforcement>
+        <![CDATA[
+// FALSCH (KI-SLOP GLAS-OVERDOSE):
+rect #slopCard {
+  fill: alpha(#FFFFFF, 0.05);
+  border: 1px solid alpha(#FFFFFF, 0.15);
+  radius: 32px;
+  blur: 20px;
+}
+
+// RICHTIG (PROFESSIONELLES, OPAKES DESIGN):
+rect #solidCard {
+  fill: #1E293B;
+  border: 1px solid #334155;
+  radius: 8px;
+  shadow: 0 4px 12px alpha(#000000, 0.08);
+}
+        ]]>
+      </toad_enforcement>
+    </heuristic>
+
+    <heuristic id="SLOP-WEB-008" severity="fatal">
+      <trope_name>Der generative Horror Vacui – Die Angst vor leerem Raum (Kompulsive Überfüllung / Clutter Overload)</trope_name>
+      <visible_telltale_sign>Die Leinwand ist völlig vollgestopft. Jedes Bildschirmsegment wird mit 4 Status-Badges, 3 Pills, 6 Bento-Karten, 5 Deko-Icons, Trennlinien, Ziffern und Hintergrundmustern zugemüllt. Dem Betrachter wird kein Ruhepol und kein klarer Fokuspunkt gegönnt; das Layout 'schreit' an allen Ecken gleichzeitig.</visible_telltale_sign>
+      <why_it_happens>KI setzt 'Qualität' und 'Reichhaltigkeit' fälschlicherweise mit maximaler Token- und Elementdichte gleich. Sie hat eine fundamentale 'Angst vor leerem Raum' und glaubt, weiße oder freie Flächen seien unvollständig.</why_it_happens>
+      <donts>
+        <dont>Niemals freie Räume mit bedeutungslosen Kacheln, Abzeichen oder Zierleisten 'auffüllen', nur weil dort noch Platz ist.</dont>
+        <dont>Nicht mehr als 1 primäre visuelle Kernbotschaft und maximal 2 fokussierte Sekundärelemente pro Viewport-Abschnitt platzieren.</dont>
+        <dont>Keine Reizüberflutung durch 10 gleich laute Callouts oder parallele Animationen.</dont>
+      </donts>
+      <dos>
+        <do>WENIGER IST MEHR (Radikale Reduktion): Professionelle Eleganz entsteht durch das, was man weglässt.</do>
+        <do>Mindestens 40% bis 60% der Fläche als beruhigenden, sauberen Weißraum (Negative Space) atmen lassen.</do>
+        <do>Großzügige Abstände nutzen: gap: 48px; bis 64px;, padding: 48px; bis 80px;.</do>
+        <do>Der 'Kill-Your-Darlings'-Reflex: Nach der ersten Konzeption mindestens 25% der unwichtigen Zier-Elemente wieder rigoros streichen.</do>
+      </dos>
+      <toad_enforcement>
+        <![CDATA[
+// FALSCH (KI-SLOP HORROR VACUI: ALLES VOLLGESTOPFT):
+stack #clutteredHero {
+  badge #b1 { text "AI Powered" {} }
+  badge #b2 { text "Next-Gen" {} }
+  badge #b3 { text "Zero Latency" {} }
+  text #h1 { "Supercharge Everything" {} }
+  text #sub { "Lorem ipsum dolor sit amet..." {} }
+  rect #stat1 { text "99.9% Uptime" {} }
+  rect #stat2 { text "10x Speed" {} }
+  rect #stat3 { text "Zero Cost" {} }
+  // 15 weitere Mini-Cards...
+}
+
+// RICHTIG (SOUVERÄNE REDUKTION & WEISSRAUM):
+stack #calmHero {
+  gap: 32px;
+  text #headline {
+    size: 64px;
+    font-weight: 800;
+    "Cloud-ERP ohne bürokratischen Ballast."
+  }
+  text #sub {
+    size: 20px;
+    color: #64748B;
+    width: 600px;
+    "Automatische Buchhaltung und Lagerverwaltung für den Mittelstand."
+  }
+  rect #ctaButton {
+    fill: #6D213F;
+    radius: 9999px;
+    padding: 16px 36px;
+    text "Kostenlos testen" { color: #FFFFFF; font-weight: 600; }
+  }
+}
+        ]]>
+      </toad_enforcement>
+    </heuristic>
+
+    <heuristic id="SLOP-WEB-009" severity="error">
+      <trope_name>Der 3–4px Kantenstreifen-Reflex (Purposeless Left Border Stripe)</trope_name>
+      <visible_telltale_sign>Fast jede Informationskarte oder Bento-Kachel besitzt an der linken Außenkante einen 3 bis 4 Pixel breiten Akzentstreifen (meist Cyan, Electric Purple oder Königsblau), der keinerlei semantische Statusfunktion (wie Erfolg, Warnung, Fehler) erfüllt.</visible_telltale_sign>
+      <why_it_happens>KI-Generatoren nutzen dieses Element reflexartig als oberflächlichen 'Visual Interest'-Ersatz, um strukturlose Kacheln moderner aussehen zu lassen.</why_it_happens>
+      <donts>
+        <dont>Niemals grundlos farbige linke Kantenstreifen auf neutrale Informationskarten kleben.</dont>
+        <dont>Keine Pseudo-Statusbalken ohne echte Datenbedeutung im Interface verteilen.</dont>
+      </donts>
+      <dos>
+        <do>Farbe an Kanten ausschließlich für echte Systemzustände (Erfolg: Grün, Fehler: Rot, Warnung: Amber) oder primäre Selektion reservieren.</do>
+        <do>Kartenhierarchien durch typografische Abstufung, dezente Hintergrundnuancen oder 1px-Borders definieren.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-WEB-010" severity="fatal">
+      <trope_name>Der unmotivierte Italic-Serif-Stilbruch (Editorial Faker Trope)</trope_name>
+      <visible_telltale_sign>Innerhalb einer rein serifenlosen Grotesk-Headline (z. B. Inter oder Space Grotesk) wird plötzlich genau EIN einzelnes Wort in eine elegante, kursive Serifenschrift gesetzt (z. B. 'Accelerate your [digital] transformation'), ohne dass dieser Wechsel inhaltlich begründet ist.</visible_telltale_sign>
+      <why_it_happens>LLMs imitieren 2024er Dribbble- und Awwwards-Trends als billigen visuellen Code für 'redaktionelle Eleganz' und Luxus-Anmutung.</why_it_happens>
+      <donts>
+        <dont>Niemals ein einzelnes Wort mitten im Satz künstlich in Serif Italic setzen, nur um 'Design' zu simulieren.</dont>
+        <dont>Keine willkürlichen Schriftfamilien-Wechsel innerhalb derselben Textzeile ohne semantische Notwendigkeit.</dont>
+      </donts>
+      <dos>
+        <do>Echte typografische Hierarchien schaffen: Wenn Serif, dann konsequent als ganzheitliche Display-Headline oder definierter Kicker.</do>
+        <do>Hervorhebungen über echte Schnitte (Semibold/Bold), Tracking oder dezente Akzentfarben lösen.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-WEB-011" severity="error">
+      <trope_name>Ungedämpfte Hover-Zustände &amp; Snapping States</trope_name>
+      <visible_telltale_sign>Buttons und Karten springen bei :hover oder Klick schlagartig ohne Übergangsdämpfung (Transition/Easing) um, oder Navigations-Links enden auf toten Ankern (href='#').</visible_telltale_sign>
+      <why_it_happens>Statische Code-Generatoren rendern den ersten Screenshot-Zustand, vergessen aber das kinematische Verhalten realer Interaktionselemente.</why_it_happens>
+      <donts>
+        <dont>Keine harten, ungedämpften Farbsprünge bei interaktiven Komponenten.</dont>
+        <dont>Keine toten Links ohne interaktiven Pfad oder dokumentierten Event-Handler.</dont>
+      </donts>
+      <dos>
+        <do>Geschmeidige Transitions (z. B. 150ms–200ms mit cubic-bezier(0.16, 1, 0.3, 1)) für Farb- und Transform-Zustände einplanen.</do>
+        <do>Aktive, Hover- und Fokus-Zustände als zusammenhängendes visuelles Feedback-System gestalten.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-WEB-012" severity="warning">
+      <trope_name>Die monotone Triplet-Feature-Reihe &amp; stereotyper 6-Stufen-Seitenaufbau</trope_name>
+      <visible_telltale_sign>Immer exakt 3 gleich breite Karten nebeneinander mit je einem zentrierten Standard-Icon im abgerundeten Quadrat, gefolgt von einer 6-Stufen-Schablone (Pill-Badge + H1-Gradient + 2 Buttons -> 5 graue Logos -> Bento Grid -> 3er-Reihe -> Fake-Statistiken -> FAQ).</visible_telltale_sign>
+      <why_it_happens>Statistische Verengung auf das mediane Landingpage-Template moderner SaaS-Frameworks.</why_it_happens>
+      <donts>
+        <dont>Nicht jede Feature-Sektion in exakt drei identische Kacheln mit mittigem Mini-Icon zwingen.</dont>
+        <dont>Keine starre Abfolge generischer Schablonen ohne Bezug zur realen Nutzerreise des Produkts.</dont>
+      </donts>
+      <dos>
+        <do>Asymmetrische Gliederungen, modulare Feature-Showcases mit realen UI-Ausschnitten, interaktive Tabs oder vertikale Storytelling-Abschnitte nutzen.</do>
+      </dos>
+    </heuristic>
+
+  </domain>
+
+  <!-- ====================================================================== -->
+  <!-- DOMAIN 2: LOGOS & BRAND IDENTITY                                      -->
+  <!-- ====================================================================== -->
+  <domain id="logo_brand" name="Logos & Brand Identity">
+
+    <heuristic id="SLOP-LOGO-001" severity="fatal">
+      <trope_name>Die Gradient-Unendlichkeitsschleife / Origami-Swoosh</trope_name>
+      <visible_telltale_sign>Ein 3D-überlappender Möbius-Streifen, eine Unendlichkeitsschleife oder ein gefaltetes Origami-Band mit fließendem Farbverlauf von Cyan über Magenta nach Gelb.</visible_telltale_sign>
+      <why_it_happens>KI-Bildgeneratoren kennen nur glatte Vektorschatten und lieben endlose Kurven ohne reale Fertigungsbeschränkung.</why_it_happens>
+      <donts>
+        <dont>Niemals Logos entwerfen, die zwingend einen 5-Stufen-Gradienten benötigen, um überhaupt erkennbar zu sein.</dont>
+        <dont>Keine überlappenden 'Fake-3D'-Transparenz-Bänder ohne geometrische Logik.</dont>
+        <dont>Keine Logos, die in 1-farbigem Schwarz/Weiß auf Papier oder gestickt auf Textil zu einem unkenntlichen Klecks werden.</dont>
+      </donts>
+      <dos>
+        <do>Der 'Fax- & Stickmaschinen-Test': Ein echtes Logo muss als pure 1-Bit-Silhouette (100% Schwarz auf 100% Weiß) perfekt funktionieren.</do>
+        <do>Klare, mathematisch präzise Pfade mit minimaler Knotenanzahl (Bézier-Reduktion).</do>
+        <do>Einprägsame Negativraum-Konzepte (wie das FedEx-Pfeil-Prinzip) anstelle von optischen Verlaufs-Effekten.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-LOGO-002" severity="fatal">
+      <trope_name>Der isometrische Schaltkreis-Hexagon-Würfel</trope_name>
+      <visible_telltale_sign>Ein Hexagon, das in 3 isometrische Rauten geteilt ist, garniert mit leuchtenden Leiterbahnen, Platinen-Punkten oder neuronalen Synapsen-Ästen.</visible_telltale_sign>
+      <why_it_happens>Default-Assoziation für 'Tech / Crypto / AI / Data / Security'.</why_it_happens>
+      <donts>
+        <dont>Kein Hexagon-Würfel für Tech-Firmen – das ist das meist-abgenutzte Klischee der IT-Geschichte.</dont>
+        <dont>Keine Leiterbahnen mit leuchtenden Lötpunkten als Logo-Elemente.</dont>
+      </donts>
+      <dos>
+        <do>Eigenständige Wortmarken mit individuellem Schrift-Kerning, modifizierten Ligaturen oder archaischen Symbolen entwickeln.</do>
+        <do>Unerwartete Metaphern wählen (z. B. nautisch, architektonisch, biologisch, mineralisch) statt Schaltkreisen.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-LOGO-003" severity="error">
+      <trope_name>Das Blatt-Zahnrad-Öko-Klischee</trope_name>
+      <visible_telltale_sign>Ein grünes Blatt, das aus einem Industrie-Zahnrad wächst, oder zwei Hände, die einen leuchtenden Erdball / Setzling umschließen.</visible_telltale_sign>
+      <why_it_happens>Primitive semantische Aneinanderreihung: 'Nachhaltigkeit' + 'Industrie' = Blatt + Zahnrad.</why_it_happens>
+      <donts>
+        <dont>Keine buchstäbliche Verschmelzung von zwei Standard-Icons zu einem Hybrid-Monster.</dont>
+      </donts>
+      <dos>
+        <do>Auf abstrakte Rhythmen, Topologie, Materialität oder reine typografische Ernsthaftigkeit setzen.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-LOGO-004" severity="fatal">
+      <trope_name>Der Favicon-Mikrodetail-Tod</trope_name>
+      <visible_telltale_sign>Ein Signet mit 15 haarfeinen Linien, 3 konzentrischen Textringen, feinen Schraffuren oder Mikro-Sternen, das bei 32x32 Pixeln im Browser-Tab zu grauem Matsch verschwimmt.</visible_telltale_sign>
+      <why_it_happens>Modelle zeichnen auf großen Canvas-Auflösungen ohne Skalierungs-Simulation für reale Displays.</why_it_happens>
+      <donts>
+        <dont>Keine Liniendicken unter 2px auf 64px Basisgröße.</dont>
+        <dont>Keine Innenabstände unter 4px zwischen Vektorformen im Signet.</dont>
+      </donts>
+      <dos>
+        <do>Immer den 16px- und 32px-Favicon-Test bestehen: Fette, markante Primärformen mit klaren Silhouetten.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-LOGO-005" severity="fatal">
+      <trope_name>Knotenpunktexplosion &amp; Autotrace-Pathologie (Dense Node Clustering &amp; Wobbly Curves)</trope_name>
+      <visible_telltale_sign>Dutzende bis Hunderte ungeordnete Ankerpunkte pro Kurvensegment bei Vektor-Logos (oft Resultat von automatischem Bild-Tracing). Verletzung der mathematischen C¹- und C²-Krümmungsstetigkeit: Zick-Zack-Kanten, mikroskopische Wellen (Wobbly Curves) und zittrige Sägezahn-Konturen.</visible_telltale_sign>
+      <why_it_happens>Diffusionsmodelle erzeugen Pixelraster; automatische Vektorisierungs-Tools quantisieren die weichen Kanten in Hunderte Mikroknoten statt sauberer Bézier-Kurven.</why_it_happens>
+      <donts>
+        <dont>Niemals auto-getraceten Vektormüll mit 100+ unbereinigten Knotenpunkten pro Kurve als finales Signet ausliefern.</dont>
+        <dont>Keine unharmonischen Bézier-Griffe, die zu welligen, zittrigen Kantenverläufen führen.</dont>
+      </donts>
+      <dos>
+        <do>Radikale Knoten-Ökonomie: Eine professionelle Basiskurve benötigt exakt 2 bis 4 Ankerpunkte mit tangential ausgerichteten Steuergriffen.</do>
+        <do>Mathematisch harmonische C²-Stetigkeit (stetiger Krümmungsradius ohne Krümmungssprung) wahren.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-LOGO-006" severity="fatal">
+      <trope_name>Mangel an boolescher Hygiene &amp; Vektor-Inseln (Vector Islands &amp; Open Loops)</trope_name>
+      <visible_telltale_sign>Flächen sind nicht über saubere boolesche Pathfinder-Operationen (Vereinigung/Subtraktion) verschmolzen, sondern liegen als überlappende, offene oder in sich verdrehte Pfadschleifen vor. Freistehende 1px-Restflächen ('Vektor-Inseln') aus der Rauschunterdrückung.</visible_telltale_sign>
+      <why_it_happens>Generative Tracing-Algorithmen erkennen keine geometrische Logik, sondern zeichnen Luminanz-Inseln blind nach.</why_it_happens>
+      <donts>
+        <dont>Keine ungeschlossenen Pfade, sich selbst durchdringenden Schleifen oder unbereinigten Vektorfragmente im Logo hinterlassen.</dont>
+      </donts>
+      <dos>
+        <do>Strikte Pfad-Hygiene: Alle Flächen sauber boolesch vereinen, offene Enden schließen und mikroskopische Restinseln löschen.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-LOGO-007" severity="fatal">
+      <trope_name>Terrassierte Banding-Zonen &amp; Fertigungsunreife (CNC/Plotter-Kollaps)</trope_name>
+      <visible_telltale_sign>Farbverläufe bestehen aus terrassierten Treppenstufen aus Dutzenden übereinanderliegenden Mikropfaden statt echten mathematischen Gradients. Bei Fertigung (Folienplott, Lasergravur, CNC-Fräsen, Stickmaschinen) führt die Pfadüberladung zu Maschinenstopps und Zerstörung des Werkstücks.</visible_telltale_sign>
+      <why_it_happens>Tracing-Software zerlegt Pixel-Gradients in unzählige gestufte Farbzonen-Vektoren.</why_it_happens>
+      <donts>
+        <dont>Keine treppenförmig gestapelten Mikropfade als Verlaufssubstitut verwenden.</dont>
+        <dont>Keine Pfade erzeugen, die bei Messerschnitt-Plottern das Trägermaterial zerschneiden.</dont>
+      </donts>
+      <dos>
+        <do>Echte mathematische Verläufe oder saubere Volltonflächen mit klar definierten Farbwerten einsetzen.</do>
+        <do>Prüfung in der Pfadansicht (Drahtgitter-Modus): Nur geschlossene, schneidbare Außenkonturen zulassen.</do>
+      </dos>
+    </heuristic>
+
+  </domain>
+
+  <!-- ====================================================================== -->
+  <!-- DOMAIN 3: GRAPHICS, ILLUSTRATION & POSTERS                             -->
+  <!-- ====================================================================== -->
+  <domain id="graphic_illustration" name="Graphics, Vectors & Editorial Art">
+
+    <heuristic id="SLOP-GFX-001" severity="fatal">
+      <trope_name>Corporate Memphis Nudelarm-Syndrom</trope_name>
+      <visible_telltale_sign>Flache Figuren mit riesigen blauen oder lila Hosen, extrem langen wurstartigen Armen ohne Gelenke, winzigen gesichtslosen Köpfen, die an riesigen Topfpflanzen vorbeilaufen oder riesige Dokumente tragen.</visible_telltale_sign>
+      <why_it_happens>Dominanz des 'Big Tech Flat'-Stils aus den 2018-2021 Trainingsdaten (Alegria-Stil).</why_it_happens>
+      <donts>
+        <dont>Niemals Figuren mit unrealistischen Riesengliedmaßen und winzigen Erdnuss-Köpfen zeichnen.</dont>
+        <dont>Keine Personen mit violetter, blauer oder zitronengelber Hautfarbe ohne inhaltlichen Kontext.</dont>
+      </donts>
+      <dos>
+        <do>Echte anatomische Würde, technische Bauzeichnungen, historische Holzschnitt-Ästhetik, Linolschnitt, Riso-Print oder präzise Vektor-Diagramme.</do>
+        <do>Lieber ganz auf Figuren verzichten und stattdessen Daten-Typografie oder Sachfotografie sprechen lassen.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-GFX-002" severity="error">
+      <trope_name>Das kosmische Müll-Konfetti (Senseless Floating Geometric Debris)</trope_name>
+      <visible_telltale_sign>Kleine weiße oder pastellene Kreuze (+), offene Ringe (o), Zickzack-Wellen, Dreiecke und Pünktchen, die willkürlich um die Hauptgrafik herumschweben, um 'Leere' zu füllen.</visible_telltale_sign>
+      <why_it_happens>Fauler 'Memphis-Design'-Reflex von Bildgeneratoren, um leere Flächen ohne echte inhaltliche Arbeit dynamisch wirken zu lassen.</why_it_happens>
+      <donts>
+        <dont>Kein sinnloses Deko-Konfetti auf Bannern oder Postern verteilen.</dont>
+        <dont>Keine zufälligen Plus-Zeichen oder Pünktchen-Muster ohne Messfunktion.</dont>
+      </donts>
+      <dos>
+        <do>Mut zum echten Weißraum (negative space): Leere Flächen strahlen Ruhe, Exklusivität und Souveränität aus.</do>
+        <do>Wenn Hilfslinien verwendet werden, dann mit echtem ingenieurmäßigem Bezug: Maßketten, Achsenbeschriftungen, Koordinaten-Ticks.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-GFX-003" severity="fatal">
+      <trope_name>Die schmutzige Grau-Zone (Linear RGB Gradient Bleed)</trope_name>
+      <visible_telltale_sign>Ein Farbverlauf zwischen zwei Komplementärfarben (z. B. Blau und Orange oder Grün und Rot), der in der Mitte zu einem schmutzigen, toten Schlamm-Grau oder Erdbraun verwaschen wird.</visible_telltale_sign>
+      <why_it_happens>Einfache lineare Interpolation im sRGB-Farbraum ohne Zwischenstopps oder Farbkreis-Führung (Oklab/Hue-Shift).</why_it_happens>
+      <donts>
+        <dont>Niemals zwei entgegengesetzte Farben im Farbkreis direkt ohne Stützfarbe ineinander übergehen lassen.</dont>
+      </donts>
+      <dos>
+        <do>Immer einen leuchtenden Übergangsstopp im oberen Spektrum einfügen (z. B. Blau -> Purpur/Violett -> Warmrot -> Orange).</do>
+        <do>Monochrome oder analoge Farbharmonien (Nachbarfarben auf dem Rad) bevorzugen.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-GFX-004" severity="fatal">
+      <trope_name>Schmelzende Konturen &amp; Formauflösung (Melting Outlines &amp; Open Shapes)</trope_name>
+      <visible_telltale_sign>Klare Tusche-, Vektor- oder Zeichenkanten verlieren mitten im Verlauf ihre Kontureigenschaft und gehen diffus in Schattierungsflächen oder den Hintergrund über. Körperformen oder Linien werden nicht geschlossen, sondern versumpfen in undefinierten Pixelzonen.</visible_telltale_sign>
+      <why_it_happens>Diffusionsmodelle rendern hochfrequente Texturmuster direkt auf die Bildebene, ohne das physische 3D-Volumen und die geschlossene Begrenzung von Körpern zu begreifen.</why_it_happens>
+      <donts>
+        <dont>Keine Zeichnungen mit diffus ausfasernden, unabgeschlossenen Konturlinien akzeptieren.</dont>
+        <dont>Kein Verschwimmen von Vordergrund-Silhouetten in benachbarte Texturen.</dont>
+      </donts>
+      <dos>
+        <do>Strikte Formschließung: Klare Trennung zwischen Körperkontur (Line Art), Lichtreflex und Hintergrundebene.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-GFX-005" severity="fatal">
+      <trope_name>Unabsichtliche visuelle Tangenten (Depth-Collapsing Tangents)</trope_name>
+      <visible_telltale_sign>Kanten unterschiedlicher Raumebenen treffen haargenau aufeinander: Die Umrisslinie eines Vordergrundobjekts (z. B. der Arm einer Figur) geht exakt in die Horizontlinie oder eine ferne Gebäudekante über. Die Raumtiefe kollabiert und die Bildebenen 'kleben' flach zusammen.</visible_telltale_sign>
+      <why_it_happens>Statistische Bildgeneratoren optimieren Pixelkorrelationen ohne räumliches Tiefenschicht-Verständnis.</why_it_happens>
+      <donts>
+        <dont>Niemals Kanten aus unterschiedlichen Raumtiefen nahtlos aneinanderstoßen lassen (Kollision auf derselben 2D-Achse).</dont>
+      </donts>
+      <dos>
+        <do>Eindeutige Überlappung (Overlap) oder großzügigen Freiraum zwischen Vordergrund- und Hintergrundformen etablieren.</do>
+        <do>Klare Trennung der Raumebenen durch Tonwertkontraste und Schärfeunterschiede.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-GFX-006" severity="error">
+      <trope_name>Polyzentrische Fluchtpunkte &amp; Perspektiven-Verdrehung</trope_name>
+      <visible_telltale_sign>Horizontale Linien von Gebäuden, Fliesenmustern, Fensterflügeln oder Möbeln konvergieren nicht in gemeinsamen Fluchtpunkten auf der Horizontlinie, sondern weisen gegeneinander verdrehte Projektionsachsen auf. Treppenstufen verjüngen sich unlogisch oder enden an Wänden.</visible_telltale_sign>
+      <why_it_happens>Generative Modelle simulieren lokale Perspektivenfragmente, ohne eine globale projektive 3D-Geometrie zu berechnen.</why_it_happens>
+      <donts>
+        <dont>Keine architektonischen Szenen mit gegeneinander verkippten Fluchtachsen verwenden.</dont>
+      </donts>
+      <dos>
+        <do>Strenge 1-Punkt-, 2-Punkt- oder orthogonale isometrische Axonometrie konstruieren.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-GFX-007" severity="error">
+      <trope_name>Funktionsloses Greebling &amp; Mechanische Scheinkomplexität</trope_name>
+      <visible_telltale_sign>Oberflächen von Fahrzeugen, Rüstungen oder Sci-Fi-Geräten sind mit Hydraulikzylindern, Schläuchen, Gittern und Schrauben übersät. Bei mechanischer Prüfung ist kein Teil funktionsfähig: Schläuche enden im Nichts, Gelenke blockieren starre Platten, Zahnräder haben ungleiche Zähne, die nicht ineinandergreifen.</visible_telltale_sign>
+      <why_it_happens>Modelle nutzen 'Greebles' als Füllmaterial für vermeintliche 'High-Tech'-Detaillierung.</why_it_happens>
+      <donts>
+        <dont>Keine sinnlosen Pseudo-Schläuche, funktionsunfähigen Zahnräder oder Zierschrauben auf Flächen klatschen.</dont>
+      </donts>
+      <dos>
+        <do>Funktionale Ingenieurs-Logik: Jedes mechanische Element muss einen klaren Kraftschluss, eine Drehachse oder eine Versorgungsleitung darstellen.</do>
+        <do>Beruhigte, glatte Funktionsflächen im Wechsel mit gezielten mechanischen Schwerpunkten gestalten.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-GFX-008" severity="error">
+      <trope_name>Aufhebung der atmosphärischen Perspektive (Crisp Distance Trope)</trope_name>
+      <visible_telltale_sign>Kilometerweit entfernte Gebirgsketten, Wälder oder City-Skylines werden mit derselben rasiermesserscharfen Kantenschärfe, maximalen Kontrastdichte und chromatischen Sättigung dargestellt wie das Hauptmotiv im unmittelbaren Vordergrund.</visible_telltale_sign>
+      <why_it_happens>KI schärft alle Bildzonen homogen nach und ignoriert physikalische Rayleigh- und Mie-Streuung der Erdatmosphäre.</why_it_happens>
+      <donts>
+        <dont>Hintergründe nicht mit identischer Kantenschärfe und Vollkontrast wie den Vordergrund rendern.</dont>
+      </donts>
+      <dos>
+        <do>Atmosphärische Distanz wahren: Ferne Ebenen müssen systematisch an Kontrast, Farbsättigung und Detailzeichnung verlieren (Aufhellung und kühleres Blaugrau in die Ferne).</do>
+      </dos>
+    </heuristic>
+
+  </domain>
+
+  <!-- ====================================================================== -->
+  <!-- DOMAIN 4: PHOTOGRAPHY, SCENIC & SIMULATION                             -->
+  <!-- ====================================================================== -->
+  <domain id="photography" name="Photography & Scenic Realism">
+
+    <heuristic id="SLOP-PHOTO-001" severity="fatal">
+      <trope_name>Das Wachsfigurenkabinett (Porcelain Skin & Ringlight Overkill)</trope_name>
+      <visible_telltale_sign>Menschliche Haut ohne jede Pore, Falte oder Textur – glänzend wie polierter Kunststoff mit übertriebenem Subsurface Scattering. Perfekt kreisrunde Reflexionen in beiden Augen (Ringlicht-Spiegelung), zementiertes Grinsen, unnatürlich schneeweiße Zähne.</visible_telltale_sign>
+      <why_it_happens>Diffusionsmodelle trainieren massenhaft auf Stockfoto-Beauty-Filtern und glätten Varianzen weg.</why_it_happens>
+      <donts>
+        <dont>Keine porenfreien, glattgebügelten Gesichter erzeugen.</dont>
+        <dont>Kein symmetrisches Doppel-Catchlight in den Pupillen.</dont>
+        <dont>Keine generischen 'Business-Menschen im Konferenzraum, die begeistert auf einen leeren Laptop zeigen'.</dont>
+      </donts>
+      <dos>
+        <do>Echte analoge Textur: Mikro-Hauttextur, natürliche Asymmetrie, echte Mimikfalten, Filmkorn (ISO 400 Grain).</do>
+        <do>Dokumentarische Beleuchtung: Echtes Fensterlicht (Rembrandt-Lighting), harte Schatten oder ungeschöntes Neon-Mischlicht.</do>
+        <do>Authentische Handlungen: Menschen, die konzentriert arbeiten, nachdenklich wegschauen oder echte Werkzeuge bedienen.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-PHOTO-002" severity="fatal">
+      <trope_name>Der toxische Orange-Teal-Sonnenuntergang (God-Rays Overdrive)</trope_name>
+      <visible_telltale_sign>Jede Außenszene hat grelle, volumetrische Sonnenstrahlen, die schräg durchs Bild brechen, übertriebene goldene Staubpartikel in der Luft, knallig orangefarbene Highlights und tiefblaue/türkise Schatten.</visible_telltale_sign>
+      <why_it_happens>Midjourney & DALL-E haben eine extreme statistische Vorliebe für den Hollywood-Blockbuster-Farblook.</why_it_happens>
+      <donts>
+        <dont>Nicht jede Szene mit 'Golden Hour', 'Dust Motes' und 'God Rays' fluten.</dont>
+        <dont>Keine unnatürliche Übersättigung bei Natur- und Architekturaufnahmen.</dont>
+      </donts>
+      <dos>
+        <do>Bewusst trübes, diffuses Tageslicht wählen (bewölkter Himmel, nordisches Streulicht, kühler Dämmerungsschatten).</do>
+        <do>Natürliche Erdtöne, reduziertes Farbspektrum, monochrome Bildkompositionen.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-PHOTO-003" severity="error">
+      <trope_name>Der Schärfentiefe-Matsch (Creamy Gaussian Fake-Bokeh)</trope_name>
+      <visible_telltale_sign>Der Hintergrund ist völlig bis zur Unkenntlichkeit in einer cremigen Suppe aufgelöst, während Teile der Haare oder Kleidung fehlerhaft scharf geschnitten sind oder ins Nichts verschwimmen.</visible_telltale_sign>
+      <why_it_happens>Fokus auf Blende f/1.2 als KI-Prompt-Reflex ('bokeh, 85mm, depth of field').</why_it_happens>
+      <donts>
+        <dont>Hintergründe nicht vollständig zu Brei zermatschen, nur um fehlerhafte Details zu kaschieren.</dont>
+      </donts>
+      <dos>
+        <do>Große Tiefenschärfe (Blende f/8 bis f/11) mit scharfer, architektonischer Raumwirkung fordern.</do>
+        <do>Der Hintergrund muss eine reale, lesbare Umwelt erzählen (Bücherregal, Straßenzug, Werkbank).</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-PHOTO-004" severity="warning">
+      <trope_name>Der einsame Grübler am Panoramafenster</trope_name>
+      <visible_telltale_sign>Eine Person von hinten oder im Profil, die Hände in den Taschen, blickt aus einem bodentiefen Wolkenkratzer-Fenster auf eine futuristische Megacity bei Nacht.</visible_telltale_sign>
+      <why_it_happens>Klischee-Symbolbild für 'Visionär / AI Founder / Future Leadership'.</why_it_happens>
+      <donts>
+        <dont>Keine pathetischen Fenster-Gucker-Szenen als Standard für Unternehmensführung.</dont>
+      </donts>
+      <dos>
+        <do>Pragmatische Nahaufnahmen von Arbeitsstationen, Skizzenbüchern, Prototypen oder Teaminteraktionen auf Augenhöhe.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-PHOTO-005" severity="fatal">
+      <trope_name>Hornhautreflexion-Divergenz &amp; Polyedrische Pupillengeometrie (Catchlight Divergence)</trope_name>
+      <visible_telltale_sign>Unterschiedliche Reflexionsformen oder divergierende Einstrahlwinkel der Lichtquelle im linken vs. rechten Auge. Pupillen sind nicht kreisrund, sondern polyedrisch verformt, elliptisch verzerrt oder weisen ausgefranste Kanten auf.</visible_telltale_sign>
+      <why_it_happens>Diffusionsmodelle rendern Augenpaare als separate lokale Pixelmuster, anstatt einen konsistenten 3D-Lichtstrahlenverlauf im Raum zu berechnen.</why_it_happens>
+      <donts>
+        <dont>Keine Porträts mit asymmetrischen oder unruhig verformten Lichtreflexen in den Augen verwenden.</dont>
+      </donts>
+      <dos>
+        <do>Forensischer Pupillencheck bei 400% Zoom: Reflexionsform der Lichtquelle muss in beiden Augen identisch ausgerichtet sein.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-PHOTO-006" severity="fatal">
+      <trope_name>Klaviertastengebiss (Monolithic Dental Bar)</trope_name>
+      <visible_telltale_sign>Zahnreihen wirken wie eine durchgehende, weiße Kunststoffleiste ohne individuelle Zahnbreiten, natürliche Wölbungen oder sichtbare Interdentalräume (Zahnzwischenräume).</visible_telltale_sign>
+      <why_it_happens>Modelle glätten Zahnstrukturen statistisch zu einer homogenen weißen Barriere zusammen.</why_it_happens>
+      <donts>
+        <dont>Keine künstlichen, lückenlosen 'Klaviertasten'-Gebisse in Bild-Assets akzeptieren.</dont>
+      </donts>
+      <dos>
+        <do>Auf individuelle Zahnmorphologie, anatomische Kronenformen und feine natürliche Schattierungen achten.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-PHOTO-007" severity="error">
+      <trope_name>Fehlende Ambient Occlusion &amp; Schwebende Objekte (Contact Shadow Deficit)</trope_name>
+      <visible_telltale_sign>Füße auf Böden, Gegenstände auf Schreibtischen oder Hand-Objekt-Interaktionen besitzen keinen dunklen, scharfen Kontaktschatten (Ambient Occlusion) an den realen Auflagepunkten. Die Gegenstände scheinen im Raum zu schweben.</visible_telltale_sign>
+      <why_it_happens>Diffusionsalgorithmen fehlt ein globales Raytracing für physikalische Lichtverdeckung an Berührungspunkten.</why_it_happens>
+      <donts>
+        <dont>Keine Stockfotos oder Renderings verwenden, bei denen Objekte ohne physikalische Verankerung im Raum schweben.</dont>
+      </donts>
+      <dos>
+        <do>Präzise Kontaktschatten an allen physischen Auflagepunkten fordern.</do>
+      </dos>
+    </heuristic>
+
+  </domain>
+
+  <!-- ====================================================================== -->
+  <!-- DOMAIN 5: TYPOGRAPHY & TEXT LAYOUT                                     -->
+  <!-- ====================================================================== -->
+  <domain id="typography" name="Typography & Text Hierarchy">
+
+    <heuristic id="SLOP-TYPE-001" severity="fatal">
+      <trope_name>Die Inter/Roboto-Einheitsmuff-Tyrannei</trope_name>
+      <visible_telltale_sign>Jede Website, jedes Poster, jede Card nutzt ausschließlich generischen, neutralen Sans-Serif-Font ('Inter', 'Roboto', 'Open Sans') in immer denselben 3 Schnitten ohne jeden gestalterischen Charakter.</visible_telltale_sign>
+      <why_it_happens>Sichere Standardwerte in AI-Code-Templates.</why_it_happens>
+      <donts>
+        <dont>Niemals gedankenlos auf 'Inter, sans-serif' als Universallösung zurückgreifen.</dont>
+        <dont>Keine typografische Monokultur ohne Spannung zwischen Headline und Body.</dont>
+      </donts>
+      <dos>
+        <do>Mutige Paarungen einsetzen: Charakterstarke Display-Schriften (z. B. 'Playfair', 'Space Grotesk', 'Cabinet Grotesk', 'Fraunces', 'Cinzel') kombiniert mit sachlicher Leseschrift.</do>
+        <do>Spezifische Schnitte (Ultra-Light 200, Black 900) mit extremen Größenkontrasten (64px Headline vs 13px Mono-Label) nutzen.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-TYPE-002" severity="fatal">
+      <trope_name>Der zentrierte Fließtext-Klotz</trope_name>
+      <visible_telltale_sign>Mehrzeilige Absätze (3-6 Zeilen Fließtext) sind horizontal zentriert ausgerichtet (align: center). Das Auge des Lesers findet keinen festen linken Startpunkt und ermüdet sofort.</visible_telltale_sign>
+      <why_it_happens>KI zentriert gerne alles auf der Canvas, weil Zentrierung symmetrisch aussieht.</why_it_happens>
+      <donts>
+        <dont>Niemals Fließtext mit mehr als 2 Zeilen zentriert setzen.</dont>
+      </donts>
+      <dos>
+        <do>Fließtext immer linksbündig (align: left;) mit sauberem Flattersatz setzen.</do>
+        <do>Zentrierung ausschließlich für 1-zeilige Badges, kurze Kicker-Zeilen oder monumentale H1-Headlines reservieren.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-TYPE-003" severity="error">
+      <trope_name>Das graue Geistertext-Massaker (Low Contrast Death)</trope_name>
+      <visible_telltale_sign>Fließtext in #555555 oder #666666 auf dunkelgrauem Hintergrund (#1A1A1A), der bei normalem Raumlicht oder auf Laptops mit 70% Helligkeit völlig unlesbar wird.</visible_telltale_sign>
+      <why_it_happens>Falsch verstandene 'Subtilität' in KI-Designs.</why_it_happens>
+      <donts>
+        <dont>Kein Text mit einem Kontrastverhältnis von unter 4.5:1 (WCAG AA Standard).</dont>
+      </donts>
+      <dos>
+        <do>Klare Lesbarkeit: Sekundärtext auf dunklem Grund mit mindestens #94A3B8 (Slate 400) oder #A1A1AA (Zinc 400) ansetzen.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-TYPE-004" severity="warning">
+      <trope_name>Der gequetschte Versalien-Albtraum</trope_name>
+      <visible_telltale_sign>Headlines oder Buttons in Großbuchstaben (ALL CAPS) mit normalem oder sogar negativem Zeichenabstand (letter-spacing: 0;), sodass die Buchstaben optisch aneinanderkleben.</visible_telltale_sign>
+      <why_it_happens>Fehlendes Verständnis für Schriftmetrik bei Großbuchstaben.</why_it_happens>
+      <donts>
+        <dont>Niemals Versalien ohne gesperrten Zeichenabstand setzen.</dont>
+      </donts>
+      <dos>
+        <do>Versalien (Kicker, Badges, Tabellenheader) immer mit letter-spacing: 0.08em; bis 0.15em; leicht sperren.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-TYPE-005" severity="fatal">
+      <trope_name>Glyphenmutationen &amp; Punzen-Kollaps (Deformed Counters &amp; Asymmetric Serifs)</trope_name>
+      <visible_telltale_sign>Deformierte oder zugelaufene Innenräume (Punzen) bei Minuskeln wie 'e', 'a' oder 'o'; Stegdicken schwanken willkürlich oder verschmelzen mit Nachbarstrichen. Serifen enden an einer Seite spitz, auf der Gegenseite keulenförmig verdickt oder rund.</visible_telltale_sign>
+      <why_it_happens>Diffusionsmodelle interpretieren Glyphen als statistische Pixelcluster ohne typografisches Vektor-Skelett.</why_it_happens>
+      <donts>
+        <dont>Niemals synthetisch generierte Wortmarken mit mutierten Binnenräumen oder deformierten Serifen verwenden.</dont>
+      </donts>
+      <dos>
+        <do>Ausschließlich echte, hochqualitative Schriftsätze (@font / digitaler Typeface) mit konsistenten Glyphengeometrien einsetzen.</do>
+        <do>Detailprüfung bei 400% Zoom: Punzen müssen geometrisch exakt definiert sein.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-TYPE-006" severity="fatal">
+      <trope_name>Kerning-Kollaps, Baseline-Drift &amp; Stammstärken-Mutation</trope_name>
+      <visible_telltale_sign>Buchstabenabstände schwanken innerhalb desselben Wortes erratisch zwischen Kollisionen und weiten Lücken. Einzelne Zeichen driften vertikal von der Grundlinie (Baseline) ab oder kippen in der optischen Achse. Symmetrische Glyphen (M, W, H, A) weisen ungleiche Strichstärken auf.</visible_telltale_sign>
+      <why_it_happens>Fehlendes Verständnis für Schriftmetrik, optischen Ausgleich und mathematische Grundlinienführung.</why_it_happens>
+      <donts>
+        <dont>Keine unregelmäßig tanzenden Buchstaben oder kollidierende Glyphenpaare im Text tolerieren.</dont>
+      </donts>
+      <dos>
+        <do>Mathematisch verlässliche Text-Engines und planparallele Grundlinienausrichtung mit standardisierten Kerning-Tabellen nutzen.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-TYPE-007" severity="fatal">
+      <trope_name>Die 'Baked-Text'-Falle (Irreversibel gerasterte Pfade statt Type Layers)</trope_name>
+      <visible_telltale_sign>Text liegt nicht als editierbarer, nativer Schriftsatz mit OpenType-Features vor, sondern ist als unsaubere Pfadsuppe oder flache Pixelmatrix in die Grafik eingebrannt. Schriftart und Schriftschnitt lassen sich nicht identifizieren oder editieren.</visible_telltale_sign>
+      <why_it_happens>Bildgeneratoren erzeugen Pixel statt echter Photoshop/TOAD Type Layers.</why_it_happens>
+      <donts>
+        <dont>Niemals Text in Grafiken oder PSDs als flache Pixel oder zerstörte Pfade ohne editierbare Type Layers ausliefern.</dont>
+      </donts>
+      <dos>
+        <do>Immer echte TOAD text-Nodes mit nativer Type-Layer-Serialisierung (Photoshop TySh-Block) und hinterlegten Schriftdateien im 'fonts/'-Ordner verwenden.</do>
+      </dos>
+    </heuristic>
+
+  </domain>
+
+  <!-- ====================================================================== -->
+  <!-- DOMAIN 6: COLOR, SHADOWS & LIGHTING                                    -->
+  <!-- ====================================================================== -->
+  <domain id="color_lighting" name="Color Schemes &amp; Shadow Systems">
+
+    <heuristic id="SLOP-COLOR-001" severity="fatal">
+      <trope_name>Das Cyberpunk-Discord-Default-Spektrum</trope_name>
+      <visible_telltale_sign>Ausschließlich Farbkombinationen aus #6366F1 (Indigo/Blurple), #EC4899 (Hot Pink) und #06B6D4 (Neon Cyan) auf dunklem Schiefergrau.</visible_telltale_sign>
+      <why_it_happens>Überrepräsentiert durch Web3-, Krypto-, Discord- und Tech-Templates im Pre-Training.</why_it_happens>
+      <donts>
+        <dont>Nicht automatisch zu Lila/Pink/Cyan greifen, sobald das Wort 'Software' oder 'Tech' fällt.</dont>
+      </donts>
+      <dos>
+        <do>Erwachsene, unerwartete Farbwelten erkunden: Salbeigrün (#52796F), Tiefes Terrakotta (#B75D42), Ocker/Kupfer (#C5832B), Preußischblau (#1D3557), Aubergine (#4A154B).</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-COLOR-002" severity="error">
+      <trope_name>Der schmutzige Einzelschatten (Harsh Mud Drop Shadow)</trope_name>
+      <visible_telltale_sign>Karten mit einem einzelnen, harten, schwarzen Schatten: shadow: 0 10px 20px rgba(0,0,0,0.5);. Sieht aus wie Webdesign aus dem Jahr 2008.</visible_telltale_sign>
+      <why_it_happens>Modelle nutzen einen einzelnen Schatten-Befehl statt geschichteter Ambient-Schatten.</why_it_happens>
+      <donts>
+        <dont>Keine Einzelschatten mit hoher Deckkraft (> 0.25 Alpha) unter hellen UI-Karten.</dont>
+      </donts>
+      <dos>
+        <do>Gekoppelte Schatten (Layered Shadows): Ein hauchdünner Key-Shadow für Kantenschärfe (0 1px 2px alpha(#000, 0.05)) gepaart mit einem weit gestreuten Ambient-Shadow (0 16px 32px alpha(#000, 0.04)).</do>
+        <do>Oder dezente 1px-Borders (alpha(#000, 0.08)) statt schwerer Schatten einsetzen.</do>
+      </dos>
+    </heuristic>
+
+  </domain>
+
+  <!-- ====================================================================== -->
+  <!-- DOMAIN 7: FRONTEND DOM & CODE ARCHITECTURE (DEVTOOLS FORENSIK)          -->
+  <!-- ====================================================================== -->
+  <domain id="frontend_dom_and_code" name="Frontend DOM &amp; Code Architecture">
+
+    <heuristic id="SLOP-CODE-001" severity="fatal">
+      <trope_name>Tailwind-Utility-Wüsten mit Klassen-Konflikten</trope_name>
+      <visible_telltale_sign>Endlose Klassenketten im DOM mit paradoxen Überschreibungen im selben Tag: z. B. 'p-4' und 'px-6' gleichzeitig, oder 'block' kombiniert mit 'flex' ('div class="flex ... px-6 block ... p-4"').</visible_telltale_sign>
+      <why_it_happens>LLMs reihen Tailwind-Klassen assoziativ aneinander, ohne einen semantischen CSS-Linter oder Kaskaden-Parser zu durchlaufen.</why_it_happens>
+      <donts>
+        <dont>Keine widersprüchlichen Klassen im selben Element (z. B. block + flex, p-4 + px-6).</dont>
+        <dont>Keine unstrukturierten 100-Zeichen-Klassenketten ohne Komponenten-Abstraktion.</dont>
+      </donts>
+      <dos>
+        <do>Klassen deduktiv aufräumen, CSS-Variablen oder semantische Sub-Komponenten definieren.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-CODE-002" severity="fatal">
+      <trope_name>Div-Soup &amp; Totalverweigerung von HTML5-Semantik</trope_name>
+      <visible_telltale_sign>Hunderte verschachtelte generische &lt;div&gt; und &lt;span&gt; Tags. Vollständiges Fehlen von &lt;main&gt;, &lt;header&gt;, &lt;nav&gt;, &lt;article&gt;, &lt;section&gt; oder &lt;aside&gt;.</visible_telltale_sign>
+      <why_it_happens>KI-Generatoren greifen standardmäßig auf das universellste Container-Tag ('div') zurück.</why_it_happens>
+      <donts>
+        <dont>Niemals eine Website rein aus &lt;div&gt;-Containern aufbauen.</dont>
+      </donts>
+      <dos>
+        <do>Strikte HTML5-Semantik nutzen: &lt;header&gt; für Navigation, &lt;main&gt; für Content, &lt;section&gt; mit &lt;h2&gt;, &lt;footer&gt; für Metadaten.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-CODE-003" severity="fatal">
+      <trope_name>Fehlgeleitete Interaktionselemente (Fake Buttons)</trope_name>
+      <visible_telltale_sign>Klickbare Schaltflächen werden als &lt;div onclick="..."&gt; oder &lt;a href="#"&gt; statt als echtes &lt;button&gt;-Element konstruiert. Tastaturbedienung (Tab / Enter / Space) und Screenreader versagen komplett.</visible_telltale_sign>
+      <why_it_happens>Fokus auf reine Optik statt auf DOM-Barrierefreiheit und native Event-Handling-Modelle.</why_it_happens>
+      <donts>
+        <dont>Niemals Buttons als &lt;div onclick&gt; oder &lt;span onclick&gt; implementieren.</dont>
+      </donts>
+      <dos>
+        <do>Immer echte semantische &lt;button type="button"&gt; mit Tastaturfokus und ARIA-Attributen verwenden.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-CODE-004" severity="error">
+      <trope_name>Exzessive Inline-SVG-Wüsten statt Icon-Systeme</trope_name>
+      <visible_telltale_sign>40- bis 80-zeilige rohe Vektorpfade (&lt;path d="..."&gt;) werden dutzende Male direkt unkomprimiert in den HTML-Body eingebettet, anstatt Spritesheets, &lt;use&gt;-Referenzen oder modulare Icon-Komponenten (Lucide, Phosphor) zu nutzen.</visible_telltale_sign>
+      <why_it_happens>LLMs erzeugen SVG-Tags ad-hoc inline, da sie keine externe Asset-Pipeline verwalten können.</why_it_happens>
+      <donts>
+        <dont>Keine Dutzenden redundanten Raw-Inline-SVGs im DOM vervielfältigen.</dont>
+      </donts>
+      <dos>
+        <do>Einheitliche Icon-Systeme (Lucide, Heroicons, Phosphor) oder TOAD-Komponenten nutzen.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-CODE-005" severity="error">
+      <trope_name>Unicode-Emoji-Substitution als Billig-Icons</trope_name>
+      <visible_telltale_sign>Nutzung von rohen System-Emojis (🚀, ✨, ⚡, 🎯, 💡) als Kachel-Icons, Aufzählungszeichen oder visuelle Trenner.</visible_telltale_sign>
+      <why_it_happens>Emojis sind einzelne Unicode-Zeichen und für LLMs extrem billig zu generieren im Vergleich zu Vektorpfaden.</why_it_happens>
+      <donts>
+        <dont>Niemals Standard-Emojis als Ersatz für professionelle Icon-Systeme in Business-UIs verwenden.</dont>
+      </donts>
+      <dos>
+        <do>Gestaltete Vektor-Icons mit konsistenter Strichstärke (z. B. 1.5px Stroke) und Farbtoken nutzen.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-CODE-006" severity="warning">
+      <trope_name>Hyper-deskriptive, triviale Code-Kommentare</trope_name>
+      <visible_telltale_sign>Kommentare, die redundant das absolut Offensichtliche beschreiben: '// Function to handle form submission', '// Loop through array of features and render cards', '// Set active filter state to true'.</visible_telltale_sign>
+      <why_it_happens>LLMs spiegeln Lehrbuch-Trainingsdaten wider, bei denen jede Zeile für Studenten kommentiert wurde.</why_it_happens>
+      <donts>
+        <dont>Keine trivialen 'Was-macht-die-Zeile'-Kommentare hinterlassen.</dont>
+      </donts>
+      <dos>
+        <do>Nur das geschäftliche 'Warum', architektonische Designentscheidungen oder komplexe mathematische Edge-Cases kommentieren.</do>
+      </dos>
+    </heuristic>
+
+  </domain>
+
+  <!-- ====================================================================== -->
+  <!-- DOMAIN 8: RUNTIME, INTERACTION & A11Y (HAPPY-PATH-TÄUSCHUNG)          -->
+  <!-- ====================================================================== -->
+  <domain id="interaction_and_runtime" name="Runtime Interaction, A11y & Edge Cases">
+
+    <heuristic id="SLOP-RUN-001" severity="fatal">
+      <trope_name>Schein-Interaktivität (Mock-State ohne Backend-Request)</trope_name>
+      <visible_telltale_sign>Kontaktformulare, Suchfelder oder Newsletter-Anmeldungen zeigen ein hübsches Erfolgs-Modal, senden im Network-Tab der DevTools aber keinen einzigen echten POST-, PUT- oder Fetch-Request. State wird rein lokal über useState() oder alert() gefaked.</visible_telltale_sign>
+      <why_it_happens>Generatoren erzeugen reine Frontend-Fassaden ohne reale Backend-Architektur.</why_it_happens>
+      <donts>
+        <dont>Keine reinen Mock-Formulare ohne Validierungs-Logik, Request-Zustände (loading, success, error) und API-Payload.</dont>
+      </donts>
+      <dos>
+        <do>Vollständige Zustandsmaschinen modellieren: Pending, Error-Handling, Server-Side-Validation und Response-Parsing.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-RUN-002" severity="error">
+      <trope_name>Statisches Client-Filter-Mocking</trope_name>
+      <visible_telltale_sign>Filter-Leisten oder Suchfelder filtern lediglich ein hardgecodetes lokales JavaScript-Array aus 3 bis 6 statischen Dummy-Objekten. Reale Edge-Cases (z. B. leere Suchergebnisse, Paginierung, Lade-Fehler) sind nicht abgefangen.</visible_telltale_sign>
+      <why_it_happens>LLMs erzeugen den minimalen Happy-Path-Code, der im ersten Screenshot funktioniert.</why_it_happens>
+      <donts>
+        <dont>Keine statischen Filter ohne Empty-States, Pagination oder Debounce-Handling.</dont>
+      </donts>
+      <dos>
+        <do>Explizite Empty-States ('Keine Ergebnisse für Suche X gefunden') und strukturierte Filter-Pipelines integrieren.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-RUN-003" severity="fatal">
+      <trope_name>Katastrophale Barrierefreiheit (A11y Sabotage)</trope_name>
+      <visible_telltale_sign>Fokuszustände (:focus-visible) werden rücksichtslos per 'outline: none' entfernt. Bilder tragen generische Dummy-Alt-Texte wie alt="hero image" oder alt="feature icon". Formularfelder besitzen keine verknüpften &lt;label for="..."&gt;-Tags.</visible_telltale_sign>
+      <why_it_happens>Der Browser-Standard-Fokusrahmen wird von KI als optisch störend empfunden und gelöscht, statt gestylt zu werden.</why_it_happens>
+      <donts>
+        <dont>Niemals outline: none ohne sichtbare, kontraststarke barrierefreie Alternative (z. B. ring-2 ring-primary) verwenden.</dont>
+        <dont>Keine Dummy-Alt-Texte wie 'image' oder 'icon'.</dont>
+      </donts>
+      <dos>
+        <do>A11y-First: Sinnstiftende Alt-Texte, verknüpfte Labels, Tastaturbedienbarkeit und WCAG 2.2 AA Kontraste.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-RUN-004" severity="fatal">
+      <trope_name>Responsive Bruchstellen zwischen Standard-Breakpoints</trope_name>
+      <visible_telltale_sign>Layouts brechen zusammen, sobald der Viewport auf Zwischengrößen skaliert wird (z. B. Tablet 768–1024px oder Ultrawide >1920px): Text überlappt Kartenränder, zentrierte Wrapper driften ab, ungewollte horizontale Scrollbalken entstehen.</visible_telltale_sign>
+      <why_it_happens>Generatoren optimieren stereotyp nur für zwei Standard-Canvas-Größen: 390px (Mobile) und 1440px (Desktop).</why_it_happens>
+      <donts>
+        <dont>Keine starren absoluten Pixelbreiten, die bei Zwischenauflösungen horizontale Scrollbars erzeugen.</dont>
+      </donts>
+      <dos>
+        <do>Flüssige Layouts mit min/max-Grenzen, relationalen TOAD-Constraints und adaptiven Stacks.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-RUN-005" severity="warning">
+      <trope_name>Der Em-Dash Gedankenstrich-Tick (—)</trope_name>
+      <visible_telltale_sign>Exzessive Verwendung von echten Gedankenstrichen (—) in Headlines und Subtitles: 'Schneller skalieren — ohne Mehraufwand — mit smarter KI'.</visible_telltale_sign>
+      <why_it_happens>ChatGPT und Claude nutzen den Em-Dash statistisch extrem überproportional als rhetorische Pause.</why_it_happens>
+      <donts>
+        <dont>Nicht jeden zweiten Satz mit Em-Dashes (—) zerhacken.</dont>
+      </donts>
+      <dos>
+        <do>Präzise Satzstrukturen mit natürlicher deutscher Zeichensetzung (Komma, Doppelpunkt, Bindestrich).</do>
+      </dos>
+    </heuristic>
+
+  </domain>
+
+  <!-- ====================================================================== -->
+  <!-- DOMAIN 9: ASSETS, HOSTING, DS-GVO & FAKE-DATEN                         -->
+  <!-- ====================================================================== -->
+  <domain id="assets_and_forensics" name="Assets, CDN, DSGVO & Metadata">
+
+    <heuristic id="SLOP-ASSET-001" severity="fatal">
+      <trope_name>Unsplash-URL-Signatur &amp; Platzhalter-Domains</trope_name>
+      <visible_telltale_sign>Bilder verlinken direkt auf externe Unsplash-URLs mit typischen Generator-Parametern ('images.unsplash.com/...auto=format&amp;fit=crop&amp;w=800&amp;q=80') oder auf Platzhalter-Domains wie 'placehold.co/600x400' und 'via.placeholder.com'.</visible_telltale_sign>
+      <why_it_happens>LLMs erinnern Unsplash-Photo-IDs aus Trainingsdaten und setzen sie als Platzhalter ein.</why_it_happens>
+      <donts>
+        <dont>Keine externen Roh-Unsplash-URLs oder placehold.co im fertigen Design belassen.</dont>
+      </donts>
+      <dos>
+        <do>Lokale Bild-Assets mit optimierten Formaten (WebP/AVIF) oder native TOAD-Vektoren einbinden.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-ASSET-002" severity="fatal">
+      <trope_name>Unreflektiertes Google-Fonts-Streaming (DSGVO-Verstoß)</trope_name>
+      <visible_telltale_sign>Schriften werden unreflektiert über 'fonts.googleapis.com' geladen (Standard-Fonts wie Inter, Geist, Plus Jakarta Sans), anstatt DSGVO-konform self-hosted ausgeliefert zu werden.</visible_telltale_sign>
+      <why_it_happens>Google Fonts CDN ist der einfachste One-Liner für Web-Generatoren.</why_it_happens>
+      <donts>
+        <dont>Kein ungeprüftes Remote-Streaming von Google-Servern in EU-Websites.</dont>
+      </donts>
+      <dos>
+        <do>Lokale Schriftdateien (@font-face / @font in TOAD) mit Base64- oder lokalem Pfad-Embedding nutzen.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-ASSET-003" severity="error">
+      <trope_name>Tote OpenGraph-Assets &amp; 404-Metadaten</trope_name>
+      <visible_telltale_sign>Im &lt;head&gt; verweist 'og:image' auf relative Standardpfade wie '/og.png' oder '/preview.jpg', die auf dem Webserver physisch überhaupt nicht existieren.</visible_telltale_sign>
+      <why_it_happens>Templates fügen Standard-Meta-Tags ein, ohne die entsprechenden Bilddateien zu generieren.</why_it_happens>
+      <donts>
+        <dont>Keine Blind-Verweise auf nicht-existente Social-Media-Vorschaubilder.</dont>
+      </donts>
+      <dos>
+        <do>Tatsächlich existierende, optimierte 1200x630px OG-Grafiken erstellen und referenzieren.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-ASSET-004" severity="fatal">
+      <trope_name>Standard-Dummy-Reste &amp; Fake-US-Nummern</trope_name>
+      <visible_telltale_sign>Fußzeilen und Impressen enthalten typische Reste: E-Mails wie 'contact@company.com' oder 'support@example.com', US-Rufnummern '+1 (555) 0123' oder statisch kodierte veraltete Copyright-Jahre.</visible_telltale_sign>
+      <why_it_happens>Modelle übernehmen generische Template-Footer ohne Lokalisierung.</why_it_happens>
+      <donts>
+        <dont>Niemals example.com, +1 (555) oder statische 2023/2024-Jahreszahlen im Produktionscode belassen.</dont>
+      </donts>
+      <dos>
+        <do>Reale Firmendaten, korrekte länderspezifische Telefonformate und dynamische Daten verwenden.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-ASSET-005" severity="fatal">
+      <trope_name>Phantomprivatsphäre &amp; Fake-Testimonials</trope_name>
+      <visible_telltale_sign>Testimonial-Karten von angeblichen Führungskräften ('Sarah Chen, VP of Technology at CloudCore') mit makellosen Porträts, die auf LinkedIn nicht existieren und deren Firmen reine Erfindungen sind.</visible_telltale_sign>
+      <why_it_happens>Halluzination von sozialem Vertrauen zur Befriedigung des Marketing-Musters.</why_it_happens>
+      <donts>
+        <dont>Keine Fake-Personas mit erfundenen Firmen als angebliche Kunden ausgeben.</dont>
+      </donts>
+      <dos>
+        <do>Echte Case Studies, anonymisierte reale Branchen-Zitate oder rein nutzenbasierte Fakten präsentieren.</do>
+      </dos>
+    </heuristic>
+
+  </domain>
+
+  <!-- ====================================================================== -->
+  <!-- DOMAIN 10: FORENSIK, KRYPTOGRAFIE & EU AI ACT (STAND 2026)             -->
+  <!-- ====================================================================== -->
+  <domain id="forensics_and_compliance" name="Forensics, Cryptography & Compliance">
+
+    <heuristic id="SLOP-LAW-001" severity="fatal">
+      <trope_name>EU AI Act Art. 50 Kennzeichnungspflicht (Ab August 2026)</trope_name>
+      <visible_telltale_sign>Kommerzielle Bereitstellung von fotorealistischen, KI-generierten oder manipulierten Medien ohne maschinen- und menschenlesbare Kennzeichnung.</visible_telltale_sign>
+      <why_it_happens>Fehlendes Bewusstsein für europäische Regulierungsvorgaben für generative Medien.</why_it_happens>
+      <donts>
+        <dont>KI-generierte fotorealistische Bildinhalte im EU-Wirtschaftsraum nicht ohne Kennzeichnung veröffentlichen (meldepflichtiger Rechtsverstoß).</dont>
+      </donts>
+      <dos>
+        <do>Klare Kennzeichnung gemäß EU AI Act Art. 50 (visuelle Labels und Metadaten-Manifeste).</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-TECH-001" severity="warning">
+      <trope_name>C2PA Content Credentials &amp; False-Negative-Falle</trope_name>
+      <visible_telltale_sign>Fehlen von C2PA-Manifesten in Dateien bedeutet NICHT, dass sie menschlich sind! WhatsApp, Instagram und Telegram strippen Metadaten; Canvas-Rendering oder einfache WebP-Konvertierung löschen C2PA vollständig.</visible_telltale_sign>
+      <why_it_happens>Metadaten gehen bei Plattform-Uploads und Re-Exports verloren.</why_it_happens>
+      <donts>
+        <dont>Niemals das Fehlen von C2PA-Daten als Beweis für Echtheit werten.</dont>
+      </donts>
+      <dos>
+        <do>Multimodale Forensik anwenden: C2PA-Prüfung kombiniert mit Vektor-Topologie, Pupillenreflex-Analyse und DOM-Inspektion.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-TECH-002" severity="error">
+      <trope_name>PNG tEXt Chunks &amp; Rohe Prompt-Reste</trope_name>
+      <visible_telltale_sign>Unmodifizierte Diffusions-Outputs enthalten in den Metadaten (PNG tEXt chunks) den vollständigen Generierungs-Prompt und Seed-Parameter im Klartext (auslesbar via 'exiftool -all:all').</visible_telltale_sign>
+      <why_it_happens>ComfyUI, Stable Diffusion und Forge schreiben Generation-Metadaten standardmäßig in die PNG-Header.</why_it_happens>
+      <donts>
+        <dont>Keine unbereinigten Roh-Outputs mit Trainings-Prompts im Produktionssystem ausliefern.</dont>
+      </donts>
+      <dos>
+        <do>Assets über eine saubere Build-Pipeline bereinigen und strukturieren.</do>
+      </dos>
+    </heuristic>
+
+  </domain>
+
+  <!-- ====================================================================== -->
+  <!-- DOMAIN 11: ICON SYSTEMS, TEXTURES & TRANSPARENCIES                     -->
+  <!-- ====================================================================== -->
+  <domain id="icons_and_textures" name="Icon Systems, Textures &amp; Transparency">
+
+    <heuristic id="SLOP-ICON-001" severity="fatal">
+      <trope_name>Stilistische Inkohärenz in Symbolfamilien (Heterogeneous Icon Sets)</trope_name>
+      <visible_telltale_sign>Strichstärken variieren erratisch innerhalb desselben Icon-Sets: Ein Icon nutzt eine 2.0px Kontur, das nächste filigrane 1.0px Linien und das dritte eine fette 3.5px Mischung aus Fläche und Outline.</visible_telltale_sign>
+      <why_it_happens>KI synthetisiert Icons isoliert über separate Prompts ohne globales Vektor-Regelwerk.</why_it_happens>
+      <donts>
+        <dont>Niemals Icons mit divergierenden Linienstärken nebeneinander im selben Interface platzieren.</dont>
+      </donts>
+      <dos>
+        <do>Strikte Design-System-Metriken: Einheitliche Strichstärke (z. B. 1.5px oder 2.0px auf 24x24px Grid) für das gesamte Set einhalten.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-ICON-002" severity="fatal">
+      <trope_name>Perspektivische &amp; Geometrische Brüche in Piktogrammen</trope_name>
+      <visible_telltale_sign>Flache orthogonale 2D-Icons stehen direkt neben isometrischen 2.5D-Schrägansichten oder 3D-Körpern. Eckradien und Linienabschlüsse mischen willkürlich scharfe Kanten (Miter), Rundungen (Round) und Fasen (Bevel).</visible_telltale_sign>
+      <why_it_happens>Mangelnde geometrische Standardisierung isolierter Bildgenerierungen.</why_it_happens>
+      <donts>
+        <dont>Keine Mischung von 2D-Flachgrafik und 3D/isometrischen Symbolen in derselben Navigations- oder Featureleiste.</dont>
+        <dont>Keine uneinheitlichen Linienabschlüsse (stroke-linecap) und Eckenrundungen (stroke-linejoin).</dont>
+      </donts>
+      <dos>
+        <do>Einheitliche Projektion (rein 2D frontal oder rein isometrisch) und einheitliche Corner-Joins über alle Symbole hinweg durchsetzen.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-ICON-003" severity="error">
+      <trope_name>Wandernder Lichtursprung in Symbolserien</trope_name>
+      <visible_telltale_sign>Schattenwürfe und Glanzlichter wandern unkoordiniert zwischen Piktogrammen: Icon A wird von oben-links beleuchtet, Icon B hat diffuse Raumausleuchtung, Icon C Licht von rechts-unten.</visible_telltale_sign>
+      <why_it_happens>Fehlen einer gemeinsamen virtuellen 3D-Lichtszene bei separaten Generierungsschritten.</why_it_happens>
+      <donts>
+        <dont>Keine schattierten Icon-Sets ohne globale Lichtachsen-Definition verwenden.</dont>
+      </donts>
+      <dos>
+        <do>Konsequenter virtueller Lichtursprung (z. B. immer 45° Top-Left) für die gesamte Grafikfamilie.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-TEX-001" severity="fatal">
+      <trope_name>Das eingebrannte Photoshop-Schachbrettmuster (Baked Checkerboard Artifact)</trope_name>
+      <visible_telltale_sign>Das Bild soll freigestellt sein, besitzt aber stattdessen das grau-weiße Transparenzmuster als reale, opake Farbpixel aufgemalt. Das Schachbrettmuster ist fest in die Bitmap 'eingebrannt'.</visible_telltale_sign>
+      <why_it_happens>Modelle trainierten auf Screenshots von Bearbeitungsprogrammen und interpretieren das UI-Transparenzmuster als Bildtextur.</why_it_happens>
+      <donts>
+        <dont>Niemals Assets ausliefern, bei denen Transparenz durch aufgemalte grau-weiße Karos vorgetäuscht wird.</dont>
+      </donts>
+      <dos>
+        <do>Prüfung vor Freigabe: Asset über farbigem Hintergrund platzieren – echter Alphakanal muss den Untergrund sauber durchscheinen lassen.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-TEX-002" severity="error">
+      <trope_name>Kantenkontamination &amp; Matting-Halos (Fringing Defect)</trope_name>
+      <visible_telltale_sign>An den Außenkanten freigestellter Objekte verbleiben schmutzige graue, weiße oder dunkle Farbsäume (Halos), die bei Platzierung auf andersfarbigen Hintergründen unschön hervorblitzen.</visible_telltale_sign>
+      <why_it_happens>Fehlerhafte Trennung von Antialiasing-Pixeln gegen den ursprünglichen Synthese-Hintergrund.</why_it_happens>
+      <donts>
+        <dont>Keine unsauberen Freisteller mit pixeligen Randsäumen im Produktions-Layout verwenden.</dont>
+      </donts>
+      <dos>
+        <do>Saubere Alphamaske oder native Vektorbegrenzung ohne Hintergrund-Bleed verwenden.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-TEX-003" severity="fatal">
+      <trope_name>Kachelungsdefekte bei Seamless Patterns (Tiling Seams &amp; Brightness Drift)</trope_name>
+      <visible_telltale_sign>Wird eine als 'nahtlos' deklarierte Texturkachel im 3x3-Raster aneinandergelegt, treten deutliche Schnittkanten, Linienversätze oder Helligkeitssprünge zutage, die einen unruhigen Fleckenteppich erzeugen.</visible_telltale_sign>
+      <why_it_happens>Generative Modelle beachten an den Canvas-Rändern nicht die exakte periodische Randbedingung (Periodic Boundary Condition).</why_it_happens>
+      <donts>
+        <dont>Keine Texturen als 'seamless' deklarieren ohne erfolgreichen 3x3-Kachelungstest in nativer Auflösung.</dont>
+      </donts>
+      <dos>
+        <do>Mathematisch geschlossene Kachelung verifizieren: Rechter Rand muss bitgenau an linken Rand anschließen, oberer an unteren.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-TEX-004" severity="warning">
+      <trope_name>Sub-perzeptuelles Farbrauschen auf Schein-Volltonflächen</trope_name>
+      <visible_telltale_sign>Flächen, die für das bloße Auge wie homogenes Weiß (#FFFFFF) oder Schwarz (#000000) wirken, entpuppen sich bei Kontrastspreizung als Teppich aus Tausenden Mikroschattierungen und Diffusionsrauschen.</visible_telltale_sign>
+      <why_it_happens>Diffusionsrauschen wird in flachen Zonen nicht vollständig auf 0 eliminiert.</why_it_happens>
+      <donts>
+        <dont>Keine synthetisch 'verunreinigten' Volltonflächen im finalen Vektorsystem belassen.</dont>
+      </donts>
+      <dos>
+        <do>Saubere mathematische Hex-Farbwerte in TOAD deklarieren (fill: #FFFFFF;), statt gerasterte Farbflächen zu importieren.</do>
+      </dos>
+    </heuristic>
+
+  </domain>
+
+  <!-- ====================================================================== -->
+  <!-- FORENSIC AUDIT FRAMEWORK & STRATEGIC PRINCIPLES                       -->
+  <!-- ====================================================================== -->
+  <forensic_audit_framework>
+    <evaluation_matrix>
+      <category level="ko_criteria" title="K.O.-Kriterien (Unmittelbarer Beleg für unbereinigten KI-Slop)">
+        <criterion domain="logo_vector">Knotenpunktexplosion: Hunderte ungeordnete Ankerpunkte pro Kurve; zittrige Sägezahnlinien (Ctrl+Y Pfadansicht).</criterion>
+        <criterion domain="logo_vector">Glyphenmorphing: Deformierte Punzen bei 'e'/'a'/'o', asymmetrische Serifen, erratische Stammstärken.</criterion>
+        <criterion domain="web_ui">Schein-Interaktivität: Snapping States ohne Easing, tote href='#' Links, leere Mock-States.</criterion>
+        <criterion domain="digital_art">Schmelzende Konturen: Vektor- oder Tuschekanten lösen sich diffus in Schattierungsflächen auf.</criterion>
+        <criterion domain="icon_sets">Systembrüche: Erratisch schwankende Strichstärken (1px vs 3.5px) und gemischte Projektionen (2D neben 3D).</criterion>
+        <criterion domain="textures">Transparenz-Täuschung: Eingebranntes grau-weißes Photoshop-Schachbrettmuster im Pixelraster.</criterion>
+        <criterion domain="textures">Kachelungsdefekte: Sichtbare Nahtmuster oder Helligkeitssprünge beim 3x3-Kachelungstest.</criterion>
+        <criterion domain="photo_scenic">Mikrodeformationen: Divergierende Hornhautreflexionen (Catchlights), polyedrische Pupillen, monolithisches Klaviertastengebiss.</criterion>
+      </category>
+
+      <category level="heavy_suspicion" title="Schwerer Verdacht (Erfordert manuelle Überarbeitung &amp; Entwurfsnachweis)">
+        <criterion domain="logo_vector">Funktionaler Formkollaps: Unlesbarkeit bei 16x16px (Favicon-Test); Zerstörung der Kontraste im 1-Bit-Schwarz-Weiß-Test.</criterion>
+        <criterion domain="logo_vector">Topologische Unmöglichkeit: Widersprüchliche 3D-Banddurchdringungen und pseudo-geometrische Zierschleifen.</criterion>
+        <criterion domain="web_ui">Vibe-Coding-Archetyp: Grundloser 3–4px Farbstreifen an linker Kante kombiniert mit Tailwind-Monokultur (p-6, rounded-2xl).</criterion>
+        <criterion domain="web_ui">Hero-Schablone: Cyan-Violett-Textverlauf, unmotivierter Italic-Serif-Stilbruch im Satz, diffuse Leuchtkugeln im Hintergrund.</criterion>
+        <criterion domain="web_ui">Token-Inkonsistenz: Sprunghafte Abstands- und Paddingwerte ohne 8-Punkt-Gitter; responsive Umbruchkollapse.</criterion>
+        <criterion domain="digital_art">Unabsichtliche Tangenten: Kanten unterschiedlicher Raumebenen stoßen exakt aufeinander und zerstören Tiefe.</criterion>
+        <criterion domain="digital_art">Funktionsloses Greebling: Scheintechnische Kleinstrukturen ohne physikalisch-mechanische Logik.</criterion>
+      </category>
+    </evaluation_matrix>
+
+    <strategic_principles>
+      <principle id="P1" name="Trennung von dekorativer Präsentation und nativer Konstruktion">
+        <rule>Designentwürfe dürfen niemals anhand isolierter 3D-Mockups, fotorealistisch gerenderter Visitenkarten oder statischer Vollbild-Präsentationen bewertet werden, da diese Effekte konstruktive Mängel verdecken.</rule>
+        <rule>Die Prüfung MUSS zwingend an den rohen Quelldaten erfolgen: Ungeschützte Vektordateien (Pfadansicht), editierbare Typografie und nativer TOAD-Code.</rule>
+      </principle>
+
+      <principle id="P2" name="Systemintegrität als primärer Qualitätsmaßstab">
+        <rule>Professionelle Designqualität bemisst sich nicht am isolierten Einzel-Asset, sondern an der konsistenten Skalierung über das gesamte System hinweg.</rule>
+        <rule>Beweisführung durch Stresstests: Hält das Signet dem 16x16-Favicon- und 1-Bit-Drucktest stand? Bleiben Strichstärken über Dutzende Icons identisch? Folgt das Interface lückenlos einem 8pt-Token-Gitter?</rule>
+      </principle>
+
+      <principle id="P3" name="Nachvollziehbarkeit des Entstehungsprozesses (Design Provenance)">
+        <rule>Professionelle Gestaltung hinterlässt eine nachvollziehbare Konstruktionsspur: Benannte Ebenenstrukturen, saubere Komponenten-Hierarchien, typografische Skalen und begründete Richtungsentscheidungen.</rule>
+        <rule>Fehlen diese Nachweise und liegen ausschließlich flachgerechnete Pixel- oder Pfadfragmente vor, greifen die K.O.-Kriterien dieses Katalogs.</rule>
+      </principle>
+    </strategic_principles>
+  </forensic_audit_framework>
+
+</anti_ai_slop_heuristics>

@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<specification module="02_variables_math_and_expressions" target="toad-dsl" version="3.0">
+  <metadata>
+    <description>Variable scoping, assignment operators, mathematical evaluations, and dynamic color transformations</description>
+  </metadata>
+
+  <variable_syntax>
+    <declaration_rule severity="fatal">
+      <description>Variables are declared using the &apos;&gt;&apos; sigil and &apos;=&apos; assignment operator. NEVER use colon notation.</description>
+      <good><![CDATA[
+>brandGreen = #87CC2E;
+>bgDark = #101612;
+>gridBase = 8px;
+>fontDisplay = "Agency FB, sans-serif";
+      ]]></good>
+      <bad reason="CSS colon notation or missing > sigil"><![CDATA[
+>brandGreen: #87CC2E;
+brandGreen = #87CC2E;
+let accent = #87CC2E;
+      ]]></bad>
+    </declaration_rule>
+
+    <referencing>
+      <description>Reference variables using the &apos;&gt;&apos; sigil.</description>
+      <example><![CDATA[
+rect #card {
+    fill: >bgDark;
+    stroke: >brandGreen 1px;
+    padding: >gridBase;
+}
+      ]]></example>
+    </referencing>
+
+    <scoping_hierarchy order="low_to_high">
+      <level rank="1" name="global_tokens">Root-level declarations in imported files</level>
+      <level rank="2" name="import_shadowing">Later @import documents override earlier declarations</level>
+      <level rank="3" name="local_component_args">Component parameter arguments shadow outer scope variables</level>
+    </scoping_hierarchy>
+
+    <nested_token_objects>
+      <description>Tokens grouped hierarchically using object literals, accessed via dot notation.</description>
+      <example><![CDATA[
+>theme = {
+    primary: #87CC2E,
+    surface: #152018,
+    border: alpha(#87CC2E, 0.25)
+};
+rect #badge {
+    fill: >theme.surface;
+    stroke: >theme.border 1px;
+}
+      ]]></example>
+    </nested_token_objects>
+  </variable_syntax>
+
+  <font_stack_rule severity="fatal">
+    <description>Font fallback chains in variables MUST ALWAYS be a single string literal. Unquoted commas cause parse errors.</description>
+    <good>>fontBody = "Inter, -apple-system, sans-serif";</good>
+    <bad reason="Unexpected token comma error">>fontBody = "Inter", -apple-system, sans-serif;</bad>
+  </font_stack_rule>
+
+  <math_and_dimensions>
+    <operators>Addition (+), Subtraction (-), Multiplication (*), Division (/)</operators>
+    <calc_function>
+      <example><![CDATA[
+rect #wideCard {
+    width: calc(100% - 80px);
+    height: calc(50% - 40px);
+    at: (40px, 40px);
+}
+rect #modalBox {
+    width: calc(>gridBase * 60);
+    padding: calc(>gridBase * 2);
+}
+      ]]></example>
+    </calc_function>
+    <dimension_conversions dpi="96">
+      <unit name="in" px="96" />
+      <unit name="mm" px="3.7795" formula="96 / 25.4" />
+      <unit name="cm" px="37.795" formula="96 / 2.54" />
+      <unit name="pt" px="1.3333" formula="96 / 72" />
+      <unit name="em_rem" px="16" note="Default typographic scale reference" />
+    </dimension_conversions>
+  </math_and_dimensions>
+
+  <color_transform_functions>
+    <function name="alpha" signature="alpha(color, opacity)">
+      <description>Sets or scales alpha transparency (0.0 to 1.0)</description>
+      <example>alpha(#87CC2E, 0.35)</example>
+    </function>
+    <function name="mix" signature="mix(color1, color2, weight)">
+      <description>Linearly blends two colors by weight (0.0 to 1.0)</description>
+      <example>mix(#ffffff, #000000, 0.2)</example>
+    </function>
+    <function name="lighten" signature="lighten(color, percent)">
+      <description>Increases HSL lightness by percentage</description>
+      <example>lighten(>brandGreen, 15%)</example>
+    </function>
+    <function name="darken" signature="darken(color, percent)">
+      <description>Decreases HSL lightness by percentage</description>
+      <example>darken(>brandGreen, 20%)</example>
+    </function>
+  </color_transform_functions>
+</specification>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<specification module="01_component_architecture" target="toad-dsl" version="3.0">
+  <metadata>
+    <description>Modular reusable component architecture, parameterized props, default values, and local scoping</description>
+  </metadata>
+
+  <component_declaration>
+    <syntax><![CDATA[
+component MetricCard(title = "Total Users", value = "12,450", trend = "+8.2%") {
+    size: 240px 140px;
+    background: #19271D;
+    radius: 14px;
+    stroke: alpha(#87CC2E, 0.2) 1px;
+
+    text #lblTitle {
+        at: (20px, 20px);
+        content: title;
+        font-size: 13px;
+        color: #9EB0A3;
+    }
+
+    text #lblValue {
+        at: (20px, 48px);
+        content: value;
+        font-size: 28px;
+        font-weight: 700;
+        color: #ffffff;
+    }
+
+    text #lblTrend {
+        at: (20px, 94px);
+        content: trend;
+        font-size: 12px;
+        font-weight: 600;
+        color: #87CC2E;
+    }
+}
+    ]]></syntax>
+  </component_declaration>
+
+  <instantiation>
+    <description>Components can be instantiated with positional or named arguments.</description>
+    <example><![CDATA[
+// Positional
+MetricCard #users("Monthly Active", "45,200", "+14.3%") {
+    at: (40px, 40px);
+}
+
+// Named override
+MetricCard #revenue(value = "$98,400", title = "MRR") {
+    at: right of #users offset 24px;
+}
+    ]]></example>
+  </instantiation>
+</specification>

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<corporate_design id="nordholz_architektur" industry_domain="industry_and_craft" category="B_INDUSTRY_AND_CRAFT" version="1.0">
+  <brand_meta>
+    <company_name>NordHolz Architektur &amp; Bau</company_name>
+    <product_name>NordHolz Passivhaus-System</product_name>
+    <industry>Architektur &amp; Nachhaltiger Holzbau</industry>
+    <profile>Büro für moderne, skandinavisch inspirierte Holzrahmenbauten und CO2-neutrale Wohnhäuser.</profile>
+    <tone_of_voice>Naturverbunden, architektonisch anspruchsvoll, ruhig, skandinavisch klar.</tone_of_voice>
+  </brand_meta>
+
+  <tags>
+    <tag>architektur</tag>
+    <tag>holzbau</tag>
+    <tag>nachhaltig</tag>
+    <tag>skandinavisch</tag>
+    <tag>erdtöne</tag>
+  </tags>
+
+  <design_tokens>
+    <colors>
+      <color token="chalkLight" hex="#F5F2EB" role="Naturweißes Architekturpapier" />
+      <color token="pineGreen" hex="#2E3D30" role="Moosgrün, Nadelwald, Kernmarke" />
+      <color token="larchWood" hex="#C7A77B" role="Lärchenholz-Akzente, Schnittkanten" />
+      <color token="slateMuted" hex="#4A4D48" role="Bemaßungs- und Textfarbe" />
+    </colors>
+    <typography>
+      <primary_font>&quot;Plus Jakarta Sans&quot;, &quot;Inter&quot;, sans-serif</primary_font>
+      <h1 scale="Semi-Bold (600), 34px" />
+      <body scale="Regular (400), 15px, Color #4A4D48" />
+    </typography>
+    <geometry>
+      <card_radius>8px</card_radius>
+      <button_radius>4px</button_radius>
+      <grid_gap>24px</grid_gap>
+    </geometry>
+    <shadows>
+      <ambient>Dezenter Papierschatten</ambient>
+    </shadows>
+  </design_tokens>
+
+  <brand_rules>
+    <dos>
+      <do>Warmes Kreideweiß (#F5F2EB) und Tannengrün (#2E3D30) als Naturklang koppeln.</do>
+      <do>Große, ruhige Architektur-Weißräume stehen lassen.</do>
+    </dos>
+    <donts>
+      <dont>Keine künstlichen Chemiefarben oder schrilles Plastikrot.</dont>
+      <dont>Keine unruhigen Schriften.</dont>
+    </donts>
+  </brand_rules>
+
+  <toad_component_blueprint lang="toad"><![CDATA[
+canvas {
+  size: 920px 600px;
+  fill: #F5F2EB;
+  font-family: "Plus Jakarta Sans, sans-serif";
+}
+
+>chalk = #F5F2EB;
+>pineGreen = #2E3D30;
+>larchWood = #C7A77B;
+>slate = #4A4D48;
+
+rect #drawingCard {
+  at: center of canvas;
+  size: 820px 500px;
+  fill: #FFFFFF;
+  stroke: #E2DDD5;
+  stroke-width: 1px;
+  radius: 8px;
+}
+
+text #archHeader {
+  at: top left of #drawingCard offset 40px 36px;
+  content: "NORDHOLZ ARCHITEKTUR // PROJEKT HAUS EIKEN";
+  font-size: 13px;
+  font-weight: 600;
+  color: >larchWood;
+}
+
+text #projectTitle {
+  at: below #archHeader offset 12px;
+  content: "Passivhaus in Massivholzbauweise";
+  font-size: 32px;
+  font-weight: 600;
+  color: >pineGreen;
+}
+
+text #projectMeta {
+  at: below #projectTitle offset 14px;
+  size: 700px;
+  content: "Wohnfläche: 184 m² • Standort: Schleswig-Holstein • KfW 40 Plus Standard mit sichtbaren Brettsperrholzdecken und Erdwärmepumpe.";
+  font-size: 14px;
+  color: >slate;
+}
+  ]]></toad_component_blueprint>
+
+  <routing_triggers>
+    <trigger>timber architecture brand</trigger>
+    <trigger>sustainable wooden house</trigger>
+    <trigger>nordic construction styleguide</trigger>
+    <trigger>nordholz bau</trigger>
+    <trigger>green architecture flyer</trigger>
+  </routing_triggers>
+</corporate_design>

@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<corporate_design id="nexushr_workforce" industry_domain="saas_and_tech" category="A_SAAS_AND_TECH" version="1.0">
+  <brand_meta>
+    <company_name>NexusHR Systems</company_name>
+    <product_name>NexusHR Global People OS</product_name>
+    <industry>People Operations &amp; Global Payroll</industry>
+    <profile>All-in-one HR-Plattform für globale Teams, Onboarding und Talententwicklung.</profile>
+    <tone_of_voice>Menschlich, inspirierend, weltoffen, wertschätzend.</tone_of_voice>
+  </brand_meta>
+
+  <tags>
+    <tag>hr</tag>
+    <tag>people-ops</tag>
+    <tag>purple</tag>
+    <tag>onboarding</tag>
+    <tag>culture</tag>
+  </tags>
+
+  <design_tokens>
+    <colors>
+      <color token="warmCanvas" hex="#FAF8F5" role="Sanfte, warme Arbeitswelt" />
+      <color token="royalPurple" hex="#7C3AED" role="Primärmarke, Führung, Meilensteine" />
+      <color token="cultureRose" hex="#EC4899" role="Team-Events, Auszeichnungen, Kultur" />
+      <color token="darkIndigo" hex="#1E1B4B" role="Headlines" />
+    </colors>
+    <typography>
+      <primary_font>&quot;Plus Jakarta Sans&quot;, sans-serif</primary_font>
+      <h1 scale="Bold (700), 36px, Line-Height: 1.2" />
+      <body scale="Regular (400), 15px, Line-Height: 1.55, Color #475569" />
+    </typography>
+    <geometry>
+      <card_radius>16px</card_radius>
+      <button_radius>10px</button_radius>
+      <grid_gap>20px</grid_gap>
+    </geometry>
+    <shadows>
+      <ambient>Weicher Schatten alpha(#000000, 0.06)</ambient>
+    </shadows>
+  </design_tokens>
+
+  <brand_rules>
+    <dos>
+      <do>Warme Töne mit royalem Lila (#7C3AED) verbinden.</do>
+      <do>Mitarbeiter-Avatar-Slots und Erfolgsgeschichten zelebrieren.</do>
+      <do>Karten mit 16px Radius sauber strukturieren.</do>
+    </dos>
+    <donts>
+      <dont>Keine kalte, seelenlose &apos;Personalnummern&apos;-Ästhetik.</dont>
+      <dont>Keine harten, aggressiven Schatten.</dont>
+    </donts>
+  </brand_rules>
+
+  <toad_component_blueprint lang="toad"><![CDATA[
+canvas {
+  size: 920px 580px;
+  fill: #FAF8F5;
+  font-family: "Plus Jakarta Sans, sans-serif";
+}
+
+>warmCanvas = #FAF8F5;
+>royalPurple = #7C3AED;
+>cultureRose = #EC4899;
+>darkIndigo = #1E1B4B;
+
+rect #empCard {
+  at: center of canvas;
+  size: 820px 460px;
+  fill: #FFFFFF;
+  stroke: #E2E8F0;
+  stroke-width: 1px;
+  radius: 16px;
+}
+
+text #empHeader {
+  at: top left of #empCard offset 36px 36px;
+  content: "TEAM SPOTLIGHT // ONBOARDING CELEBRATION";
+  font-size: 13px;
+  font-weight: 700;
+  color: >royalPurple;
+}
+
+text #empTitle {
+  at: below #empHeader offset 12px;
+  content: "Willkommen im Team, Sarah!";
+  font-size: 32px;
+  font-weight: 800;
+  color: >darkIndigo;
+}
+
+rect #cultureBadge {
+  at: below #empTitle offset 20px;
+  size: 200px 32px;
+  fill: alpha(>cultureRose, 0.15);
+  radius: 9999px;
+}
+
+text #cultureText {
+  at: center of #cultureBadge;
+  content: "★ SENIOR PRODUCT DESIGNER";
+  font-size: 11px;
+  font-weight: 700;
+  color: >cultureRose;
+}
+  ]]></toad_component_blueprint>
+
+  <routing_triggers>
+    <trigger>hr corporate identity</trigger>
+    <trigger>people ops dashboard</trigger>
+    <trigger>employee welcome card</trigger>
+    <trigger>workforce payroll brand</trigger>
+    <trigger>nexushr culture</trigger>
+  </routing_triggers>
+</corporate_design>

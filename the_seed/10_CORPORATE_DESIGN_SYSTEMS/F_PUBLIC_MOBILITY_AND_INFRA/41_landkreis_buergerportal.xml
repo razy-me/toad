@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<corporate_design id="landkreis_buergerportal" industry_domain="public_mobility_and_infra" category="F_PUBLIC_MOBILITY_AND_INFRA" version="1.0">
+  <brand_meta>
+    <company_name>Landkreis Bürgerportal Online</company_name>
+    <product_name>Digitales Bürgeramt &amp; Kfz-Zulassung</product_name>
+    <industry>Öffentlicher Sektor / E-Government</industry>
+    <profile>Bürgerservice nach dem Onlinezugangsgesetz (OZG), barrierefreie Anträge in 3 Klicks.</profile>
+    <tone_of_voice>Neutral, bürgerfreundlich, barrierefrei, rechtssicher.</tone_of_voice>
+  </brand_meta>
+
+  <tags>
+    <tag>buergeramt</tag>
+    <tag>egovernment</tag>
+    <tag>barrierefrei</tag>
+    <tag>amt</tag>
+    <tag>kreisverwaltung</tag>
+  </tags>
+
+  <design_tokens>
+    <colors>
+      <color token="govNavy" hex="#1E3A8A" role="Behörden-Vertrauen" />
+      <color token="accentAmber" hex="#D97706" role="Status-Hinweise" />
+      <color token="cardBg" hex="#F8FAFC" role="Antrags-Kacheln" />
+    </colors>
+    <typography>
+      <primary_font>&quot;Arial&quot;, sans-serif</primary_font>
+      <h1 scale="Bold (700), 32px" />
+      <body scale="Regular (400), 15px, Color #1E293B" />
+    </typography>
+    <geometry>
+      <card_radius>8px</card_radius>
+      <button_radius>4px</button_radius>
+      <grid_gap>16px</grid_gap>
+    </geometry>
+    <shadows>
+      <ambient>none</ambient>
+    </shadows>
+  </design_tokens>
+
+  <brand_rules>
+    <dos>
+      <do>Hohe Kontraste (WCAG AAA) und klare Amts-Icons.</do>
+    </dos>
+    <donts>
+      <dont>Keine bürokratischen Schachtelsätze auf Bannern.</dont>
+    </donts>
+  </brand_rules>
+
+  <toad_component_blueprint lang="toad"><![CDATA[
+canvas {
+  size: 900px 560px;
+  fill: #FFFFFF;
+  font-family: "Arial, sans-serif";
+}
+
+>navy = #1E3A8A;
+
+rect #ozgCard {
+  at: center of canvas;
+  size: 800px 460px;
+  fill: #F8FAFC;
+  stroke: #CBD5E1;
+  stroke-width: 1px;
+  radius: 8px;
+}
+
+text #ozgHeader {
+  at: top left of #ozgCard offset 36px 36px;
+  content: "KREISVERWALTUNG // DIGITALES BÜRGERPORTAL";
+  font-size: 13px;
+  font-weight: 700;
+  color: >navy;
+}
+
+text #ozgTitle {
+  at: below #ozgHeader offset 14px;
+  content: "Wohnsitz ummelden & Reisepass beantragen – 100% online";
+  font-size: 26px;
+  font-weight: 700;
+  color: #0F172A;
+}
+  ]]></toad_component_blueprint>
+
+  <routing_triggers>
+    <trigger>egovernment corporate design</trigger>
+    <trigger>citizen service portal</trigger>
+    <trigger>public sector styleguide</trigger>
+    <trigger>landkreis amt</trigger>
+    <trigger>accessible administrative poster</trigger>
+  </routing_triggers>
+</corporate_design>

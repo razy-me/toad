@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<corporate_design id="palazzo_bellini_hotel" industry_domain="luxury_and_fashion" category="E_LUXURY_AND_FASHION" version="1.0">
+  <brand_meta>
+    <company_name>Grand Hotel Palazzo Bellini</company_name>
+    <product_name>Dogen-Suite mit privatem Bootsanleger</product_name>
+    <industry>Hospitality / 5-Sterne Luxushotel</industry>
+    <profile>Historischer Renaissance-Palast am Canal Grande in Venedig mit Muranoglas-Kronleuchtern.</profile>
+    <tone_of_voice>Venezianisch prachtvoll, diskret, unvergleichlich zuvorkommend.</tone_of_voice>
+  </brand_meta>
+
+  <tags>
+    <tag>hotel</tag>
+    <tag>venedig</tag>
+    <tag>venetian-red</tag>
+    <tag>marmor</tag>
+    <tag>luxus</tag>
+  </tags>
+
+  <design_tokens>
+    <colors>
+      <color token="venetianRed" hex="#7F1D1D" role="Dogenrot" />
+      <color token="goldLeaf" hex="#D4AF37" role="Blattgold" />
+      <color token="marbleWhite" hex="#FDFBF7" role="Marmor-Weiß" />
+    </colors>
+    <typography>
+      <primary_font>&quot;Playfair Display&quot;, serif</primary_font>
+      <h1 scale="Semi-Bold (600), 36px" />
+      <body scale="Regular (400), 14px, Color #7F1D1D" />
+    </typography>
+    <geometry>
+      <card_radius>2px</card_radius>
+      <button_radius>0px</button_radius>
+      <grid_gap>24px</grid_gap>
+    </geometry>
+    <shadows>
+      <ambient>none</ambient>
+    </shadows>
+  </design_tokens>
+
+  <brand_rules>
+    <dos>
+      <do>Venezianisches Karminrot (#7F1D1D) mit Blattgold (#D4AF37) zelebrieren.</do>
+    </dos>
+    <donts>
+      <dont>Keine modernen Kettenhotel-Templates.</dont>
+    </donts>
+  </brand_rules>
+
+  <toad_component_blueprint lang="toad"><![CDATA[
+canvas {
+  size: 880px 580px;
+  fill: #7F1D1D;
+  font-family: "Playfair Display, serif";
+}
+
+>gold = #D4AF37;
+>marble = #FDFBF7;
+
+rect #hotelCard {
+  at: center of canvas;
+  size: 780px 480px;
+  fill: >marble;
+  stroke: >gold;
+  stroke-width: 2px;
+  radius: 2px;
+}
+
+text #hotelHeader {
+  at: top center of #hotelCard offset 0px 40px;
+  content: "PALAZZO BELLINI • CANAL GRANDE VENEZIA";
+  font-size: 14px;
+  font-weight: 600;
+  color: >gold;
+}
+
+text #hotelTitle {
+  at: below #hotelHeader offset 16px;
+  content: "L'Arte dell'Ospitalità dal 1542";
+  font-size: 32px;
+  font-weight: 700;
+  color: #7F1D1D;
+}
+  ]]></toad_component_blueprint>
+
+  <routing_triggers>
+    <trigger>luxury hotel brand</trigger>
+    <trigger>venetian palace styleguide</trigger>
+    <trigger>5 star grand hotel brochure</trigger>
+    <trigger>palazzo bellini</trigger>
+    <trigger>hospitality room card</trigger>
+  </routing_triggers>
+</corporate_design>

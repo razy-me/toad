@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<specification module="01_llm_code_generation_handbook" target="toad-dsl" version="3.0">
+  <metadata>
+    <description>Authoritative prompt-injection rules, architectural constraints, 8pt grid, and visual hierarchy protocol for LLMs</description>
+  </metadata>
+
+  <golden_rules>
+    <rule id="1" name="variables" requirement=">name = value;" invalid="name: value; or var name = value;" valid=">primary = #2563EB;" />
+    <rule id="2" name="font_stacks" requirement="Single quoted string" invalid='>font = "Inter", sans-serif;' valid='>font = "Inter, sans-serif";' />
+    <rule id="3" name="font_vs_wrap" requirement="font-size vs width" invalid="size: 24px; for glyph scale" valid="font-size: 24px; size: 400px;" />
+    <rule id="4" name="font_weights" requirement="Integer or valid keyword" invalid="font-weight: semi bold;" valid="font-weight: 600; or semibold;" />
+    <rule id="5" name="anchor_offset" requirement="Space after offset, no colon" invalid="at: below #box offset: 16px;" valid="at: below #box offset 16px;" />
+    <rule id="6" name="anchor_target" requirement="Explicit target reference" invalid="at: center;" valid="at: center of canvas;" />
+    <rule id="7" name="fill_vs_color" requirement="Shape fill vs Text color" invalid="text { fill: #000; }" valid="text { color: #000; }" />
+    <rule id="8" name="statements" requirement="Semicolon terminated" invalid="width: 200px" valid="width: 200px;" />
+    <rule id="9" name="slots" requirement="Semicolon terminated" invalid="slot" valid="slot;" />
+    <rule id="10" name="neon_glows" requirement="Center alpha >= 0.25" invalid="alpha(>neon, 0.08)" valid="alpha(>neon, 0.35)" />
+  </golden_rules>
+
+  <spacing_protocol scale="8pt_grid">
+    <tokens>
+      <token name=">xs" value="8px" />
+      <token name=">sm" value="16px" />
+      <token name=">md" value="24px" />
+      <token name=">lg" value="32px" />
+      <token name=">xl" value="48px" />
+      <token name=">2xl" value="64px" />
+      <token name=">3xl" value="96px" />
+      <token name=">4xl" value="128px" />
+    </tokens>
+  </spacing_protocol>
+
+  <typography_rules>
+    <rule name="explicit_wrap_box">Multiline text paragraphs MUST specify explicit width or size to trigger word wrapping; otherwise text flows on an infinite line.</rule>
+    <rule name="badge_safety_padding">Pills and badges MUST allocate 15% to 20% horizontal safety padding around text to prevent cross-engine glyph clipping.</rule>
+  </typography_rules>
+
+  <visual_hierarchy_tiers>
+    <tier rank="1" name="Hero / Primary" size="40px - 72px" weight="700 - 800" contrast="High (#FFFFFF on dark, #0F172A on light)" />
+    <tier rank="2" name="Section / Subhead" size="20px - 28px" weight="600" contrast="Medium (#94A3B8 on dark, #334155 on light)" />
+    <tier rank="3" name="Body / Captions" size="12px - 16px" weight="400 - 500" contrast="Muted (#64748B)" />
+  </visual_hierarchy_tiers>
+</specification>

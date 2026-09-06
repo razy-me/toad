@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<corporate_design id="sartoria_marchese" industry_domain="luxury_and_fashion" category="E_LUXURY_AND_FASHION" version="1.0">
+  <brand_meta>
+    <company_name>Sartoria Marchese Napoli</company_name>
+    <product_name>Bespoke Herrenanzug (Spalla Camicia)</product_name>
+    <industry>Herrenmode / Maßschneiderei</industry>
+    <profile>Neapolitanische Schneiderkunst mit ungefütterter Schulter und handrollierten Seidenkrawatten.</profile>
+    <tone_of_voice>Sprezzatura, weltmännisch, traditionsbewusst, souverän.</tone_of_voice>
+  </brand_meta>
+
+  <tags>
+    <tag>massschneiderei</tag>
+    <tag>bespoke</tag>
+    <tag>anzug</tag>
+    <tag>navy</tag>
+    <tag>napoli</tag>
+  </tags>
+
+  <design_tokens>
+    <colors>
+      <color token="bespokeNavy" hex="#1E293B" role="Tuchstoff-Navy" />
+      <color token="chalkStripe" hex="#F8FAFC" role="Kreidestreifen-Weiß" />
+      <color token="silkBurgundy" hex="#831843" role="Seidenfutter-Bordeaux" />
+    </colors>
+    <typography>
+      <primary_font>&quot;Bodoni MT&quot;, serif</primary_font>
+      <h1 scale="Semi-Bold (600), 34px" />
+      <body scale="Regular (400), 14px, Color #F8FAFC" />
+    </typography>
+    <geometry>
+      <card_radius>2px</card_radius>
+      <button_radius>2px</button_radius>
+      <grid_gap>20px</grid_gap>
+    </geometry>
+    <shadows>
+      <ambient>none</ambient>
+    </shadows>
+  </design_tokens>
+
+  <brand_rules>
+    <dos>
+      <do>Feine Kreidestreifen-Elemente und bordeauxrote Seidenakzente.</do>
+    </dos>
+    <donts>
+      <dont>Keine moderne Fast-Fashion-Hektik.</dont>
+    </donts>
+  </brand_rules>
+
+  <toad_component_blueprint lang="toad"><![CDATA[
+canvas {
+  size: 880px 580px;
+  fill: #0F172A;
+  font-family: "Bodoni MT, serif";
+}
+
+>navy = #1E293B;
+>burgundy = #831843;
+>white = #F8FAFC;
+
+rect #tailorCard {
+  at: center of canvas;
+  size: 780px 480px;
+  fill: >navy;
+  stroke: >burgundy;
+  stroke-width: 2px;
+  radius: 2px;
+}
+
+text #tailorHeader {
+  at: top center of #tailorCard offset 0px 40px;
+  content: "SARTORIA MARCHESE • NAPOLI DAL 1928";
+  font-size: 15px;
+  font-weight: 600;
+  color: >burgundy;
+}
+
+text #suitTitle {
+  at: below #tailorHeader offset 16px;
+  content: "Bespoke Su Misura • Spalla Camicia";
+  font-size: 32px;
+  font-weight: 700;
+  color: >white;
+}
+  ]]></toad_component_blueprint>
+
+  <routing_triggers>
+    <trigger>bespoke tailoring brand</trigger>
+    <trigger>luxury menswear styleguide</trigger>
+    <trigger>italian suit flyer</trigger>
+    <trigger>sartoria marchese</trigger>
+    <trigger>gentleman wardrobe card</trigger>
+  </routing_triggers>
+</corporate_design>

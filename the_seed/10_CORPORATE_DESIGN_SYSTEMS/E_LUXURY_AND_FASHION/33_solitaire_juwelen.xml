@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<corporate_design id="solitaire_juwelen" industry_domain="luxury_and_fashion" category="E_LUXURY_AND_FASHION" version="1.0">
+  <brand_meta>
+    <company_name>Solitaire Fine Jewelry</company_name>
+    <product_name>Fair-Mined Brillant-Solitär</product_name>
+    <industry>Haute Joaillerie / Schmuck</industry>
+    <profile>Atelier für konfliktfreie Diamanten, recyceltes Feingold und Unikat-Verlobungsringe.</profile>
+    <tone_of_voice>Strahlend, ewiggültig, handwerklich makellos, romantisch.</tone_of_voice>
+  </brand_meta>
+
+  <tags>
+    <tag>schmuck</tag>
+    <tag>diamanten</tag>
+    <tag>gold</tag>
+    <tag>joaillerie</tag>
+    <tag>edel</tag>
+  </tags>
+
+  <design_tokens>
+    <colors>
+      <color token="velvetBlue" hex="#0A1128" role="Samtetui-Dunkelblau" />
+      <color token="diamondSpark" hex="#E2E8F0" role="Diamant-Brillanz" />
+      <color token="pureGold" hex="#EAB308" role="750er Gelbgold" />
+    </colors>
+    <typography>
+      <primary_font>&quot;Playfair Display&quot;, serif</primary_font>
+      <h1 scale="Bold (700), 36px" />
+      <body scale="Regular (400), 14px, Color #E2E8F0" />
+    </typography>
+    <geometry>
+      <card_radius>4px</card_radius>
+      <button_radius>2px</button_radius>
+      <grid_gap>24px</grid_gap>
+    </geometry>
+    <shadows>
+      <ambient>Lichtfunken</ambient>
+    </shadows>
+  </design_tokens>
+
+  <brand_rules>
+    <dos>
+      <do>Samtiges Tiefblau (#0A1128) mit funkelndem Diamant-Silber kontrastieren.</do>
+    </dos>
+    <donts>
+      <dont>Keine billigen Modeschmuck-Farben.</dont>
+    </donts>
+  </brand_rules>
+
+  <toad_component_blueprint lang="toad"><![CDATA[
+canvas {
+  size: 880px 580px;
+  fill: #0A1128;
+  font-family: "Playfair Display, serif";
+}
+
+>gold = #EAB308;
+>silver = #E2E8F0;
+
+rect #jewelCard {
+  at: center of canvas;
+  size: 780px 480px;
+  fill: #0F172A;
+  stroke: >gold;
+  stroke-width: 1px;
+  radius: 4px;
+}
+
+text #jewelHeader {
+  at: top center of #jewelCard offset 0px 40px;
+  content: "SOLITAIRE // ATELIER HAUTE JOAILLERIE";
+  font-size: 14px;
+  font-weight: 700;
+  color: >gold;
+}
+
+text #ringTitle {
+  at: below #jewelHeader offset 16px;
+  content: "L'Étoile 2.4ct • Conflict-Free Brilliance";
+  font-size: 30px;
+  font-weight: 700;
+  color: >silver;
+}
+  ]]></toad_component_blueprint>
+
+  <routing_triggers>
+    <trigger>fine jewelry brand</trigger>
+    <trigger>diamond ring catalog</trigger>
+    <trigger>haute joaillerie corporate</trigger>
+    <trigger>solitaire jewels</trigger>
+    <trigger>luxury engagement card</trigger>
+  </routing_triggers>
+</corporate_design>

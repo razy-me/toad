@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<corporate_design id="valmont_geneve_uhren" industry_domain="luxury_and_fashion" category="E_LUXURY_AND_FASHION" version="1.0">
+  <brand_meta>
+    <company_name>Valmont &amp; Cie. Genève</company_name>
+    <product_name>Chronographe Tourbillon No. 7</product_name>
+    <industry>Haute Horlogerie / Luxusuhren</industry>
+    <profile>Genfer Uhrenmanufaktur seit 1864, Handgravuren und COSC-zertifizierte Manufakturwerke.</profile>
+    <tone_of_voice>Majestätisch, zeitlos, aristokratisch leise, uhrmacherisch meisterhaft.</tone_of_voice>
+  </brand_meta>
+
+  <tags>
+    <tag>uhren</tag>
+    <tag>haute-horlogerie</tag>
+    <tag>geneve</tag>
+    <tag>platin</tag>
+    <tag>zeitlos</tag>
+  </tags>
+
+  <design_tokens>
+    <colors>
+      <color token="obsidianNight" hex="#0B0C10" role="Tiefes Zifferblatt-Schwarz" />
+      <color token="roseGold" hex="#C5A059" role="18k Roségold-Lünette" />
+      <color token="rhodiumSilver" hex="#E2E8F0" role="Rhodinierte Zeiger &amp; Indizes" />
+    </colors>
+    <typography>
+      <primary_font>&quot;Didot&quot;, &quot;Playfair Display&quot;, serif</primary_font>
+      <h1 scale="Semi-Bold (600), 36px" />
+      <body scale="Regular (400), 13px, Color #C5A059" />
+    </typography>
+    <geometry>
+      <card_radius>2px</card_radius>
+      <button_radius>0px</button_radius>
+      <grid_gap>24px</grid_gap>
+    </geometry>
+    <shadows>
+      <ambient>none</ambient>
+    </shadows>
+  </design_tokens>
+
+  <brand_rules>
+    <dos>
+      <do>Champagner-Gold (#C5A059) mit mikrofeinen 1px Linien auf Nachtschwarz einsetzen.</do>
+    </dos>
+    <donts>
+      <dont>Keine schreienden Sale-Badges oder Plastikfarben.</dont>
+    </donts>
+  </brand_rules>
+
+  <toad_component_blueprint lang="toad"><![CDATA[
+canvas {
+  size: 880px 600px;
+  fill: #0B0C10;
+  font-family: "Didot, serif";
+}
+
+>gold = #C5A059;
+>silver = #E2E8F0;
+
+rect #watchCard {
+  at: center of canvas;
+  size: 780px 500px;
+  fill: #101217;
+  stroke: >gold;
+  stroke-width: 1px;
+}
+
+text #brandHeader {
+  at: top center of #watchCard offset 0px 48px;
+  content: "VALMONT & CIE. • GENÈVE";
+  font-size: 15px;
+  font-weight: 600;
+  color: >gold;
+}
+
+text #modelTitle {
+  at: below #brandHeader offset 20px;
+  content: "CHRONOGRAPHE TOURBILLON";
+  font-size: 32px;
+  font-weight: 700;
+  color: >silver;
+}
+  ]]></toad_component_blueprint>
+
+  <routing_triggers>
+    <trigger>luxury watch brand</trigger>
+    <trigger>haute horlogerie styleguide</trigger>
+    <trigger>swiss timepiece banner</trigger>
+    <trigger>valmont geneve</trigger>
+    <trigger>chronograph catalog card</trigger>
+  </routing_triggers>
+</corporate_design>

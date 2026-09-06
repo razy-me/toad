@@ -1,0 +1,423 @@
+# Scope: UNIVERSAL APPLICABILITY across ALL TOAD designs (posters, banners, cards, logos, UIs, print).
+# Rule: NO exemptions. Less is more applies everywhere.
+
+universal_mandates:
+  scope: "APPLIES TO EVERY .toad OUTPUT REGARDLESS OF ARTIFACT TYPE (print, web, poster, logo, banner, card, book cover)."
+  core_rule: "WENIGER IST MEHR (Less is more). Eliminate cognitive clutter, reject purposeless decorations, preserve 40-60% negative space."
+
+slop_signatures_and_donts:
+
+  web_and_ui:
+    - id: "SLOP-WEB-001"
+      name: "Purple Haze Darkmode Syndrome"
+      tell: "Pure black canvas (#000000) with 2-3 random blurred violet/cyan circles floating behind headlines."
+      dont: "DO NOT emit arbitrary radial glow circles (#8B5CF6 / #06B6D4) without physical light source."
+      do: "Use architectural surface stepping (#0F172A -> #1E293B) or clean gridline strokes (alpha(#fff, 0.06))."
+
+    - id: "SLOP-WEB-002"
+      name: "Meaningless Bento-Grid Overkill"
+      tell: "Forcing simple paragraphs, quotes, or 2-step lists into a 6-box glassmorphism grid."
+      dont: "DO NOT box everything into identical rounded cards with alpha(#fff, 0.1) borders."
+      do: "Use asymmetrical layouts, editorial type contrast, and reserve bento for multi-metric dashboards."
+
+    - id: "SLOP-WEB-003"
+      name: "Supercharge Phrasen-Dreschmaschine"
+      tell: "Headlines like 'Supercharge your workflow with next-gen synergy' with zero actual facts."
+      dont: "NEVER use the buzzword triad: 'Supercharge', 'Seamless', 'Next-Gen'."
+      do: "Write specific, grounded domain copy with numbers, tools (e.g. DATEV, Slack, SQL), and exact outcomes."
+
+    - id: "SLOP-WEB-004"
+      name: "Senseless Floating Glass Torus"
+      tell: "Floating chrome donuts, shiny spheres, or pearlescent ribbon blobs hovering in hero corners."
+      dont: "DO NOT place decorative 3D geometric debris to fill empty hero space."
+      do: "Render authentic product artifacts: code viewports, data flows, receipts, invoices, or UI mockups."
+
+    - id: "SLOP-WEB-005"
+      name: "Rainbow Pill-Button Overload"
+      tell: "Buttons with hot-pink to cyan gradients, glowing borders, inner glow, and arrow icons on all links."
+      dont: "DO NOT give every button on a page glowing neon gradients."
+      do: "Use 1-color high-contrast primary actions (e.g. dark aubergine or pure cream) and understated ghost secondary links."
+
+    - id: "SLOP-WEB-007"
+      name: "Glassmorphism Overdose & Extreme Corner Radii"
+      tell: "Every card, box, and navbar turned into a frosted translucent glass slab (blur + 1px white border) with childish 24-36px soap-bar rounded corners."
+      dont: "NEVER use ubiquitous frosted glassmorphism across all content cards or giant 32px radii on standard text containers."
+      do: "Use solid, opaque surfaces with architectural value hierarchy (#0F172A -> #1E293B) and disciplined 6-12px radii (or sharp 0-2px for editorial/fintech)."
+
+    - id: "SLOP-WEB-008"
+      name: "Horror Vacui & Compulsive Clutter Overload (Less is More)"
+      tell: "Overstuffing the canvas with 15 redundant badges, decorative pills, sub-cards, borders, and micro-icons."
+      dont: "DO NOT fill every free pixel just because empty space exists. Avoid cognitive clutter and shouting elements."
+      do: "WENIGER IST MEHR (Less is More): Reserve 40-60% of canvas as generous negative space. Delete 25% of elements during review."
+
+    - id: "SLOP-WEB-009"
+      name: "Purposeless Left Border Stripe"
+      tell: "3-4px accent stripe exclusively on left card edge without semantic status function."
+      dont: "DO NOT apply arbitrary colored left-edge stripes to neutral content cards."
+      do: "Reserve border colors strictly for verified system states (success/error/warning)."
+
+    - id: "SLOP-WEB-010"
+      name: "Editorial Faker Italic Serif Break"
+      tell: "Single italic serif word stuck into an otherwise pure sans-serif headline for pseudo-elegance."
+      dont: "NEVER switch font families mid-sentence just to fake luxury editorial flair."
+      do: "Build honest typographic hierarchy: use consistent display serif or pure grotesque throughout."
+
+    - id: "SLOP-WEB-011"
+      name: "Snapping Hover States & Dead Anchors"
+      tell: "Buttons snap instantly without CSS transitions; navigation links point to dead href='#'."
+      dont: "DO NOT emit rigid snapping states without easing transitions or dead placeholder links."
+      do: "Include smooth transitions (150-200ms cubic-bezier) and functional interaction states."
+
+    - id: "SLOP-WEB-012"
+      name: "Monotone Triplet Feature Clones & Rigid 6-Stage Template"
+      tell: "Always exactly 3 identical cards with centered icons, following a rigid 6-part landing page recipe."
+      dont: "DO NOT force all feature presentations into identical 3-column icon boxes."
+      do: "Vary layout rhythms with asymmetric feature blocks, real UI previews, and modular storytelling."
+
+  logos_and_branding:
+    - id: "SLOP-LOGO-001"
+      name: "Gradient Infinity Loop / Origami Ribbon"
+      tell: "Overlapping folded ribbons with continuous 5-color gradients that vanish in monochrome."
+      dont: "DO NOT design logos that depend on gradients to define their shape or silhouette."
+      do: "Pass the Fax & Embroidery Test: Logo must be 100% legible as flat 1-bit black on white."
+
+    - id: "SLOP-LOGO-002"
+      name: "Circuit Hexagon Cube"
+      tell: "Isometric 3D hexagon cube with glowing PCB traces and solder nodes."
+      dont: "NEVER use the isometric circuit hexagon for tech, crypto, or AI brands."
+      do: "Craft bespoke typographic wordmarks with unique ligatures or unexpected architectural metaphors."
+
+    - id: "SLOP-LOGO-003"
+      name: "Sprouting Leaf in Gear / Green Hands"
+      tell: "Literal leaf growing out of cogwheel for sustainability/greentech."
+      dont: "DO NOT combine two literal clipart icons into a hybrid cliché."
+      do: "Adopt abstract topological forms, brutalist typography, or nature-inspired geometric ratios."
+
+    - id: "SLOP-LOGO-004"
+      name: "Favicon Micro-Detail Smear"
+      tell: "Signets with 12 razor-thin vector lines that become muddy gray noise at 32x32px."
+      dont: "DO NOT use stroke weights < 2px or gaps < 4px inside brandmarks."
+      do: "Design bold, high-contrast silhouette geometry that retains recognizability at 16x16px."
+
+    - id: "SLOP-LOGO-005"
+      name: "Dense Node Clustering & Wobbly Curves"
+      tell: "40-200+ chaotic anchor points per curve; C¹/C² continuity violations creating wobbly sawtooth edges."
+      dont: "NEVER output raw auto-traced vectors with dense node clusters and jittery edges."
+      do: "Enforce strict node economy: 2 to 4 anchor points per base curve with harmonized tangential handles."
+
+    - id: "SLOP-LOGO-006"
+      name: "Boolean Deficits & Vector Islands"
+      tell: "Overlapping open loops, self-intersecting paths, and floating 1px noise specks from auto-tracing."
+      dont: "DO NOT leave unmerged shapes, open paths, or orphan noise specks in vector logos."
+      do: "Execute clean Pathfinder Boolean unions/subtractions and delete all disconnected micro-islands."
+
+    - id: "SLOP-LOGO-007"
+      name: "Terraced Banding Zones & Plotter Collapse"
+      tell: "Gradients autotraced into dozens of stacked micro-paths, failing completely in plotter/CNC/embroidery."
+      dont: "DO NOT substitute true gradients with stacked stepped path layers that jam production machinery."
+      do: "Use pure mathematical gradients or solid fills with verified closed cuttable outer contours."
+
+  graphics_and_illustration:
+    - id: "SLOP-GFX-001"
+      name: "Corporate Memphis Noodle Arms"
+      tell: "Flat figures with giant blue/purple pants, long jointless noodle arms, and tiny faceless heads."
+      dont: "NEVER emit Corporate Memphis / Alegria flat tech figures."
+      do: "Use technical engineering diagrams, woodcut/linocut textures, riso-print styling, or pure data typography."
+
+    - id: "SLOP-GFX-002"
+      name: "Floating Geometric Confetti"
+      tell: "Random floating plus signs (+), empty circles, zigzag squiggles, and confetti dots around artwork."
+      dont: "DO NOT scatter purposeless vector confetti to disguise visual emptiness."
+      do: "Embrace confident negative space (whitespace) or use functional drafting marks (rulers, crosshairs)."
+
+    - id: "SLOP-GFX-003"
+      name: "Muddy Linear RGB Gradient Bleed"
+      tell: "Complementary gradients (e.g. blue to orange) turning into dirty sewage gray in the middle."
+      dont: "DO NOT interpolate opposite color wheel hues without an intermediary saturation stop."
+      do: "Add a vivid intermediate color stop (e.g. blue -> violet -> warm red -> orange) or use analog palettes."
+
+    - id: "SLOP-GFX-004"
+      name: "Melting Outlines & Open Body Shapes"
+      tell: "Line art dissolves midway into background shading or textures; outlines fail to form closed hulls."
+      dont: "DO NOT output vector illustrations with unclosed silhouettes or bleeding contour strokes."
+      do: "Maintain strict contour enclosure separating foreground figures, specular highlights, and backdrop."
+
+    - id: "SLOP-GFX-005"
+      name: "Depth-Collapsing Visual Tangents"
+      tell: "Foreground contours align exactly with horizon lines or background architectural edges, flattening 3D space."
+      dont: "NEVER allow edges from different spatial depths to graze or share a 2D line."
+      do: "Enforce decisive geometric overlap or generous separation between spatial planes."
+
+    - id: "SLOP-GFX-006"
+      name: "Polycentric Vanishing Points"
+      tell: "Architecture and patterns with conflicting perspective axes and staircases ending abruptly at walls."
+      dont: "DO NOT mix disparate perspective horizons within the same architectural scene."
+      do: "Construct rigorous 1-point, 2-point, or axonometric isometric perspective projection grids."
+
+    - id: "SLOP-GFX-007"
+      name: "Senseless Non-Functional Greebling"
+      tell: "Dense mechanical greebles (hoses ending in blank metal, gears with mismatched teeth, blocked joints)."
+      dont: "DO NOT clutter mechanical surfaces with purposeless pseudo-engineering debris."
+      do: "Design with functional mechanical plausibility: ensure pivot clearances, cable paths, and resting surfaces."
+
+    - id: "SLOP-GFX-008"
+      name: "Atmospheric Distance Collapse"
+      tell: "Distant mountains or skylines rendered with razor-sharp edges and 100% foreground contrast/saturation."
+      dont: "DO NOT render backgrounds with identical sharpness and chromatic saturation as foreground heroes."
+      do: "Honor atmospheric physics: diminish contrast, soften edges, and introduce cool tinting at distance."
+
+  photography_and_scenic:
+    - id: "SLOP-PHOTO-001"
+      name: "Porcelain Wax Museum Skin & Ringlight Eyes"
+      tell: "Poreless plastic skin, perfect radial ringlight reflections in both eyes, artificial dental veneer grins."
+      dont: "DO NOT render smooth plastic human faces or perfectly centered ringlight catchlights."
+      do: "Demand realistic skin pores, natural facial asymmetry, 400 ISO film grain, and directional window light."
+
+    - id: "SLOP-PHOTO-002"
+      name: "Toxic Orange-Teal God-Rays Overdrive"
+      tell: "Blinding volumetric sunbeams with airborne golden dust motes and intense teal shadow tinting."
+      dont: "DO NOT default to cinematic golden hour and Hollywood blockbuster orange/teal."
+      do: "Explore overcast daylight, diffused Nordic shadows, editorial cool daylight, or honest flash photography."
+
+    - id: "SLOP-PHOTO-003"
+      name: "Creamy Gaussian Tilt-Shift Mush"
+      tell: "Background obliterated into abstract creamy soup with fuzzy, inconsistent edge cutouts."
+      dont: "DO NOT destroy background context with f/1.2 blur overkill to hide environment details."
+      do: "Use f/8 to f/11 deep depth-of-field where architecture and workspace context remain crisp and tell a story."
+
+    - id: "SLOP-PHOTO-005"
+      name: "Catchlight Divergence & Polyhedral Pupils"
+      tell: "Divergent light reflection shapes in left vs right eye; irregularly warped or frayed pupil outlines."
+      dont: "DO NOT deploy portraits with discordant eye catchlights or non-circular pupil geometry."
+      do: "Verify catchlight fidelity at 400% zoom: light source reflection must align across both corneas."
+
+    - id: "SLOP-PHOTO-006"
+      name: "Monolithic Tooth Bar (Piano Key Smile)"
+      tell: "Teeth depicted as a single contiguous plastic bar lacking interdental spaces and natural anatomy."
+      dont: "DO NOT tolerate gapless monolithic dental bars in business stock imagery."
+      do: "Require authentic dental morphology with distinct crown widths, natural shadows, and individual spacing."
+
+    - id: "SLOP-PHOTO-007"
+      name: "Contact Shadow Deficit (Floating Object Syndrome)"
+      tell: "Feet, furniture, or held objects lack dark ambient occlusion contact shadows, floating unanchored."
+      dont: "DO NOT use images where subjects float without physical surface anchoring."
+      do: "Insist on realistic ambient occlusion contact shadows directly under all load-bearing points."
+
+  typography_and_layout:
+    - id: "SLOP-TYPE-001"
+      name: "Inter/Roboto Monoculture"
+      tell: "Defaulting to neutral sans-serif everywhere with zero editorial pairing or stylistic tension."
+      dont: "NEVER use default Inter for everything without deliberate pairing."
+      do: "Pair high-personality display type (e.g. 'Cabinet Grotesk', 'Playfair', 'Space Grotesk') with utilitarian body."
+
+    - id: "SLOP-TYPE-002"
+      name: "Centered Multi-Line Body Paragraphs"
+      tell: "Centering 4-line prose paragraphs, destroying the reader's left-eye scanning anchor."
+      dont: "NEVER center-align body text paragraphs longer than 2 lines."
+      do: "Always left-align multi-line text (align: left;). Center only single-line badges and heroic H1s."
+
+    - id: "SLOP-TYPE-003"
+      name: "Low-Contrast Ghost Text"
+      tell: "Fließtext in #555555 on dark gray #1A1A1A, failing accessibility standards."
+      dont: "DO NOT use body text with contrast ratio < 4.5:1."
+      do: "Use minimum #94A3B8 (Slate 400) or #A1A1AA (Zinc 400) on dark surfaces."
+
+    - id: "SLOP-TYPE-004"
+      name: "Unspaced All-Caps Squeeze"
+      tell: "UPPERCASE labels, badges, or headlines with normal/negative letter-spacing sticking together."
+      dont: "NEVER emit all-caps text without positive letter-spacing."
+      do: "Always add tracking: letter-spacing: 0.08em; to 0.15em; for uppercase tokens."
+
+    - id: "SLOP-TYPE-005"
+      name: "Deformed Counters & Asymmetric Serifs"
+      tell: "Melted/closed counters (Punzen) in 'e'/'a'/'o'; serifs sharp on one side and clubbed/bulbous on the other."
+      dont: "NEVER use synthetic logo text with corrupted letter counters or asymmetric serif mutations."
+      do: "Rely exclusively on genuine digital typefaces with rigorously verified glyph vector contours."
+
+    - id: "SLOP-TYPE-006"
+      name: "Kerning Collapse & Baseline Drift"
+      tell: "Erratic glyph spacing within a single word; letters drifting off the baseline or tilting off-axis."
+      dont: "DO NOT accept chaotic glyph collisions or variable stem widths on symmetrical letters (M, W, H)."
+      do: "Use mathematical typography engines and standard font kerning tables with strict baseline alignment."
+
+    - id: "SLOP-TYPE-007"
+      name: "Baked-Text Trap (Destroyed Type Layers)"
+      tell: "Text baked irreversibly into flat pixels or broken path vectors, preventing native editing."
+      dont: "NEVER export text as flattened pixels or uneditable vector soup in production PSDs/assets."
+      do: "Retain native TOAD text nodes mapped to live Photoshop Type Layers (TySh) with synced fonts in 'fonts/'."
+
+    - id: "SLOP-TYPE-008"
+      name: "Floating Text Pill Syndrome (Top-Baseline Clinging)"
+      tell: "Text inside compact pills, badges, or buttons sitting 2-4px too high due to uncompensated top-baseline font metrics."
+      dont: "NEVER rely on raw bounding box centering without verifying glyph optical vertical alignment against container borders."
+      do: "Apply optical Cap-Height Offset (+1.5px to +2.5px at 1x; +3px to +5px at 2x) or run pixel-scan verification so (topGap == botGap)."
+
+  frontend_dom_and_code:
+    - id: "SLOP-CODE-001"
+      name: "Tailwind Paradoxical Conflicts"
+      tell: "Conflicting classes in the same tag (p-4 and px-6; block combined with flex)."
+      dont: "DO NOT emit conflicting Tailwind utility overrides."
+      do: "Clean up class lists and extract semantic sub-components."
+
+    - id: "SLOP-CODE-002"
+      name: "Div-Soup & Zero HTML5 Semantics"
+      tell: "Hundreds of nested <div>/<span> elements with zero <main>, <header>, <nav>, or <section>."
+      dont: "NEVER build an entire page layout out of raw <div> tags."
+      do: "Use strict HTML5 semantics (<header>, <main>, <nav>, <section>, <article>, <footer>)."
+
+    - id: "SLOP-CODE-003"
+      name: "Fake-Buttons (div onclick)"
+      tell: "Clickable elements rendered as <div onclick> or <a href='#'> instead of <button>."
+      dont: "NEVER use <div> or <span> as clickable button replacements."
+      do: "Always use native semantic <button> elements with full keyboard focusability."
+
+    - id: "SLOP-CODE-004"
+      name: "Inline-SVG Flooding"
+      tell: "40- to 80-line raw SVG vector paths duplicated dozens of times directly in HTML body."
+      dont: "DO NOT paste repetitive inline SVG code blocks across DOM templates."
+      do: "Use unified icon systems (Lucide, Heroicons, Phosphor) or TOAD component symbols."
+
+    - id: "SLOP-CODE-005"
+      name: "Unicode-Emoji Cheap Substitution"
+      tell: "Raw system emojis (🚀, ✨, ⚡, 🎯) used as tile icons, bullets, or dividers."
+      dont: "NEVER use raw emojis as UI icons in business software."
+      do: "Use calibrated vector icons with consistent 1.5px stroke weight."
+
+    - id: "SLOP-CODE-006"
+      name: "Trivial 'What-It-Does' Code Comments"
+      tell: "Comments like '// Function to handle form submission' or '// Set active state to true'."
+      dont: "DO NOT emit obvious, redundant code comments."
+      do: "Comment only the architectural rationale, domain 'why', and complex edge-case math."
+
+  interaction_and_runtime:
+    - id: "SLOP-RUN-001"
+      name: "Mock-State Illusion (Fake Backend)"
+      tell: "Forms and search inputs show success modal but fire zero network requests in DevTools."
+      dont: "DO NOT create purely local mocked state without real API error/loading handling."
+      do: "Model full state machines: pending, network errors, validation, and real payloads."
+
+    - id: "SLOP-RUN-002"
+      name: "Static Array Filter Mocking"
+      tell: "Search bars filtering 3 hardcoded dummy items; zero handling for empty results or pagination."
+      dont: "DO NOT implement happy-path-only client array filters."
+      do: "Implement realistic empty states, debounce handling, and pagination."
+
+    - id: "SLOP-RUN-003"
+      name: "Accessibility Outline Sabotage"
+      tell: "focus-visible removed via 'outline: none'; dummy alt='hero image'; inputs without <label for>."
+      dont: "NEVER remove keyboard focus outlines without a high-contrast accessible ring alternative."
+      do: "Enforce WCAG 2.2 AA compliance, semantic labels, and keyboard accessibility."
+
+    - id: "SLOP-RUN-004"
+      name: "Responsive Mid-Breakpoint Collapse"
+      tell: "Layouts breaking on tablets (768-1024px) or ultrawide (>1920px) with horizontal scrollbars."
+      dont: "DO NOT code fixed pixel wrappers that assume only 390px or 1440px viewports."
+      do: "Design fluid layouts with max-width boundaries and relational flex/stack math."
+
+    - id: "SLOP-RUN-005"
+      name: "Em-Dash Inflation (—)"
+      tell: "Excessive em-dashes in titles ('Scale faster — with no effort — using smart AI')."
+      dont: "DO NOT overuse rhetorical em-dashes (—) in German and English copy."
+      do: "Use natural, grounded sentence structure with standard punctuation."
+
+  assets_and_compliance:
+    - id: "SLOP-ASSET-001"
+      name: "Unsplash Parameter Signature & placehold.co"
+      tell: "Raw URLs containing 'auto=format&fit=crop&w=800&q=80' or placehold.co in production."
+      dont: "NEVER leave external stock photo parameters or placeholder domains in final code."
+      do: "Use local WebP/AVIF assets or native TOAD vectors."
+
+    - id: "SLOP-ASSET-002"
+      name: "Google Fonts Remote Streaming (GDPR Violation)"
+      tell: "Streaming fonts from fonts.googleapis.com instead of local hosting."
+      dont: "DO NOT stream fonts directly from Google servers in EU jurisdictions."
+      do: "Self-host all font files locally via @font directives."
+
+    - id: "SLOP-ASSET-003"
+      name: "Dead OpenGraph Previews"
+      tell: "og:image pointing to non-existent /og.png resulting in 404s."
+      dont: "DO NOT declare ghost OG images that fail to resolve."
+      do: "Always generate and test actual 1200x630px social cards."
+
+    - id: "SLOP-ASSET-004"
+      name: "Dummy Remnants (+1 555 / example.com)"
+      tell: "Footer displaying contact@company.com, +1 (555) 0123, or hardcoded outdated copyright year."
+      dont: "NEVER ship templates containing unlocalized dummy contact information."
+      do: "Use realistic localized contact formats and dynamic dates."
+
+    - id: "SLOP-ASSET-005"
+      name: "Phantom Executives & Fake Testimonials"
+      tell: "Praising quotes from 'VP of Tech at CloudCore' with nonexistent LinkedIn profiles."
+      dont: "DO NOT hallucinate fictional executive endorsements."
+      do: "Use verifiable case studies or grounded user problem statements."
+
+    - id: "SLOP-LAW-001"
+      name: "EU AI Act Art. 50 Disclosure Requirement (August 2026)"
+      tell: "Commercial publication of photorealistic AI media without machine/human-readable labels."
+      dont: "DO NOT deploy AI-generated photorealistic imagery in the EU without proper disclosure."
+      do: "Comply with EU AI Act Art. 50 transparency requirements (labels and C2PA manifests)."
+
+  icons_and_textures:
+    - id: "SLOP-ICON-001"
+      name: "Heterogeneous Icon Sets & Stroke Inconsistency"
+      tell: "Stroke weights jump erratically between 1.0px, 2.0px, and 3.5px within the same icon family."
+      dont: "DO NOT mix different stroke weights or line styles across icons in the same interface."
+      do: "Standardize stroke width (e.g. 1.5px or 2.0px on 24x24 grid) across the entire icon family."
+
+    - id: "SLOP-ICON-002"
+      name: "Projection Fractures & Mixed Corner Joins"
+      tell: "Orthogonal 2D icons placed alongside isometric 2.5D icons; miter, round, and bevel joins mixed."
+      dont: "DO NOT combine 2D flat icons with 3D/isometric icons or alternate join styles."
+      do: "Maintain uniform projection (100% 2D frontal or 100% isometric) and consistent corner rounding."
+
+    - id: "SLOP-ICON-003"
+      name: "Wandering Light Origins in Icon Series"
+      tell: "Shadows and highlights cast in random directions across icons in the same navigation bar."
+      dont: "DO NOT design shaded icon series without a global synchronized light angle."
+      do: "Establish a single virtual light source (e.g. 45° top-left) for all rendered icon highlights."
+
+    - id: "SLOP-TEX-001"
+      name: "Baked Photoshop Checkerboard Artifact"
+      tell: "Opaque image contains gray-and-white transparency checkerboard painted directly into color pixels."
+      dont: "NEVER output images with fake transparency checkerboards burned into bitmap pixels."
+      do: "Ensure real PNG/WebP alpha channels that cleanly reveal whatever background sits beneath."
+
+    - id: "SLOP-TEX-002"
+      name: "Fringing & Edge Halo Defect (Matting Contamination)"
+      tell: "Dirty gray/white edge halos around cutouts caused by poor antialiasing against original canvas."
+      dont: "DO NOT use masked assets with dirty halo fringing around their contours."
+      do: "Use clean alpha clipping masks or native mathematical vector hulls with zero background bleed."
+
+    - id: "SLOP-TEX-003"
+      name: "Tiling Seams in Seamless Patterns"
+      tell: "Pattern repeats show visible edge seams, mismatching lines, or brightness banding in a 3x3 grid."
+      dont: "DO NOT declare textures seamless without verifying periodic boundary matching."
+      do: "Pass the 3x3 Tiling Test: ensure pixel-perfect continuity across horizontal and vertical seams."
+
+    - id: "SLOP-TEX-004"
+      name: "Sub-Perceptual Color Noise on Flat Fills"
+      tell: "Surfaces appearing flat (#FFF / #000) reveal thousands of micro-noise artifacts under contrast boost."
+      dont: "DO NOT import rasterized flat fills with residual diffusion noise."
+      do: "Use pure mathematical TOAD hex color tokens (fill: #FFFFFF;) for vector backgrounds."
+
+forensic_audit_matrix:
+  ko_criteria_immediate_rejection:
+    - "Dense node clustering: 40-200+ chaotic points per curve in vector logos (Ctrl+Y wireframe check)."
+    - "Deformed letter counters (punzen) or asymmetric mutated serifs in brand typography."
+    - "Snapping interactive states without transition easing or dead '#' navigation links."
+    - "Melting vector outlines that dissolve midway into background shading."
+    - "Heterogeneous stroke weights (1px mixed with 3.5px) within an icon set."
+    - "Baked Photoshop transparency checkerboard pattern rendered into opaque image pixels."
+    - "Visible seams or brightness steps during 3x3 tiling of seamless textures."
+    - "Catchlight divergence or polyhedral/frayed pupils in portrait photography."
+
+  heavy_suspicion_requires_audit:
+    - "Functional collapse: logo illegible at 16x16px favicon scale or destroyed in 1-bit monochrome."
+    - "Impossible 3D geometry: self-intersecting ribbons with illogical light shading."
+    - "Purposeless 3-4px left-edge accent stripe on cards combined with cookie-cutter Tailwind defaults."
+    - "Editorial faker italic serif word break inside an otherwise clean sans-serif headline."
+    - "Uncontrolled spacing values breaking an established 8pt token grid."
+    - "Visual tangents where foreground contours share exact 2D coordinates with background horizons."
+    - "Non-functional mechanical greebling with cables, gears, or pistons that cannot physically work."
+
+

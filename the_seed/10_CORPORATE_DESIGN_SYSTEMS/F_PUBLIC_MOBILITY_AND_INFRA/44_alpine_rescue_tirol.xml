@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<corporate_design id="alpine_rescue_tirol" industry_domain="public_mobility_and_infra" category="F_PUBLIC_MOBILITY_AND_INFRA" version="1.0">
+  <brand_meta>
+    <company_name>Bergrettung Tirol Notruf 140</company_name>
+    <product_name>Alpine Luftrettung &amp; Lawineneinsatz</product_name>
+    <industry>Notfallrettung &amp; Katastrophenschutz</industry>
+    <profile>Einsatzleitstelle für Hubschrauberbergungen in Fels und Schnee bei extremen Wetterlagen.</profile>
+    <tone_of_voice>Herzergreifend tapfer, lebensrettend, präzise auf Koordinaten, hochalpin.</tone_of_voice>
+  </brand_meta>
+
+  <tags>
+    <tag>bergrettung</tag>
+    <tag>notruf</tag>
+    <tag>signalorange</tag>
+    <tag>alpen</tag>
+    <tag>hubschrauber</tag>
+  </tags>
+
+  <design_tokens>
+    <colors>
+      <color token="rescueOrange" hex="#FF5500" role="Signalfarbe in Schnee und Nebel" />
+      <color token="graniteDark" hex="#1E293B" role="Alpiner Fels" />
+      <color token="snowWhite" hex="#FFFFFF" role="Schneegipfel" />
+    </colors>
+    <typography>
+      <primary_font>&quot;Anton&quot;, &quot;Inter&quot;, sans-serif</primary_font>
+      <h1 scale="Bold (900), 38px" />
+      <body scale="Regular (400), 14px, Color #FFFFFF" />
+    </typography>
+    <geometry>
+      <card_radius>4px</card_radius>
+      <button_radius>2px</button_radius>
+      <grid_gap>16px</grid_gap>
+    </geometry>
+    <shadows>
+      <ambient>none</ambient>
+    </shadows>
+  </design_tokens>
+
+  <brand_rules>
+    <dos>
+      <do>Leuchtendes Notruf-Orange (#FF5500) und Notrufnummer 140 dominant zeigen.</do>
+    </dos>
+    <donts>
+      <dont>Keine unleserlichen Design-Experimente.</dont>
+    </donts>
+  </brand_rules>
+
+  <toad_component_blueprint lang="toad"><![CDATA[
+canvas {
+  size: 900px 580px;
+  fill: #1E293B;
+  font-family: "Anton, sans-serif";
+}
+
+>orange = #FF5500;
+>white = #FFFFFF;
+
+rect #rescuePanel {
+  at: center of canvas;
+  size: 800px 480px;
+  fill: #0F172A;
+  stroke: >orange;
+  stroke-width: 4px;
+}
+
+text #notrufNumber {
+  at: top left of #rescuePanel offset 36px 36px;
+  content: "NOTRUF 140 // BERGRETTUNG TIROL";
+  font-size: 18px;
+  font-weight: 900;
+  color: >orange;
+}
+
+text #missionHeadline {
+  at: below #notrufNumber offset 20px;
+  content: "Einsatzbereit bei Sturm, Schnee & Steilwand";
+  font-size: 36px;
+  font-weight: 900;
+  color: >white;
+}
+  ]]></toad_component_blueprint>
+
+  <routing_triggers>
+    <trigger>mountain rescue styleguide</trigger>
+    <trigger>alpine emergency brand</trigger>
+    <trigger>search and rescue poster</trigger>
+    <trigger>bergrettung</trigger>
+    <trigger>helicopter medical banner</trigger>
+  </routing_triggers>
+</corporate_design>

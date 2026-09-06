@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<corporate_design id="zimmerei_eichenlaub" industry_domain="industry_and_craft" category="B_INDUSTRY_AND_CRAFT" version="1.0">
+  <brand_meta>
+    <company_name>Zimmerei &amp; Holzbau Eichenlaub</company_name>
+    <product_name>Traditioneller Dachstuhl- &amp; Fachwerkbau</product_name>
+    <industry>Handwerk / Zimmerei</industry>
+    <profile>Inhabergeführter Meisterbetrieb in dritter Generation. Fachwerkrestaurierung und Hallenbau.</profile>
+    <tone_of_voice>Ehrlich, handschlagtreu, handwerklich meisterhaft, regional verwurzelt.</tone_of_voice>
+  </brand_meta>
+
+  <tags>
+    <tag>zimmerei</tag>
+    <tag>handwerk</tag>
+    <tag>fachwerk</tag>
+    <tag>holztöne</tag>
+    <tag>meisterbetrieb</tag>
+  </tags>
+
+  <design_tokens>
+    <colors>
+      <color token="timberDark" hex="#261C14" role="Altholz-Dunkelbraun" />
+      <color token="amberGlow" hex="#D97706" role="Frisches Hobelspangold" />
+      <color token="creamPaper" hex="#FAF6EF" role="Angebotspapier-Weiß" />
+      <color token="brickRed" hex="#991B1B" role="Ziegeldach-Rot" />
+    </colors>
+    <typography>
+      <primary_font>&quot;Barlow&quot;, serif</primary_font>
+      <h1 scale="Bold (700), 34px" />
+      <body scale="Regular (400), 15px, Color #261C14" />
+    </typography>
+    <geometry>
+      <card_radius>4px</card_radius>
+      <button_radius>4px</button_radius>
+      <grid_gap>16px</grid_gap>
+    </geometry>
+    <shadows>
+      <ambient>none</ambient>
+    </shadows>
+  </design_tokens>
+
+  <brand_rules>
+    <dos>
+      <do>Zunftzeichen und Hobelspan-Gold (#D97706) als Stolz des Handwerks zeigen.</do>
+      <do>Traditionelle Zimmerer-Begriffe sauber gliedern.</do>
+    </dos>
+    <donts>
+      <dont>Keine sterilen Digital-Icons.</dont>
+      <dont>Keine kühlen Tech-Blautöne.</dont>
+    </donts>
+  </brand_rules>
+
+  <toad_component_blueprint lang="toad"><![CDATA[
+canvas {
+  size: 880px 580px;
+  fill: #FAF6EF;
+  font-family: "Barlow, serif";
+}
+
+>timber = #261C14;
+>gold = #D97706;
+>brick = #991B1B;
+
+rect #guildCard {
+  at: center of canvas;
+  size: 800px 480px;
+  fill: #FFFFFF;
+  stroke: >timber;
+  stroke-width: 2px;
+  radius: 4px;
+}
+
+text #guildTitle {
+  at: top center of #guildCard offset 0px 40px;
+  content: "ZIMMEREI EICHENLAUB • SEIT 1954";
+  font-size: 16px;
+  font-weight: 700;
+  color: >gold;
+}
+
+text #mainMotto {
+  at: below #guildTitle offset 16px;
+  content: "Gekonntes Holzhandwerk & Fachwerk-Restaurierung";
+  font-size: 26px;
+  font-weight: 700;
+  color: >timber;
+}
+
+text #serviceDetails {
+  at: below #mainMotto offset 20px;
+  size: 680px;
+  content: "Dachstühle • Carports • Gauben • Altbausanierung mit Eichenholz aus heimischer Forstwirtschaft.";
+  font-size: 15px;
+  color: #4A3A2E;
+}
+  ]]></toad_component_blueprint>
+
+  <routing_triggers>
+    <trigger>carpentry brand identity</trigger>
+    <trigger>craftsman styleguide</trigger>
+    <trigger>timber framing poster</trigger>
+    <trigger>zimmerei eichenlaub</trigger>
+    <trigger>artisan woodworker banner</trigger>
+  </routing_triggers>
+</corporate_design>

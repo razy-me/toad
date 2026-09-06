@@ -96,6 +96,7 @@ export interface ComputedStyle {
   hangingPunctuation?: boolean;
   backdropFilter?: string;
   verticalAlign?: 'top' | 'middle' | 'bottom';
+  trim?: 'cap' | 'both' | 'start' | 'end' | 'none';
   fillOpacity?: number;
   layerColor?: 'none' | 'red' | 'orange' | 'yellow' | 'green' | 'blue' | 'violet' | 'gray';
   lock?: 'all' | 'position' | 'transparency' | 'composite';
@@ -115,11 +116,18 @@ export interface TextLayoutResult {
   fontStyle: string;
   ascent: number;
   descent: number;
+  actualAscent?: number;
+  actualDescent?: number;
+  capHeight?: number;
+  opticalCenterOffset?: number;
+  fontBoundingBoxAscent?: number;
+  fontBoundingBoxDescent?: number;
 }
 
 export interface LayoutNode {
   id?: string;
   name: string;
+  isSyntheticId?: boolean;
   type: 'rect' | 'circle' | 'polygon' | 'path' | 'text' | 'image' | 'adjust' | 'group' | 'grid' | 'stack' | 'icon' | 'star' | 'triangle' | 'arrow' | 'cross' | 'shape' | 'slot';
   box: LayoutBox;
   style: ComputedStyle;
@@ -433,6 +441,7 @@ export function layoutText(
     explicitWidth?: number;
     maxLines?: number;
     overflow?: 'visible' | 'hidden' | 'ellipsis' | 'clip';
+    trim?: 'cap' | 'both' | 'start' | 'end' | 'none';
   }
 ): TextLayoutResult {
   const fontSize = style.fontSize || 16;
@@ -453,7 +462,11 @@ export function layoutText(
       fontWeight,
       fontStyle,
       ascent: 0,
-      descent: 0
+      descent: 0,
+      actualAscent: 0,
+      actualDescent: 0,
+      capHeight: 0,
+      opticalCenterOffset: 0
     };
   }
 
@@ -490,6 +503,33 @@ export function layoutText(
 
   let maxAscent = Math.round(fontSize * 0.8);
   let maxDescent = Math.round(fontSize * 0.2);
+  let maxActualAscent = 0;
+  let maxActualDescent = 0;
+  let fontBoundingBoxAscent = 0;
+  let fontBoundingBoxDescent = 0;
+
+  const sampleMetrics = (str: string) => {
+    if (!str) return;
+    const m = ctx.measureText(str);
+    if (m.actualBoundingBoxAscent !== undefined && m.actualBoundingBoxAscent > maxActualAscent) {
+      maxActualAscent = m.actualBoundingBoxAscent;
+    }
+    if (m.actualBoundingBoxDescent !== undefined && m.actualBoundingBoxDescent > maxActualDescent) {
+      maxActualDescent = m.actualBoundingBoxDescent;
+    }
+    if (m.fontBoundingBoxAscent !== undefined && m.fontBoundingBoxAscent > fontBoundingBoxAscent) {
+      fontBoundingBoxAscent = m.fontBoundingBoxAscent;
+    }
+    if (m.fontBoundingBoxDescent !== undefined && m.fontBoundingBoxDescent > fontBoundingBoxDescent) {
+      fontBoundingBoxDescent = m.fontBoundingBoxDescent;
+    }
+    if (m.actualBoundingBoxAscent && m.actualBoundingBoxAscent > maxAscent) {
+      maxAscent = m.actualBoundingBoxAscent;
+    }
+    if (m.actualBoundingBoxDescent && m.actualBoundingBoxDescent > maxDescent) {
+      maxDescent = m.actualBoundingBoxDescent;
+    }
+  };
 
   // Case A: No explicit width -> No auto-wrapping (preserve lines)
   if (style.explicitWidth === undefined || style.explicitWidth <= 0) {
@@ -498,26 +538,43 @@ export function layoutText(
       finalLines.push(para);
       const w = measure(para);
       if (w > maxWidth) maxWidth = w;
-      const metrics = ctx.measureText(para);
-      if (metrics.actualBoundingBoxAscent && metrics.actualBoundingBoxAscent > maxAscent) {
-        maxAscent = metrics.actualBoundingBoxAscent;
-      }
-      if (metrics.actualBoundingBoxDescent && metrics.actualBoundingBoxDescent > maxDescent) {
-        maxDescent = metrics.actualBoundingBoxDescent;
-      }
+      sampleMetrics(para);
+    }
+
+    const capHeight = maxActualAscent || Math.round(fontSize * 0.7);
+    const opticalCenterOffset = (maxActualAscent - maxActualDescent) / 2;
+
+    let computedHeight: number;
+    if (style.trim === 'cap') {
+      computedHeight = finalLines.length > 1
+        ? (finalLines.length - 1) * lineHeight + capHeight
+        : capHeight;
+    } else if (style.trim === 'both') {
+      const glyphH = (maxActualAscent + maxActualDescent) || Math.round(fontSize * 0.9);
+      computedHeight = finalLines.length > 1
+        ? (finalLines.length - 1) * lineHeight + glyphH
+        : glyphH;
+    } else {
+      computedHeight = Math.max(finalLines.length * lineHeight, Math.ceil(maxAscent + maxDescent));
     }
 
     return {
       lines: finalLines,
       width: Math.ceil(maxWidth),
-      height: Math.max(finalLines.length * lineHeight, Math.ceil(maxAscent + maxDescent)),
+      height: computedHeight,
       lineHeight,
       fontSize,
       fontFamily,
       fontWeight,
       fontStyle,
       ascent: maxAscent,
-      descent: maxDescent
+      descent: maxDescent,
+      actualAscent: maxActualAscent,
+      actualDescent: maxActualDescent,
+      capHeight,
+      opticalCenterOffset,
+      fontBoundingBoxAscent,
+      fontBoundingBoxDescent
     };
   }
 
@@ -543,17 +600,9 @@ export function layoutText(
     finalLines.push(currentLine);
   }
 
-  // Sample real glyph extents across the wrapped lines (Case B previously
-  // kept the crude 0.8/0.2 font-size estimates).
+  // Sample real glyph extents across the wrapped lines
   for (const line of finalLines) {
-    if (!line) continue;
-    const metrics = ctx.measureText(line);
-    if (metrics.actualBoundingBoxAscent && metrics.actualBoundingBoxAscent > maxAscent) {
-      maxAscent = metrics.actualBoundingBoxAscent;
-    }
-    if (metrics.actualBoundingBoxDescent && metrics.actualBoundingBoxDescent > maxDescent) {
-      maxDescent = metrics.actualBoundingBoxDescent;
-    }
+    sampleMetrics(line);
   }
 
   let outLines = finalLines;
@@ -576,18 +625,41 @@ export function layoutText(
     if (lw > actualMaxW) actualMaxW = lw;
   }
 
+  const capHeight = maxActualAscent || Math.round(fontSize * 0.7);
+  const opticalCenterOffset = (maxActualAscent - maxActualDescent) / 2;
+
+  let computedHeight: number;
+  if (style.trim === 'cap') {
+    computedHeight = outLines.length > 1
+      ? (outLines.length - 1) * lineHeight + capHeight
+      : capHeight;
+  } else if (style.trim === 'both') {
+    const glyphH = (maxActualAscent + maxActualDescent) || Math.round(fontSize * 0.9);
+    computedHeight = outLines.length > 1
+      ? (outLines.length - 1) * lineHeight + glyphH
+      : glyphH;
+  } else {
+    computedHeight = Math.max(outLines.length * lineHeight, Math.ceil(maxAscent + maxDescent));
+  }
+
   return {
     lines: outLines,
     width: maxW,
     actualWidth: Math.ceil(actualMaxW),
-    height: Math.max(outLines.length * lineHeight, Math.ceil(maxAscent + maxDescent)),
+    height: computedHeight,
     ascent: maxAscent,
     descent: maxDescent,
     fontSize,
     lineHeight,
     fontFamily,
     fontWeight,
-    fontStyle
+    fontStyle,
+    actualAscent: maxActualAscent,
+    actualDescent: maxActualDescent,
+    capHeight,
+    opticalCenterOffset,
+    fontBoundingBoxAscent,
+    fontBoundingBoxDescent
   };
 }
 
@@ -869,7 +941,8 @@ export class LayoutSolver {
         textTransform: elem.font?.textTransform ?? elem.textTransform,
         explicitWidth: textWidthLimit,
         maxLines: (elem as any).maxLines,
-        overflow: (elem as any).overflow
+        overflow: (elem as any).overflow,
+        trim: (elem as any).trim
       });
       w = typeof wRaw === 'number' && wRaw > 0 ? wRaw : tLayout.width;
       const hasExplicitHeight = (elem as any)._hasExplicitHeight || (typeof hRaw === 'number' && hRaw > 0 && hRaw !== wRaw);
@@ -1064,7 +1137,8 @@ export class LayoutSolver {
         textTransform: elem.font?.textTransform ?? elem.textTransform,
         explicitWidth: textWidthLimit,
         maxLines: (elem as any).maxLines,
-        overflow: (elem as any).overflow
+        overflow: (elem as any).overflow,
+        trim: (elem as any).trim
       });
       h = resolveDimension(elem.size?.h, parentH, tLayout.height);
     }
@@ -1118,6 +1192,9 @@ export class LayoutSolver {
             case 'center of':
               x = targetBox.x + (targetBox.w - w) / 2 + ox;
               y = targetBox.y + (targetBox.h - h) / 2 + oy;
+              if (elem.type === 'text' && (elem as any).verticalAlign === undefined) {
+                (elem as any).verticalAlign = 'middle';
+              }
               break;
             case 'inside':
               x = targetBox.x + ox;
@@ -1328,7 +1405,12 @@ export class LayoutSolver {
           if (alignStr === 'center') cx += (effectiveCrossTotal - cw) / 2;
           else if (alignStr === 'end' || alignStr === 'right') cx += (effectiveCrossTotal - cw);
         } else {
-          if (alignStr === 'center') cy += (effectiveCrossTotal - ch) / 2;
+          if (alignStr === 'center') {
+            cy += (effectiveCrossTotal - ch) / 2;
+            if (child.type === 'text' && (child as any).verticalAlign === undefined) {
+              (child as any).verticalAlign = 'middle';
+            }
+          }
           else if (alignStr === 'end' || alignStr === 'bottom') cy += (effectiveCrossTotal - ch);
         }
 
@@ -1450,7 +1532,8 @@ export class LayoutSolver {
       fontVariation: elem.fontVariation || elem.font?.fontVariation,
       hangingPunctuation: elem.hangingPunctuation ?? elem.font?.hangingPunctuation,
       clip: elem.clip,
-      verticalAlign: ((elem as any).verticalAlign || undefined) as any,
+      verticalAlign: ((elem as any).verticalAlign || ((elem as any).trim ? 'middle' : undefined)) as any,
+      trim: ((elem as any).trim || undefined) as any,
       fillOpacity: elem.fillOpacity,
       layerColor: elem.layerColor,
       lock: elem.lock,
@@ -1483,7 +1566,8 @@ export class LayoutSolver {
         textTransform: style.textTransform,
         explicitWidth: box.w,
         maxLines: (elem as any).maxLines,
-        overflow: (elem as any).overflow
+        overflow: (elem as any).overflow,
+        trim: style.trim
       });
     } else if (elem.type === 'polygon' && elem.points && elem.points.length > 0) {
       let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
@@ -1559,9 +1643,13 @@ export class LayoutSolver {
       }
     }
 
+    const isSynthetic = !elem.id || elem.id.startsWith('__auto_') || (elem as any).isSyntheticId;
+    const resolvedName = elem.name || (!isSynthetic && elem.id ? elem.id : (elem.type || 'layer'));
+
     return {
       id: elem.id,
-      name: elem.name || elem.id || elem.type,
+      name: resolvedName,
+      isSyntheticId: Boolean(isSynthetic),
       type: elem.type,
       box,
       style,

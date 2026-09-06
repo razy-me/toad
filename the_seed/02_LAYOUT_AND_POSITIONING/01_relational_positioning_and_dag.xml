@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<specification module="01_relational_positioning_and_dag" target="toad-dsl" version="3.0">
+  <metadata>
+    <description>Relational anchoring grammar, directional relations, alignments, and 3-color DFS DAG solver</description>
+    <source_compiler_file>src/layout/dependencyGraph.ts</source_compiler_file>
+  </metadata>
+
+  <grammar_rule>
+    <![CDATA[at: <relation> <target> [offset <distance>] [align: <alignment>];]]>
+  </grammar_rule>
+
+  <relations>
+    <relation name="below" description="Places top edge of element below bottom edge of target" example="at: below #heroImage offset 24px;" />
+    <relation name="above" description="Places bottom edge of element above top edge of target" example="at: above #footer offset 16px;" />
+    <relation name="right of" description="Places left edge of element right of target right edge" example="at: right of #sidebar offset 32px;" />
+    <relation name="left of" description="Places right edge of element left of target left edge" example="at: left of #badge offset 12px;" />
+    <relation name="center of" description="Centers element along horizontal and vertical axes within target" example="at: center of canvas;" />
+    <relation name="inside" description="Anchors to an inner corner or edge of a container" example="at: top-left inside #container offset 16px;" />
+  </relations>
+
+  <special_targets>
+    <target name="#elementId" description="References any named element in the document" />
+    <target name="canvas" description="The root artboard viewport" />
+    <target name="parent" description="The containing group or stack" />
+    <target name="previous" description="The immediately preceding sibling in document order" />
+  </special_targets>
+
+  <syntax_guardrail severity="fatal">
+    <description>NEVER put a colon after the 'offset' keyword. Offset takes a space-delimited dimension.</description>
+    <good>at: below #title offset 16px;</good>
+    <bad reason="Unexpected token ':' after offset">at: below #title offset: 16px;</bad>
+  </syntax_guardrail>
+
+  <alignments>
+    <align name="left-edge / left" formula="x1 = x2" description="Aligns left boundaries" />
+    <align name="right-edge / right" formula="x1 + w1 = x2 + w2" description="Aligns right boundaries" />
+    <align name="center-x / center" description="Centers horizontally relative to target" />
+    <align name="top-edge / top" formula="y1 = y2" description="Aligns top boundaries" />
+    <align name="bottom-edge / bottom" formula="y1 + h1 = y2 + h2" description="Aligns bottom boundaries" />
+    <align name="center-y" description="Centers vertically relative to target" />
+  </alignments>
+
+  <dag_solver_and_cycles>
+    <algorithm>3-color Depth-First Search (DFS) topological sort: WHITE (unvisited), GRAY (in recursion stack), BLACK (resolved)</algorithm>
+    <cycle_prevention severity="fatal">
+      <description>Cycles between mutually dependent nodes throw Cyclic layout dependency error.</description>
+      <resolution>Anchor landmark root elements to absolute coords '(x, y)' or 'center of canvas', and chain dependents unidirectionally.</resolution>
+      <bad><![CDATA[
+rect #boxA { at: below #boxB offset 10px; }
+rect #boxB { at: below #boxA offset 10px; }
+      ]]></bad>
+    </cycle_prevention>
+  </dag_solver_and_cycles>
+</specification>

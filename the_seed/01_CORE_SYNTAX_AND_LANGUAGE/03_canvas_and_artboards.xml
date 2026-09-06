@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<specification module="03_canvas_and_artboards" target="toad-dsl" version="3.0">
+  <metadata>
+    <description>Canvas declaration syntax, artboards, dimensions, properties, and standard industrial presets</description>
+  </metadata>
+
+  <canvas_declaration>
+    <example><![CDATA[
+canvas "VeloraTentCard_Dark" {
+    size: 900px 1200px;
+    background: #101612;
+    font-family: "Agency FB", sans-serif;
+    export: all;
+    scales: [1, 2];
+    quality: 100;
+}
+    ]]></example>
+  </canvas_declaration>
+
+  <properties>
+    <property name="size" alias="dimensions" type="dimension_pair" example="1200px 630px">Canvas width and height</property>
+    <property name="width / height" type="dimension" example="800px">Explicit dimension overrides</property>
+    <property name="background" alias="fill" type="color_or_gradient">Root canvas background</property>
+    <property name="font-family" alias="font" type="string" example='"Inter"'>Document default font inherited by text elements lacking explicit font</property>
+    <property name="export" alias="exports" type="format_list" example="all, png, jpg, webp, svg, psd">Target export formats</property>
+    <property name="scales" alias="scale" type="number_array" example="[1, 2, 4]">Resolution export multipliers</property>
+    <property name="quality" alias="compression" type="number" range="1-100">JPEG/WebP export quality</property>
+    <property name="dpi" type="number" default="96" example="300">Resolution metadata for print workflows</property>
+    <property name="bleed" type="dimension" example="3mm">Extra edge margin outside the trim box</property>
+    <property name="crop-marks" type="boolean" example="true">Emits professional print registration and trim marks</property>
+    <property name="color-mode" type="enum" values="rgb, cmyk">Color profile for prepress</property>
+    <property name="preset" type="string" example='"og-image"'>Instant dimension presets</property>
+  </properties>
+
+  <industrial_presets>
+    <preset name="og-image" width="1200px" height="630px" target="OpenGraph social preview card" />
+    <preset name="banner" width="1920px" height="1080px" target="Standard 16:9 Full HD banner" />
+    <preset name="github-banner" width="1280px" height="640px" target="GitHub repo header (2:1)" />
+    <preset name="avatar" width="400px" height="400px" target="Square profile picture" />
+    <preset name="app-icon" width="1024px" height="1024px" target="App Store icon asset" />
+    <preset name="insta-post" width="1080px" height="1080px" target="Instagram Square Feed" />
+    <preset name="insta-story" width="1080px" height="1920px" target="Vertical 9:16 Story / Reel" />
+    <preset name="twitter-header" width="1500px" height="500px" target="X / Twitter header (3:1)" />
+    <preset name="a4" width="2480px" height="3508px" target="ISO A4 Portrait (300 DPI)" />
+    <preset name="a4-landscape" width="3508px" height="2480px" target="ISO A4 Landscape (300 DPI)" />
+  </industrial_presets>
+
+  <multi_artboard_rules>
+    <rule>Each canvas defines its own isolated coordinate space and element hierarchy.</rule>
+    <rule>Global variables and @font directives are shared across all canvases in the document.</rule>
+    <rule>CLI exports each canvas to matching filenames (e.g. CanvasName.png, CanvasName.svg).</rule>
+  </multi_artboard_rules>
+</specification>

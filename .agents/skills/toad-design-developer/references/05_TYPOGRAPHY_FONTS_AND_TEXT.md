@@ -129,3 +129,13 @@ Font fallback stacks must always be enclosed in a single string literal:
 * ✅ `>mainFont = "Inter, sans-serif";`
 * ❌ `>mainFont = "Inter", sans-serif;` *(Syntax error: unquoted commas in variable declarations)*
 
+---
+
+## 7. Mandatory Project `fonts/` Directory & Photopea Drag-and-Drop Workflow
+
+### In-Browser PSD Editing with Photopea:
+* Photopea operates in a secure web browser sandbox and cannot automatically query the local host OS font library.
+* **The AI Mandate**: Whenever generating or maintaining `.toad` projects, the AI MUST keep the local `./fonts/` directory completely up to date with the `.ttf` or `.otf` font binaries for all fonts used in the layout.
+* **Effortless Drag-and-Drop**: Users can drag and drop font files from `./fonts/` directly into the Photopea interface. Photopea instantly loads them into its memory font cache, ensuring that Photoshop Type Layers (`TySh`), custom font weights, kerning, tracking, and OpenType ligatures render identically with 0% font replacement errors.
+
+

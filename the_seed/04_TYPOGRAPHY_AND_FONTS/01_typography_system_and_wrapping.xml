@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<specification module="01_typography_system_and_wrapping" target="toad-dsl" version="3.0">
+  <metadata>
+    <description>Typographic layout model, font-size vs size bounding box, wrapping algorithms, and property reference</description>
+  </metadata>
+
+  <fundamental_distinction severity="fatal">
+    <rule name="font_size_vs_size">
+      <description>
+        'font-size: 24px;' controls typographic glyph scale.
+        'size: 400px;' (or 'width: 400px;') defines container bounding box width for multi-line word-wrapping.
+        Without size/width, text elements measure intrinsically and flow across a single continuous line.
+      </description>
+      <example><![CDATA[
+// 1. Single-line title (no wrapping)
+text #title {
+    at: (40px, 40px);
+    content: "Overview Dashboard";
+    font-size: 32px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+// 2. Multi-line body paragraph (wraps at 500px, hugs wrapped height)
+text #body {
+    at: below #title offset 12px;
+    content: "The declarative compiler converts structured AST nodes into production raster images.";
+    font-size: 15px;
+    line-height: 1.6;
+    color: #9EB0A3;
+    size: 500px hug;
+}
+      ]]></example>
+    </rule>
+  </fundamental_distinction>
+
+  <properties>
+    <property name="content / text" type="string" example='"Hello\nWorld"'>Raw text string; \n for line breaks</property>
+    <property name="font-family / font" type="string" example='"Inter"'>Font family or PostScript name</property>
+    <property name="font-size / fontSize" type="dimension" example="24px">Typographic glyph size</property>
+    <property name="font-weight / weight" type="number_or_keyword" example="700, bold">Weight alias or numeric 100-900</property>
+    <property name="font-style / style" values="normal, italic, oblique">Font slant variant</property>
+    <property name="line-height / lineHeight" type="multiplier_or_dimension" example="1.5, 24px">Baseline distance</property>
+    <property name="letter-spacing / tracking" type="dimension" example="-0.5px, 1.2px">Tracking distance between glyphs</property>
+    <property name="align / text-align" values="left, center, right, justify">Paragraph horizontal alignment</property>
+    <property name="verticalAlign" values="top, middle, bottom">Vertical positioning in fixed-height boxes</property>
+    <property name="text-transform" values="uppercase, lowercase, capitalize, none">Casing transformation</property>
+    <property name="maxLines" type="integer" example="2">Clamps maximum displayed lines</property>
+    <property name="overflow" values="ellipsis, clip">Truncates text with ellipsis (...)</property>
+  </properties>
+
+  <optical_centering_and_cap_height_invariants severity="high">
+    <rule name="badge_and_pill_vertical_centering">
+      <description>
+        2D Canvas/Skia text renderers position text at textBaseline = 'top', reserving space for ascenders and descenders.
+        In tight UI containers (pills, badges, buttons, status chips: h = 20px-34px), text consisting of capital letters or numbers without descenders (e.g. 'COMPILED • 0 ERRORS', '4-Pass Math') will mathematically align its bounding box to center, but OPTICALLY appear 2-3px too high.
+        To achieve true mathematical and optical dead-center alignment:
+        1. Always adjust the text y-position by a Cap-Height Offset: +1.5px to +2.5px (+3px to +5px @2x).
+        2. When pairing with SVG icons, align the visual center of the glyphs directly to the center of the icon bounds.
+      </description>
+      <verification_formula><![CDATA[
+Delta = (Text_minY - Container_minY) - (Container_maxY - Text_maxY)
+True center requires: |Delta| <= 0.5px. If Delta > 0.5px, shift text down.
+      ]]></verification_formula>
+      <example><![CDATA[
+// Pixel-perfect tab pill (24px height container)
+group #tabActive {
+    size: 96px 24px;
+    rect #tabBg { size: 96px 24px; radius: 4px; fill: alpha(#00f0ff, 0.12); at: (0px, 0px); }
+    // Text y = 10px instead of theoretical 7px to compensate for top-baseline ascent:
+    text #tabLabel { content: "banner.toad"; font-size: 11px; font-weight: 700; color: #00f0ff; at: (12px, 10px); }
+}
+      ]]></example>
+    </rule>
+  </optical_centering_and_cap_height_invariants>
+</specification>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<specification module="04_print_prepress_and_cmyk" target="toad-dsl" version="3.0">
+  <metadata>
+    <description>Print prepress box model, bleed boundaries, 300 DPI calculations, TAC limits, and Rich Black</description>
+  </metadata>
+
+  <box_model>
+    <boundary name="trim_box" description="Exact physical dimension of printed document after cutting (e.g. EU Business Card: 85x55mm, A4: 210x297mm)" />
+    <boundary name="bleed_box" description="Extra margin (typically 3mm or 0.125in) extending outward from trim line. Backgrounds MUST extend here to prevent white paper slivers." />
+    <boundary name="safe_zone" description="Inner margin (3-5mm inside trim line). Critical typography, logos, and QR codes must remain inside." />
+  </box_model>
+
+  <dpi_and_dimensions at="300_DPI">
+    <format name="EU Business Card (85x55mm)" trim="1004x650 px" bleed_3mm="1075x720 px" />
+    <format name="US Business Card (3.5x2.0in)" trim="1050x600 px" bleed_eighth_in="1125x675 px" />
+    <format name="ISO A4 Sheet (210x297mm)" trim="2480x3508 px" bleed_3mm="2551x3579 px" />
+    <formula_mm>Pixels = (Millimeters / 25.4) * DPI</formula_mm>
+    <formula_inch>Pixels = Inches * DPI</formula_inch>
+  </dpi_and_dimensions>
+
+  <cmyk_and_press_rules>
+    <gamut_mismatch>RGB colors with high saturation (neon green, electric cyan) cannot be reproduced in standard 4-color process inks.</gamut_mismatch>
+    <tac_limit max_tac="300%">Total Area Coverage (C% + M% + Y% + K%) must not exceed 300% on coated paper to prevent smearing.</tac_limit>
+    <pure_black c="0%" m="0%" y="0%" k="100%">Mandatory for all body text and thin lines to eliminate misregistration fringing.</pure_black>
+    <rich_black c="60%" m="40%" y="40%" k="100%" tac="240%">Used for solid dark backgrounds for deep, luxurious black without gray cast.</rich_black>
+  </cmyk_and_press_rules>
+</specification>

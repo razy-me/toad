@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<specification module="03_opentype_and_variable_fonts" target="toad-dsl" version="3.0">
+  <metadata>
+    <description>OpenType typographic feature flags and multi-axis Variable Font controls</description>
+  </metadata>
+
+  <opentype_features>
+    <example><![CDATA[
+text #financialTable {
+    content: "0123456789 — $1,420,950.00";
+    font-size: 20px;
+    font-features: "tnum" 1, "zero" 1, "frac" 1;
+}
+    ]]></example>
+    <features>
+      <feature tag='"tnum" 1' name="Tabular Figures" use="Monospaced digits for tables and pricing" />
+      <feature tag='"onum" 1' name="Oldstyle Figures" use="Harmonious editorial body numerals" />
+      <feature tag='"smcp" 1' name="Small Capitals" use="True typographic small caps" />
+      <feature tag='"zero" 1' name="Slashed Zero" use="Disambiguates 0 from O" />
+      <feature tag='"frac" 1' name="Diagonal Fractions" use="Synthesizes diagonal fractions" />
+      <feature tag='"liga" 1' name="Standard Ligatures" use="Character pairs like fi, fl" />
+      <feature tag='"dlig" 1' name="Discretionary Ligatures" use="Display ligatures like ct, st" />
+      <feature tag='"ss01" 1' name="Stylistic Sets" use="Custom alternate glyph designs" />
+    </features>
+  </opentype_features>
+
+  <variable_fonts>
+    <example><![CDATA[
+text #dynamicHero {
+    content: "PRECISION UI";
+    font-family: "RobotoFlex";
+    font-size: 56px;
+    font-variation: "wght" 750 "wdth" 85 "opsz" 48;
+}
+    ]]></example>
+    <registered_axes>
+      <axis tag="wght" name="Weight" range="100-900" />
+      <axis tag="wdth" name="Width / Condensation" range="75% - 125%" />
+      <axis tag="slnt" name="Slant" range="-10deg - 0deg" />
+      <axis tag="ital" name="Italic" range="0.0 - 1.0" />
+      <axis tag="opsz" name="Optical Size" range="8 - 72" />
+    </registered_axes>
+  </variable_fonts>
+
+  <pipeline_mapping>
+    <skia>Configures ctx.fontVariationSettings and ctx.fontFeatureSettings</skia>
+    <svg>Outputs standard inline CSS font-feature-settings and font-variation-settings</svg>
+    <psd>Stores font variation coordinates in Type Tool ALI descriptor (TySh)</psd>
+  </pipeline_mapping>
+</specification>

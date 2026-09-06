@@ -170,7 +170,7 @@ function searchDir(
           lower === targetFileName + '.toad' ||
           (targetFileName.endsWith('.toad') && lower === targetFileName);
 
-        // Normalize hyphens and underscores (e.g. vario_nova matches vario-nova)
+        // Normalize hyphens and underscores (e.g. velora_nova matches velora-nova)
         const isFuzzyHyphenMatch =
           lower.endsWith('.toad') &&
           lowerNoExt.replace(/[-_]/g, '') === targetNoExt.replace(/[-_]/g, '');

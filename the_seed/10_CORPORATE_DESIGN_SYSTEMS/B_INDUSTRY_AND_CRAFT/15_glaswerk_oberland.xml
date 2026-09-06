@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<corporate_design id="glaswerk_oberland" industry_domain="industry_and_craft" category="B_INDUSTRY_AND_CRAFT" version="1.0">
+  <brand_meta>
+    <company_name>Glaswerk Oberland GmbH</company_name>
+    <product_name>Structural Glazing &amp; Sicherheitsglas</product_name>
+    <industry>Glasbau &amp; Fassadenarchitektur</industry>
+    <profile>Hersteller von Isoliergläsern, Brandschutzverglasungen und minimalistischen Nurglas-Fassaden.</profile>
+    <tone_of_voice>Glasklar, transparent, statisch souverän, lichtdurchflutet.</tone_of_voice>
+  </brand_meta>
+
+  <tags>
+    <tag>glasbau</tag>
+    <tag>fassade</tag>
+    <tag>transparent</tag>
+    <tag>cyan-ice</tag>
+    <tag>architektur</tag>
+  </tags>
+
+  <design_tokens>
+    <colors>
+      <color token="iceCyan" hex="#E0F2FE" role="Glasreflexion-Canvas" />
+      <color token="glassAqua" hex="#0284C7" role="Kantenbrechung, Kernmarke" />
+      <color token="frameDark" hex="#0F172A" role="Aluminium-Pfosten-Riegel" />
+    </colors>
+    <typography>
+      <primary_font>&quot;Inter&quot;, sans-serif</primary_font>
+      <h1 scale="Medium (500), 36px" />
+      <body scale="Regular (400), 14px, Color #334155" />
+    </typography>
+    <geometry>
+      <card_radius>12px</card_radius>
+      <button_radius>4px</button_radius>
+      <grid_gap>20px</grid_gap>
+    </geometry>
+    <shadows>
+      <ambient>Zarter Glasmorphism-Schatten</ambient>
+    </shadows>
+  </design_tokens>
+
+  <brand_rules>
+    <dos>
+      <do>Transparente Weißtöne und klares Eisblau (#0284C7) nutzen.</do>
+    </dos>
+    <donts>
+      <dont>Keine schweren, unordentlichen Formen.</dont>
+    </donts>
+  </brand_rules>
+
+  <toad_component_blueprint lang="toad"><![CDATA[
+canvas {
+  size: 920px 580px;
+  fill: #E0F2FE;
+  font-family: "Inter, sans-serif";
+}
+
+>glassAqua = #0284C7;
+>frameDark = #0F172A;
+
+rect #glassPanel {
+  at: center of canvas;
+  size: 820px 480px;
+  fill: #FFFFFF;
+  stroke: >glassAqua;
+  stroke-width: 1px;
+  radius: 12px;
+}
+
+text #glassTitle {
+  at: top left of #glassPanel offset 36px 36px;
+  content: "GLASWERK OBERLAND // STRUCTURAL FACADES";
+  font-size: 13px;
+  font-weight: 600;
+  color: >glassAqua;
+}
+
+text #glassMain {
+  at: below #glassTitle offset 14px;
+  content: "Transparenz ohne Kompromisse bei Wärmeschutz";
+  font-size: 30px;
+  font-weight: 500;
+  color: >frameDark;
+}
+  ]]></toad_component_blueprint>
+
+  <routing_triggers>
+    <trigger>glass architecture brand</trigger>
+    <trigger>facade engineering corporate</trigger>
+    <trigger>transparent glass styleguide</trigger>
+    <trigger>glaswerk oberland</trigger>
+    <trigger>curtain wall catalog</trigger>
+  </routing_triggers>
+</corporate_design>

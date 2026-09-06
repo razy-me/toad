@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<corporate_design id="soundwave_openair" industry_domain="entertainment_sports_and_community" category="G_ENTERTAINMENT_SPORTS_AND_COMMUNITY" version="1.0">
+  <brand_meta>
+    <company_name>Soundwave OpenAir Festival</company_name>
+    <product_name>3-Tages-Festivalpass &amp; Camping</product_name>
+    <industry>Musikfestival / Event</industry>
+    <profile>Ökologisches OpenAir-Festival am Waldsee mit internationalem Indie-, Elektro- und Folk-Lineup.</profile>
+    <tone_of_voice>Euphorisch, sonnig, freiheitsliebend, nachhaltig.</tone_of_voice>
+  </brand_meta>
+
+  <tags>
+    <tag>festival</tag>
+    <tag>openair</tag>
+    <tag>musik</tag>
+    <tag>sonnenuntergang</tag>
+    <tag>indie</tag>
+  </tags>
+
+  <design_tokens>
+    <colors>
+      <color token="sunsetOrange" hex="#F97316" role="Sonnenuntergang über der Seebühne" />
+      <color token="lakeTeal" hex="#0D9488" role="Seeufer, Wald" />
+      <color token="sandLight" hex="#FEF3C7" role="Strand-Sand" />
+    </colors>
+    <typography>
+      <primary_font>&quot;Syne&quot;, &quot;Inter&quot;, sans-serif</primary_font>
+      <h1 scale="Bold (800), 38px" />
+      <body scale="Regular (400), 14px, Color #1E293B" />
+    </typography>
+    <geometry>
+      <card_radius>16px</card_radius>
+      <button_radius>9999px</button_radius>
+      <grid_gap>20px</grid_gap>
+    </geometry>
+    <shadows>
+      <ambient>none</ambient>
+    </shadows>
+  </design_tokens>
+
+  <brand_rules>
+    <dos>
+      <do>Sonnenuntergangs-Orange (#F97316) mit Seegrün (#0D9488) verbinden.</do>
+    </dos>
+    <donts>
+      <dont>Keine starre Banken- oder Behördenästhetik.</dont>
+    </donts>
+  </brand_rules>
+
+  <toad_component_blueprint lang="toad"><![CDATA[
+canvas {
+  size: 900px 580px;
+  fill: #FEF3C7;
+  font-family: "Syne, sans-serif";
+}
+
+>orange = #F97316;
+>teal = #0D9488;
+
+rect #festCard {
+  at: center of canvas;
+  size: 800px 480px;
+  fill: #FFFFFF;
+  stroke: >orange;
+  stroke-width: 2px;
+  radius: 16px;
+}
+
+text #festHeader {
+  at: top left of #festCard offset 36px 36px;
+  content: "SOUNDWAVE OPENAIR // 14. - 16. AUGUST 2026";
+  font-size: 13px;
+  font-weight: 800;
+  color: >teal;
+}
+
+text #festTitle {
+  at: below #festHeader offset 14px;
+  content: "3 TAGE MUSIK, WALD & SONNENUNTERGANG";
+  font-size: 32px;
+  font-weight: 800;
+  color: >orange;
+}
+  ]]></toad_component_blueprint>
+
+  <routing_triggers>
+    <trigger>music festival brand</trigger>
+    <trigger>openair concert poster</trigger>
+    <trigger>indie festival styleguide</trigger>
+    <trigger>soundwave openair</trigger>
+    <trigger>summer event banner</trigger>
+  </routing_triggers>
+</corporate_design>

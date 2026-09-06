@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<specification module="02_top_20_antipatterns_and_errors" target="toad-dsl" version="3.0">
+  <metadata>
+    <description>Catalog of top 20 frequent errors and anti-patterns with severity and exact fixes</description>
+  </metadata>
+
+  <antipatterns>
+    <item id="AP-01" name="Variable Syntax" severity="Critical">
+      <bad>>brandColor: #3B82F6;</bad>
+      <good>>brandColor = #3B82F6;</good>
+    </item>
+    <item id="AP-02" name="Unquoted Font Fallback Comma" severity="Critical">
+      <bad>>mainFont = "Inter", sans-serif;</bad>
+      <good>>mainFont = "Inter, sans-serif";</good>
+    </item>
+    <item id="AP-03" name="size: vs font-size: on Text" severity="Medium">
+      <bad>text { size: 24px; }</bad>
+      <good>text { font-size: 24px; }</good>
+    </item>
+    <item id="AP-04" name="Multi-Word Font Weight Strings" severity="High">
+      <bad>font-weight: "semi bold";</bad>
+      <good>font-weight: 600; /* or semibold */</good>
+    </item>
+    <item id="AP-05" name="Colon After offset Keyword" severity="Critical">
+      <bad>at: below #title offset: 16px;</bad>
+      <good>at: below #title offset 16px;</good>
+    </item>
+    <item id="AP-06" name="Naked at: center;" severity="High">
+      <bad>at: center;</bad>
+      <good>at: center of canvas; /* or center of #parent */</good>
+    </item>
+    <item id="AP-07" name="fill: on Text or color: on Shapes" severity="Medium">
+      <bad>text { fill: #fff; } rect { color: #000; }</bad>
+      <good>text { color: #fff; } rect { fill: #000; }</good>
+    </item>
+    <item id="AP-08" name="Missing Semicolons" severity="Critical">
+      <bad>width: 200px</bad>
+      <good>width: 200px;</good>
+    </item>
+    <item id="AP-09" name="Naked slot Without Semicolon" severity="Critical">
+      <bad>slot</bad>
+      <good>slot;</good>
+    </item>
+    <item id="AP-10" name="Ultra-Low Glow Alphas" severity="Low">
+      <bad>alpha(>brand, 0.08)</bad>
+      <good>alpha(>brand, 0.35)</good>
+    </item>
+    <item id="AP-11" name="Pill Badge Tight Clipping" severity="Medium">
+      <bad>Pill width exactly equal to text width</bad>
+      <good>Allocate 15% to 20% horizontal padding</good>
+    </item>
+    <item id="AP-12" name="Missing Canvas @font / Fallback" severity="Low">
+      <bad>Relying on unassigned system fonts</bad>
+      <good>Declare @font or canvas font-family</good>
+    </item>
+    <item id="AP-13" name="CSS Flexbox Hallucinations" severity="Critical">
+      <bad>rect { display: flex; }</bad>
+      <good>stack { direction: horizontal; }</good>
+    </item>
+    <item id="AP-14" name="HTML Tag Hallucinations" severity="Critical">
+      <bad>&lt;div&gt; &lt;span&gt; &lt;p&gt;</bad>
+      <good>rect, text, stack, group</good>
+    </item>
+    <item id="AP-15" name="Circular DAG Dependency" severity="Critical">
+      <bad>#A below #B while #B below #A</bad>
+      <good>Unidirectional anchor tree</good>
+    </item>
+    <item id="AP-16" name="CSS rgba vs TOAD alpha" severity="High">
+      <bad>rgba(59, 130, 246, 0.5)</bad>
+      <good>alpha(#3b82f6, 0.5) or #3b82f680</good>
+    </item>
+    <item id="AP-17" name="Hardcoded Coordinates in Stacks" severity="Medium">
+      <bad>Child with at: (10px, 20px); inside stack</bad>
+      <good>Let stack flow and gap manage position</good>
+    </item>
+    <item id="AP-18" name="Unparenthesized Nested Math" severity="High">
+      <bad>calc(100% - 20px * 2)</bad>
+      <good>calc(100% - (20px * 2))</good>
+    </item>
+    <item id="AP-19" name="Overwriting Parent Canvas Size" severity="Critical">
+      <bad>Child rect resizing canvas artboard</bad>
+      <good>Respect root canvas dimensions</good>
+    </item>
+    <item id="AP-20" name="Duplicate Element IDs" severity="High">
+      <bad>Two elements sharing #title</bad>
+      <good>Unique IDs (#heroTitle, #sectionTitle)</good>
+    </item>
+    <item id="AP-21" name="Text Top-Baseline Drift in Pills &amp; Badges" severity="High">
+      <bad>Centering text inside a 20-30px pill using standard bounding box math without cap-height offset (glyphs render 2-3px too high).</bad>
+      <good>Apply +1.5px to +2.5px optical y-offset (+3-5px @2x) or group coordinates calibrated so top gap equals bottom gap.</good>
+    </item>
+    <item id="AP-22" name="Uncalibrated Icon-Text Alignment" severity="Medium">
+      <bad>Placing icon and text side-by-side expecting identical vertical centers without aligning glyph visual bounds to icon stroke bounds.</bad>
+      <good>Calibrate icon and text y-coordinates so glyph center matches icon geometric center (|Icon_center - Text_center| &lt;= 0.5px).</good>
+    </item>
+  </antipatterns>
+</specification>

@@ -1,0 +1,364 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<corporate_design_router version="1.0" target="toad-dsl">
+  <system_instruction>
+    When tasked with creating, rendering, or refining any corporate or branded .toad artifact (business card, rollup, flyer, dashboard, header, social asset):
+    1. Scan user prompt for industry, company type, or brand keywords.
+    2. MANDATORY: Select AT LEAST 3 matching Corporate Design Systems from the routes below or from 'index.yaml' (more if fitting).
+    3. Cross-pollinate design tokens (colors, fonts, radii, spacing, hierarchy) from all selected systems into .toad variables.
+    4. Declare the >=3 corporate systems and inherited tokens in the TOAD Multi-DNA Inspiration Header.
+    5. Follow corporate brand compliance rules and the 12 non-negotiable TOAD syntax invariants.
+  </system_instruction>
+
+  <routes>
+    <route id="velora_cloud_erp">
+      <company_name>Velora Software GmbH</company_name>
+      <product_name>Velora Cloud ERP</product_name>
+      <file_reference>A_SAAS_AND_TECH/01_velora_cloud_erp.xml</file_reference>
+      <tags>erp, kmu, cloud-software, familiär, pill-ui</tags>
+      <matching_intent>velora cloud erp | mittelstand erp | kmu cloud software | pill button ui | aubergine green branding</matching_intent>
+    </route>
+    <route id="synapse_ai_labs">
+      <company_name>Synapse AI Labs</company_name>
+      <product_name>Synapse Neural Compute Fabric</product_name>
+      <file_reference>A_SAAS_AND_TECH/02_synapse_ai_labs.xml</file_reference>
+      <tags>ki, deeptech, neural, indigo, bento-grid</tags>
+      <matching_intent>ai research brand | deeptech corporate identity | neural bento grid | machine learning saas | synapse dark ui</matching_intent>
+    </route>
+    <route id="cybervault_security">
+      <company_name>CyberVault Systems</company_name>
+      <product_name>CyberVault Zero-Trust Guard</product_name>
+      <file_reference>A_SAAS_AND_TECH/03_cybervault_security.xml</file_reference>
+      <tags>cyber-security, zero-trust, dark-navy, cyan, terminal</tags>
+      <matching_intent>cyber security design | zero trust brand | firewall dashboard | encrypted terminal | cybervault defense</matching_intent>
+    </route>
+    <route id="streamflow_devops">
+      <company_name>StreamFlow Systems</company_name>
+      <product_name>StreamFlow Orchestrator</product_name>
+      <file_reference>A_SAAS_AND_TECH/04_streamflow_devops.xml</file_reference>
+      <tags>devops, cicd, orange, zinc, developer-tools</tags>
+      <matching_intent>devops tooling brand | cicd pipeline card | developer console | terminal dashboard | streamflow engineering</matching_intent>
+    </route>
+    <route id="paypulse_fintech">
+      <company_name>PayPulse Global</company_name>
+      <product_name>PayPulse Gateway &amp; API</product_name>
+      <file_reference>A_SAAS_AND_TECH/05_paypulse_fintech.xml</file_reference>
+      <tags>fintech, payment, blue, trust, clean-ui</tags>
+      <matching_intent>fintech corporate design | payment gateway banner | neobank card | digital checkout ui | paypulse brand</matching_intent>
+    </route>
+    <route id="cleverdesk_edtech">
+      <company_name>CleverDesk Digital</company_name>
+      <product_name>CleverDesk Classroom Hub</product_name>
+      <file_reference>A_SAAS_AND_TECH/06_cleverdesk_edtech.xml</file_reference>
+      <tags>edtech, schule, bildung, tangerine, lernplattform</tags>
+      <matching_intent>edtech corporate design | school software card | classroom learning app | education dashboard | cleverdesk hub</matching_intent>
+    </route>
+    <route id="omnidrive_iot">
+      <company_name>OmniDrive Telematics</company_name>
+      <product_name>OmniFleet IoT Platform</product_name>
+      <file_reference>A_SAAS_AND_TECH/07_omnidrive_iot.xml</file_reference>
+      <tags>telematik, iot, flottenmanagement, amber, sensorik</tags>
+      <matching_intent>fleet management brand | telematics iot dashboard | truck logistics banner | industrial sensor card | omnidrive vehicle ui</matching_intent>
+    </route>
+    <route id="nexushr_workforce">
+      <company_name>NexusHR Systems</company_name>
+      <product_name>NexusHR Global People OS</product_name>
+      <file_reference>A_SAAS_AND_TECH/08_nexushr_workforce.xml</file_reference>
+      <tags>hr, people-ops, purple, onboarding, culture</tags>
+      <matching_intent>hr corporate identity | people ops dashboard | employee welcome card | workforce payroll brand | nexushr culture</matching_intent>
+    </route>
+    <route id="kruppstahl_maschinenbau">
+      <company_name>Kruppstahl Präzisionsbau AG</company_name>
+      <product_name>TitanMill 5-Achs CNC-Bearbeitungszentrum</product_name>
+      <file_reference>B_INDUSTRY_AND_CRAFT/09_kruppstahl_maschinenbau.xml</file_reference>
+      <tags>maschinenbau, industrie, stahlgrau, cad, präzision</tags>
+      <matching_intent>maschinenbau corporate design | heavy industry brand | cnc machining banner | german engineering styleguide | kruppstahl</matching_intent>
+    </route>
+    <route id="nordholz_architektur">
+      <company_name>NordHolz Architektur &amp; Bau</company_name>
+      <product_name>NordHolz Passivhaus-System</product_name>
+      <file_reference>B_INDUSTRY_AND_CRAFT/10_nordholz_architektur.xml</file_reference>
+      <tags>architektur, holzbau, nachhaltig, skandinavisch, erdtöne</tags>
+      <matching_intent>timber architecture brand | sustainable wooden house | nordic construction styleguide | nordholz bau | green architecture flyer</matching_intent>
+    </route>
+    <route id="zimmerei_eichenlaub">
+      <company_name>Zimmerei &amp; Holzbau Eichenlaub</company_name>
+      <product_name>Traditioneller Dachstuhl- &amp; Fachwerkbau</product_name>
+      <file_reference>B_INDUSTRY_AND_CRAFT/11_zimmerei_eichenlaub.xml</file_reference>
+      <tags>zimmerei, handwerk, fachwerk, holztöne, meisterbetrieb</tags>
+      <matching_intent>carpentry brand identity | craftsman styleguide | timber framing poster | zimmerei eichenlaub | artisan woodworker banner</matching_intent>
+    </route>
+    <route id="vulkan_guss_manufaktur">
+      <company_name>Vulkan Eisen- &amp; Bronzeguss</company_name>
+      <product_name>Vulkan Industrie-Armaturen &amp; Spezialguss</product_name>
+      <file_reference>B_INDUSTRY_AND_CRAFT/12_vulkan_guss_manufaktur.xml</file_reference>
+      <tags>giesserei, metall, glutrot, bronze, schwerindustrie</tags>
+      <matching_intent>foundry corporate design | metallurgy brand | casting iron factory | vulkan guss | heavy metal industrial banner</matching_intent>
+    </route>
+    <route id="elektro_voltmeister">
+      <company_name>Voltmeister Elektrotechnik GmbH</company_name>
+      <product_name>Industrie-Schaltanlagen &amp; Gewerbe-PV</product_name>
+      <file_reference>B_INDUSTRY_AND_CRAFT/13_elektro_voltmeister.xml</file_reference>
+      <tags>elektrotechnik, energie, voltgelb, schaltschrank, photovoltaik</tags>
+      <matching_intent>electrical engineering corporate | photovoltaic installation brand | switchboard panel layout | voltmeister | electrician styleguide</matching_intent>
+    </route>
+    <route id="dachdeckerei_steinfirst">
+      <company_name>Steinfirst Dach &amp; Fassade</company_name>
+      <product_name>Meisterbetrieb für Steildach und Schiefer</product_name>
+      <file_reference>B_INDUSTRY_AND_CRAFT/14_dachdeckerei_steinfirst.xml</file_reference>
+      <tags>dachdeckerei, schiefer, ziegelrot, wetterfest, handwerk</tags>
+      <matching_intent>roofing corporate brand | slate tiles roof flyer | craftsman roof service | steinfirst | terracotta roofer banner</matching_intent>
+    </route>
+    <route id="glaswerk_oberland">
+      <company_name>Glaswerk Oberland GmbH</company_name>
+      <product_name>Structural Glazing &amp; Sicherheitsglas</product_name>
+      <file_reference>B_INDUSTRY_AND_CRAFT/15_glaswerk_oberland.xml</file_reference>
+      <tags>glasbau, fassade, transparent, cyan-ice, architektur</tags>
+      <matching_intent>glass architecture brand | facade engineering corporate | transparent glass styleguide | glaswerk oberland | curtain wall catalog</matching_intent>
+    </route>
+    <route id="cura_telemedizin">
+      <company_name>Cura TeleHealth</company_name>
+      <product_name>Cura App &amp; e-Rezept</product_name>
+      <file_reference>C_HEALTH_AND_LIFE_SCIENCES/16_cura_telemedizin.xml</file_reference>
+      <tags>telemedizin, arztpraxis, mint, gesundheit, e-rezept</tags>
+      <matching_intent>telehealth corporate design | digital doctor app | erezept branding | medical clinic styleguide | cura health</matching_intent>
+    </route>
+    <route id="st_lukas_klinikum">
+      <company_name>St. Lukas Universitätsklinikum</company_name>
+      <product_name>Zentrum für Spitzenmedizin</product_name>
+      <file_reference>C_HEALTH_AND_LIFE_SCIENCES/17_st_lukas_klinikum.xml</file_reference>
+      <tags>krankenhaus, klinikum, royal-blue, spitzenmedizin, steril</tags>
+      <matching_intent>hospital signage brand | clinic corporate identity | medical center poster | st lukas klinikum | emergency room brochure</matching_intent>
+    </route>
+    <route id="bionova_genomics">
+      <company_name>BioNova Genomics AG</company_name>
+      <product_name>Sequenzierplattform NovaGene</product_name>
+      <file_reference>C_HEALTH_AND_LIFE_SCIENCES/18_bionova_genomics.xml</file_reference>
+      <tags>genomik, biotech, dna, cyan-glow, forschung</tags>
+      <matching_intent>biotech styleguide | genomics corporate design | dna lab visual identity | bionova | scientific research flyer</matching_intent>
+    </route>
+    <route id="dentapur_zahnmedizin">
+      <company_name>DentaPur Zahnzentrum</company_name>
+      <product_name>Ästhetische Zahnheilkunde &amp; Aligner</product_name>
+      <file_reference>C_HEALTH_AND_LIFE_SCIENCES/19_dentapur_zahnmedizin.xml</file_reference>
+      <tags>zahnarzt, aligner, weiss, ästhetik, clean</tags>
+      <matching_intent>dental clinic brand | dentist styleguide | invisible aligner flyer | dentapur smile | aesthetic teeth banner</matching_intent>
+    </route>
+    <route id="physiowell_reha">
+      <company_name>PhysioWell Rehazentrum</company_name>
+      <product_name>Sportphysiotherapie &amp; Bewegungstherapie</product_name>
+      <file_reference>C_HEALTH_AND_LIFE_SCIENCES/20_physiowell_reha.xml</file_reference>
+      <tags>physiotherapie, reha, sport, orange-vital, bewegung</tags>
+      <matching_intent>physiotherapy corporate design | rehab center styleguide | sports clinic banner | physiowell | movement therapy flyer</matching_intent>
+    </route>
+    <route id="sanitas_apotheke">
+      <company_name>Sanitas Apothekenverbund</company_name>
+      <product_name>Sanitas Express-Botendienst</product_name>
+      <file_reference>C_HEALTH_AND_LIFE_SCIENCES/21_sanitas_apotheke.xml</file_reference>
+      <tags>apotheke, pharmazie, rot-gruen, botendienst, beratung</tags>
+      <matching_intent>pharmacy styleguide | apotheke corporate brand | medicine delivery poster | sanitas | pharmaceutical brochure</matching_intent>
+    </route>
+    <route id="aether_mental_health">
+      <company_name>Aether Seelenraum Klinik</company_name>
+      <product_name>Achtsamkeitsbasierte Psychotherapie</product_name>
+      <file_reference>C_HEALTH_AND_LIFE_SCIENCES/22_aether_mental_health.xml</file_reference>
+      <tags>mental-health, psychotherapie, lavendel, achtsam, ruhe</tags>
+      <matching_intent>mental health clinic brand | psychotherapy styleguide | meditation retreat card | aether | mindfulness health brochure</matching_intent>
+    </route>
+    <route id="haferglueck_oatmilk">
+      <company_name>Haferglück Bio-Milch</company_name>
+      <product_name>Haferdrink Barista Edition</product_name>
+      <file_reference>D_CONSUMER_FOOD_AND_LIFESTYLE/23_haferglueck_oatmilk.xml</file_reference>
+      <tags>hafermilch, vegan, bio, oat-yellow, lifestyle</tags>
+      <matching_intent>oatmilk brand design | vegan food packaging | plant-based drink styleguide | haferglueck | organic breakfast banner</matching_intent>
+    </route>
+    <route id="brauhaus_hopfenstolz">
+      <company_name>Brauhaus Hopfenstolz</company_name>
+      <product_name>Fränkisches Kellerbier &amp; Hopfen-IPA</product_name>
+      <file_reference>D_CONSUMER_FOOD_AND_LIFESTYLE/24_brauhaus_hopfenstolz.xml</file_reference>
+      <tags>brauhaus, bier, hopfengruen, amber-gold, rustikal</tags>
+      <matching_intent>brewery brand identity | craft beer label design | bavarian tavern poster | hopfenstolz | artisan ale styleguide</matching_intent>
+    </route>
+    <route id="rostwerk_kaffee">
+      <company_name>Röstwerk Kaffeemanufaktur</company_name>
+      <product_name>Single Origin Specialty Beans</product_name>
+      <file_reference>D_CONSUMER_FOOD_AND_LIFESTYLE/25_rostwerk_kaffee.xml</file_reference>
+      <tags>kaffee, specialty-coffee, terrakotta, trommelroestung, direct-trade</tags>
+      <matching_intent>specialty coffee brand | coffee bean bag packaging | roastery styleguide | rostwerk kaffee | barista cafe poster</matching_intent>
+    </route>
+    <route id="alpenkraeuter_tee">
+      <company_name>AlpenKräuter Manufaktur</company_name>
+      <product_name>Bio-Bergkräutertee</product_name>
+      <file_reference>D_CONSUMER_FOOD_AND_LIFESTYLE/26_alpenkraeuter_tee.xml</file_reference>
+      <tags>tee, alpen, kraeuter, wiesengruen, bio</tags>
+      <matching_intent>herbal tea brand | alpine organic tea packaging | botanical infusion styleguide | alpenkraeuter | nature remedy flyer</matching_intent>
+    </route>
+    <route id="fischerhues_sylt">
+      <company_name>Fischerhüs Sylt</company_name>
+      <product_name>Nordsee-Austern &amp; Krabbenbrötchen</product_name>
+      <file_reference>D_CONSUMER_FOOD_AND_LIFESTYLE/27_fischerhues_sylt.xml</file_reference>
+      <tags>nordsee, fisch, marineblau, sylt, maritim</tags>
+      <matching_intent>seafood restaurant brand | maritime fish bistro styleguide | nordic oyster bar flyer | fischerhues sylt | marine culinary menu</matching_intent>
+    </route>
+    <route id="urbanleaf_salad">
+      <company_name>UrbanLeaf Bowls &amp; Greens</company_name>
+      <product_name>Zero-Waste Quinoa &amp; Greens Bowl</product_name>
+      <file_reference>D_CONSUMER_FOOD_AND_LIFESTYLE/28_urbanleaf_salad.xml</file_reference>
+      <tags>bowls, salad, avocado-green, fast-casual, urban</tags>
+      <matching_intent>salad bowl restaurant brand | fast casual healthy styleguide | fresh food bar poster | urbanleaf | zero waste lunch menu</matching_intent>
+    </route>
+    <route id="schoko_kuvertuere">
+      <company_name>Chocolat Grand Cru Suisse</company_name>
+      <product_name>74% Criollo Single Origin Tafel</product_name>
+      <file_reference>D_CONSUMER_FOOD_AND_LIFESTYLE/29_schoko_kuvertuere.xml</file_reference>
+      <tags>schokolade, luxury-food, cacao-brown, gold, swiss</tags>
+      <matching_intent>swiss chocolate packaging | artisan bean to bar brand | luxury cacao styleguide | chocolat grand cru | confectionery gift card</matching_intent>
+    </route>
+    <route id="brotecht_baeckerei">
+      <company_name>BrotEcht Naturbäckerei</company_name>
+      <product_name>Holzofen-Roggenlaib mit 48h Teigruhe</product_name>
+      <file_reference>D_CONSUMER_FOOD_AND_LIFESTYLE/30_brotecht_baeckerei.xml</file_reference>
+      <tags>baeckerei, sauerteig, krustenbraun, mehlstaub, handwerk</tags>
+      <matching_intent>bakery corporate design | sourdough bread styleguide | artisan baker flyer | brotecht | wood oven bread packaging</matching_intent>
+    </route>
+    <route id="valmont_geneve_uhren">
+      <company_name>Valmont &amp; Cie. Genève</company_name>
+      <product_name>Chronographe Tourbillon No. 7</product_name>
+      <file_reference>E_LUXURY_AND_FASHION/31_valmont_geneve_uhren.xml</file_reference>
+      <tags>uhren, haute-horlogerie, geneve, platin, zeitlos</tags>
+      <matching_intent>luxury watch brand | haute horlogerie styleguide | swiss timepiece banner | valmont geneve | chronograph catalog card</matching_intent>
+    </route>
+    <route id="maison_vellum_parfum">
+      <company_name>Maison Vellum Parfumerie</company_name>
+      <product_name>Extrait de Parfum Cuir Blanc</product_name>
+      <file_reference>E_LUXURY_AND_FASHION/32_maison_vellum_parfum.xml</file_reference>
+      <tags>parfum, luxus, grasse, champagner, duft</tags>
+      <matching_intent>luxury perfume brand | niche fragrance packaging | haute parfumerie styleguide | maison vellum | luxury cosmetics card</matching_intent>
+    </route>
+    <route id="solitaire_juwelen">
+      <company_name>Solitaire Fine Jewelry</company_name>
+      <product_name>Fair-Mined Brillant-Solitär</product_name>
+      <file_reference>E_LUXURY_AND_FASHION/33_solitaire_juwelen.xml</file_reference>
+      <tags>schmuck, diamanten, gold, joaillerie, edel</tags>
+      <matching_intent>fine jewelry brand | diamond ring catalog | haute joaillerie corporate | solitaire jewels | luxury engagement card</matching_intent>
+    </route>
+    <route id="sartoria_marchese">
+      <company_name>Sartoria Marchese Napoli</company_name>
+      <product_name>Bespoke Herrenanzug (Spalla Camicia)</product_name>
+      <file_reference>E_LUXURY_AND_FASHION/34_sartoria_marchese.xml</file_reference>
+      <tags>massschneiderei, bespoke, anzug, navy, napoli</tags>
+      <matching_intent>bespoke tailoring brand | luxury menswear styleguide | italian suit flyer | sartoria marchese | gentleman wardrobe card</matching_intent>
+    </route>
+    <route id="atelier_nordstrikk">
+      <company_name>Atelier Nordstrikk Oslo</company_name>
+      <product_name>Reine Merinowoll-Strickwaren</product_name>
+      <file_reference>E_LUXURY_AND_FASHION/35_atelier_nordstrikk.xml</file_reference>
+      <tags>strick, merinowolle, norwegen, wollweiss, slow-fashion</tags>
+      <matching_intent>knitwear brand identity | scandinavian woolen fashion | slow fashion styleguide | nordstrikk | merino wool banner</matching_intent>
+    </route>
+    <route id="monolith_yachting">
+      <company_name>Monolith Superyachts</company_name>
+      <product_name>90m Explorer Yacht Projekt Orca</product_name>
+      <file_reference>E_LUXURY_AND_FASHION/36_monolith_yachting.xml</file_reference>
+      <tags>superyacht, werft, ozeanblau, monaco, marina</tags>
+      <matching_intent>superyacht brand | luxury marine styleguide | monaco yachting poster | monolith yachts | naval architecture brochure</matching_intent>
+    </route>
+    <route id="palazzo_bellini_hotel">
+      <company_name>Grand Hotel Palazzo Bellini</company_name>
+      <product_name>Dogen-Suite mit privatem Bootsanleger</product_name>
+      <file_reference>E_LUXURY_AND_FASHION/37_palazzo_bellini_hotel.xml</file_reference>
+      <tags>hotel, venedig, venetian-red, marmor, luxus</tags>
+      <matching_intent>luxury hotel brand | venetian palace styleguide | 5 star grand hotel brochure | palazzo bellini | hospitality room card</matching_intent>
+    </route>
+    <route id="stadtwerke_gruenstrom">
+      <company_name>Stadtwerke GrünStrom</company_name>
+      <product_name>100% Regionale Geothermie &amp; Windkraft</product_name>
+      <file_reference>F_PUBLIC_MOBILITY_AND_INFRA/38_stadtwerke_gruenstrom.xml</file_reference>
+      <tags>stadtwerke, energie, gruen, geothermie, kommunal</tags>
+      <matching_intent>public utility styleguide | municipal energy brand | green power flyer | stadtwerke | clean energy banner</matching_intent>
+    </route>
+    <route id="metro_transvia">
+      <company_name>Transvia Verkehrsverbund</company_name>
+      <product_name>U-Bahn, Tram &amp; Stadtbusse im Minutentakt</product_name>
+      <file_reference>F_PUBLIC_MOBILITY_AND_INFRA/39_metro_transvia.xml</file_reference>
+      <tags>oepnv, metro, verkehrsverbund, rot-signal, fahrplan</tags>
+      <matching_intent>metro transit brand | subway timetable poster | public transport styleguide | transvia | tram network banner</matching_intent>
+    </route>
+    <route id="nordic_ferry_lines">
+      <company_name>Nordic Ferry Lines</company_name>
+      <product_name>Zero-Emission Island Ferries</product_name>
+      <file_reference>F_PUBLIC_MOBILITY_AND_INFRA/40_nordic_ferry_lines.xml</file_reference>
+      <tags>faehre, schifffahrt, skandinavien, nordic-blue, insel</tags>
+      <matching_intent>ferry line brand | maritime transport styleguide | electric ship flyer | nordic ferry | island logistics banner</matching_intent>
+    </route>
+    <route id="landkreis_buergerportal">
+      <company_name>Landkreis Bürgerportal Online</company_name>
+      <product_name>Digitales Bürgeramt &amp; Kfz-Zulassung</product_name>
+      <file_reference>F_PUBLIC_MOBILITY_AND_INFRA/41_landkreis_buergerportal.xml</file_reference>
+      <tags>buergeramt, egovernment, barrierefrei, amt, kreisverwaltung</tags>
+      <matching_intent>egovernment corporate design | citizen service portal | public sector styleguide | landkreis amt | accessible administrative poster</matching_intent>
+    </route>
+    <route id="velo_city_bikeshare">
+      <company_name>VeloCity Bikesharing</company_name>
+      <product_name>Smart E-Bike Stationen</product_name>
+      <file_reference>F_PUBLIC_MOBILITY_AND_INFRA/42_velo_city_bikeshare.xml</file_reference>
+      <tags>bikeshare, ebike, mobility, lime-neon, smart-city</tags>
+      <matching_intent>bikesharing brand | smart city micromobility | ebike app flyer | velocity | urban cycling styleguide</matching_intent>
+    </route>
+    <route id="aerotrain_intercity">
+      <company_name>AeroTrain European Rail</company_name>
+      <product_name>High-Speed Rail 350 km/h</product_name>
+      <file_reference>F_PUBLIC_MOBILITY_AND_INFRA/43_aerotrain_intercity.xml</file_reference>
+      <tags>zug, eisenbahn, ice, speed, europa</tags>
+      <matching_intent>high speed rail brand | train network styleguide | intercity railway poster | aerotrain | european rail booking card</matching_intent>
+    </route>
+    <route id="alpine_rescue_tirol">
+      <company_name>Bergrettung Tirol Notruf 140</company_name>
+      <product_name>Alpine Luftrettung &amp; Lawineneinsatz</product_name>
+      <file_reference>F_PUBLIC_MOBILITY_AND_INFRA/44_alpine_rescue_tirol.xml</file_reference>
+      <tags>bergrettung, notruf, signalorange, alpen, hubschrauber</tags>
+      <matching_intent>mountain rescue styleguide | alpine emergency brand | search and rescue poster | bergrettung | helicopter medical banner</matching_intent>
+    </route>
+    <route id="kickbox_dojo_kuro">
+      <company_name>Kuro Martial Arts Dojo</company_name>
+      <product_name>Muay Thai &amp; K-1 Kampfsport-Akademie</product_name>
+      <file_reference>G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/45_kickbox_dojo_kuro.xml</file_reference>
+      <tags>kampfsport, dojo, schwarz-rot, muay-thai, disziplin</tags>
+      <matching_intent>martial arts gym brand | boxing dojo styleguide | muay thai academy flyer | kuro dojo | combat sports banner</matching_intent>
+    </route>
+    <route id="pulsar_gaming_arena">
+      <company_name>Pulsar E-Sports Arena</company_name>
+      <product_name>Pro-Gaming League &amp; LAN-Hub</product_name>
+      <file_reference>G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/46_pulsar_gaming_arena.xml</file_reference>
+      <tags>esports, gaming, magenta, neon, cyber</tags>
+      <matching_intent>esports arena brand | gaming tournament banner | cyber league styleguide | pulsar arena | lan party poster</matching_intent>
+    </route>
+    <route id="summit_bouldering">
+      <company_name>Summit Boulderhalle</company_name>
+      <product_name>Boulder-Routen &amp; Kletterkurse</product_name>
+      <file_reference>G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/47_summit_bouldering.xml</file_reference>
+      <tags>bouldern, klettern, petrol, chalk, sport</tags>
+      <matching_intent>bouldering gym brand | climbing hall styleguide | sports club flyer | summit bouldering | climb route banner</matching_intent>
+    </route>
+    <route id="filmforum_arthouse">
+      <company_name>Filmforum Arthouse Kino</company_name>
+      <product_name>Internationales Independent-Kino</product_name>
+      <file_reference>G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/48_filmforum_arthouse.xml</file_reference>
+      <tags>kino, arthouse, cinematisch, gold, film</tags>
+      <matching_intent>arthouse cinema brand | film festival styleguide | movie program poster | filmforum | indie cinema brochure</matching_intent>
+    </route>
+    <route id="symphonia_orchester">
+      <company_name>Symphonia Staatsorchester</company_name>
+      <product_name>Saison-Abonnement Klassik &amp; Romantik</product_name>
+      <file_reference>G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/49_symphonia_orchester.xml</file_reference>
+      <tags>orchester, klassik, violine, gold, konzert</tags>
+      <matching_intent>orchestra brand identity | classical symphony styleguide | philharmonic concert flyer | symphonia | music subscription card</matching_intent>
+    </route>
+    <route id="soundwave_openair">
+      <company_name>Soundwave OpenAir Festival</company_name>
+      <product_name>3-Tages-Festivalpass &amp; Camping</product_name>
+      <file_reference>G_ENTERTAINMENT_SPORTS_AND_COMMUNITY/50_soundwave_openair.xml</file_reference>
+      <tags>festival, openair, musik, sonnenuntergang, indie</tags>
+      <matching_intent>music festival brand | openair concert poster | indie festival styleguide | soundwave openair | summer event banner</matching_intent>
+    </route>
+  </routes>
+</corporate_design_router>

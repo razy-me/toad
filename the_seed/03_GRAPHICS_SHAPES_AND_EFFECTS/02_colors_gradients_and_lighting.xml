@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<specification module="02_colors_gradients_and_lighting" target="toad-dsl" version="3.0">
+  <metadata>
+    <description>Color models, multi-stop gradient architectures (linear, radial, conic), and sRGB parity</description>
+  </metadata>
+
+  <color_models>
+    <model type="hex" example="#87CC2E, #10161280 (8-digit hex with alpha)" />
+    <model type="rgb_rgba" example="rgb(135, 204, 46), rgba(16, 22, 18, 0.65)" />
+    <model type="hsl_hsla" example="hsl(86, 63%, 49%), hsla(86, 63%, 49%, 0.8)" />
+    <model type="named" example="transparent, current" />
+  </color_models>
+
+  <gradients>
+    <gradient type="linear-gradient">
+      <example><![CDATA[rect #grad { fill: linear-gradient(135deg, #0C120E 0%, #152018 50%, #87CC2E 100%); }]]></example>
+      <distribution_formula>offset_i = i / (N - 1) when stop percentages are omitted</distribution_formula>
+    </gradient>
+
+    <gradient type="radial-gradient">
+      <example><![CDATA[circle #glow { size: 700px; fill: radial-gradient(circle, alpha(#87CC2E, 0.35) 0%, alpha(#101612, 0) 70%); }]]></example>
+      <rule severity="important">Vibrant Glow Alphas >= 0.25: In sRGB display profiles, low alphas are crushed by display gamma. Center stop alpha must be >= 0.25 for visible neon glow.</rule>
+    </gradient>
+
+    <gradient type="conic-gradient">
+      <example><![CDATA[circle #gauge { size: 240px; fill: conic-gradient(from 0deg, #87CC2E 0%, #F59E0B 70%, #EF4444 100%); }]]></example>
+      <svg_parity>SVG exporter synthesizes a high-res 6-degree polygonal wedge pattern to achieve visual parity since SVG lacks native conicGradient.</svg_parity>
+    </gradient>
+  </gradients>
+
+  <srgb_interpolation_parity>
+    <description>TOAD SVG exporter sets color-interpolation="sRGB" on all gradients to prevent dark desaturated bands present in linearRGB default.</description>
+  </srgb_interpolation_parity>
+</specification>

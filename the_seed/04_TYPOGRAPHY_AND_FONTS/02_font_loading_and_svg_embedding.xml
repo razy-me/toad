@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<specification module="02_font_loading_and_svg_embedding" target="toad-dsl" version="3.0">
+  <metadata>
+    <description>Font registration via @font, canvas inheritance, standalone SVG Base64 embedding, and Photopea synchronization</description>
+  </metadata>
+
+  <font_registration>
+    <syntax><![CDATA[
+@font "./fonts/Inter-Regular.ttf" as "Inter" weight: 400 style: normal;
+@font "./fonts/Inter-Bold.ttf" as "Inter" weight: 700 style: normal;
+@font "./fonts/AgencyFB-Regular.ttf" as "Agency FB" normal;
+@font "./fonts/AgencyFB-Bold.ttf" as "Agency FB" bold;
+    ]]></syntax>
+  </font_registration>
+
+  <canvas_font_inheritance>
+    <example><![CDATA[
+canvas "Keynote" {
+    size: 1920px 1080px;
+    font-family: "Agency FB", sans-serif; // Inherited by all child text elements
+}
+text #h1 { content: "Headline"; font-size: 48px; } // Uses Agency FB
+    ]]></example>
+    <priority_order>
+      <level rank="1">Explicit font-family on text element</level>
+      <level rank="2">font-family on root canvas block</level>
+      <level rank="3">First registered @font directive family</level>
+      <level rank="4">Engine default fallback (sans-serif)</level>
+    </priority_order>
+  </canvas_font_inheritance>
+
+  <standalone_svg_base64>
+    <description>SVG exporter automatically converts local .ttf/.otf binaries into Base64 data URLs inside @font-face defs, ensuring 100% portable vector rendering without system font fallbacks.</description>
+  </standalone_svg_base64>
+
+  <photopea_fonts_synchronization severity="mandatory">
+    <rule>Keep local project './fonts/' directory up to date at all times with all font binaries used.</rule>
+    <workflow>Enables users to drag and drop the font files directly into Photopea so PSD Type Layers render natively without missing font alerts or substitution distortion.</workflow>
+  </photopea_fonts_synchronization>
+</specification>

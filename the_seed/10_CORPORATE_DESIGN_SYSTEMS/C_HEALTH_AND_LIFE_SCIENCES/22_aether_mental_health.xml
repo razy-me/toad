@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<corporate_design id="aether_mental_health" industry_domain="health_and_life_sciences" category="C_HEALTH_AND_LIFE_SCIENCES" version="1.0">
+  <brand_meta>
+    <company_name>Aether Seelenraum Klinik</company_name>
+    <product_name>Achtsamkeitsbasierte Psychotherapie</product_name>
+    <industry>Psychosomatik &amp; Mentale Gesundheit</industry>
+    <profile>Rückzugsort für Stressreduktion, Burnout-Therapie und tiefenpsychologische Begleitung im Grünen.</profile>
+    <tone_of_voice>Achtsam, behutsam, druckfrei, heilsam, leise.</tone_of_voice>
+  </brand_meta>
+
+  <tags>
+    <tag>mental-health</tag>
+    <tag>psychotherapie</tag>
+    <tag>lavendel</tag>
+    <tag>achtsam</tag>
+    <tag>ruhe</tag>
+  </tags>
+
+  <design_tokens>
+    <colors>
+      <color token="softLavender" hex="#DDD6FE" role="Hüllende Sanftheit" />
+      <color token="sageDeep" hex="#2E4A40" role="Erdung, Waldruhe" />
+      <color token="calmClay" hex="#F5F3EF" role="Leinwand-Ton" />
+    </colors>
+    <typography>
+      <primary_font>&quot;Sora&quot;, &quot;Plus Jakarta Sans&quot;, sans-serif</primary_font>
+      <h1 scale="Light/Medium (400), 32px" />
+      <body scale="Regular (400), 15px, Color #2E4A40" />
+    </typography>
+    <geometry>
+      <card_radius>20px</card_radius>
+      <button_radius>9999px</button_radius>
+      <grid_gap>24px</grid_gap>
+    </geometry>
+    <shadows>
+      <ambient>Sehr sanfter Nebel-Glow</ambient>
+    </shadows>
+  </design_tokens>
+
+  <brand_rules>
+    <dos>
+      <do>Lavendel (#DDD6FE) und Salbei (#2E4A40) zur Beruhigung des Nervensystems nutzen.</do>
+    </dos>
+    <donts>
+      <dont>Keine Hektik, keine grellen Farben, kein aggressives Call-to-Action.</dont>
+    </donts>
+  </brand_rules>
+
+  <toad_component_blueprint lang="toad"><![CDATA[
+canvas {
+  size: 880px 580px;
+  fill: #F5F3EF;
+  font-family: "Sora, sans-serif";
+}
+
+>lavender = #DDD6FE;
+>sage = #2E4A40;
+
+rect #mentalCard {
+  at: center of canvas;
+  size: 780px 480px;
+  fill: #FFFFFF;
+  radius: 20px;
+}
+
+text #sanctuaryHeader {
+  at: top left of #mentalCard offset 40px 40px;
+  content: "AETHER // RAUM FÜR DIE SEELE";
+  font-size: 13px;
+  font-weight: 600;
+  color: >sage;
+}
+
+text #sanctuaryTitle {
+  at: below #sanctuaryHeader offset 16px;
+  content: "Innehalten. Durchatmen. Kraft finden.";
+  font-size: 32px;
+  font-weight: 400;
+  color: >sage;
+}
+  ]]></toad_component_blueprint>
+
+  <routing_triggers>
+    <trigger>mental health clinic brand</trigger>
+    <trigger>psychotherapy styleguide</trigger>
+    <trigger>meditation retreat card</trigger>
+    <trigger>aether</trigger>
+    <trigger>mindfulness health brochure</trigger>
+  </routing_triggers>
+</corporate_design>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<specification module="01_syntax_grammar_and_tokens" target="toad-dsl" version="3.0">
+  <metadata>
+    <description>Lexical architecture, EBNF grammar, token streams, and syntax rules for TOAD declarative design language</description>
+    <source_compiler_file>src/parser/lexer.ts</source_compiler_file>
+  </metadata>
+
+  <ebnf_grammar>
+    <![CDATA[
+Document        ::= ( Directive | VariableDecl | ComponentDecl | CanvasDecl | Element )*
+Directive       ::= ImportDirective | FontDirective
+ImportDirective ::= "@import" STRING ";"
+FontDirective   ::= "@font" STRING "as" IDENTIFIER ( FontOption )* ";"
+FontOption      ::= ( "weight:" ( NUMBER | IDENTIFIER ) )
+                  | ( "style:" IDENTIFIER )
+                  | ( "normal" | "bold" | "italic" | "oblique" | NUMBER )
+VariableDecl    ::= ">" IDENTIFIER "=" Value ";"
+CanvasDecl      ::= "canvas" ( STRING )? "{" ( Property )* ( Element )* "}"
+ComponentDecl   ::= "component" IDENTIFIER ( "(" ParameterList? ")" )? "{" ( Property )* ( Element )* "}"
+ParameterList   ::= Parameter ( "," Parameter )*
+Parameter       ::= IDENTIFIER ( ":" Type )? ( "=" Value )?
+Element         ::= ElementType ( "#" IDENTIFIER )? "{" ( Property )* ( Element )* "}"
+ElementType     ::= "rect" | "circle" | "ellipse" | "text" | "path" | "shape" 
+                  | "icon" | "image" | "stack" | "grid" | "group" | "polygon"
+                  | "star" | "triangle" | "arrow" | "cross" | "slot"
+Property        ::= IDENTIFIER ":" Value ";"
+    ]]>
+  </ebnf_grammar>
+
+  <tokens>
+    <token type="DIRECTIVE_IMPORT" pattern="@import" example='@import "./tokens.toad";' />
+    <token type="DIRECTIVE_FONT" pattern="@font" example='@font "./inter.ttf" as "Inter";' />
+    <token type="KW_CANVAS" pattern="canvas" example='canvas "Main" { ... }' />
+    <token type="KW_COMPONENT" pattern="component" example='component Card(title = "Default") { ... }' />
+    <token type="KW_SLOT" pattern="slot" example="slot;" />
+    <token type="IDENTIFIER" pattern="[a-zA-Z_][a-zA-Z0-9_-]*" example="cardBorder, font-size" />
+    <token type="VARIABLE_NAME" pattern=">[a-zA-Z_][a-zA-Z0-9_-]*" example=">brandGreen, >textDim" />
+    <token type="COLOR" pattern="#([0-9a-fA-F]{3,8})" example="#87cc2e, #ffffff80" />
+    <token type="NUMBER" pattern="[0-9]+(\.[0-9]+)?" example="16, 1.25, 0.75" />
+    <token type="DIMENSION" pattern="NUMBER + (px|%|em|rem|mm|cm|in|pt|deg)" example="24px, 50%, 1.5rem, 45deg" />
+    <token type="STRING" pattern="&quot;...&quot; | '...'" example='&quot;Hello World&quot;, &apos;Agency FB&apos;' />
+  </tokens>
+
+  <reserved_keywords>
+    <category name="element_primitives">rect, circle, ellipse, text, path, shape, icon, image, stack, grid, group, polygon, star, triangle, arrow, cross, slot</category>
+    <category name="directives_and_declarations">canvas, component, @import, @font, as, from</category>
+    <category name="relational_anchoring">at, position, center, of, below, above, right, left, inside, offset, align, previous</category>
+    <category name="layout_and_dimensions">hug, fill, auto, size, width, height, gap, padding, direction</category>
+    <category name="color_transforms">alpha, mix, lighten, darken, saturate, desaturate</category>
+  </reserved_keywords>
+
+  <punctuation_rules>
+    <rule id="SEMICOLON_TERMINATION" severity="fatal">
+      <description>Every property statement, directive, variable assignment, and slot statement MUST terminate with a semicolon (;).</description>
+      <good><![CDATA[>primary = #3b82f6; rect #box { size: 200px 100px; fill: >primary; }]]></good>
+      <bad reason="Missing semicolons cause [TOAD-E001]"><![CDATA[>primary = #3b82f6 rect #box { size: 200px 100px fill: >primary }]]></bad>
+    </rule>
+    <rule id="TUPLE_COMMAS" severity="fatal">
+      <description>Inside coordinate tuples '(x, y)', commas are MANDATORY: at: (100px, 200px);</description>
+      <good>at: (100px, 200px);</good>
+      <bad>at: (100px 200px);</bad>
+    </rule>
+    <rule id="DIMENSION_PAIR_WHITESPACE" severity="fatal">
+      <description>Inside dimension pairs 'size: W H;', commas are FORBIDDEN (whitespace delimited).</description>
+      <good>size: 900px 1200px;</good>
+      <bad>size: 900px, 1200px;</bad>
+    </rule>
+    <rule id="FUNCTION_ARG_COMMAS" severity="fatal">
+      <description>Inside transform functions, commas separate arguments.</description>
+      <good>fill: alpha(>brandColor, 0.35); fill: mix(#ff0000, #0000ff, 0.5);</good>
+    </rule>
+    <rule id="COMMENTS">
+      <description>C-style comments: single-line '// ...' and block '/* ... */'. Whitespace is non-significant except as token delimiter.</description>
+    </rule>
+  </punctuation_rules>
+</specification>

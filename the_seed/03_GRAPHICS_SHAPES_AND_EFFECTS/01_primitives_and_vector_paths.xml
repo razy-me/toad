@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<specification module="01_primitives_and_vector_paths" target="toad-dsl" version="3.0">
+  <metadata>
+    <description>Hardware-accelerated 2D geometric shapes, parametric primitives, corner radii, SVG paths, and icons</description>
+  </metadata>
+
+  <primitives>
+    <primitive name="rect">
+      <example><![CDATA[rect #box { size: 200px 120px; fill: #19271D; stroke: #87CC2E 1.5px; radius: 12px; }]]></example>
+    </primitive>
+    <primitive name="circle / ellipse">
+      <example><![CDATA[
+circle #avatar { size: 64px; fill: #87CC2E; }
+ellipse #glowOrb { size: 300px 180px; fill: radial-gradient(circle, alpha(#87CC2E, 0.4) 0%, transparent 70%); }
+      ]]></example>
+    </primitive>
+    <primitive name="star">
+      <example><![CDATA[star #badgeStar { size: 48px; points: 5; fill: #F59E0B; }]]></example>
+    </primitive>
+    <primitive name="triangle">
+      <example><![CDATA[triangle #indicator { size: 24px 20px; fill: #87CC2E; rotation: 90deg; }]]></example>
+    </primitive>
+    <primitive name="arrow">
+      <example><![CDATA[arrow #nextArrow { size: 32px 32px; stroke: #ffffff 2px; }]]></example>
+    </primitive>
+  </primitives>
+
+  <corner_radii>
+    <uniform example="rect #card { radius: 16px; }" />
+    <per_corner syntax="[Top-Left, Top-Right, Bottom-Right, Bottom-Left]" example="rect #modalHeader { radius: [16px, 16px, 0px, 0px]; }" />
+  </corner_radii>
+
+  <custom_svg_paths>
+    <description>Arbitrary vector paths via 'd:' SVG path data string.</description>
+    <rule severity="important">Path data coordinates in 'd:' should be normalized around local origin (0, 0). The compiler translates and anchors via 'at:'.</rule>
+    <example><![CDATA[
+path #customCloudLogo {
+    at: (360px, 100px);
+    size: 176px 100px;
+    d: "M 67.3 26.2 L 108.5 98 L 24 98 A 24 24 0 0 1 0 74 A 24 24 0 0 1 24 50 A 28 28 0 0 1 67.3 26.2 Z";
+    fill: #99C556;
+    stroke: alpha(#000000, 0.2) 1px;
+}
+    ]]></example>
+  </custom_svg_paths>
+
+  <polygons>
+    <description>Accepts an array of 2D vertex coordinate tuples relative to center (0, 0).</description>
+    <example><![CDATA[polygon #diamond { at: (200px, 200px); size: 80px 80px; points: [(0, -40), (40, 0), (0, 40), (-40, 0)]; fill: #87CC2E; }]]></example>
+  </polygons>
+
+  <icon_system>
+    <description>Integrated Lucide-compatible vector icons rendered at scale.</description>
+    <example><![CDATA[icon #checkIcon { at: (16px, 16px); size: 20px; iconName: "check"; fill: #87CC2E; }]]></example>
+  </icon_system>
+</specification>

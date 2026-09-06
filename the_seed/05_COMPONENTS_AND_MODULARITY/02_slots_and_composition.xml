@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<specification module="02_slots_and_composition" target="toad-dsl" version="3.0">
+  <metadata>
+    <description>Slot declarations, content projection, component wrappers, and modal compositions</description>
+  </metadata>
+
+  <slot_syntax severity="fatal">
+    <rule>The slot statement MUST terminate with a semicolon: 'slot;'. Omitting causes parse error [TOAD-E001].</rule>
+    <example><![CDATA[
+component ModalDialog(title = "Dialog Title", width = 500px) {
+    size: width hug;
+    radius: 16px;
+    fill: #19271D;
+    padding: 24px;
+
+    text #header {
+        content: title;
+        font-size: 20px;
+        font-weight: 700;
+        color: #ffffff;
+    }
+
+    // Dynamic slot insertion point
+    slot;
+}
+    ]]></example>
+  </slot_syntax>
+
+  <slotted_instantiation>
+    <example><![CDATA[
+ModalDialog #confirmModal("Confirm Deployment", 560px) {
+    at: center of canvas;
+
+    // Injected directly into component's slot;
+    text #dialogBody {
+        content: "Are you sure you want to deploy production payload v2.4.1?";
+        font-size: 14px;
+        color: #9EB0A3;
+        at: below #header offset 16px;
+    }
+
+    stack #buttonGroup {
+        at: below #dialogBody offset 24px;
+        direction: horizontal;
+        gap: 12px;
+        rect #btnCancel { size: 120px 40px; fill: transparent; stroke: #9EB0A3 1px; radius: 8px; }
+        rect #btnConfirm { size: 160px 40px; fill: #87CC2E; radius: 8px; }
+    }
+}
+    ]]></example>
+  </slotted_instantiation>
+</specification>
