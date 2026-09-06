@@ -808,7 +808,10 @@ toad logo -w
 
 <span class="comm"># 7. In bestimmten Ordner exportieren</span>
 toad logo -o ./dist
-toad logo -o .    <span class="comm"># in aktuellen Terminal-Ordner</span></code></pre>
+toad logo -o .    <span class="comm"># in aktuellen Terminal-Ordner</span>
+
+<span class="comm"># 8. PSD Ebenennamen (Standard: menschlich lesbar "Hero Headline", optional IDs behalten):</span>
+toad logo -f psd --no-human-layers</code></pre>
       </div>
 
       <div class="card-grid">
@@ -870,6 +873,10 @@ toad logo -o .    <span class="comm"># in aktuellen Terminal-Ordner</span></code
             <tr>
               <td><code>-f "svg, png, psd"</code></td>
               <td>Beliebige Kombi (kommagetrennt oder mit Leerzeichen)</td>
+            </tr>
+            <tr>
+              <td><code>--no-human-layers</code></td>
+              <td>Verhindert die automatische lesbare Ebenen-Benennung in PSD-Dateien und behält interne Code-IDs bei</td>
             </tr>
           </tbody>
         </table>
@@ -1036,7 +1043,7 @@ toad logo -o .    <span class="comm"># in aktuellen Terminal-Ordner</span></code
             <tr>
               <td><code>rect</code></td>
               <td>Rechteck oder abgerundetes Rechteck</td>
-              <td><code>size</code>, <code>fill</code>, <code>radius</code>, <code>border-radius</code>, <code>stroke</code></td>
+              <td><code>size</code>, <code>fill</code>, <code>radius</code> (Aliase: <code>border-radius</code>, <code>corner-radius</code>), <code>stroke</code></td>
             </tr>
             <tr>
               <td><code>circle</code></td>
@@ -1168,13 +1175,30 @@ toad logo -o .    <span class="comm"># in aktuellen Terminal-Ordner</span></code
   <span class="prop">font-variation</span>: <span class="val">"wght" 700 "wdth" 85</span>; <span class="comm">// Variable Font Achsen</span>
   <span class="prop">align</span>: <span class="kw">justify</span>;               <span class="comm">// 'left', 'center', 'right', 'justify'</span>
   <span class="prop">hanging-punctuation</span>: <span class="val">true</span>;    <span class="comm">// Optischer Randausgleich für Satzzeichen</span>
+  <span class="prop">trim</span>: <span class="kw">cap</span>;                    <span class="comm">// Leading-Trim ('cap', 'both', 'start', 'end', 'none')</span>
+  <span class="prop">vertical-align</span>: <span class="kw">middle</span>;       <span class="comm">// 'top', 'middle', 'bottom' (optische Vertikal-Zentrierung)</span>
   <span class="prop">color</span>: <span class="val">#ffffff</span>;
 }</code></pre>
       </div>
 
+      <div class="card-grid">
+        <div class="card">
+          <h4><code>trim: cap | both | none;</code></h4>
+          <p>Schneidet das typografische Leading (Halb-Geviert) über der Versalhöhe (Cap-Height) oder unter der Baseline ab (Alias: <code>text-box-trim</code>). Eliminiert unerwünschten Weißraum über Großbuchstaben.</p>
+        </div>
+        <div class="card">
+          <h4><code>vertical-align: middle;</code></h4>
+          <p>Aktiviert die mathematische und optische Vertikalzentrierung innerhalb von Containern (z.B. Pill-Badges, Buttons, Tabs) unter automatischer Kompensation des Top-Baseline-Bias.</p>
+        </div>
+        <div class="card">
+          <h4><code>Optische Zentrierung (Cap-Height)</code></h4>
+          <p>In engen Elementen (&le; 36px Höhe) gleicht TOAD den Versalhöhen-Versatz automatisch aus, sodass Glyphen geometrisch und optisch exakt auf der Container-Mittellinie sitzen.</p>
+        </div>
+      </div>
+
       <div class="callout">
-        <div class="callout-title">Tipp zu OpenType, Blocksatz &amp; Zeilenumbruch</div>
-        <p>Wird <code>align: justify</code> oder <code>font-features</code> gesetzt, berechnet die Skia-Engine den Wort- und Glyphenabstand präzise und exportiert die Absätze direkt als formatierte Photoshop-Textlayer.</p>
+        <div class="callout-title">Tipp zu OpenType, Blocksatz &amp; Optischer Zentrierung</div>
+        <p>Wird <code>trim: cap</code> oder <code>vertical-align: middle</code> verwendet, kalkuliert die TOAD-Engine die metrische Versalhöhe der Schriftart und exportiert den Text mit perfektem optischen Ausgleich direkt in Photoshop Type Layers und Vektor-SVGs.</p>
       </div>
     </section>
 
@@ -1420,6 +1444,10 @@ Card(<span class="val">"Analytics Card"</span>, <span class="val">#0f172a</span>
         <div class="card">
           <h4><code>Schnittmasken & Ordner</code></h4>
           <p><code>clip: true;</code> wird als native Photoshop Schnittmaske angelegt. Gruppen und Stacks werden zu hierarchischen Ebenen-Ordnern.</p>
+        </div>
+        <div class="card">
+          <h4><code>Semantische Ebenennamen</code></h4>
+          <p>Layer erhalten standardmäßig saubere, lesbare Namen (z.B. &quot;Hero Headline&quot;, &quot;Card Background&quot;). Mit <code>--no-human-layers</code> bleiben interne DSL-IDs erhalten.</p>
         </div>
       </div>
     </section>
@@ -1752,6 +1780,7 @@ Card(<span class="val">"Analytics Card"</span>, <span class="val">#0f172a</span>
 
     // 4. Formen & Icons
     { title: "rect { ... }", category: "Formen", desc: "Rechteck mit optionalem einheitlichem oder individuellem Eckenradius", link: "#shapes", tag: "Primitive" },
+    { title: "corner-radius: 12px;", category: "Formen", desc: "Eckenabrundung für Rechtecke (Aliase: radius, border-radius, corner-radius)", link: "#shapes", tag: "Primitive" },
     { title: "circle { ... }", category: "Formen", desc: "Kreis oder Ellipse (size: 100px; oder size: 120px 80px;)", link: "#shapes", tag: "Primitive" },
     { title: "star { ... }", category: "Formen", desc: "5-zackiger Vektorstern mit goldenem Schnitt", link: "#shapes", tag: "Primitive" },
     { title: "triangle { ... }", category: "Formen", desc: "Gleichschenkliges Vektor-Dreieck", link: "#shapes", tag: "Primitive" },
@@ -1768,6 +1797,8 @@ Card(<span class="val">"Analytics Card"</span>, <span class="val">#0f172a</span>
     { title: "font-weight: 700 / bold;", category: "Typografie", desc: "Schriftgewichtung (100–900 oder bold, normal, medium)", link: "#text", tag: "Text" },
     { title: "letter-spacing: 1.5px;", category: "Typografie", desc: "Zeichenabstand / Tracking in Pixeln", link: "#text", tag: "Text" },
     { title: "line-height: 1.4;", category: "Typografie", desc: "Zeilenhöhe (Multiplikator oder Pixel)", link: "#text", tag: "Text" },
+    { title: "trim: cap | both | none;", category: "Typografie", desc: "Leading-Trimming für bündige Versalhöhe / optische Zentrierung (Alias: text-box-trim)", link: "#text", tag: "Text" },
+    { title: "vertical-align: middle;", category: "Typografie", desc: "Optische Vertikal-Zentrierung unter Kompensation des Top-Baseline-Bias in Badges & Buttons", link: "#text", tag: "Text" },
     { title: "text-transform: uppercase;", category: "Typografie", desc: "Groß-/Kleinschreibung (uppercase, lowercase, capitalize)", link: "#text", tag: "Text" },
     { title: "text-align: center;", category: "Typografie", desc: "Horizontale Textausrichtung (left, center, right, justify)", link: "#text", tag: "Text" },
 
@@ -1819,6 +1850,7 @@ Card(<span class="val">"Analytics Card"</span>, <span class="val">#0f172a</span>
     { title: "Photoshop Layer FX (fx)", category: "Photoshop PSD", desc: "Vollständiges Layer-FX-Mapping (dropShadow, innerShadow, outerGlow, innerGlow, bevel, stroke, solidFill)", link: "#psd-features", tag: "PSD" },
     { title: "Adjustment Layers", category: "Photoshop PSD", desc: "Helligkeit/Kontrast, Gradationskurven und Farbton/Sättigung als editierbare Ebenen", link: "#psd-features", tag: "PSD" },
     { title: "Native Type Layers", category: "Photoshop PSD", desc: "Voll editierbare Textebenen mit PostScript-Font-Mapping für das Text-Werkzeug (T)", link: "#psd-features", tag: "PSD" },
+    { title: "--no-human-layers", category: "Photoshop PSD", desc: "CLI-Flag: Behält technische Node-IDs statt formatierter menschenlesbarer Ebenennamen", link: "#psd-features", tag: "PSD" },
 
     // 12. Best Practice Master-Poster
     { title: "Bauhaus Exhibition Poster 1923", category: "Praxis-Beispiele", desc: "Konstruktivistische Vektor-Ribbons (SVG Arc A), Haettenschweiler Typo & harmonische Farbpalette", link: "#bauhaus-poster", tag: "Template" },
