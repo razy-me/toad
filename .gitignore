@@ -22,3 +22,8 @@ Thumbs.db
 .idea/
 .vscode/
 *.log
+
+# AI agent workspace configurations
+.agents/
+_agents/
+
