@@ -71,10 +71,10 @@ To completely eliminate generic, mediocre "Mid-AI" designs, **EVERY `.toad` code
    - Text elements (`text`) take `color:` (or `fill:`).
 7. **Slot Statements**: Content projection slots MUST terminate with a semicolon: `slot;`.
 8. **Font Stacks in Variables**: Font fallback chains MUST be a single string literal: `>font = "Inter, -apple-system, sans-serif";`. NEVER unquoted comma lists (`>font = "Inter", sans-serif;` is a FATAL syntax error).
-9. **Explicit Fonts & Synchronized `fonts/` Directory (Photopea Drag & Drop)**:
+9. **Explicit Fonts & Centralized `c:/toad-designs/fonts/` Directory (Photopea Drag & Drop)**:
    - Always declare `@font` directives or define `font-family:` on the `canvas` block. Do not rely on unconfigured OS-specific fallback fonts.
-   - **MANDATORY**: Keep the local project `fonts/` folder completely up to date at all times. Every custom font family and weight used in the design MUST have its corresponding `.ttf` or `.otf` font binary in `fonts/`.
-   - **Photopea Readiness**: Keeping the `fonts/` folder synchronized ensures the user can instantly drag and drop the font files directly into **Photopea** (or Photoshop) so that all live text layers, weights, and glyphs render natively without missing font alerts or substitution distortion.
+   - **MANDATORY**: Projects do NOT maintain individual, fragmented `fonts/` folders. Instead, ALL fonts used across any designs are stored in the single central fonts repository at `c:/toad-designs/fonts/`. Whenever a new font is required, add/expand it in `c:/toad-designs/fonts/`.
+   - **Photopea Readiness**: The central `c:/toad-designs/fonts/` directory ensures the user can load all required fonts once into **Photopea** (or Photoshop) via drag-and-drop or local fonts, so that all live text layers, weights, and glyphs render natively across all projects without missing font alerts or substitution distortion.
 10. **Badge & Pill Margins**: Always provide 15% to 20% horizontal safety padding around text in pills, badges, and buttons to prevent clipping across different OS font metric engines.
 11. **Vibrant Glow Alphas**: For neon or glowing radial gradients, center stop alphas MUST be $\ge 0.25$ (e.g., `alpha(>brandGreen, 0.35) 0%`) to remain vivid across sRGB displays.
 12. **Transforms & Rotation**: Rotations use `rotation: 180;` or `rotation: 180deg;`. In rotated containers, adjust margins to account for inverted coordinate axes.
@@ -116,6 +116,6 @@ Before outputting `.toad` code, execute this mental checklist:
 - [ ] Are all badge containers 15–20% wider than the raw text string?
 - [ ] Are neon glow center alphas $\ge 0.25$?
 - [ ] Do all `slot` statements terminate with `;`?
-- [ ] Did I ensure the project's `fonts/` directory is maintained and up to date with all necessary `.ttf`/`.otf` font binaries for seamless Photopea drag-and-drop loading?
+- [ ] Did I ensure any required fonts are present in the central `c:/toad-designs/fonts/` repository (expanding it if new fonts are needed)?
 
 

@@ -58,9 +58,9 @@ verification_steps:
     action_if_invalid: "Remove cluttered badges/cards; replace purple haze with structured surfaces; left-align body text; delete floating debris."
 
   11_fonts_directory_sync:
-    check: "Is the project's 'fonts/' folder created, populated, and kept up to date with all .ttf/.otf binaries for seamless Photopea drag-and-drop support?"
-    rule: "Every project MUST maintain an up-to-date 'fonts/' directory containing the font binaries (.ttf/.otf) for all custom fonts declared via @font or referenced in font-family."
-    action_if_invalid: "Ensure 'fonts/' contains the required font files and that @font paths correctly point to them."
+    check: "Are all required font binaries (.ttf/.otf) verified to exist in the central repository 'c:/toad-designs/fonts/' (expanding it if new fonts are needed)?"
+    rule: "Designs MUST NOT duplicate font folders locally per project. All fonts are centralized in 'c:/toad-designs/fonts/'. When a design uses a new font, expand the central repository."
+    action_if_invalid: "Add the required font file (.ttf/.otf) to 'c:/toad-designs/fonts/' and ensure @font / font-family references are aligned."
 
   12_optical_text_centering:
     check: "Are texts in compact pills, badges, and buttons optically centered using cap-height offset (+1.5px to +2.5px @1x) or trim: cap / verticalAlign: middle?"

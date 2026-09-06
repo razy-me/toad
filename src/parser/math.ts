@@ -214,6 +214,7 @@ export interface LayoutCanvasResult {
   quality?: number;
   guides?: Array<{ location: number; direction: 'horizontal' | 'vertical' }>;
   globalLight?: { angle: number; altitude?: number };
+  properties?: Record<string, any>;
 }
 
 export interface LayoutResult {
@@ -835,7 +836,8 @@ export class LayoutSolver {
       ratio: this.doc.canvas.ratio,
       quality: this.doc.canvas.quality,
       guides: this.doc.canvas.guides || (this.doc.canvas.properties?.guides as any),
-      globalLight: this.doc.canvas.globalLight || (this.doc.canvas.properties?.globalLight as any)
+      globalLight: this.doc.canvas.globalLight || (this.doc.canvas.properties?.globalLight as any),
+      properties: this.doc.canvas.properties
     };
 
     let canvasesResult: Array<{ canvas: LayoutCanvasResult; nodes: LayoutNode[]; warnings: string[] }> | undefined;

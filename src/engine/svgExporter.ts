@@ -11,40 +11,44 @@ import { LayoutResult, LayoutNode, ComputedStyle, GradientStyle } from '../parse
 import { distributeGradientStops, parseFilterString, parseColorToRgba } from './drawUtils.js';
 import { resolveSharedImage } from './imageCache.js';
 import { resolveHumanLayerName, LayerNamingContext } from '../utils/layerNaming.js';
+import { FontLoader } from './fontLoader.js';
 
-function formatColorForSvg(color: string): string {
-  if (!color) return color;
-  const trimmed = color.trim();
-  if (trimmed.toLowerCase() === 'transparent') {
-    return 'none';
+export function parseSvgColorAndOpacity(colorStr?: string): { color: string; opacity?: number } {
+  if (!colorStr) return { color: 'none' };
+  const trimmed = colorStr.trim();
+  if (trimmed.toLowerCase() === 'transparent' || trimmed.toLowerCase() === 'none') {
+    return { color: 'none' };
   }
-  if (trimmed.toLowerCase().startsWith('cmyk(')) {
-    const rgba = parseColorToRgba(trimmed);
-    if (rgba.a === 1) {
-      const hex = ((1 << 24) + (rgba.r << 16) + (rgba.g << 8) + rgba.b).toString(16).slice(1);
-      return `#${hex}`;
-    }
-    return `rgba(${rgba.r},${rgba.g},${rgba.b},${rgba.a})`;
-  }
-  return color;
-}
-
-function formatStopAttributes(color: string): string {
-  if (!color) return 'stop-color="#000000"';
-  const trimmed = color.trim();
-  if (trimmed.toLowerCase() === 'transparent') {
-    return 'stop-color="#000000" stop-opacity="0"';
+  if (trimmed.startsWith('url(#')) {
+    return { color: trimmed };
   }
   try {
     const rgba = parseColorToRgba(trimmed);
     const hex = ((1 << 24) + (rgba.r << 16) + (rgba.g << 8) + rgba.b).toString(16).slice(1);
     if (rgba.a < 1) {
-      return `stop-color="#${hex}" stop-opacity="${Number(rgba.a.toFixed(3))}"`;
+      return { color: `#${hex}`, opacity: Number(rgba.a.toFixed(3)) };
     }
-    return `stop-color="#${hex}"`;
+    return { color: `#${hex}` };
   } catch {
-    return `stop-color="${formatColorForSvg(color)}"`;
+    return { color: colorStr };
   }
+}
+
+function formatColorForSvg(color: string): string {
+  if (!color) return color;
+  return parseSvgColorAndOpacity(color).color;
+}
+
+function formatStopAttributes(color: string): string {
+  if (!color) return 'stop-color="#000000"';
+  const parsed = parseSvgColorAndOpacity(color);
+  if (parsed.color === 'none') {
+    return 'stop-color="#000000" stop-opacity="0"';
+  }
+  if (parsed.opacity !== undefined && parsed.opacity < 1) {
+    return `stop-color="${parsed.color}" stop-opacity="${parsed.opacity}"`;
+  }
+  return `stop-color="${parsed.color}"`;
 }
 
 function rgbStr(c: { r: number; g: number; b: number }): string {
@@ -56,6 +60,7 @@ export interface SvgExportOptions {
   basePath?: string;
   embedImages?: boolean;
   humanizeLayerNames?: boolean;
+  textToPath?: boolean;
 }
 
 export class SvgExporter {
@@ -69,11 +74,13 @@ export class SvgExporter {
   private basePath?: string;
   private embedImages: boolean;
   private humanizeLayerNames: boolean;
+  private textToPath: boolean;
 
   constructor(options: SvgExportOptions = {}) {
     this.basePath = options.basePath;
     this.embedImages = options.embedImages !== false;
     this.humanizeLayerNames = options.humanizeLayerNames === true;
+    this.textToPath = options.textToPath === true;
   }
 
   /**
@@ -108,6 +115,10 @@ export class SvgExporter {
             const weightProp = f.weight ? `font-weight: ${f.weight}; ` : '';
             const styleProp = f.style ? `font-style: ${f.style}; ` : '';
             fontFaces.push(`@font-face { font-family: "${this.escapeAttr(f.family)}"; ${weightProp}${styleProp}src: url("data:${mime};base64,${base64}"); }`);
+            const psName = FontLoader.resolvePostScriptName(f.family, f.weight, f.style);
+            if (psName && psName.toLowerCase() !== f.family.toLowerCase()) {
+              fontFaces.push(`@font-face { font-family: "${this.escapeAttr(psName)}"; ${weightProp}${styleProp}src: url("data:${mime};base64,${base64}"); }`);
+            }
           } catch {}
         }
       }
@@ -127,7 +138,11 @@ export class SvgExporter {
     if (layout.canvas.background && layout.canvas.background !== 'transparent' && layout.canvas.background !== 'none') {
       const bgBox = { x: 0, y: 0, w: width, h: height };
       const bgFill = this.processFill(layout.canvas.background, bgBox);
-      elementsMarkup.push(`  <rect width="100%" height="100%" fill="${bgFill}" />`);
+      const parsedBg = parseSvgColorAndOpacity(bgFill);
+      if (parsedBg.color !== 'none') {
+        const op = parsedBg.opacity !== undefined && parsedBg.opacity < 1 ? ` fill-opacity="${parsedBg.opacity}"` : '';
+        elementsMarkup.push(`  <rect width="100%" height="100%" fill="${parsedBg.color}"${op} />`);
+      }
     }
 
     // 2. Render Nodes
@@ -159,12 +174,51 @@ export class SvgExporter {
       ? `  <defs>\n${this.defs.map(d => `    ${d}`).join('\n')}\n  </defs>\n`
       : '';
 
-    return [
+    const rawSvg = [
       `<?xml version="1.0" encoding="UTF-8"?>`,
       `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="0 0 ${width} ${height}" width="${scaledW}" height="${scaledH}">`,
       defsBlock + elementsMarkup.join('\n'),
       `</svg>`
     ].filter(Boolean).join('\n');
+
+    const shouldConvertTextToPath = this.textToPath
+      || Boolean(layout.canvas.properties?.textToPath)
+      || Boolean(layout.canvas.properties?.['text-to-path'])
+      || Boolean(layout.canvas.properties?.textAsPath)
+      || Boolean(layout.canvas.properties?.['text-as-path']);
+
+    if (shouldConvertTextToPath) {
+      try {
+        if (layout.fonts && layout.fonts.length > 0) {
+          FontLoader.registerFontDirectives(layout.fonts, this.basePath);
+        }
+        const { convertSVGTextToPath } = await import('@napi-rs/canvas');
+        const textRegex = /<text\b([^>]*)>([\s\S]*?)<\/text>/g;
+        return rawSvg.replace(textRegex, (match, attrs) => {
+          const idMatch = attrs.match(/\bid="([^"]+)"/);
+          const dataNameMatch = attrs.match(/\bdata-name="([^"]+)"/);
+          const labelMatch = attrs.match(/\binkscape:label="([^"]+)"/);
+
+          const idAttr = idMatch ? ` id="${idMatch[1]}"` : '';
+          const dataNameAttr = dataNameMatch ? ` data-name="${dataNameMatch[1]}"` : '';
+          const labelAttr = labelMatch ? ` inkscape:label="${labelMatch[1]}"` : '';
+
+          const miniSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">${match}</svg>`;
+          const convertedMini = convertSVGTextToPath(Buffer.from(miniSvg)).toString('utf-8');
+
+          const paths = convertedMini.match(/<path[^>]+>/g);
+          if (!paths || paths.length === 0) {
+            return match;
+          }
+
+          return `<g${idAttr}${dataNameAttr}${labelAttr}>\n        ${paths.join('\n        ')}\n      </g>`;
+        });
+      } catch {
+        return rawSvg;
+      }
+    }
+
+    return rawSvg;
   }
 
   private async renderNode(node: LayoutNode, indent = '  ', context?: LayerNamingContext): Promise<string> {
@@ -340,14 +394,57 @@ export class SvgExporter {
         const lineCountSvg = lines.length || 1;
         const isMiddleSvg = node.style.verticalAlign === 'middle';
 
-        const fontFeaturesStyle = node.style.fontFeatures
-          ? `font-feature-settings: ${Array.isArray(node.style.fontFeatures) ? node.style.fontFeatures.map(f => `"${f}" 1`).join(', ') : node.style.fontFeatures};`
-          : '';
-        const fontVariationStyle = node.style.fontVariation
-          ? `font-variation-settings: ${typeof node.style.fontVariation === 'object' ? Object.entries(node.style.fontVariation).map(([k, v]) => `"${k}" ${v}`).join(', ') : node.style.fontVariation};`
-          : '';
-        const combinedStyle = [fontFeaturesStyle, fontVariationStyle].filter(Boolean).join(' ');
-        const styleAttr = combinedStyle ? `style="${this.escapeAttr(combinedStyle)}"` : '';
+        const rawFamily = node.textLayout?.fontFamily || 'sans-serif';
+        // Extract clean primary family name for SVG presentation attribute (Photopea, Illustrator, Inkscape)
+        const primaryFamily = rawFamily.split(',')[0]!.trim().replace(/^['"]|['"]$/g, '') || 'sans-serif';
+
+        // Helper to format CSS font-family stack with proper quoting for multi-word fonts
+        const formatCssFamily = (fam: string): string => {
+          return fam.split(',').map(part => {
+            const trimmed = part.trim();
+            if (/^(serif|sans-serif|monospace|cursive|fantasy|system-ui|-apple-system)$/i.test(trimmed)) {
+              return trimmed;
+            }
+            const unquoted = trimmed.replace(/^['"]|['"]$/g, '');
+            return `'${unquoted}'`;
+          }).join(', ');
+        };
+
+        const formattedCssFontFamily = rawFamily.includes(',')
+          ? formatCssFamily(rawFamily)
+          : (primaryFamily === 'sans-serif' || primaryFamily === 'serif' || primaryFamily === 'monospace'
+              ? primaryFamily
+              : `'${primaryFamily}', sans-serif`);
+
+        const fontWeight = node.textLayout?.fontWeight ? String(node.textLayout.fontWeight) : '';
+        const fontStyle = node.textLayout?.fontStyle ? String(node.textLayout.fontStyle) : '';
+
+        // Resolve exact PostScript font name (e.g. SegoeUI-Bold, Consolas-Bold) for Photopea, Photoshop, and Illustrator
+        const postScriptName = FontLoader.resolvePostScriptName(primaryFamily, fontWeight, fontStyle);
+        const isMono = primaryFamily.toLowerCase().includes('mono') || primaryFamily.toLowerCase().includes('consolas') || primaryFamily.toLowerCase().includes('courier');
+        const genericFallback = isMono ? 'monospace' : (primaryFamily.toLowerCase().includes('serif') && !primaryFamily.toLowerCase().includes('sans') ? 'serif' : 'sans-serif');
+
+        let familyAttr = primaryFamily;
+        if (postScriptName && postScriptName.toLowerCase() !== primaryFamily.toLowerCase()) {
+          familyAttr = `${postScriptName}, '${primaryFamily}', ${genericFallback}`;
+        } else if (rawFamily.includes(',')) {
+          familyAttr = rawFamily;
+        }
+
+        const fontStyles: string[] = [];
+        if (postScriptName && postScriptName.toLowerCase() !== primaryFamily.toLowerCase()) {
+          fontStyles.push(`font-family: ${postScriptName}, '${primaryFamily}', ${genericFallback};`);
+        }
+        if (fontWeight) fontStyles.push(`font-weight: ${fontWeight};`);
+        if (fontStyle) fontStyles.push(`font-style: ${fontStyle};`);
+        if (node.style.letterSpacing) fontStyles.push(`letter-spacing: ${node.style.letterSpacing}px;`);
+        if (node.style.fontFeatures) {
+          fontStyles.push(`font-feature-settings: ${Array.isArray(node.style.fontFeatures) ? node.style.fontFeatures.map(f => `"${f}" 1`).join(', ') : node.style.fontFeatures};`);
+        }
+        if (node.style.fontVariation) {
+          fontStyles.push(`font-variation-settings: ${typeof node.style.fontVariation === 'object' ? Object.entries(node.style.fontVariation).map(([k, v]) => `"${k}" ${v}`).join(', ') : node.style.fontVariation};`);
+        }
+        const styleAttr = fontStyles.length > 0 ? `style="${this.escapeAttr(fontStyles.join(' '))}"` : '';
 
         // Exact Skia Canvas parity:
         let baselineY: number;
@@ -361,17 +458,13 @@ export class SvgExporter {
           baselineY = node.y + valignShiftSvg + ascent;
         }
 
-        const formattedFontFamily = fontFamily === 'sans-serif' || fontFamily.includes(',')
-          ? fontFamily
-          : `'${fontFamily}', sans-serif`;
-
         const textAttrs = [
           `x="${anchorX}"`,
           `y="${baselineY}"`,
-          `font-family="${this.escapeAttr(formattedFontFamily)}"`,
+          `font-family="${this.escapeAttr(familyAttr)}"`,
           `font-size="${fontSize}"`,
-          node.textLayout?.fontWeight ? `font-weight="${this.escapeAttr(String(node.textLayout.fontWeight))}"` : '',
-          node.textLayout?.fontStyle ? `font-style="${this.escapeAttr(String(node.textLayout.fontStyle))}"` : '',
+          fontWeight ? `font-weight="${this.escapeAttr(fontWeight)}"` : '',
+          fontStyle ? `font-style="${this.escapeAttr(fontStyle)}"` : '',
           `text-anchor="${textAnchor}"`,
           node.style.letterSpacing ? `letter-spacing="${node.style.letterSpacing}"` : '',
           node.style.textTransform && node.style.textTransform !== 'none' ? `text-transform="${this.escapeAttr(node.style.textTransform)}"` : '',
@@ -387,8 +480,8 @@ export class SvgExporter {
         }
 
         const tspans = lines.map((l, i) => {
-          const dy = i === 0 ? 0 : lineHeight;
-          return `<tspan x="${anchorX}" dy="${dy}">${this.escapeXml(l)}</tspan>`;
+          const lineY = baselineY + i * lineHeight;
+          return `<tspan x="${anchorX}" y="${lineY}">${this.escapeXml(l)}</tspan>`;
         }).join('');
 
         return `${indent}<text ${textAttrs}>${tspans}</text>`;
@@ -551,13 +644,24 @@ export class SvgExporter {
     const fill = node.style.fill || node.fill;
     if (!fill) {
       if (node.type === 'text') {
-        const color = formatColorForSvg(node.style.color || '#000000');
-        return `fill="${this.escapeAttr(color)}"`;
+        const parsed = parseSvgColorAndOpacity(node.style.color || '#000000');
+        if (parsed.color === 'none') return 'fill="none"';
+        let res = `fill="${this.escapeAttr(parsed.color)}"`;
+        if (parsed.opacity !== undefined && parsed.opacity < 1) {
+          res += ` fill-opacity="${parsed.opacity}"`;
+        }
+        return res;
       }
       return 'fill="none"';
     }
     const val = this.processFill(fill, node.box);
-    return `fill="${this.escapeAttr(formatColorForSvg(val))}"`;
+    const parsed = parseSvgColorAndOpacity(val);
+    if (parsed.color === 'none') return 'fill="none"';
+    let res = `fill="${this.escapeAttr(parsed.color)}"`;
+    if (parsed.opacity !== undefined && parsed.opacity < 1) {
+      res += ` fill-opacity="${parsed.opacity}"`;
+    }
+    return res;
   }
 
   private getStrokeAttrs(node: LayoutNode): string {
@@ -567,9 +671,12 @@ export class SvgExporter {
     const strokeWidth = node.style.strokeWidth ?? 1;
     if (!stroke || strokeWidth <= 0) return '';
 
-    const formattedStroke = formatColorForSvg(stroke);
-    if (formattedStroke === 'none') return '';
-    let res = `stroke="${this.escapeAttr(formattedStroke)}" stroke-width="${strokeWidth}"`;
+    const parsed = parseSvgColorAndOpacity(stroke);
+    if (parsed.color === 'none') return '';
+    let res = `stroke="${this.escapeAttr(parsed.color)}" stroke-width="${strokeWidth}"`;
+    if (parsed.opacity !== undefined && parsed.opacity < 1) {
+      res += ` stroke-opacity="${parsed.opacity}"`;
+    }
     if (node.style.strokeCap) {
       res += ` stroke-linecap="${this.escapeAttr(node.style.strokeCap)}"`;
     }
@@ -586,7 +693,7 @@ export class SvgExporter {
 
   private processFill(fill: string | GradientStyle | any, box: { x: number; y: number; w: number; h: number }): string {
     if (typeof fill === 'string') {
-      return formatColorForSvg(fill);
+      return fill;
     }
 
     if (typeof fill === 'object' && fill.type === 'linear') {
@@ -799,17 +906,20 @@ export class SvgExporter {
     }
 
     if (shadow) {
+      const parsedShadow = parseSvgColorAndOpacity(shadow.color);
+      const op = parsedShadow.opacity !== undefined && parsedShadow.opacity < 1 ? ` flood-opacity="${parsedShadow.opacity}"` : '';
       feElements.push(
-        `<feDropShadow dx="${shadow.offsetX}" dy="${shadow.offsetY}" stdDeviation="${shadow.blur / 2}" flood-color="${this.escapeAttr(shadow.color)}" />`
+        `<feDropShadow dx="${shadow.offsetX}" dy="${shadow.offsetY}" stdDeviation="${shadow.blur / 2}" flood-color="${this.escapeAttr(parsedShadow.color)}"${op} />`
       );
     }
 
     if (outerGlow) {
-      const col = outerGlow.color || '#ffffff';
+      const parsedGlow = parseSvgColorAndOpacity(outerGlow.color || '#ffffff');
       const size = (outerGlow.size || 10) / 2;
-      const op = outerGlow.opacity !== undefined ? ` flood-opacity="${outerGlow.opacity}"` : '';
+      const effectiveOpacity = outerGlow.opacity !== undefined ? outerGlow.opacity : (parsedGlow.opacity !== undefined ? parsedGlow.opacity : 1);
+      const op = effectiveOpacity < 1 ? ` flood-opacity="${effectiveOpacity}"` : '';
       feElements.push(
-        `<feDropShadow dx="0" dy="0" stdDeviation="${size}" flood-color="${this.escapeAttr(col)}"${op} />`
+        `<feDropShadow dx="0" dy="0" stdDeviation="${size}" flood-color="${this.escapeAttr(parsedGlow.color)}"${op} />`
       );
     }
 

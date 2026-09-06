@@ -42,6 +42,7 @@ export interface BuildOptions {
   /** Preferred port for the live preview server (dev command). */
   port?: number;
   humanizeLayerNames?: boolean;
+  textToPath?: boolean;
 }
 
 export interface BuildResult {
@@ -250,9 +251,7 @@ export async function compileToad(
       const fileBase = scaleSuffix ? `${baseName}${page.nameSuffix}${scaleSuffix}` : `${baseName}${page.nameSuffix}`;
       const pageLayout = page.pageLayout;
 
-      // Render the scene once per page/scale and encode every requested
-      // raster format from the same bitmap instead of re-running the full
-      // renderer per format.
+      // Raster formats respect scalesToRender and scaleSuffix
       const needsRaster = formatsToRender.some(f => f === 'png' || f === 'jpg' || f === 'jpeg' || f === 'webp');
       if (needsRaster) {
         const renderedCanvas = await renderToCanvas(pageLayout, {
@@ -281,32 +280,42 @@ export async function compileToad(
           outputFiles.push(webpPath);
         }
       }
+    }
+  }
 
-      if (formatsToRender.includes('psd')) {
-        const effectiveDpi = options.dpi || (pageLayout.canvas.hasExplicitDpi ? pageLayout.canvas.dpi : 72);
-        const psdBuf = await exportToPsd(pageLayout, {
-          scale,
-          dpi: effectiveDpi,
-          basePath: resolvedEntry,
-          humanizeLayerNames: options.humanizeLayerNames
-        });
-        const psdPath = path.join(outDir, `${fileBase}.psd`);
-        fs.mkdirSync(path.dirname(psdPath), { recursive: true });
-        fs.writeFileSync(psdPath, psdBuf);
-        outputFiles.push(psdPath);
-      }
+  // PSD and SVG files are always exported at fixed scale 2.5x of the original canvas,
+  // completely ignoring -s / --scale and canvas.scales options to ensure crisp vector / high-res rendering.
+  const FIXED_VECTOR_SCALE = 2.5;
 
-      if (formatsToRender.includes('svg')) {
-        const exporter = new SvgExporter({
-          basePath: resolvedEntry,
-          humanizeLayerNames: options.humanizeLayerNames
-        });
-        const svgContent = await exporter.export(pageLayout, scale);
-        const svgPath = path.join(outDir, `${fileBase}.svg`);
-        fs.mkdirSync(path.dirname(svgPath), { recursive: true });
-        fs.writeFileSync(svgPath, svgContent, 'utf-8');
-        outputFiles.push(svgPath);
-      }
+  for (const page of layoutPages) {
+    const fileBase = `${baseName}${page.nameSuffix}`;
+    const pageLayout = page.pageLayout;
+
+    if (formatsToRender.includes('psd')) {
+      const effectiveDpi = options.dpi || (pageLayout.canvas.hasExplicitDpi ? pageLayout.canvas.dpi : 72);
+      const psdBuf = await exportToPsd(pageLayout, {
+        scale: FIXED_VECTOR_SCALE,
+        dpi: effectiveDpi,
+        basePath: resolvedEntry,
+        humanizeLayerNames: options.humanizeLayerNames
+      });
+      const psdPath = path.join(outDir, `${fileBase}.psd`);
+      fs.mkdirSync(path.dirname(psdPath), { recursive: true });
+      fs.writeFileSync(psdPath, psdBuf);
+      outputFiles.push(psdPath);
+    }
+
+    if (formatsToRender.includes('svg')) {
+      const exporter = new SvgExporter({
+        basePath: resolvedEntry,
+        humanizeLayerNames: options.humanizeLayerNames,
+        textToPath: options.textToPath
+      });
+      const svgContent = await exporter.export(pageLayout, FIXED_VECTOR_SCALE);
+      const svgPath = path.join(outDir, `${fileBase}.svg`);
+      fs.mkdirSync(path.dirname(svgPath), { recursive: true });
+      fs.writeFileSync(svgPath, svgContent, 'utf-8');
+      outputFiles.push(svgPath);
     }
   }
 

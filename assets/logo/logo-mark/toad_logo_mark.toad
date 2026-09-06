@@ -1,0 +1,122 @@
+// ============================================================================
+// 🧬 TOAD MULTI-DNA INSPIRATION MATRIX (Min 3 Personas + Min 3 Corporate Systems)
+// ----------------------------------------------------------------------------
+// 🎭 CREATIVE PERSONAS (the_seed/09_CREATIVE_PERSONAS_AND_STYLES/):
+//   1. [felix_aero_lindner]       -> 2D geometric circle & squircle purism, surgical balance, flat vector signet
+//   2. [marcus_vanguard_thorne]   -> Stark typographic contrast, unapologetic flat 2D shapes, zero skeuomorphism
+//   3. [sven_hallstroem]          -> Nordic reduction, essential organic curves, calm confident branding
+// 🏢 CORPORATE DESIGN SYSTEMS (the_seed/10_CORPORATE_DESIGN_SYSTEMS/):
+//   1. [streamflow_devops]        -> Clean modern developer tool aesthetic (flat 2D vector, CLI-ready)
+//   2. [paypulse_fintech]         -> High-trust flat rounded geometry, generous corner radii
+//   3. [velora_cloud_erp]         -> Soft pill-shapes, disciplined 2D curves, friendly professional tone
+// ============================================================================
+
+// --- Explicit Typography Declarations (Synchronized with ./fonts/) ---
+@font "./fonts/segoeui.ttf" as "Segoe UI" weight: 400 style: normal;
+@font "./fonts/segoeuib.ttf" as "Segoe UI" weight: 700 style: normal;
+@font "./fonts/consola.ttf" as "Consolas" weight: 400 style: normal;
+@font "./fonts/consolab.ttf" as "Consolas" weight: 700 style: normal;
+
+// --- Design Tokens & Palette ---
+>fontDisplay    = "Segoe UI, -apple-system, sans-serif";
+>fontMono       = "Consolas, monospace";
+
+>bgDark         = #080c14;
+>toadEmerald    = #10b981;
+>toadWhite      = #ffffff;
+
+// --- Canvas Definition: 1024 x 1024 px (1:1 Master App Icon & Emblem) ---
+canvas "ToadLogoMark" {
+    size: 1024px 1024px;
+    font-family: >fontDisplay;
+    background: >bgDark;
+    export: all;
+    quality: 100;
+}
+
+// ============================================================================
+// MASTER 2D FUSION TILE LOGO
+// ============================================================================
+stack #masterStack {
+    direction: vertical;
+    gap: 36px;
+    align: center;
+    size: 700px hug;
+    at: center of canvas offset (0px, -10px);
+
+    // --- The 2D Fusion Squircle Tile (540x540 px) ---
+    group #fusionTile {
+        size: 540px 540px;
+
+        // Base Emerald Squircle Chassis
+        rect #tileChassis {
+            size: 540px 540px;
+            radius: 156px;
+            fill: >toadEmerald;
+            at: (0px, 0px);
+        }
+
+        // --- White Amphibian Silhouette (Centered Inside Tile) ---
+        group #toadSilhouette {
+            size: 380px 260px;
+            at: (80px, 140px);
+
+            // Left Eye Dome
+            circle #eyeLeftDome {
+                size: 130px;
+                fill: >toadWhite;
+                at: (30px, 0px);
+            }
+
+            // Right Eye Dome
+            circle #eyeRightDome {
+                size: 130px;
+                fill: >toadWhite;
+                at: (220px, 0px);
+            }
+
+            // Wide Rounded Body Capsule
+            rect #bodyCapsule {
+                size: 380px 190px;
+                radius: 95px;
+                fill: >toadWhite;
+                at: (0px, 70px);
+            }
+
+            // --- Negative Space: Syntax Prompt Chevron (">") ---
+            path #variableChevron {
+                d: "M 166 128 L 214 165 L 166 202";
+                size: 380px 260px;
+                stroke: >toadEmerald 32px;
+                stroke-cap: round;
+                stroke-join: round;
+                fill: transparent;
+                at: (0px, 0px);
+            }
+        }
+    }
+
+    // --- Master Typographic Wordmark & Tagline ---
+    stack #wordmarkStack {
+        direction: vertical;
+        gap: 8px;
+        align: center;
+
+        text #toadWordmark {
+            content: "toad";
+            font-size: 76px;
+            font-weight: 700;
+            color: >toadWhite;
+            letter-spacing: -2.5px;
+        }
+
+        text #toadTagline {
+            content: "DESIGN GRAPHICS AT THE SPEED OF CODE";
+            font-family: >fontMono;
+            font-size: 12px;
+            font-weight: 700;
+            color: >toadEmerald;
+            letter-spacing: 2px;
+        }
+    }
+}

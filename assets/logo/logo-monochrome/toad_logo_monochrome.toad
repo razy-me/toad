@@ -1,0 +1,240 @@
+// ============================================================================
+// 🧬 TOAD MULTI-DNA INSPIRATION MATRIX (Min 3 Personas + Min 3 Corporate Systems)
+// ----------------------------------------------------------------------------
+// 🎭 CREATIVE PERSONAS (the_seed/09_CREATIVE_PERSONAS_AND_STYLES/):
+//   1. [felix_aero_lindner]       -> 2D geometric circle & squircle purism, surgical balance, flat vector signet
+//   2. [marcus_vanguard_thorne]   -> Stark typographic contrast, unapologetic monochrome solid geometries, negative space discipline
+//   3. [sven_hallstroem]          -> Nordic reduction, essential organic curves, pure essential reduction
+// 🏢 CORPORATE DESIGN SYSTEMS (the_seed/10_CORPORATE_DESIGN_SYSTEMS/):
+//   1. [streamflow_devops]        -> Clean modern developer tool aesthetic (flat 2D vector, CLI-ready)
+//   2. [kruppstahl_maschinenbau]  -> Industrial engineering discipline, disciplined radii, 8pt spatial grid alignment
+//   3. [cybervault_security]      -> Tactical aerospace dark aesthetic, high-contrast monochrome discipline
+// ============================================================================
+
+// --- Explicit Typography Declarations (Synchronized with ./fonts/) ---
+@font "./fonts/segoeui.ttf" as "Segoe UI" weight: 400 style: normal;
+@font "./fonts/segoeuib.ttf" as "Segoe UI" weight: 700 style: normal;
+@font "./fonts/consola.ttf" as "Consolas" weight: 400 style: normal;
+@font "./fonts/consolab.ttf" as "Consolas" weight: 700 style: normal;
+
+// --- Design Tokens & Palette ---
+>fontDisplay    = "Segoe UI, -apple-system, sans-serif";
+>fontMono       = "Consolas, monospace";
+
+>pureBlack      = #000000;
+>pureWhite      = #ffffff;
+>bgBackdrop     = #0a0a0a;
+>grayHairline   = alpha(#ffffff, 0.12);
+>grayBorder     = alpha(#ffffff, 0.20);
+
+// --- Canvas Definition: 1400 x 700 px (Monochrome Precision Stencil Showcase) ---
+canvas "ToadLogoMonochrome" {
+    size: 1400px 700px;
+    font-family: >fontDisplay;
+    background: >bgBackdrop;
+    export: all;
+    quality: 100;
+}
+
+// ============================================================================
+// 1. ARCHITECTURAL CAD GRID & REGISTRATION
+// ============================================================================
+rect #gridH1 { size: 1400px 1px; fill: >grayHairline; at: (0px, 60px); }
+rect #gridH2 { size: 1400px 1px; fill: >grayHairline; at: (0px, 640px); }
+rect #gridMid { size: 1px 700px; fill: >grayHairline; at: (700px, 0px); }
+
+text #cadTopL {
+    content: "[+] TOAD MONOCHROME SPECIFICATION // 2D FUSION TILE";
+    font-family: >fontMono;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: alpha(>pureWhite, 0.50);
+    letter-spacing: 1.5px;
+    at: (48px, 36px);
+}
+
+text #cadTopR {
+    content: "SILKSCREEN • LASER ENGRAVE • 1-BIT RASTER COMPLIANT [+]";
+    font-family: >fontMono;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: alpha(>pureWhite, 0.50);
+    letter-spacing: 1.5px;
+    at: (920px, 36px);
+}
+
+// ============================================================================
+// 2. MONOCHROME COMPARISON SPLIT
+// ============================================================================
+stack #splitContent {
+    direction: horizontal;
+    gap: 48px;
+    size: 1304px hug;
+    at: center of canvas offset (0px, 10px);
+
+    // ========================================================================
+    // LEFT PANEL: INVERTED STENCIL (White Tile on Pitch Black)
+    // ========================================================================
+    group #panelInverted {
+        size: 628px 520px;
+
+        rect #panelInvBg {
+            size: 628px 520px;
+            radius: 16px;
+            fill: >pureBlack;
+            stroke: >grayBorder 1.5px;
+            at: (0px, 0px);
+        }
+
+        text #labelInv {
+            content: "NEGATIVE STENCIL // WHITE TILE ON BLACK";
+            font-family: >fontMono;
+            font-size: 10px;
+            font-weight: 700;
+            color: alpha(>pureWhite, 0.60);
+            letter-spacing: 1.5px;
+            at: (32px, 28px);
+        }
+
+        stack #invLockup {
+            direction: vertical;
+            gap: 24px;
+            align: center;
+            size: 400px hug;
+            at: center of #panelInvBg offset (0px, 16px);
+
+            // 150x150 Inverted Fusion Tile
+            group #invFusionTile {
+                size: 150px 150px;
+
+                rect {
+                    size: 150px 150px;
+                    radius: 44px;
+                    fill: >pureWhite;
+                    at: (0px, 0px);
+                }
+
+                // Black Toad Silhouette Inside
+                group #silhInv {
+                    size: 106px 72px;
+                    at: (22px, 39px);
+
+                    circle { size: 36px; fill: >pureBlack; at: (8px, 0px); }
+                    circle { size: 36px; fill: >pureBlack; at: (62px, 0px); }
+                    rect { size: 106px 52px; radius: 26px; fill: >pureBlack; at: (0px, 20px); }
+
+                    // White Center Chevron (">")
+                    path {
+                        d: "M 47 36 L 60 46 L 47 56";
+                        size: 106px 72px;
+                        stroke: >pureWhite 9px;
+                        stroke-cap: round;
+                        stroke-join: round;
+                        fill: transparent;
+                        at: (0px, 0px);
+                    }
+                }
+            }
+
+            text #invTitle {
+                content: "toad";
+                font-size: 60px;
+                font-weight: 700;
+                color: >pureWhite;
+                letter-spacing: -2px;
+            }
+
+            text #invSub {
+                content: "DESIGN GRAPHICS AT THE SPEED OF CODE";
+                font-family: >fontMono;
+                font-size: 10px;
+                font-weight: 700;
+                color: alpha(>pureWhite, 0.70);
+                letter-spacing: 1.5px;
+            }
+        }
+    }
+
+    // ========================================================================
+    // RIGHT PANEL: POSITIVE STENCIL (Black Tile on Crisp White)
+    // ========================================================================
+    group #panelPositive {
+        size: 628px 520px;
+
+        rect #panelPosBg {
+            size: 628px 520px;
+            radius: 16px;
+            fill: >pureWhite;
+            stroke: alpha(>pureBlack, 0.15) 1.5px;
+            at: (0px, 0px);
+        }
+
+        text #labelPos {
+            content: "POSITIVE STENCIL // BLACK TILE ON WHITE";
+            font-family: >fontMono;
+            font-size: 10px;
+            font-weight: 700;
+            color: alpha(>pureBlack, 0.50);
+            letter-spacing: 1.5px;
+            at: (32px, 28px);
+        }
+
+        stack #posLockup {
+            direction: vertical;
+            gap: 24px;
+            align: center;
+            size: 400px hug;
+            at: center of #panelPosBg offset (0px, 16px);
+
+            // 150x150 Positive Fusion Tile
+            group #posFusionTile {
+                size: 150px 150px;
+
+                rect {
+                    size: 150px 150px;
+                    radius: 44px;
+                    fill: >pureBlack;
+                    at: (0px, 0px);
+                }
+
+                // White Toad Silhouette Inside
+                group #silhPos {
+                    size: 106px 72px;
+                    at: (22px, 39px);
+
+                    circle { size: 36px; fill: >pureWhite; at: (8px, 0px); }
+                    circle { size: 36px; fill: >pureWhite; at: (62px, 0px); }
+                    rect { size: 106px 52px; radius: 26px; fill: >pureWhite; at: (0px, 20px); }
+
+                    // Black Center Chevron (">")
+                    path {
+                        d: "M 47 36 L 60 46 L 47 56";
+                        size: 106px 72px;
+                        stroke: >pureBlack 9px;
+                        stroke-cap: round;
+                        stroke-join: round;
+                        fill: transparent;
+                        at: (0px, 0px);
+                    }
+                }
+            }
+
+            text #posTitle {
+                content: "toad";
+                font-size: 60px;
+                font-weight: 700;
+                color: >pureBlack;
+                letter-spacing: -2px;
+            }
+
+            text #posSub {
+                content: "DESIGN GRAPHICS AT THE SPEED OF CODE";
+                font-family: >fontMono;
+                font-size: 10px;
+                font-weight: 700;
+                color: alpha(>pureBlack, 0.65);
+                letter-spacing: 1.5px;
+            }
+        }
+    }
+}

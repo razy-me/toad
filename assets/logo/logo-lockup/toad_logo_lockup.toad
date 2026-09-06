@@ -1,0 +1,542 @@
+// ============================================================================
+// 🧬 TOAD MULTI-DNA INSPIRATION MATRIX (Min 3 Personas + Min 3 Corporate Systems)
+// ----------------------------------------------------------------------------
+// 🎭 CREATIVE PERSONAS (the_seed/09_CREATIVE_PERSONAS_AND_STYLES/):
+//   1. [felix_aero_lindner]       -> 2D geometric circle & squircle purism, surgical balance, flat vector signet
+//   2. [marcus_vanguard_thorne]   -> Stark typographic contrast, unapologetic flat 2D shapes, zero skeuomorphism
+//   3. [sven_hallstroem]          -> Nordic reduction, essential organic curves, calm confident branding
+// 🏢 CORPORATE DESIGN SYSTEMS (the_seed/10_CORPORATE_DESIGN_SYSTEMS/):
+//   1. [streamflow_devops]        -> Clean modern developer tool aesthetic (flat 2D vector, CLI-ready)
+//   2. [paypulse_fintech]         -> High-trust flat rounded geometry, generous corner radii
+//   3. [velora_cloud_erp]         -> Soft pill-shapes, disciplined 2D curves, friendly professional tone
+// ============================================================================
+
+// --- Explicit Typography Declarations (Synchronized with ./fonts/) ---
+@font "./fonts/segoeui.ttf" as "Segoe UI" weight: 400 style: normal;
+@font "./fonts/segoeuib.ttf" as "Segoe UI" weight: 700 style: normal;
+@font "./fonts/consola.ttf" as "Consolas" weight: 400 style: normal;
+@font "./fonts/consolab.ttf" as "Consolas" weight: 700 style: normal;
+
+// --- Design Tokens & Palette ---
+>fontDisplay    = "Segoe UI, -apple-system, sans-serif";
+>fontMono       = "Consolas, monospace";
+
+>bgCanvas       = #080c14;
+>bgCardDark     = #0e1626;
+>bgCardLight    = #f8fafc;
+
+>borderDark     = alpha(#ffffff, 0.08);
+>borderLight    = alpha(#0f172a, 0.12);
+>gridHairline   = alpha(#ffffff, 0.04);
+>crosshairColor = alpha(#10b981, 0.50);
+
+>toadEmerald    = #10b981;
+>toadWhite      = #ffffff;
+>textMuted      = #94a3b8;
+>textDark       = #0f172a;
+>textDarkMuted  = #64748b;
+
+// --- Canvas Definition: 1600 x 1000 px (Brand Lockup Showcase) ---
+canvas "ToadLogoLockup" {
+    size: 1600px 1000px;
+    font-family: >fontDisplay;
+    background: >bgCanvas;
+    export: all;
+    quality: 100;
+}
+
+// ============================================================================
+// 1. MINIMALIST CAD REGISTRATION GUIDES
+// ============================================================================
+rect #gridH1 { size: 1600px 1px; fill: >gridHairline; at: (0px, 70px); }
+rect #gridH2 { size: 1600px 1px; fill: >gridHairline; at: (0px, 930px); }
+rect #gridV1 { size: 1px 1000px; fill: >gridHairline; at: (80px, 0px); }
+rect #gridV2 { size: 1px 1000px; fill: >gridHairline; at: (1520px, 0px); }
+
+text #regHeaderL {
+    content: "[+] TOAD BRAND LOCKUP SUITE // 2D FUSION TILE SPECIFICATION";
+    font-family: >fontMono;
+    font-size: 11px;
+    font-weight: 700;
+    color: >crosshairColor;
+    letter-spacing: 1.5px;
+    at: (80px, 42px);
+}
+
+text #regHeaderR {
+    content: "FLAT 2D VECTOR • NATIVE PSD & SVG COMPILATION [+]";
+    font-family: >fontMono;
+    font-size: 11px;
+    font-weight: 700;
+    color: >crosshairColor;
+    letter-spacing: 1.5px;
+    at: (1120px, 42px);
+}
+
+// ============================================================================
+// 2. MAIN LOCKUP CONTAINER
+// ============================================================================
+stack #mainContainer {
+    direction: vertical;
+    gap: 32px;
+    size: 1440px hug;
+    at: center of canvas offset (0px, 15px);
+
+    // ------------------------------------------------------------------------
+    // ROW 1: PRIMARY HORIZONTAL LOCKUPS (Dark Mode & Light Mode Side-by-Side)
+    // ------------------------------------------------------------------------
+    stack #horizontalRow {
+        direction: horizontal;
+        gap: 32px;
+        size: 1440px hug;
+
+        // --- DARK MODE PRIMARY LOCKUP CARD (704px wide) ---
+        group #cardDark {
+            size: 704px 280px;
+
+            rect #cardDarkBg {
+                size: 704px 280px;
+                radius: 20px;
+                fill: >bgCardDark;
+                stroke: >borderDark 1px;
+                at: (0px, 0px);
+            }
+
+            text #labelDark {
+                content: "PRIMARY HORIZONTAL LOCKUP // DARK MODE";
+                font-family: >fontMono;
+                font-size: 10px;
+                font-weight: 700;
+                color: >toadEmerald;
+                letter-spacing: 1.5px;
+                at: (32px, 24px);
+            }
+
+            // Dark Lockup Stack
+            stack #lockupDarkStack {
+                direction: horizontal;
+                gap: 28px;
+                align: center;
+                size: 640px hug;
+                at: (32px, 72px);
+
+                // --- 130x130 2D Fusion Tile ---
+                group #signetDark {
+                    size: 130px 130px;
+
+                    rect #tileDarkBg {
+                        size: 130px 130px;
+                        radius: 38px;
+                        fill: >toadEmerald;
+                        at: (0px, 0px);
+                    }
+
+                    // White Toad Silhouette
+                    group #silhDark {
+                        size: 92px 64px;
+                        at: (19px, 33px);
+
+                        circle { size: 32px; fill: >toadWhite; at: (8px, 0px); }
+                        circle { size: 32px; fill: >toadWhite; at: (52px, 0px); }
+                        rect { size: 92px 46px; radius: 23px; fill: >toadWhite; at: (0px, 18px); }
+
+                        // Center Emerald Chevron (">")
+                        path {
+                            d: "M 41 31 L 52 40 L 41 49";
+                            size: 92px 64px;
+                            stroke: >toadEmerald 8px;
+                            stroke-cap: round;
+                            stroke-join: round;
+                            fill: transparent;
+                            at: (0px, 0px);
+                        }
+                    }
+                }
+
+                // Wordmark Block
+                stack #textDarkStack {
+                    direction: vertical;
+                    gap: 4px;
+
+                    group #wordmarkDarkRow {
+                        size: 320px 64px;
+
+                        text #wordmarkDark {
+                            content: "toad";
+                            font-size: 64px;
+                            font-weight: 700;
+                            color: >toadWhite;
+                            letter-spacing: -2px;
+                            at: (0px, 0px);
+                        }
+
+                        text #extensionDark {
+                            content: ".dsl";
+                            font-family: >fontMono;
+                            font-size: 32px;
+                            font-weight: 700;
+                            color: >toadEmerald;
+                            at: right of #wordmarkDark offset (6px, 24px);
+                        }
+                    }
+
+                    text #taglineDark {
+                        content: "DECLARATIVE DESIGN LANGUAGE & COMPILER";
+                        font-family: >fontMono;
+                        font-size: 11px;
+                        font-weight: 700;
+                        color: >toadEmerald;
+                        letter-spacing: 1.8px;
+                    }
+
+                    text #sublineDark {
+                        content: "Compiles code to layered PSD, vector SVG & Skia raster buffers.";
+                        font-size: 13px;
+                        font-weight: 400;
+                        color: >textMuted;
+                    }
+                }
+            }
+        }
+
+        // --- LIGHT MODE PRIMARY LOCKUP CARD (704px wide) ---
+        group #cardLight {
+            size: 704px 280px;
+
+            rect #cardLightBg {
+                size: 704px 280px;
+                radius: 20px;
+                fill: >bgCardLight;
+                stroke: >borderLight 1px;
+                at: (0px, 0px);
+            }
+
+            text #labelLight {
+                content: "PRIMARY HORIZONTAL LOCKUP // LIGHT MODE";
+                font-family: >fontMono;
+                font-size: 10px;
+                font-weight: 700;
+                color: #059669;
+                letter-spacing: 1.5px;
+                at: (32px, 24px);
+            }
+
+            // Light Lockup Stack
+            stack #lockupLightStack {
+                direction: horizontal;
+                gap: 28px;
+                align: center;
+                size: 640px hug;
+                at: (32px, 72px);
+
+                // --- 130x130 2D Fusion Tile ---
+                group #signetLight {
+                    size: 130px 130px;
+
+                    rect #tileLightBg {
+                        size: 130px 130px;
+                        radius: 38px;
+                        fill: >toadEmerald;
+                        at: (0px, 0px);
+                    }
+
+                    // White Toad Silhouette
+                    group #silhLight {
+                        size: 92px 64px;
+                        at: (19px, 33px);
+
+                        circle { size: 32px; fill: >toadWhite; at: (8px, 0px); }
+                        circle { size: 32px; fill: >toadWhite; at: (52px, 0px); }
+                        rect { size: 92px 46px; radius: 23px; fill: >toadWhite; at: (0px, 18px); }
+
+                        // Center Emerald Chevron (">")
+                        path {
+                            d: "M 41 31 L 52 40 L 41 49";
+                            size: 92px 64px;
+                            stroke: >toadEmerald 8px;
+                            stroke-cap: round;
+                            stroke-join: round;
+                            fill: transparent;
+                            at: (0px, 0px);
+                        }
+                    }
+                }
+
+                // Wordmark Block (Dark Text)
+                stack #textLightStack {
+                    direction: vertical;
+                    gap: 4px;
+
+                    group #wordmarkLightRow {
+                        size: 320px 64px;
+
+                        text #wordmarkLight {
+                            content: "toad";
+                            font-size: 64px;
+                            font-weight: 700;
+                            color: >textDark;
+                            letter-spacing: -2px;
+                            at: (0px, 0px);
+                        }
+
+                        text #extensionLight {
+                            content: ".dsl";
+                            font-family: >fontMono;
+                            font-size: 32px;
+                            font-weight: 700;
+                            color: #059669;
+                            at: right of #wordmarkLight offset (6px, 24px);
+                        }
+                    }
+
+                    text #taglineLight {
+                        content: "DECLARATIVE DESIGN LANGUAGE & COMPILER";
+                        font-family: >fontMono;
+                        font-size: 11px;
+                        font-weight: 700;
+                        color: #059669;
+                        letter-spacing: 1.8px;
+                    }
+
+                    text #sublineLight {
+                        content: "Compiles code to layered PSD, vector SVG & Skia raster buffers.";
+                        font-size: 13px;
+                        font-weight: 400;
+                        color: >textDarkMuted;
+                    }
+                }
+            }
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // ROW 2: VERTICAL STACKED LOCKUP & CLI CONSOLE CARD
+    // ------------------------------------------------------------------------
+    stack #verticalRow {
+        direction: horizontal;
+        gap: 32px;
+        size: 1440px hug;
+
+        // --- VERTICAL STACKED BADGE CARD (458px wide) ---
+        group #cardVertical {
+            size: 458px 460px;
+
+            rect #cardVertBg {
+                size: 458px 460px;
+                radius: 20px;
+                fill: >bgCardDark;
+                stroke: >borderDark 1px;
+                at: (0px, 0px);
+            }
+
+            text #labelVert {
+                content: "VERTICAL EMBLEM LOCKUP";
+                font-family: >fontMono;
+                font-size: 10px;
+                font-weight: 700;
+                color: >toadEmerald;
+                letter-spacing: 1.5px;
+                at: (32px, 24px);
+            }
+
+            stack #vertStack {
+                direction: vertical;
+                gap: 20px;
+                align: center;
+                size: 400px hug;
+                at: center of #cardVertBg offset (0px, 20px);
+
+                // Centered 140x140 2D Fusion Tile
+                group #signetVert {
+                    size: 140px 140px;
+
+                    rect {
+                        size: 140px 140px;
+                        radius: 40px;
+                        fill: >toadEmerald;
+                        at: (0px, 0px);
+                    }
+
+                    group #silhVert {
+                        size: 100px 70px;
+                        at: (20px, 35px);
+
+                        circle { size: 34px; fill: >toadWhite; at: (8px, 0px); }
+                        circle { size: 34px; fill: >toadWhite; at: (58px, 0px); }
+                        rect { size: 100px 50px; radius: 25px; fill: >toadWhite; at: (0px, 20px); }
+
+                        path {
+                            d: "M 44 34 L 56 44 L 44 54";
+                            size: 100px 70px;
+                            stroke: >toadEmerald 9px;
+                            stroke-cap: round;
+                            stroke-join: round;
+                            fill: transparent;
+                            at: (0px, 0px);
+                        }
+                    }
+                }
+
+                text #vertWordmark {
+                    content: "toad";
+                    font-size: 60px;
+                    font-weight: 700;
+                    color: >toadWhite;
+                    letter-spacing: -2px;
+                }
+
+                text #vertTagline {
+                    content: "DESIGN GRAPHICS AT THE SPEED OF CODE";
+                    font-family: >fontMono;
+                    font-size: 10.5px;
+                    font-weight: 700;
+                    color: >toadEmerald;
+                    letter-spacing: 1.5px;
+                }
+            }
+        }
+
+        // --- DEVELOPER TERMINAL & COMPILER CLI CONSOLE (950px wide) ---
+        group #cardTerminal {
+            size: 950px 460px;
+
+            rect #cardTermBg {
+                size: 950px 460px;
+                radius: 20px;
+                fill: #050810;
+                stroke: alpha(>toadEmerald, 0.20) 1px;
+                at: (0px, 0px);
+            }
+
+            // Window Header Bar
+            rect #termHeaderBar {
+                size: 950px 42px;
+                radius: [20px, 20px, 0px, 0px];
+                fill: #090e1a;
+                at: (0px, 0px);
+            }
+
+            circle { size: 10px; fill: #ef4444; at: (20px, 16px); }
+            circle { size: 10px; fill: #f59e0b; at: (38px, 16px); }
+            circle { size: 10px; fill: #10b981; at: (56px, 16px); }
+
+            text #termTitle {
+                content: "bash // toad compiler live execution";
+                font-family: >fontMono;
+                font-size: 11px;
+                font-weight: 700;
+                color: >textMuted;
+                at: (80px, 15px);
+            }
+
+            // Terminal Code Content
+            stack #termContentStack {
+                direction: vertical;
+                gap: 12px;
+                size: 890px hug;
+                at: (30px, 64px);
+
+                text #termLine1 {
+                    content: "$ npm install -g toad-dsl";
+                    font-family: >fontMono;
+                    font-size: 13.5px;
+                    font-weight: 700;
+                    color: >toadWhite;
+                }
+
+                text #termLine2 {
+                    content: "added 1 package in 412ms [engine: @napi-rs/canvas-win32-x64]";
+                    font-family: >fontMono;
+                    font-size: 12px;
+                    color: >textMuted;
+                }
+
+                text #termLine3 {
+                    content: "$ toad build logo_mark.toad --format \"svg, psd, png\" --scale 2";
+                    font-family: >fontMono;
+                    font-size: 13.5px;
+                    font-weight: 700;
+                    color: #34d399;
+                }
+
+                text #termLine4 {
+                    content: "[toad] Compiling AST (4-pass constraint layout solver)... 14ms";
+                    font-family: >fontMono;
+                    font-size: 12px;
+                    color: #38bdf8;
+                }
+
+                text #termLine5 {
+                    content: " SUCCESS  Build completed in 68ms";
+                    font-family: >fontMono;
+                    font-size: 12.5px;
+                    font-weight: 700;
+                    color: >toadEmerald;
+                }
+
+                text #termLine6 {
+                    content: "  => logo_mark.svg       (Scalable Vector Graphics, clean Bézier paths)\n  => logo_mark.psd       (Layered Photoshop document, live TySh text layers)\n  => logo_mark@2x.png    (Skia 2D raster engine, crisp 2048x2048 buffer)";
+                    font-family: >fontMono;
+                    font-size: 12px;
+                    color: >textMuted;
+                    line-height: 20px;
+                    size: 880px auto;
+                }
+
+                // Status Telemetry Chips Row
+                stack #telemetryChipsRow {
+                    direction: horizontal;
+                    gap: 12px;
+
+                    group #chipSolver {
+                        size: 200px 30px;
+                        radius: 6px;
+                        fill: alpha(>toadEmerald, 0.12);
+                        stroke: alpha(>toadEmerald, 0.40) 1px;
+
+                        text {
+                            content: "SOLVER: 4-PASS GEOMETRY";
+                            font-family: >fontMono;
+                            font-size: 10px;
+                            font-weight: 700;
+                            color: >toadEmerald;
+                            at: center of parent;
+                        }
+                    }
+
+                    group #chipEngine {
+                        size: 200px 30px;
+                        radius: 6px;
+                        fill: alpha(#38bdf8, 0.12);
+                        stroke: alpha(#38bdf8, 0.40) 1px;
+
+                        text {
+                            content: "RENDERER: SKIA-2D DIRECT";
+                            font-family: >fontMono;
+                            font-size: 10px;
+                            font-weight: 700;
+                            color: #38bdf8;
+                            at: center of parent;
+                        }
+                    }
+
+                    group #chipPsd {
+                        size: 210px 30px;
+                        radius: 6px;
+                        fill: alpha(>toadEmerald, 0.12);
+                        stroke: alpha(>toadEmerald, 0.40) 1px;
+
+                        text {
+                            content: "PSD ENGINE: NATIVE TYSH";
+                            font-family: >fontMono;
+                            font-size: 10px;
+                            font-weight: 700;
+                            color: >toadEmerald;
+                            at: center of parent;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

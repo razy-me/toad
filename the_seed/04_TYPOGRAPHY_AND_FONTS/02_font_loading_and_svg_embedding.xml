@@ -34,7 +34,7 @@ text #h1 { content: "Headline"; font-size: 48px; } // Uses Agency FB
   </standalone_svg_base64>
 
   <photopea_fonts_synchronization severity="mandatory">
-    <rule>Keep local project './fonts/' directory up to date at all times with all font binaries used.</rule>
-    <workflow>Enables users to drag and drop the font files directly into Photopea so PSD Type Layers render natively without missing font alerts or substitution distortion.</workflow>
+    <rule>Do NOT create separate local 'fonts/' folders per project. All font binaries (.ttf/.otf) must be stored in and referenced from the central repository at 'c:/toad-designs/fonts/'. When a new font is needed, add it to 'c:/toad-designs/fonts/'.</rule>
+    <workflow>Enables users to drag and drop all fonts into Photopea or Photoshop once from a single central folder so PSD Type Layers render natively without missing font alerts or substitution distortion.</workflow>
   </photopea_fonts_synchronization>
 </specification>

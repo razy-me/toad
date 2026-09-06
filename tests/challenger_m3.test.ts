@@ -291,8 +291,8 @@ describe('Milestone M3 Adversarial Challenge & Stress Suite', () => {
         expect(psdBuf.subarray(0, 4).toString()).toBe('8BPS');
 
         const psd = readPsd(psdBuf);
-        expect(psd.width).toBe(f.baseW * 4);
-        expect(psd.height).toBe(f.baseH * 4);
+        expect(psd.width).toBe(Math.round(f.baseW * 2.5));
+        expect(psd.height).toBe(Math.round(f.baseH * 2.5));
         expect(psd.children).toBeDefined();
         expect(psd.children!.length).toBeGreaterThan(0);
       }, 30000);

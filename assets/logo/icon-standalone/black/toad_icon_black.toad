@@ -1,0 +1,71 @@
+// ============================================================================
+// 🧬 TOAD MULTI-DNA INSPIRATION MATRIX (Min 3 Personas + Min 3 Corporate Systems)
+// ----------------------------------------------------------------------------
+// 🎭 CREATIVE PERSONAS (the_seed/09_CREATIVE_PERSONAS_AND_STYLES/):
+//   1. [felix_aero_lindner]       -> 2D geometric circle & squircle purism, surgical balance, flat vector signet
+//   2. [marcus_vanguard_thorne]   -> Stark typographic contrast, unapologetic flat 2D shapes, zero skeuomorphism
+//   3. [sven_hallstroem]          -> Nordic reduction, essential organic curves, pure essential reduction
+// 🏢 CORPORATE DESIGN SYSTEMS (the_seed/10_CORPORATE_DESIGN_SYSTEMS/):
+//   1. [streamflow_devops]        -> Clean modern developer tool aesthetic (flat 2D vector, CLI-ready)
+//   2. [kruppstahl_maschinenbau]  -> Industrial engineering discipline, disciplined radii, 8pt spatial grid alignment
+//   3. [cybervault_security]      -> Tactical aerospace dark aesthetic, high-contrast monochrome discipline
+// ============================================================================
+
+// --- Explicit Typography Declarations ---
+@font "./fonts/segoeui.ttf" as "Segoe UI" weight: 400 style: normal;
+@font "./fonts/segoeuib.ttf" as "Segoe UI" weight: 700 style: normal;
+@font "./fonts/consola.ttf" as "Consolas" weight: 400 style: normal;
+@font "./fonts/consolab.ttf" as "Consolas" weight: 700 style: normal;
+
+// --- Design Tokens ---
+>pureBlack = #000000;
+>pureWhite = #ffffff;
+
+// --- Canvas Definition: Transparent Standalone Frog Icon (Pure Black) ---
+canvas "ToadIconBlack" {
+    size: 512px 360px;
+    background: transparent;
+    export: all;
+    quality: 100;
+}
+
+// ============================================================================
+// PURE 2D TOAD ICON — 100% BLACK (NO BACKGROUND, NO BOX)
+// ============================================================================
+group #frogIconBlack {
+    size: 512px 360px;
+    at: (0px, 0px);
+
+    // Left Eye Dome
+    circle #eyeLeft {
+        size: 175px;
+        fill: >pureBlack;
+        at: (40px, 0px);
+    }
+
+    // Right Eye Dome
+    circle #eyeRight {
+        size: 175px;
+        fill: >pureBlack;
+        at: (297px, 0px);
+    }
+
+    // Body Capsule
+    rect #body {
+        size: 512px 256px;
+        radius: 128px;
+        fill: >pureBlack;
+        at: (0px, 94px);
+    }
+
+    // White Variable Chevron (">") Cutout
+    path #chevronCutout {
+        d: "M 224 172 L 288 222 L 224 272";
+        size: 512px 360px;
+        stroke: >pureWhite 42px;
+        stroke-cap: round;
+        stroke-join: round;
+        fill: transparent;
+        at: (0px, 0px);
+    }
+}

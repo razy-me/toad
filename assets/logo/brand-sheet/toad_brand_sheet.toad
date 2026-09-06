@@ -1,0 +1,547 @@
+// ============================================================================
+// 🧬 TOAD MULTI-DNA INSPIRATION MATRIX (Min 3 Personas + Min 3 Corporate Systems)
+// ----------------------------------------------------------------------------
+// 🎭 CREATIVE PERSONAS (the_seed/09_CREATIVE_PERSONAS_AND_STYLES/):
+//   1. [felix_aero_lindner]       -> 2D geometric circle & squircle purism, surgical balance, flat vector signet
+//   2. [dr_volker_blueprint_rabe] -> Technical CAD micro-grid, precision corner registration crosshairs, dimension ticks
+//   3. [marcus_vanguard_thorne]   -> Stark typographic contrast, unapologetic flat 2D shapes, zero skeuomorphism
+//   4. [sven_hallstroem]          -> Nordic reduction, essential organic curves, calm confident branding
+// 🏢 CORPORATE DESIGN SYSTEMS (the_seed/10_CORPORATE_DESIGN_SYSTEMS/):
+//   1. [streamflow_devops]        -> Clean modern developer tool aesthetic (flat 2D vector, CLI-ready)
+//   2. [paypulse_fintech]         -> High-trust flat rounded geometry, generous corner radii
+//   3. [kruppstahl_maschinenbau]  -> Precision engineering discipline, disciplined radii, 8pt spatial grid alignment
+// ============================================================================
+
+// --- Explicit Typography Declarations (Synchronized with ./fonts/) ---
+@font "./fonts/segoeui.ttf" as "Segoe UI" weight: 400 style: normal;
+@font "./fonts/segoeuib.ttf" as "Segoe UI" weight: 700 style: normal;
+@font "./fonts/consola.ttf" as "Consolas" weight: 400 style: normal;
+@font "./fonts/consolab.ttf" as "Consolas" weight: 700 style: normal;
+
+// --- Design Tokens & Palette ---
+>fontDisplay    = "Segoe UI, -apple-system, sans-serif";
+>fontMono       = "Consolas, monospace";
+
+>bgCanvas       = #080c14;
+>bgCard         = #0e1626;
+
+>borderMuted    = alpha(#ffffff, 0.08);
+>gridHairline   = alpha(#ffffff, 0.04);
+>crosshairColor = alpha(#10b981, 0.50);
+
+>toadEmerald    = #10b981;
+>toadWhite      = #ffffff;
+>textMuted      = #94a3b8;
+
+// --- Canvas Definition: 1920 x 1080 px (Master Architectural Brand Sheet) ---
+canvas "ToadBrandSheet" {
+    size: 1920px 1080px;
+    font-family: >fontDisplay;
+    background: >bgCanvas;
+    export: all;
+    quality: 100;
+}
+
+// ============================================================================
+// 1. ARCHITECTURAL CAD GRID & REGISTRATION
+// ============================================================================
+rect #cadH1 { size: 1920px 1px; fill: >gridHairline; at: (0px, 70px); }
+rect #cadH2 { size: 1920px 1px; fill: >gridHairline; at: (0px, 1010px); }
+rect #cadV1 { size: 1px 1080px; fill: >gridHairline; at: (80px, 0px); }
+rect #cadV2 { size: 1px 1080px; fill: >gridHairline; at: (1840px, 0px); }
+
+text #specTitleL {
+    content: "[+] TOAD DSL // OFFICIAL BRAND SPECIFICATION SHEET // v1.0.0";
+    font-family: >fontMono;
+    font-size: 12px;
+    font-weight: 700;
+    color: >toadEmerald;
+    letter-spacing: 2px;
+    at: (80px, 42px);
+}
+
+text #specTitleR {
+    content: "STANDARDS: 2D FLAT VECTOR • PURE SQUIRCLE • ZERO SKEUOMORPHISM [+]";
+    font-family: >fontMono;
+    font-size: 11px;
+    font-weight: 700;
+    color: >crosshairColor;
+    letter-spacing: 1.5px;
+    at: (1260px, 42px);
+}
+
+// ============================================================================
+// 2. TOP SECTION: MASTER BRAND LOCKUP & GEOMETRIC CALIBRATION
+// ============================================================================
+stack #topRow {
+    direction: horizontal;
+    gap: 32px;
+    size: 1760px hug;
+    at: (80px, 100px);
+
+    // --- LEFT CARD: MASTER LOCKUP HERO (960px) ---
+    group #cardMasterHero {
+        size: 960px 450px;
+
+        rect #masterHeroBg {
+            size: 960px 450px;
+            radius: 20px;
+            fill: >bgCard;
+            stroke: >borderMuted 1px;
+            at: (0px, 0px);
+        }
+
+        text {
+            content: "MASTER BRAND LOCKUP // HERO DISPLAY";
+            font-family: >fontMono;
+            font-size: 11px;
+            font-weight: 700;
+            color: >toadEmerald;
+            letter-spacing: 1.5px;
+            at: (36px, 28px);
+        }
+
+        // Master Lockup Center Stack
+        stack #masterLockupStack {
+            direction: horizontal;
+            gap: 40px;
+            align: center;
+            size: 880px hug;
+            at: (48px, 120px);
+
+            // 200x200 2D Fusion Tile
+            group #heroFusionTile {
+                size: 200px 200px;
+
+                rect {
+                    size: 200px 200px;
+                    radius: 58px;
+                    fill: >toadEmerald;
+                    at: (0px, 0px);
+                }
+
+                group #heroSilh {
+                    size: 140px 96px;
+                    at: (30px, 52px);
+
+                    circle { size: 48px; fill: >toadWhite; at: (11px, 0px); }
+                    circle { size: 48px; fill: >toadWhite; at: (81px, 0px); }
+                    rect { size: 140px 70px; radius: 35px; fill: >toadWhite; at: (0px, 26px); }
+
+                    // Center Variable Chevron (">")
+                    path {
+                        d: "M 61 47 L 78 61 L 61 75";
+                        size: 140px 96px;
+                        stroke: >toadEmerald 12px;
+                        stroke-cap: round;
+                        stroke-join: round;
+                        fill: transparent;
+                        at: (0px, 0px);
+                    }
+                }
+            }
+
+            // Wordmark & Description
+            stack #heroTextStack {
+                direction: vertical;
+                gap: 6px;
+
+                group #heroWordmarkRow {
+                    size: 400px 84px;
+
+                    text #heroToad {
+                        content: "toad";
+                        font-size: 84px;
+                        font-weight: 700;
+                        color: >toadWhite;
+                        letter-spacing: -3px;
+                        at: (0px, 0px);
+                    }
+
+                    text #heroDsl {
+                        content: ".dsl";
+                        font-family: >fontMono;
+                        font-size: 40px;
+                        font-weight: 700;
+                        color: >toadEmerald;
+                        at: right of #heroToad offset (8px, 34px);
+                    }
+                }
+
+                text #heroTagline {
+                    content: "DECLARATIVE DESIGN LANGUAGE & GRAPHICS COMPILER";
+                    font-family: >fontMono;
+                    font-size: 13px;
+                    font-weight: 700;
+                    color: >toadEmerald;
+                    letter-spacing: 2px;
+                }
+
+                text #heroDesc {
+                    content: "Turns declarative code directly into layered Photoshop documents (PSD),\nclean vector graphics (SVG), and blazing-fast Skia raster buffers.";
+                    font-size: 14px;
+                    color: >textMuted;
+                    line-height: 22px;
+                    size: 580px auto;
+                }
+            }
+        }
+    }
+
+    // --- RIGHT CARD: GEOMETRIC CALIBRATION & CAD SPECS (768px) ---
+    group #cardCalibration {
+        size: 768px 450px;
+
+        rect #calibBg {
+            size: 768px 450px;
+            radius: 20px;
+            fill: >bgCard;
+            stroke: >borderMuted 1px;
+            at: (0px, 0px);
+        }
+
+        text {
+            content: "GEOMETRIC SPECIFICATION & RADII CALIBRATION";
+            font-family: >fontMono;
+            font-size: 11px;
+            font-weight: 700;
+            color: >toadEmerald;
+            letter-spacing: 1.5px;
+            at: (36px, 28px);
+        }
+
+        // CAD Grid Anatomy
+        group #cadAnatomy {
+            size: 260px 260px;
+            at: (48px, 100px);
+
+            // Outlined Chassis
+            rect {
+                size: 260px 260px;
+                radius: 76px;
+                fill: transparent;
+                stroke: >toadEmerald 2px;
+                at: (0px, 0px);
+            }
+
+            // Internal Crosshairs
+            rect { size: 260px 1px; fill: alpha(>toadEmerald, 0.25); at: (0px, 130px); }
+            rect { size: 1px 260px; fill: alpha(>toadEmerald, 0.25); at: (130px, 0px); }
+
+            // Outlined Silhouette inside
+            group #calibSilh {
+                size: 182px 124px;
+                at: (39px, 68px);
+
+                circle { size: 62px; fill: transparent; stroke: alpha(>toadWhite, 0.4) 1.5px; at: (15px, 0px); }
+                circle { size: 62px; fill: transparent; stroke: alpha(>toadWhite, 0.4) 1.5px; at: (105px, 0px); }
+                rect { size: 182px 90px; radius: 45px; fill: transparent; stroke: alpha(>toadWhite, 0.4) 1.5px; at: (0px, 34px); }
+
+                path {
+                    d: "M 80 61 L 102 79 L 80 97";
+                    size: 182px 124px;
+                    stroke: >toadEmerald 6px;
+                    stroke-cap: round;
+                    stroke-join: round;
+                    fill: transparent;
+                    at: (0px, 0px);
+                }
+            }
+        }
+
+        // Dimension Callouts Stack
+        stack #calloutsStack {
+            direction: vertical;
+            gap: 14px;
+            size: 380px hug;
+            at: (350px, 105px);
+
+            text {
+                content: "1. TILE RADIUS // R = 156px (Golden Squircle)";
+                font-family: >fontMono;
+                font-size: 12px;
+                font-weight: 700;
+                color: >toadWhite;
+            }
+            text {
+                content: "   Continuous curvature ratio (n=4) for modern OS icons.";
+                font-size: 12px;
+                color: >textMuted;
+            }
+
+            text {
+                content: "2. OCULAR NODES // Ø = 130px (Twin Circles)";
+                font-family: >fontMono;
+                font-size: 12px;
+                font-weight: 700;
+                color: >toadWhite;
+            }
+            text {
+                content: "   Symmetric circular domes matching optical canvas centers.";
+                font-size: 12px;
+                color: >textMuted;
+            }
+
+            text {
+                content: "3. BODY CAPSULE // 380x190px (R = 95px)";
+                font-family: >fontMono;
+                font-size: 12px;
+                font-weight: 700;
+                color: >toadWhite;
+            }
+            text {
+                content: "   Full semicircular pill caps ensuring zero sharp vertices.";
+                font-size: 12px;
+                color: >textMuted;
+            }
+
+            text {
+                content: "4. SYNTAX CHEVRON // Stroke: 32px (Cap: Round)";
+                font-family: >fontMono;
+                font-size: 12px;
+                font-weight: 700;
+                color: >toadEmerald;
+            }
+        }
+    }
+}
+
+// ============================================================================
+// 3. BOTTOM SECTION: COLOR PALETTE, TYPOGRAPHY & SCALE LADDER
+// ============================================================================
+stack #bottomRow {
+    direction: horizontal;
+    gap: 32px;
+    size: 1760px hug;
+    at: (80px, 580px);
+
+    // --- CARD 1: OFFICIAL BRAND TOKENS (560px) ---
+    group #cardTokens {
+        size: 560px 400px;
+
+        rect {
+            size: 560px 400px;
+            radius: 20px;
+            fill: >bgCard;
+            stroke: >borderMuted 1px;
+            at: (0px, 0px);
+        }
+
+        text {
+            content: "COLOR PALETTE & DESIGN TOKENS";
+            font-family: >fontMono;
+            font-size: 11px;
+            font-weight: 700;
+            color: >toadEmerald;
+            letter-spacing: 1.5px;
+            at: (36px, 28px);
+        }
+
+        // Swatch Rows
+        stack #swatchesStack {
+            direction: vertical;
+            gap: 12px;
+            size: 490px hug;
+            at: (36px, 72px);
+
+            // Swatch 1: Emerald Primary
+            group #swatch1 {
+                size: 490px 52px;
+                rect { size: 52px 52px; radius: 12px; fill: #10b981; at: (0px, 0px); }
+                text { content: "TOAD EMERALD // #10b981"; font-family: >fontMono; font-size: 13px; font-weight: 700; color: >toadWhite; at: (68px, 8px); }
+                text { content: "RGB: 16, 185, 129 • Primary brand color, squircle tile & accents"; font-size: 11px; color: >textMuted; at: (68px, 28px); }
+            }
+
+            // Swatch 2: Obsidian Canvas
+            group #swatch2 {
+                size: 490px 52px;
+                rect { size: 52px 52px; radius: 12px; fill: #080c14; stroke: >borderMuted 1px; at: (0px, 0px); }
+                text { content: "OBSIDIAN CANVAS // #080c14"; font-family: >fontMono; font-size: 13px; font-weight: 700; color: >toadWhite; at: (68px, 8px); }
+                text { content: "RGB: 8, 12, 20 • Background substrate, developer-dark mode"; font-size: 11px; color: >textMuted; at: (68px, 28px); }
+            }
+
+            // Swatch 3: Surface Dark
+            group #swatch3 {
+                size: 490px 52px;
+                rect { size: 52px 52px; radius: 12px; fill: #0e1626; stroke: >borderMuted 1px; at: (0px, 0px); }
+                text { content: "SURFACE CARD // #0e1626"; font-family: >fontMono; font-size: 13px; font-weight: 700; color: >toadWhite; at: (68px, 8px); }
+                text { content: "RGB: 14, 22, 38 • Elevated containers, cards & navigation bars"; font-size: 11px; color: >textMuted; at: (68px, 28px); }
+            }
+
+            // Swatch 4: Pure White
+            group #swatch4 {
+                size: 490px 52px;
+                rect { size: 52px 52px; radius: 12px; fill: #ffffff; at: (0px, 0px); }
+                text { content: "PURE WHITE // #ffffff"; font-family: >fontMono; font-size: 13px; font-weight: 700; color: >toadWhite; at: (68px, 8px); }
+                text { content: "RGB: 255, 255, 255 • Toad silhouette & primary headline text"; font-size: 11px; color: >textMuted; at: (68px, 28px); }
+            }
+        }
+    }
+
+    // --- CARD 2: TYPOGRAPHY HIERARCHY (560px) ---
+    group #cardType {
+        size: 560px 400px;
+
+        rect {
+            size: 560px 400px;
+            radius: 20px;
+            fill: >bgCard;
+            stroke: >borderMuted 1px;
+            at: (0px, 0px);
+        }
+
+        text {
+            content: "TYPOGRAPHY HIERARCHY & FONTS";
+            font-family: >fontMono;
+            font-size: 11px;
+            font-weight: 700;
+            color: >toadEmerald;
+            letter-spacing: 1.5px;
+            at: (36px, 28px);
+        }
+
+        stack #typeSpecStack {
+            direction: vertical;
+            gap: 18px;
+            size: 490px hug;
+            at: (36px, 78px);
+
+            stack {
+                direction: vertical;
+                gap: 2px;
+                text { content: "toad.dsl"; font-size: 38px; font-weight: 700; color: >toadWhite; letter-spacing: -1.5px; }
+                text { content: "DISPLAY / HEADINGS // Segoe UI Bold • -2.5px tracking"; font-family: >fontMono; font-size: 11px; color: >toadEmerald; }
+            }
+
+            stack {
+                direction: vertical;
+                gap: 2px;
+                text { content: ">primary = #10b981; // AST Compiler"; font-family: >fontMono; font-size: 18px; font-weight: 700; color: #34d399; }
+                text { content: "CODE & TELEMETRY // Consolas Bold • +1.5px tracking"; font-family: >fontMono; font-size: 11px; color: >toadEmerald; }
+            }
+
+            stack {
+                direction: vertical;
+                gap: 2px;
+                text { content: "Deterministic layout engine with 4-pass constraint solving."; font-size: 14px; font-weight: 400; color: >textMuted; }
+                text { content: "BODY & COPY // Segoe UI Regular • 1.5 line height"; font-family: >fontMono; font-size: 11px; color: >textMuted; }
+            }
+        }
+    }
+
+    // --- CARD 3: RESOLUTION SCALABILITY LADDER (608px) ---
+    group #cardScale {
+        size: 608px 400px;
+
+        rect {
+            size: 608px 400px;
+            radius: 20px;
+            fill: >bgCard;
+            stroke: >borderMuted 1px;
+            at: (0px, 0px);
+        }
+
+        text {
+            content: "RESOLUTION SCALABILITY LADDER (128px -> 16px)";
+            font-family: >fontMono;
+            font-size: 11px;
+            font-weight: 700;
+            color: >toadEmerald;
+            letter-spacing: 1.5px;
+            at: (36px, 28px);
+        }
+
+        // Horizontal Ladder Row
+        stack #ladderRow {
+            direction: horizontal;
+            gap: 28px;
+            align: center;
+            size: 540px hug;
+            at: (36px, 140px);
+
+            // 128px Icon
+            stack {
+                direction: vertical;
+                gap: 12px;
+                align: center;
+
+                group #icon128 {
+                    size: 112px 112px;
+                    rect { size: 112px 112px; radius: 32px; fill: >toadEmerald; at: (0px, 0px); }
+                    group {
+                        size: 78px 54px;
+                        at: (17px, 29px);
+                        circle { size: 27px; fill: >toadWhite; at: (6px, 0px); }
+                        circle { size: 27px; fill: >toadWhite; at: (45px, 0px); }
+                        rect { size: 78px 39px; radius: 19px; fill: >toadWhite; at: (0px, 15px); }
+                        path { d: "M 34 26 L 44 34 L 34 42"; size: 78px 54px; stroke: >toadEmerald 7px; stroke-cap: round; stroke-join: round; fill: transparent; at: (0px, 0px); }
+                    }
+                }
+                text { content: "128px"; font-family: >fontMono; font-size: 11px; font-weight: 700; color: >textMuted; }
+            }
+
+            // 64px Icon
+            stack {
+                direction: vertical;
+                gap: 12px;
+                align: center;
+
+                group #icon64 {
+                    size: 64px 64px;
+                    rect { size: 64px 64px; radius: 18px; fill: >toadEmerald; at: (0px, 0px); }
+                    group {
+                        size: 44px 30px;
+                        at: (10px, 17px);
+                        circle { size: 15px; fill: >toadWhite; at: (3px, 0px); }
+                        circle { size: 15px; fill: >toadWhite; at: (26px, 0px); }
+                        rect { size: 44px 22px; radius: 11px; fill: >toadWhite; at: (0px, 8px); }
+                        path { d: "M 19 15 L 25 19 L 19 23"; size: 44px 30px; stroke: >toadEmerald 4px; stroke-cap: round; stroke-join: round; fill: transparent; at: (0px, 0px); }
+                    }
+                }
+                text { content: "64px"; font-family: >fontMono; font-size: 11px; font-weight: 700; color: >textMuted; }
+            }
+
+            // 32px Icon
+            stack {
+                direction: vertical;
+                gap: 12px;
+                align: center;
+
+                group #icon32 {
+                    size: 36px 36px;
+                    rect { size: 36px 36px; radius: 10px; fill: >toadEmerald; at: (0px, 0px); }
+                    group {
+                        size: 26px 18px;
+                        at: (5px, 9px);
+                        circle { size: 9px; fill: >toadWhite; at: (2px, 0px); }
+                        circle { size: 9px; fill: >toadWhite; at: (15px, 0px); }
+                        rect { size: 26px 13px; radius: 6.5px; fill: >toadWhite; at: (0px, 5px); }
+                        path { d: "M 11 9 L 15 11 L 11 13"; size: 26px 18px; stroke: >toadEmerald 2.5px; stroke-cap: round; stroke-join: round; fill: transparent; at: (0px, 0px); }
+                    }
+                }
+                text { content: "32px"; font-family: >fontMono; font-size: 11px; font-weight: 700; color: >textMuted; }
+            }
+
+            // 16px Favicon
+            stack {
+                direction: vertical;
+                gap: 12px;
+                align: center;
+
+                group #icon16 {
+                    size: 20px 20px;
+                    rect { size: 20px 20px; radius: 6px; fill: >toadEmerald; at: (0px, 0px); }
+                    circle { size: 8px; fill: >toadWhite; at: (6px, 6px); }
+                }
+                text { content: "16px"; font-family: >fontMono; font-size: 11px; font-weight: 700; color: >textMuted; }
+            }
+        }
+
+        text {
+            content: "Zero detail loss across all display formats and densities.";
+            font-size: 12px;
+            color: >textMuted;
+            at: (36px, 340px);
+        }
+    }
+}

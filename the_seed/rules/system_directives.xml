@@ -61,7 +61,7 @@
     </rule>
 
     <rule id="INV-013" severity="error">
-      <statement>Project 'fonts/' Directory Synchronization &amp; Photopea Drag-and-Drop Readiness: The AI MUST maintain an active local 'fonts/' directory for every project at all times. Every custom font family and weight declared via '@font' or referenced in 'font-family:' must have its corresponding font binary (.ttf, .otf, or .woff2) stored and kept synchronized in the project's 'fonts/' folder. This ensures users can instantly drag-and-drop the font files into Photopea (or Photoshop) for 100% native glyph, weight, ligature, and layout rendering without missing font warnings or fallback replacement.</statement>
+      <statement>Centralized Fonts Repository &amp; Photopea Drag-and-Drop Readiness: LLMs and designers MUST NOT create separate local 'fonts/' folders per project. All font binaries (.ttf/.otf) MUST be stored centrally in 'c:/toad-designs/fonts/'. When a design requires a new or custom font, add it directly to 'c:/toad-designs/fonts/'. This ensures users load all fonts into Photopea or Photoshop from a single unified repository without fragmented font duplication or missing font warnings.</statement>
     </rule>
   </invariants>
 </system_directives>
