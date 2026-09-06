@@ -27,3 +27,5 @@ Thumbs.db
 .agents/
 _agents/
 
+# Fonts directory for local PSD/Photopea drag & drop
+fonts/

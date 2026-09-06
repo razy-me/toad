@@ -25,6 +25,7 @@ export interface CliOptions {
   bleed?: string;
   port?: string;
   humanLayers?: boolean;
+  textToPath?: boolean;
 }
 
 const useColor = !process.env.NO_COLOR && (process.stdout.isTTY || process.env.FORCE_COLOR !== '0');
@@ -259,7 +260,8 @@ export function createCli(): Command {
       quality: qualityNum,
       dpi: dpiNum,
       bleed: opts.bleed,
-      humanizeLayerNames: opts.humanLayers !== false
+      humanizeLayerNames: opts.humanLayers !== false,
+      textToPath: opts.textToPath
     };
 
     const formatOutput = (result: BuildResult) => {
@@ -273,8 +275,13 @@ export function createCli(): Command {
         } catch { }
         
         let dimStr = '';
-        if (f.endsWith('.psd') || f.endsWith('.png') || f.endsWith('.jpg') || f.endsWith('.jpeg') || f.endsWith('.webp')) {
-           dimStr = c.dim(`(${result.canvas.width}x${result.canvas.height})`);
+        if (f.endsWith('.psd')) {
+          dimStr = c.dim(`(${Math.round(result.canvas.width * 2.5)}x${Math.round(result.canvas.height * 2.5)})`);
+        } else if (f.endsWith('.png') || f.endsWith('.jpg') || f.endsWith('.jpeg') || f.endsWith('.webp')) {
+          const effectiveScale = buildOptions.scale && buildOptions.scale > 0 ? buildOptions.scale : 1;
+          dimStr = c.dim(`(${Math.round(result.canvas.width * effectiveScale)}x${Math.round(result.canvas.height * effectiveScale)})`);
+        } else if (f.endsWith('.svg')) {
+          dimStr = c.dim(`(${Math.round(result.canvas.width * 2.5)}x${Math.round(result.canvas.height * 2.5)})`);
         }
         
         console.log(`  ${c.cyan('➜')} ${c.bold(path.basename(f)).padEnd(24)} ${c.yellow(sizeStr.padStart(8))}  ${dimStr}`);
@@ -312,6 +319,7 @@ export function createCli(): Command {
     .option('-q, --quality <number>', 'JPEG/WebP compression quality (1-100 or 0.0-1.0, default: 92)')
     .option('--dpi <number>', 'Target output resolution in DPI (e.g. 300, 150, 96)')
     .option('--bleed <dimension>', 'Print bleed margin override (e.g. 3mm, 0.125in, 10px)')
+    .option('-t, --text-to-path', 'Convert text elements to vector path outlines in SVG export')
     .option('--no-human-layers', 'Disable semantic human layer naming in PSD and SVG')
     .action(handleBuild);
 
@@ -325,6 +333,7 @@ export function createCli(): Command {
     .option('-q, --quality <number>', 'JPEG/WebP compression quality (1-100 or 0.0-1.0, default: 92)')
     .option('--dpi <number>', 'Target output resolution in DPI (e.g. 300, 150, 96)')
     .option('--bleed <dimension>', 'Print bleed margin override (e.g. 3mm, 0.125in, 10px)')
+    .option('-t, --text-to-path', 'Convert text elements to vector path outlines in SVG export')
     .option('--no-human-layers', 'Disable semantic human layer naming in PSD and SVG')
     .option('-p, --port <number>', 'Port for the live preview server (default: 3000)')
     .action(async (entry, opts) => {

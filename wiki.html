@@ -9,32 +9,36 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     /*
-      Sleek & Smart Design System mit 100% einheitlicher Helligkeitsebene:
+      Sleek & Smart Design System:
+      - Primärfarbe: Edles Tief-Smaragdgrün #064E3B
+      - Sekundärfarbe: Warmes Champagner-Parchment #F8E7C9
       - Moderne Sticky-Sidebar Navigation mit dynamischem Scroll-Tracking
       - Schöne Karten, Tabellen, strukturierte Code-Boxen mit 1-Klick-Kopierfunktion
-      - Identische Helligkeitsebene (~75-80% Luminanz) für ALLE Texte, Header, Icons & Links
-      - Keine isolierten "Lichtspitzen" oder weißen Blendeffekte, die über Nachbarbereiche strahlen
     */
     :root {
-      /* Hintergrund: Dein edles, tiefes Wein-Anthrazit #1e0b0e */
-      --bg: #1e0b0e;
-      --bg-surface: #281216;
-      --bg-surface-elevated: #351a20;
-      --bg-code: #140709;
-      --border: #4a2128;
-      --border-subtle: #68303a;
+      /* Primär & Sekundär Theme-Tokens */
+      --primary: #064E3B;
+      --secondary: #F8E7C9;
 
-      /* Perfekt abgestimmte Typografie mit Fließtext #fd91a1 */
-      --text-main: #fd91a1;     /* Exakt deine Fließtext-Farbe #fd91a1 */
-      --text-heading: #ffe4e8;  /* Helles, klares Puder-Weiß für Überschriften */
-      --text-label: #fda4b2;    /* Sanftes Himbeer-Rose für Labels */
+      /* Oberflächen & Hintergründe basierend auf #064E3B */
+      --bg: #032018;
+      --bg-surface: #064E3B;
+      --bg-surface-elevated: #09634b;
+      --bg-code: #021610;
+      --border: #0d5e48;
+      --border-subtle: #137d61;
+
+      /* Typografie mit Sekundärfarbe #F8E7C9 */
+      --text-main: #F8E7C9;     /* Sekundärfarbe: Warmes Champagner-Parchment */
+      --text-heading: #FFFDF5;  /* Klares Elfenbein-Weiß für Überschriften */
+      --text-label: #E2D0B0;    /* Sanft abgetöntes Sand-Parchment für Labels */
 
       /* Akzente */
-      --c-cyan: #fda4b2;        /* Primär-Akzent passend zu #fd91a1 */
-      --c-teal: #f47287;        /* Kräftigeres Korall-Rose */
-      --c-purple: #e879f9;      /* Weiches Pastell-Magenta */
+      --c-cyan: #F8E7C9;        /* Primär-Akzent: Edles #F8E7C9 für Badges, Linien & Highlights */
+      --c-teal: #34d399;        /* Frisches Smaragd-Mint */
+      --c-purple: #c084fc;      /* Weiches Pastell-Violett */
       --c-amber: #fcd34d;       /* Warmes Gold */
-      --c-blue: #fca5a5;        /* Sanftes Lachs */
+      --c-blue: #6ee7b7;        /* Sanftes Meerschaum-Grün */
 
       --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
       --font-mono: 'JetBrains Mono', Consolas, monospace;
@@ -202,7 +206,7 @@
     .search-btn:hover {
       border-color: var(--c-cyan);
       color: var(--text-heading);
-      background: rgba(253, 145, 161, 0.08);
+      background: rgba(248, 231, 201, 0.08);
     }
 
     .search-btn-left {
@@ -229,7 +233,7 @@
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: rgba(14, 4, 7, 0.75);
+      background: rgba(2, 22, 16, 0.8);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       z-index: 1000;
@@ -252,7 +256,7 @@
       background: var(--bg-surface);
       border: 1px solid var(--border-subtle);
       border-radius: 12px;
-      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(253, 145, 161, 0.15);
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(248, 231, 201, 0.15);
       overflow: hidden;
       display: flex;
       flex-direction: column;
@@ -387,9 +391,9 @@
 
     /* Target pulse animation */
     @keyframes wikiTargetPulse {
-      0% { box-shadow: 0 0 0 0 rgba(253, 145, 161, 0.6); }
-      70% { box-shadow: 0 0 0 10px rgba(253, 145, 161, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(253, 145, 161, 0); }
+      0% { box-shadow: 0 0 0 0 rgba(248, 231, 201, 0.6); }
+      70% { box-shadow: 0 0 0 10px rgba(248, 231, 201, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(248, 231, 201, 0); }
     }
 
     .target-highlight {
@@ -543,8 +547,8 @@
     }
 
     .copy-btn:hover {
-      color: #ffffff;
-      background: #4a2128;
+      color: var(--text-heading);
+      background: #0d5e48;
       border-color: var(--c-cyan);
     }
 
@@ -1969,7 +1973,7 @@ Card(<span class="val">"Analytics Card"</span>, <span class="val">#0f172a</span>
     const escapedText = escapeHtml(text);
     const escapedQ = escapeHtml(query);
     const regex = new RegExp(`(${escapedQ.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-    return escapedText.replace(regex, '<span style="color:var(--text-heading);background:rgba(253,145,161,0.25);border-radius:2px;padding:0 2px">$1</span>');
+    return escapedText.replace(regex, '<span style="color:var(--text-heading);background:rgba(248,231,201,0.25);border-radius:2px;padding:0 2px">$1</span>');
   }
 
   function escapeHtml(str) {

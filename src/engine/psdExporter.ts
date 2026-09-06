@@ -329,14 +329,15 @@ export class PsdExporter {
     dpi = 72,
     parentMatrix: Matrix2D = IDENTITY_MATRIX,
     context?: LayerNamingContext,
-    options?: PsdExportOptions
+    options?: PsdExportOptions,
+    parentNode?: LayoutNode
   ): Promise<Layer | null> {
-    const layer = await this.buildPsdLayerInternal(node, scale, basePath, dpi, parentMatrix, context, options);
+    const layer = await this.buildPsdLayerInternal(node, scale, basePath, dpi, parentMatrix, context, options, parentNode);
     if (!layer || !node.maskNode) return layer;
 
     // Create a clipping mask group
     // In Photoshop, a clipping mask needs a base layer and a clipped layer.
-    const maskLayer = await this.buildPsdLayerInternal(node.maskNode, scale, basePath, dpi, parentMatrix, context, options);
+    const maskLayer = await this.buildPsdLayerInternal(node.maskNode, scale, basePath, dpi, parentMatrix, context, options, parentNode);
     if (!maskLayer) return layer;
     
     maskLayer.clipping = false; // Base mask layer
@@ -356,7 +357,8 @@ export class PsdExporter {
     dpi = 72,
     parentMatrix: Matrix2D = IDENTITY_MATRIX,
     context?: LayerNamingContext,
-    options?: PsdExportOptions
+    options?: PsdExportOptions,
+    parentNode?: LayoutNode
   ): Promise<Layer | null> {
     const localMat = getNodeLocalMatrix(node);
     const currentMat = localMat ? multiplyMatrix(parentMatrix, localMat) : parentMatrix;
@@ -435,7 +437,7 @@ export class PsdExporter {
             siblingCountsByType: childCountsByType,
             humanizeLayerNames: options?.humanizeLayerNames,
           };
-          const childLayer = await this.buildPsdLayer(childNode, scale, basePath, dpi, currentMat, childContext, options);
+          const childLayer = await this.buildPsdLayer(childNode, scale, basePath, dpi, currentMat, childContext, options, node);
           if (childLayer) {
             // Apply Photoshop clipping mask hierarchy
             if (isMask) {
@@ -457,7 +459,7 @@ export class PsdExporter {
           name: `${layerName} Background`,
           children: undefined
         };
-        const bgLayer = await this.buildPsdLayerInternal(bgNode, scale, basePath, dpi, currentMat, context, options);
+        const bgLayer = await this.buildPsdLayerInternal(bgNode, scale, basePath, dpi, currentMat, context, options, node);
         if (bgLayer) {
           childLayers.unshift(bgLayer);
         }
@@ -523,10 +525,46 @@ export class PsdExporter {
         top
       );
 
+      const isExplicitCenter =
+        node.style.align === 'center' ||
+        (node as any).alignment === 'center' ||
+        (node.style as any).textAlign === 'center';
+
+      const isStackCenter = Boolean(
+        parentNode && (parentNode.type === 'stack' || parentNode.type === 'group' || parentNode.type === 'grid') && (
+          (((parentNode.style as any)?.direction === 'vertical' || (parentNode as any).direction === 'vertical') &&
+           ((parentNode.style as any)?.align === 'center' || (parentNode as any).align === 'center')) ||
+          (((parentNode.style as any)?.direction === 'horizontal' || (parentNode as any).direction === 'horizontal') &&
+           ((parentNode.style as any)?.justify === 'center' || (parentNode as any).justify === 'center'))
+        )
+      );
+
+      const isGeometryCenter = Boolean(
+        parentNode && parentNode.width > 0 &&
+        (parentNode.width - node.width) > 8 &&
+        Math.abs((node.x + node.width / 2) - (parentNode.x + parentNode.width / 2)) < 3
+      );
+
+      const isCentered = isExplicitCenter || isStackCenter || isGeometryCenter;
+
+      const isExplicitRight =
+        node.style.align === 'right' ||
+        (node as any).alignment === 'right' ||
+        (node.style as any).textAlign === 'right';
+
+      const isStackRight = Boolean(
+        parentNode && (parentNode.type === 'stack' || parentNode.type === 'group' || parentNode.type === 'grid') && (
+          ((parentNode.style as any)?.direction === 'vertical' || (parentNode as any).direction === 'vertical') &&
+          ((parentNode.style as any)?.align === 'end' || (parentNode.style as any)?.align === 'right')
+        )
+      );
+
+      const isRight = isExplicitRight || isStackRight;
+
       let justification: any = 'left';
-      if (node.style.align === 'center') justification = 'center';
-      if (node.style.align === 'right') justification = 'right';
-      if (node.style.align === 'justify') justification = 'justifyLeft';
+      if (isCentered) justification = 'center';
+      else if (isRight) justification = 'right';
+      else if (node.style.align === 'justify') justification = 'justify-left';
 
       // Insertion anchor point in unscaled node space
       let anchorX = node.x;
@@ -1317,7 +1355,7 @@ export class PsdExporter {
       ? (isBold ? 'Courier-BoldOblique' : 'Courier-Oblique')
       : (isBold ? 'Courier-Bold' : 'Courier');
 
-    if (key === 'sans-serif' || key === 'system-ui' || key === '-apple-system' || key === 'blinkmacsystemfont' || key === 'segoe ui') {
+    if (key === 'sans-serif' || key === 'system-ui' || key === '-apple-system' || key === 'blinkmacsystemfont') {
       return genericSans;
     }
     if (key === 'serif') {
@@ -1327,6 +1365,14 @@ export class PsdExporter {
       return genericMono;
     }
 
+    const consolasName = isBold
+      ? (isItalic ? 'Consolas-BoldItalic' : 'Consolas-Bold')
+      : (isItalic ? 'Consolas-Italic' : 'Consolas');
+
+    const segoeUiName = isBold
+      ? (isItalic ? 'SegoeUI-BoldItalic' : 'SegoeUI-Bold')
+      : (isItalic ? 'SegoeUI-Italic' : 'SegoeUI');
+
     const map: Record<string, string> = {
       'arial': genericSans,
       'helvetica': `Helvetica${styleSuffix === 'Regular' ? '' : '-' + styleSuffix}`,
@@ -1335,6 +1381,12 @@ export class PsdExporter {
       'times new roman': genericSerif,
       'courier': genericMono,
       'courier new': `CourierNewPS${styleSuffix === 'Regular' ? 'MT' : '-' + styleSuffix + 'MT'}`,
+      'consolas': consolasName,
+      'segoe ui': segoeUiName,
+      'segoeui': segoeUiName,
+      'cascadia code': isBold ? (isItalic ? 'CascadiaCode-BoldItalic' : 'CascadiaCode-Bold') : (isItalic ? 'CascadiaCode-Italic' : 'CascadiaCode-Regular'),
+      'fira code': isBold ? 'FiraCode-Bold' : 'FiraCode-Regular',
+      'jetbrains mono': isBold ? (isItalic ? 'JetBrainsMono-BoldItalic' : 'JetBrainsMono-Bold') : (isItalic ? 'JetBrainsMono-Italic' : 'JetBrainsMono-Regular'),
       'inter': `Inter-${styleSuffix}`,
       'roboto': `Roboto-${styleSuffix}`,
       'poppins': `Poppins-${styleSuffix}`,
