@@ -394,7 +394,6 @@ export class CanvasRenderer {
             }).join(', ')
           : (fontFamily === 'sans-serif' ? 'sans-serif' : `"${fontFamily}"`);
         ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px ${fontFamCanvas}`;
-        ctx.textBaseline = 'top';
         if (node.style.letterSpacing && (ctx as any).letterSpacing !== undefined) {
           (ctx as any).letterSpacing = `${node.style.letterSpacing}px`;
         }
@@ -437,17 +436,25 @@ export class CanvasRenderer {
         if (align === 'right') anchorX = node.x + node.width;
 
         const tlHeight = node.textLayout?.height ?? 0;
-        const valignShift = node.style.verticalAlign === 'middle'
-          ? Math.max(0, (node.height - tlHeight) / 2)
-          : node.style.verticalAlign === 'bottom'
-            ? Math.max(0, node.height - tlHeight)
-            : 0;
+        const opticalOffset = node.textLayout?.opticalCenterOffset ?? 0;
+        const lineCount = node.textLayout?.lines?.length || 1;
+        const isMiddle = node.style.verticalAlign === 'middle';
+
+        if (isMiddle) {
+          ctx.textBaseline = 'alphabetic';
+        } else {
+          ctx.textBaseline = 'top';
+        }
+
+        const baselineY0 = isMiddle
+          ? node.y + (node.height - (lineCount - 1) * lineHeight) / 2 + opticalOffset
+          : node.y + (node.style.verticalAlign === 'bottom' ? Math.max(0, node.height - tlHeight) : 0);
 
         if (align === 'justify' && node.textLayout && node.textLayout.lines && node.textLayout.lines.length > 0) {
           ctx.textAlign = 'left';
           for (let i = 0; i < node.textLayout.lines.length; i++) {
             const line = node.textLayout.lines[i]!;
-            const lineY = node.y + valignShift + i * lineHeight;
+            const lineY = baselineY0 + i * lineHeight;
             const words = line.split(' ');
             if (words.length > 1 && i < node.textLayout.lines.length - 1) {
               const totalWordsW = words.reduce((acc, w) => acc + ctx.measureText(w).width, 0);
@@ -465,11 +472,11 @@ export class CanvasRenderer {
         } else if (node.textLayout && node.textLayout.lines && node.textLayout.lines.length > 0) {
           for (let i = 0; i < node.textLayout.lines.length; i++) {
             const line = node.textLayout.lines[i]!;
-            const lineY = node.y + valignShift + i * lineHeight;
+            const lineY = baselineY0 + i * lineHeight;
             ctx.fillText(line, anchorX, lineY);
           }
         } else if (node.name) {
-          ctx.fillText(node.name, anchorX, node.y);
+          ctx.fillText(node.name, anchorX, isMiddle ? node.y + node.height / 2 + opticalOffset : node.y);
         }
         break;
       }

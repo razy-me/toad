@@ -24,6 +24,7 @@ export interface CliOptions {
   dpi?: string;
   bleed?: string;
   port?: string;
+  humanLayers?: boolean;
 }
 
 const useColor = !process.env.NO_COLOR && (process.stdout.isTTY || process.env.FORCE_COLOR !== '0');
@@ -257,7 +258,8 @@ export function createCli(): Command {
       watch: opts.watch,
       quality: qualityNum,
       dpi: dpiNum,
-      bleed: opts.bleed
+      bleed: opts.bleed,
+      humanizeLayerNames: opts.humanLayers !== false
     };
 
     const formatOutput = (result: BuildResult) => {
@@ -310,6 +312,7 @@ export function createCli(): Command {
     .option('-q, --quality <number>', 'JPEG/WebP compression quality (1-100 or 0.0-1.0, default: 92)')
     .option('--dpi <number>', 'Target output resolution in DPI (e.g. 300, 150, 96)')
     .option('--bleed <dimension>', 'Print bleed margin override (e.g. 3mm, 0.125in, 10px)')
+    .option('--no-human-layers', 'Disable semantic human layer naming in PSD and SVG')
     .action(handleBuild);
 
   program
@@ -322,6 +325,7 @@ export function createCli(): Command {
     .option('-q, --quality <number>', 'JPEG/WebP compression quality (1-100 or 0.0-1.0, default: 92)')
     .option('--dpi <number>', 'Target output resolution in DPI (e.g. 300, 150, 96)')
     .option('--bleed <dimension>', 'Print bleed margin override (e.g. 3mm, 0.125in, 10px)')
+    .option('--no-human-layers', 'Disable semantic human layer naming in PSD and SVG')
     .option('-p, --port <number>', 'Port for the live preview server (default: 3000)')
     .action(async (entry, opts) => {
       const portNum = opts.port ? parseInt(opts.port, 10) : undefined;

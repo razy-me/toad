@@ -8,7 +8,7 @@ export const KNOWN_PROPERTIES = [
   'font', 'font-family', 'fontFamily', 'font-size', 'fontSize', 'font-weight', 'fontWeight', 'weight',
   'font-style', 'fontStyle', 'style', 'line-height', 'lineHeight', 'letter-spacing', 'letterSpacing', 'tracking',
   'text-transform', 'textTransform', 'content', 'text', 'wrap-width', 'wrapWidth', 'max-lines', 'maxLines', 'overflow',
-  'vertical-align', 'verticalAlign', 'font-features', 'fontFeatures', 'font-variation', 'fontVariation',
+  'vertical-align', 'verticalAlign', 'trim', 'text-box-trim', 'textBoxTrim', 'font-features', 'fontFeatures', 'font-variation', 'fontVariation',
   'hanging-punctuation', 'hangingPunctuation',
   'margin', 'padding', 'gap', 'column-gap', 'columnGap', 'row-gap', 'rowGap', 'flow',
   'direction', 'align', 'text-align', 'columns', 'at', 'position', 'rotation', 'scale', 'scales',

@@ -591,6 +591,7 @@ export interface ResolvedElementNode {
   letterSpacing?: number;
   textTransform?: 'uppercase' | 'lowercase' | 'capitalize' | 'none';
   verticalAlign?: 'top' | 'middle' | 'bottom';
+  trim?: 'cap' | 'both' | 'start' | 'end' | 'none';
   wrapWidth?: number;
   maxLines?: number;
   overflow?: 'ellipsis' | 'clip' | 'visible';

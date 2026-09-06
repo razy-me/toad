@@ -10,6 +10,7 @@ import * as path from 'node:path';
 import { LayoutResult, LayoutNode, ComputedStyle, GradientStyle } from '../parser/math.js';
 import { distributeGradientStops, parseFilterString, parseColorToRgba } from './drawUtils.js';
 import { resolveSharedImage } from './imageCache.js';
+import { resolveHumanLayerName, LayerNamingContext } from '../utils/layerNaming.js';
 
 function formatColorForSvg(color: string): string {
   if (!color) return color;
@@ -54,6 +55,7 @@ export interface SvgExportOptions {
   scale?: number;
   basePath?: string;
   embedImages?: boolean;
+  humanizeLayerNames?: boolean;
 }
 
 export class SvgExporter {
@@ -66,10 +68,12 @@ export class SvgExporter {
   private pendingClipByParent = new Map<string, string>();
   private basePath?: string;
   private embedImages: boolean;
+  private humanizeLayerNames: boolean;
 
   constructor(options: SvgExportOptions = {}) {
     this.basePath = options.basePath;
     this.embedImages = options.embedImages !== false;
+    this.humanizeLayerNames = options.humanizeLayerNames === true;
   }
 
   /**
@@ -128,8 +132,23 @@ export class SvgExporter {
 
     // 2. Render Nodes
     const rootNodes = layout.nodes.filter(n => !n.parentId && !n.parent);
-    for (const node of (rootNodes.length > 0 ? rootNodes : layout.nodes)) {
-      const markup = await this.renderNode(node);
+    const nodesToRender = rootNodes.length > 0 ? rootNodes : layout.nodes;
+    const rootSiblingCounts = new Map<string, number>();
+    for (const n of nodesToRender) {
+      rootSiblingCounts.set(n.type, (rootSiblingCounts.get(n.type) || 0) + 1);
+    }
+
+    for (let i = 0; i < nodesToRender.length; i++) {
+      const node = nodesToRender[i]!;
+      const rootContext: LayerNamingContext = {
+        parentName: layout.canvas.name || 'Canvas',
+        parentType: 'canvas',
+        siblingIndex: i,
+        totalSiblings: nodesToRender.length,
+        siblingCountsByType: rootSiblingCounts,
+        humanizeLayerNames: this.humanizeLayerNames,
+      };
+      const markup = await this.renderNode(node, '  ', rootContext);
       if (markup) {
         elementsMarkup.push(markup);
       }
@@ -142,17 +161,27 @@ export class SvgExporter {
 
     return [
       `<?xml version="1.0" encoding="UTF-8"?>`,
-      `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ${width} ${height}" width="${scaledW}" height="${scaledH}">`,
+      `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="0 0 ${width} ${height}" width="${scaledW}" height="${scaledH}">`,
       defsBlock + elementsMarkup.join('\n'),
       `</svg>`
     ].filter(Boolean).join('\n');
   }
 
-  private async renderNode(node: LayoutNode, indent = '  '): Promise<string> {
+  private async renderNode(node: LayoutNode, indent = '  ', context?: LayerNamingContext): Promise<string> {
     const attrs: string[] = [];
 
-    if (node.id) {
+    const layerName = resolveHumanLayerName(node, {
+      ...context,
+      humanizeLayerNames: this.humanizeLayerNames,
+    });
+
+    if (node.id && !node.id.startsWith('__auto_')) {
       attrs.push(`id="${this.escapeAttr(node.id)}"`);
+    }
+
+    if (this.humanizeLayerNames) {
+      attrs.push(`data-name="${this.escapeAttr(layerName)}"`);
+      attrs.push(`inkscape:label="${this.escapeAttr(layerName)}"`);
     }
 
     if (node.style.opacity !== undefined && node.style.opacity < 1) {
@@ -307,11 +336,9 @@ export class SvgExporter {
         }
 
         const tlHeightSvg = node.textLayout?.height ?? 0;
-        const valignShiftSvg = node.style.verticalAlign === 'middle'
-          ? Math.max(0, (node.height - tlHeightSvg) / 2)
-          : node.style.verticalAlign === 'bottom'
-            ? Math.max(0, node.height - tlHeightSvg)
-            : 0;
+        const opticalOffsetSvg = node.textLayout?.opticalCenterOffset ?? 0;
+        const lineCountSvg = lines.length || 1;
+        const isMiddleSvg = node.style.verticalAlign === 'middle';
 
         const fontFeaturesStyle = node.style.fontFeatures
           ? `font-feature-settings: ${Array.isArray(node.style.fontFeatures) ? node.style.fontFeatures.map(f => `"${f}" 1`).join(', ') : node.style.fontFeatures};`
@@ -323,10 +350,16 @@ export class SvgExporter {
         const styleAttr = combinedStyle ? `style="${this.escapeAttr(combinedStyle)}"` : '';
 
         // Exact Skia Canvas parity:
-        // In Canvas: lineY = node.y + valignShift + i * lineHeight with textBaseline = 'top'.
-        // The alphabetic baseline sits at lineY + ascent.
-        const ascent = node.textLayout?.ascent ?? Math.round(fontSize * 0.8);
-        const baselineY = node.y + valignShiftSvg + ascent;
+        let baselineY: number;
+        if (isMiddleSvg) {
+          baselineY = node.y + (node.height - (lineCountSvg - 1) * lineHeight) / 2 + opticalOffsetSvg;
+        } else {
+          const valignShiftSvg = node.style.verticalAlign === 'bottom'
+            ? Math.max(0, node.height - tlHeightSvg)
+            : 0;
+          const ascent = node.textLayout?.ascent ?? Math.round(fontSize * 0.8);
+          baselineY = node.y + valignShiftSvg + ascent;
+        }
 
         const formattedFontFamily = fontFamily === 'sans-serif' || fontFamily.includes(',')
           ? fontFamily
@@ -431,12 +464,27 @@ export class SvgExporter {
           childrenMarkup.push(indent + '  ' + bgMarkup.replace(/\s+/g, ' '));
         }
         if (node.children && node.children.length > 0) {
+          const childCountsByType = new Map<string, number>();
           for (const child of node.children) {
-            const childSvg = await this.renderNode(child, indent + '  ');
+            childCountsByType.set(child.type, (childCountsByType.get(child.type) || 0) + 1);
+          }
+
+          for (let i = 0; i < node.children.length; i++) {
+            const child = node.children[i]!;
+            const childContext: LayerNamingContext = {
+              parentName: layerName,
+              parentType: node.type,
+              siblingIndex: i,
+              totalSiblings: node.children.length,
+              siblingCountsByType: childCountsByType,
+              humanizeLayerNames: this.humanizeLayerNames,
+            };
+            const childSvg = await this.renderNode(child, indent + '  ', childContext);
             if (childSvg) childrenMarkup.push(childSvg);
           }
         }
-        return `${indent}<g ${attrs.join(' ')}>\n${childrenMarkup.join('\n')}\n${indent}</g>`;
+        const titleTag = this.humanizeLayerNames ? `${indent}  <title>${this.escapeXml(layerName)}</title>\n` : '';
+        return `${indent}<g ${attrs.join(' ')}>\n${titleTag}${childrenMarkup.join('\n')}\n${indent}</g>`;
       }
 
       default:

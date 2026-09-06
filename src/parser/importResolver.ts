@@ -1083,6 +1083,15 @@ export class ImportResolver {
           if (h !== undefined) target.size = { ...(target.size || {}), h };
           break;
         }
+        case 'name':
+        case 'layer-name':
+        case 'layerName': {
+          const str = this.extractString(val);
+          if (str) {
+            target.name = str;
+          }
+          break;
+        }
         case 'fill':
         case 'background': {
           target.fill = this.extractColorOrGradient(val);
@@ -1238,6 +1247,12 @@ export class ImportResolver {
         case 'vertical-align':
         case 'verticalAlign': {
           (target as any).verticalAlign = this.extractString(val);
+          break;
+        }
+        case 'trim':
+        case 'text-box-trim':
+        case 'textBoxTrim': {
+          (target as any).trim = this.extractString(val);
           break;
         }
         case 'align':

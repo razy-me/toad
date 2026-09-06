@@ -41,6 +41,7 @@ export interface BuildOptions {
   quality?: number;
   /** Preferred port for the live preview server (dev command). */
   port?: number;
+  humanizeLayerNames?: boolean;
 }
 
 export interface BuildResult {
@@ -286,7 +287,8 @@ export async function compileToad(
         const psdBuf = await exportToPsd(pageLayout, {
           scale,
           dpi: effectiveDpi,
-          basePath: resolvedEntry
+          basePath: resolvedEntry,
+          humanizeLayerNames: options.humanizeLayerNames
         });
         const psdPath = path.join(outDir, `${fileBase}.psd`);
         fs.mkdirSync(path.dirname(psdPath), { recursive: true });
@@ -295,7 +297,10 @@ export async function compileToad(
       }
 
       if (formatsToRender.includes('svg')) {
-        const exporter = new SvgExporter({ basePath: resolvedEntry });
+        const exporter = new SvgExporter({
+          basePath: resolvedEntry,
+          humanizeLayerNames: options.humanizeLayerNames
+        });
         const svgContent = await exporter.export(pageLayout, scale);
         const svgPath = path.join(outDir, `${fileBase}.svg`);
         fs.mkdirSync(path.dirname(svgPath), { recursive: true });
