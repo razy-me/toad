@@ -2,7 +2,7 @@
 <specification module="01_skia_canvas_raster_pipeline" target="toad-dsl" version="3.0">
   <metadata>
     <description>Headless Skia Canvas rasterization pipeline, subpixel precision, node drawing, multi-scale export, and Porter-Duff compositing</description>
-    <source_compiler_file>src/renderer/rasterCanvas.ts</source_compiler_file>
+    <source_compiler_file>src/engine/canvasRenderer.ts</source_compiler_file>
   </metadata>
 
   <pipeline_phases>

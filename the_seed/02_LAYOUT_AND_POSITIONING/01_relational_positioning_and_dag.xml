@@ -2,7 +2,7 @@
 <specification module="01_relational_positioning_and_dag" target="toad-dsl" version="3.0">
   <metadata>
     <description>Relational anchoring grammar, directional relations, alignments, and 3-color DFS DAG solver</description>
-    <source_compiler_file>src/layout/dependencyGraph.ts</source_compiler_file>
+    <source_compiler_file>src/parser/dependencyGraph.ts</source_compiler_file>
   </metadata>
 
   <grammar_rule>

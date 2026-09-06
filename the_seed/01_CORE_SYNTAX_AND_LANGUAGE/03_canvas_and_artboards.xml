@@ -9,7 +9,7 @@
 canvas "VeloraTentCard_Dark" {
     size: 900px 1200px;
     background: #101612;
-    font-family: "Agency FB", sans-serif;
+    font-family: "Agency FB, sans-serif";
     export: all;
     scales: [1, 2];
     quality: 100;

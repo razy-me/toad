@@ -1,6 +1,6 @@
 export const KNOWN_PROPERTIES = [
   'size', 'dimensions', 'width', 'height', 'fill', 'color', 'background', 'background-color', 'backgroundColor',
-  'radius', 'borderRadius', 'border-radius', 'shadow', 'box-shadow', 'drop-shadow', 'inner-shadow', 'innerShadow',
+  'radius', 'borderRadius', 'border-radius', 'corner-radius', 'cornerRadius', 'shadow', 'box-shadow', 'drop-shadow', 'inner-shadow', 'innerShadow',
   'glow', 'outer-glow', 'outerGlow', 'inner-glow', 'innerGlow', 'bevel', 'bevel-emboss', 'bevelEmboss',
   'layer-stroke', 'layerStroke', 'overlay', 'color-overlay', 'colorOverlay', 'gradient-overlay', 'gradientOverlay',
   'opacity', 'stroke', 'stroke-width', 'strokeWidth', 'stroke-style', 'strokeStyle',

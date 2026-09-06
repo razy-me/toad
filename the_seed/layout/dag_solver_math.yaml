@@ -39,6 +39,11 @@ anchor_mathematics:
     center_of:
       formula_x: "tx + ((tw - w) / 2) + dx"
       formula_y: "ty + ((th - h) / 2) + dy"
+      formula_y_text_optical: "ty + ((th - h) / 2) + opticalCenterOffset + dy"
+      optical_text_centering:
+        ascent_bias_cause: "Text rendered via top-baseline reserves upper space for full ascender height."
+        optical_offset_formula: "opticalCenterOffset = (actualAscent - actualDescent - capHeight) / 2"
+        effective_cap_trim_bounds: "When trim: cap | both is active, bounding box trims directly to [actualAscent, actualDescent]"
 
     top_left_of:
       formula_x: "tx + dx"

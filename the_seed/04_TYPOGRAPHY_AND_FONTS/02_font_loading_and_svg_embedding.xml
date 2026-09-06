@@ -17,7 +17,7 @@
     <example><![CDATA[
 canvas "Keynote" {
     size: 1920px 1080px;
-    font-family: "Agency FB", sans-serif; // Inherited by all child text elements
+    font-family: "Agency FB, sans-serif"; // Inherited by all child text elements
 }
 text #h1 { content: "Headline"; font-size: 48px; } // Uses Agency FB
     ]]></example>

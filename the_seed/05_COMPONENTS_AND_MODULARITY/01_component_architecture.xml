@@ -14,14 +14,14 @@ component MetricCard(title = "Total Users", value = "12,450", trend = "+8.2%") {
 
     text #lblTitle {
         at: (20px, 20px);
-        content: title;
+        content: >title;
         font-size: 13px;
         color: #9EB0A3;
     }
 
     text #lblValue {
         at: (20px, 48px);
-        content: value;
+        content: >value;
         font-size: 28px;
         font-weight: 700;
         color: #ffffff;
@@ -29,7 +29,7 @@ component MetricCard(title = "Total Users", value = "12,450", trend = "+8.2%") {
 
     text #lblTrend {
         at: (20px, 94px);
-        content: trend;
+        content: >trend;
         font-size: 12px;
         font-weight: 600;
         color: #87CC2E;

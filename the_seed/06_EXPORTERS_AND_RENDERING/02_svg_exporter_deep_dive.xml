@@ -2,7 +2,7 @@
 <specification module="02_svg_exporter_deep_dive" target="toad-dsl" version="3.0">
   <metadata>
     <description>W3C SVG vector serialization, standalone definitions, Base64 embedded fonts, and visual parity guarantees</description>
-    <source_compiler_file>src/renderer/svgExporter.ts</source_compiler_file>
+    <source_compiler_file>src/engine/svgExporter.ts</source_compiler_file>
   </metadata>
 
   <document_architecture>

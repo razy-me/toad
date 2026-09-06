@@ -1130,7 +1130,9 @@ export class ImportResolver {
         }
         case 'radius':
         case 'border-radius':
-        case 'borderRadius': {
+        case 'borderRadius':
+        case 'corner-radius':
+        case 'cornerRadius': {
           target.radius = this.extractRadius(val);
           const num = this.extractNumber(val);
           if (num !== undefined) target.adjustRadius = num;

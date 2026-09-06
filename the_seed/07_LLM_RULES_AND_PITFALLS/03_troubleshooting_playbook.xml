@@ -27,9 +27,9 @@
   </diagnostic_trees>
 
   <cli_debugging_toolkit>
-    <command syntax="toad compile design.toad --debug" description="Print AST and layout evaluation metrics" />
-    <command syntax="toad compile design.toad -o wireframe.png --show-bounds" description="Draw bounding boxes (red), anchor vectors (blue), padding/margin (green)" />
-    <command syntax="toad compile design.toad -o output.svg --pretty" description="Inspect formatted SVG XML structure" />
-    <command syntax="toad check design.toad" description="Check syntax and validation without writing files" />
+    <command syntax="toad build design.toad -f svg,png,psd" description="Compile a design to SVG, PNG raster, and layered PSD" />
+    <command syntax="toad dev design.toad" description="Start live preview server with SSE hot reloading in the browser" />
+    <command syntax="toad lint design.toad" description="Statically analyze syntax, DAG cycles, and design best practices without writing output" />
+    <command syntax="toad format design.toad" description="Format .toad source with canonical indentation and spacing" />
   </cli_debugging_toolkit>
 </specification>

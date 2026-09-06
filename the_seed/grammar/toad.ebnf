@@ -10,7 +10,7 @@ FontDirective       ::= "@font" StringLiteral ( "as" Identifier )? ( FontWeightT
 
 VariableDecl        ::= ">" Identifier "=" Expression ";"
 
-CanvasBlock         ::= "canvas" StringLiteral? "{" CanvasProperty* Element* "}"
+CanvasBlock         ::= "canvas" ( "photo" StringLiteral | StringLiteral )? "{" CanvasProperty* Element* "}"
 
 ComponentDecl       ::= "component" Identifier "(" ParameterList? ")" "{" ComponentBody* "}"
 ParameterList       ::= Parameter ( "," Parameter )*
@@ -20,6 +20,9 @@ Element             ::= RectElement
                       | CircleElement
                       | PathElement
                       | PolygonElement
+                      | ShapeElement
+                      | IconElement
+                      | AdjustElement
                       | TextElement
                       | ImageElement
                       | GroupElement
@@ -29,9 +32,12 @@ Element             ::= RectElement
                       | SlotElement
 
 RectElement         ::= "rect" ( "#" Identifier )? StringLiteral? "{" PropertyStatement* Element* "}"
-CircleElement       ::= "circle" ( "#" Identifier )? "{" PropertyStatement* "}"
+CircleElement       ::= ( "circle" | "ellipse" ) ( "#" Identifier )? "{" PropertyStatement* "}"
 PathElement         ::= "path" ( "#" Identifier )? "{" PropertyStatement* "}"
 PolygonElement      ::= "polygon" ( "#" Identifier )? "{" PropertyStatement* "}"
+ShapeElement        ::= ( "star" | "triangle" | "arrow" | "cross" | "shape" ) ( "#" Identifier )? "{" PropertyStatement* "}"
+IconElement         ::= "icon" ( "#" Identifier )? StringLiteral? "{" PropertyStatement* "}"
+AdjustElement       ::= "adjust" ( "#" Identifier )? "{" PropertyStatement* "}"
 TextElement         ::= "text" ( "#" Identifier )? StringLiteral? "{" PropertyStatement* "}"
 ImageElement        ::= "image" ( "#" Identifier )? "{" PropertyStatement* "}"
 GroupElement        ::= "group" ( "#" Identifier )? "{" PropertyStatement* Element* "}"

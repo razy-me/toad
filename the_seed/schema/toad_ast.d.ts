@@ -75,22 +75,57 @@ export type BlendMode =
   | 'color-dodge' | 'color-burn' | 'hard-light' | 'soft-light'
   | 'difference' | 'exclusion' | 'hue' | 'saturation' | 'color' | 'luminosity';
 
+export interface GlowStyle {
+  color: string;
+  blur: number;
+  opacity?: number;
+  spread?: number;
+}
+
+export interface BevelStyle {
+  style?: 'inner' | 'outer' | 'emboss';
+  depth?: number;
+  size?: number;
+  soften?: number;
+}
+
+export interface LayerStrokeStyle {
+  color: string;
+  width: number;
+  position?: 'inside' | 'center' | 'outside';
+}
+
 export interface BaseNode {
   id?: string;
   name?: string;
   at?: RelationalAnchor | [number | Dimension, number | Dimension];
   rotation?: number; // degrees
-  scale?: number;
+  scale?: number | [number, number];
+  skewX?: number;
+  skewY?: number;
+  transformOrigin?: string | [number | Dimension, number | Dimension];
   opacity?: number; // 0.0 to 1.0
   blendMode?: BlendMode;
   shadow?: DropShadow | DropShadow[];
+  innerShadow?: DropShadow;
+  outerGlow?: GlowStyle;
+  innerGlow?: GlowStyle;
+  bevel?: BevelStyle;
+  layerStroke?: LayerStrokeStyle;
+  colorOverlay?: string;
+  gradientOverlay?: PaintFill;
   filter?: string;
+  backdropFilter?: string;
   clip?: boolean | string; // sibling mask reference
+  knockout?: boolean;
+  zIndex?: number;
 }
 
 export interface CanvasNode {
   type: 'canvas';
   name: string;
+  mode?: 'graphic' | 'photo';
+  photoSrc?: string;
   width: Dimension | number;
   height: Dimension | number;
   background?: PaintFill;
@@ -152,10 +187,50 @@ export interface TextNode extends BaseNode {
   letterSpacing?: number | Dimension;
   color?: string; // Text glyph color (CANNOT use fill on text)
   align?: TextAlign;
+  verticalAlign?: 'top' | 'middle' | 'bottom';
+  trim?: 'cap' | 'both' | 'start' | 'end' | 'none';
+  textBoxTrim?: 'cap' | 'both' | 'start' | 'end' | 'none';
+  textTransform?: 'uppercase' | 'lowercase' | 'capitalize' | 'none';
   size?: SizeMode; // Explicit multiline wrapping width
   width?: SizeMode;
+  maxLines?: number;
+  overflow?: 'ellipsis' | 'clip' | 'visible';
   fontFeatures?: string;
   fontVariation?: string;
+  hangingPunctuation?: boolean;
+}
+
+export type ShapeType = 'star' | 'triangle' | 'arrow' | 'cross';
+
+export interface ShapeNode extends BaseNode {
+  type: 'shape';
+  shapeType: ShapeType;
+  fill?: PaintFill;
+  stroke?: string;
+  strokeWidth?: number;
+  points?: number; // e.g. 5 for star
+}
+
+export interface IconNode extends BaseNode {
+  type: 'icon';
+  iconName: string;
+  size?: SizeMode;
+  fill?: PaintFill;
+  stroke?: string;
+  strokeWidth?: number;
+}
+
+export interface AdjustNode extends BaseNode {
+  type: 'adjust';
+  radius?: number;
+  feather?: number;
+  exposure?: number;
+  contrast?: number;
+  brightness?: number;
+  saturation?: number;
+  warmth?: number;
+  highlights?: number;
+  shadows?: number;
 }
 
 export interface ImageNode extends BaseNode {
@@ -208,6 +283,9 @@ export type ElementNode =
   | PathNode
   | PolygonNode
   | TextNode
+  | ShapeNode
+  | IconNode
+  | AdjustNode
   | ImageNode
   | GroupNode
   | StackNode

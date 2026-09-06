@@ -8,13 +8,13 @@
     <rule>The slot statement MUST terminate with a semicolon: 'slot;'. Omitting causes parse error [TOAD-E001].</rule>
     <example><![CDATA[
 component ModalDialog(title = "Dialog Title", width = 500px) {
-    size: width hug;
+    size: >width hug;
     radius: 16px;
     fill: #19271D;
     padding: 24px;
 
     text #header {
-        content: title;
+        content: >title;
         font-size: 20px;
         font-weight: 700;
         color: #ffffff;

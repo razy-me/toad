@@ -13,9 +13,9 @@ stack #navbar {
     direction: horizontal;
     gap: 16px;
     padding: 0 24px;
-    align-items: center;
-    justify-content: space-between;
-    background: #19271D;
+    align: center;
+    justify: space-between;
+    fill: #19271D;
     radius: 12px;
 
     icon #logo { size: 32px; iconName: "star"; fill: #87CC2E; }

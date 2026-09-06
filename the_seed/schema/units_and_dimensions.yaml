@@ -55,4 +55,4 @@ math_and_calc:
   rules:
     - "Expressions can mix units: calc(100% - 32px)"
     - "Parenthesized expressions evaluate first: (100% - (>pad * 2))"
-    - "Variables prefixed with > or $ are substituted prior to math reduction"
+    - "Variables prefixed with > are substituted prior to math reduction"

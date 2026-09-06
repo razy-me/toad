@@ -185,3 +185,141 @@ properties:
     default: none
     note: "Photoshop layer lock protection."
     engine_support: { skia: ignore, svg: ignore, psd: "Protected layer flags" }
+
+  trim:
+    alias: [text-box-trim, textBoxTrim]
+    types: [enum_token]
+    valid_values: [cap, both, start, end, none]
+    targets: [text]
+    default: none
+    note: "Clips glyph leading to cap-height for optical dead-center alignment in compact containers."
+    engine_support: { skia: full, svg: full, psd: full }
+
+  vertical-align:
+    alias: [verticalAlign]
+    types: [enum_token]
+    valid_values: [top, middle, bottom]
+    targets: [text]
+    default: top
+    note: "Vertical text positioning. 'middle' automatically applies optical cap-height centering."
+    engine_support: { skia: full, svg: full, psd: full }
+
+  text-transform:
+    alias: [textTransform]
+    types: [enum_token]
+    valid_values: [uppercase, lowercase, capitalize, none]
+    targets: [text]
+    default: none
+    engine_support: { skia: full, svg: full, psd: full }
+
+  max-lines:
+    alias: [maxLines]
+    types: [integer]
+    targets: [text]
+    default: null
+    note: "Clamps maximum displayed lines before truncation."
+    engine_support: { skia: full, svg: full, psd: full }
+
+  overflow:
+    types: [enum_token]
+    valid_values: [ellipsis, clip, visible]
+    targets: [text]
+    default: visible
+    engine_support: { skia: full, svg: full, psd: full }
+
+  font-features:
+    alias: [fontFeatures]
+    types: [string_descriptor, array]
+    targets: [text]
+    example: '"tnum" 1, "zero" 1'
+    engine_support: { skia: full, svg: full, psd: TySh }
+
+  font-variation:
+    alias: [fontVariation]
+    types: [string_descriptor, array]
+    targets: [text]
+    example: '"wght" 700 "wdth" 90'
+    engine_support: { skia: full, svg: full, psd: TySh }
+
+  hanging-punctuation:
+    alias: [hangingPunctuation]
+    types: [boolean]
+    targets: [text]
+    default: false
+    engine_support: { skia: full, svg: full, psd: full }
+
+  inner-shadow:
+    alias: [innerShadow]
+    types: [shadow_descriptor]
+    targets: [rect, circle, polygon, path, text]
+    default: null
+    engine_support: { skia: full, svg: full, psd: "lrFX ishd" }
+
+  outer-glow:
+    alias: [outerGlow, glow]
+    types: [glow_descriptor]
+    targets: [rect, circle, polygon, path, text]
+    default: null
+    engine_support: { skia: full, svg: full, psd: "lrFX ogFl" }
+
+  inner-glow:
+    alias: [innerGlow]
+    types: [glow_descriptor]
+    targets: [rect, circle, polygon, path, text]
+    default: null
+    engine_support: { skia: full, svg: full, psd: "lrFX igFl" }
+
+  bevel:
+    alias: [bevel-emboss, bevelEmboss]
+    types: [bevel_descriptor]
+    targets: [rect, circle, polygon, path]
+    default: null
+    engine_support: { skia: raster_emulation, svg: filter, psd: "lrFX bvl" }
+
+  layer-stroke:
+    alias: [layerStroke]
+    types: [stroke_descriptor]
+    targets: [all]
+    default: null
+    engine_support: { skia: full, svg: full, psd: "lrFX FrFX" }
+
+  color-overlay:
+    alias: [colorOverlay]
+    types: [hex_color, alpha_fn]
+    targets: [all]
+    default: null
+    engine_support: { skia: full, svg: full, psd: "lrFX SoFi" }
+
+  gradient-overlay:
+    alias: [gradientOverlay]
+    types: [gradient_descriptor]
+    targets: [all]
+    default: null
+    engine_support: { skia: full, svg: full, psd: "lrFX GrFl" }
+
+  knockout:
+    types: [boolean]
+    targets: [all]
+    default: false
+    engine_support: { skia: destination_out, svg: mask, psd: native_knockout }
+
+  skew-x:
+    alias: [skewX]
+    types: [number, deg_dimension]
+    targets: [all]
+    default: 0
+    engine_support: { skia: matrix, svg: skewX, psd: matrix }
+
+  skew-y:
+    alias: [skewY]
+    types: [number, deg_dimension]
+    targets: [all]
+    default: 0
+    engine_support: { skia: matrix, svg: skewY, psd: matrix }
+
+  transform-origin:
+    alias: [transformOrigin]
+    types: [coordinate_pair, enum_token]
+    targets: [all]
+    default: "center"
+    engine_support: { skia: translate_rotate, svg: transform-origin, psd: matrix_pivot }

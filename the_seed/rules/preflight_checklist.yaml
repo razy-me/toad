@@ -62,3 +62,8 @@ verification_steps:
     rule: "Every project MUST maintain an up-to-date 'fonts/' directory containing the font binaries (.ttf/.otf) for all custom fonts declared via @font or referenced in font-family."
     action_if_invalid: "Ensure 'fonts/' contains the required font files and that @font paths correctly point to them."
 
+  12_optical_text_centering:
+    check: "Are texts in compact pills, badges, and buttons optically centered using cap-height offset (+1.5px to +2.5px @1x) or trim: cap / verticalAlign: middle?"
+    rule: "Top-baseline text rendering causes descenderless uppercase strings to appear 2-3px too high. Align glyph visual center to container midline and adjacent icon center."
+    action_if_invalid: "Apply vertical-align: middle; or trim: cap; or add +1.5px to +2.5px (+3-5px @2x) optical y-offset."
+

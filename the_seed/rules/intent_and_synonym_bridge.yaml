@@ -45,8 +45,13 @@ css_web_reflexes:
 
   - concept: "Border Radius"
     css_reflex: "border-radius: 8px; border-radius: 9999px;"
-    canonical_toad: "corner-radius: 8px; corner-radius: 9999px;"
-    rule: "NEVER use border-radius. ALWAYS use corner-radius:."
+    canonical_toad: "radius: 8px; | border-radius: 8px;"
+    rule: "Use radius: or border-radius: (alias). corner-radius is also accepted."
+
+  - concept: "Text Box Trim / Optical Centering"
+    css_reflex: "text-box-trim: trim-both; text-box-edge: cap alphabetic;"
+    canonical_toad: "trim: both; | trim: cap;"
+    rule: "Clips glyph leading to cap-height for optical dead-center alignment in compact containers."
 
   - concept: "Borders & Strokes"
     css_reflex: "border: 1px solid #e2e8f0;"
@@ -70,8 +75,8 @@ css_web_reflexes:
 
   - concept: "Absolute Positioning"
     css_reflex: "position: absolute; top: 20px; left: 40px;"
-    canonical_toad: "at: [40px, 20px];"
-    rule: "Coordinate array [X, Y]. Top-left origin."
+    canonical_toad: "at: (40px, 20px);"
+    rule: "Coordinate tuple (X, Y). Top-left origin."
 
   - concept: "Relative Anchoring"
     css_reflex: "margin-top: 16px; (relative to previous element)"
@@ -119,11 +124,11 @@ figma_design_reflexes:
     notes: "Internal inset of containers and stacks."
 
   - figma_term: "Corner Radius"
-    toad_mapping: "corner-radius: <value>;"
+    toad_mapping: "radius: <value>; | border-radius: <value>;"
     notes: "Controls rounded corners on rect and containers."
 
   - figma_term: "Pill / Full Rounding"
-    toad_mapping: "corner-radius: 9999px;"
+    toad_mapping: "radius: 9999px; | border-radius: 9999px;"
     notes: "Produces fully rounded capsule pill shapes."
 
   - figma_term: "Clip Content"
@@ -222,7 +227,7 @@ intent_mappings:
       rect #badge {
         width: 120px;
         height: 32px;
-        corner-radius: 9999px;
+        radius: 9999px;
         fill: alpha(#3b82f6, 0.15);
         stroke: #3b82f6;
         stroke-width: 1px;
@@ -242,8 +247,8 @@ intent_mappings:
   - user_intent: "Create a dark neon glow card"
     canonical_syntax: |
       rect #card {
-        size: [360px, 200px];
-        corner-radius: 16px;
+        size: 360px 200px;
+        radius: 16px;
         fill: #0d1117;
         stroke: alpha(#00f5a0, 0.3);
         stroke-width: 1px;
@@ -276,7 +281,7 @@ intent_mappings:
         justify: space-between;
         align: center;
         width: 100%;
-        # Item 1, Item 2, Item 3
+        // Item 1, Item 2, Item 3
       }
     alternatives:
       - "Horizontal navbar items"
@@ -286,8 +291,8 @@ intent_mappings:
   - user_intent: "Define a reusable card template with interchangeable body"
     canonical_syntax: |
       component MetricCard {
-        size: [280px, 160px];
-        corner-radius: 12px;
+        size: 280px 160px;
+        radius: 12px;
         fill: #1e293b;
         padding: 20px;
         slot;
@@ -313,9 +318,9 @@ property_synonym_dictionary:
     valid_on: ["text"]
     note: "Controls font glyph rendering color."
 
-  corner-radius:
-    synonyms: ["borderRadius", "border-radius", "radius", "roundness", "rounded"]
-    canonical: "corner-radius"
+  radius:
+    synonyms: ["borderRadius", "border-radius", "corner-radius", "cornerRadius", "roundness", "rounded"]
+    canonical: "radius"
     valid_on: ["rect"]
     note: "Accepts single value or array of 4 corners."
 

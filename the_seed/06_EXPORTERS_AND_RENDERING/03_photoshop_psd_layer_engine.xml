@@ -2,7 +2,7 @@
 <specification module="03_photoshop_psd_layer_engine" target="toad-dsl" version="3.0">
   <metadata>
     <description>Binary Photoshop PSD encoder, non-destructive layers, TySh EngineData, vector masks, and layer effects</description>
-    <source_compiler_file>src/renderer/psdExporter.ts</source_compiler_file>
+    <source_compiler_file>src/engine/psdExporter.ts</source_compiler_file>
   </metadata>
 
   <psd_structure_sections>
