@@ -616,6 +616,9 @@ export interface ResolvedElementNode {
   flow?: 'row' | 'column';
   // Stack (Auto-Layout) properties
   direction?: 'horizontal' | 'vertical' | 'row' | 'column';
+  distribution?: 'start' | 'center' | 'end' | 'space-between' | 'space-evenly' | 'space-around';
+  justify?: 'start' | 'center' | 'end' | 'space-between' | 'space-evenly' | 'space-around';
+  aspectRatio?: number;
   padding?: number | [number, number, number, number];
   margin?: number | [number, number, number, number];
   // Hierarchy

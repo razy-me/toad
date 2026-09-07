@@ -8,6 +8,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { spawn } from 'node:child_process';
 import { BuildResult } from '../build.js';
+import { auditDesign } from '../tools/designAuditor.js';
 
 export interface PreviewServerInstance {
   server: http.Server;
@@ -27,6 +28,15 @@ export function createPreviewServer(
     let currentResult = initialResult;
     let currentError: string | null = null;
     const sseClients = new Set<http.ServerResponse>();
+
+    const computeAuditSafe = (res: BuildResult | null) => {
+      if (!res || !res.layout) return undefined;
+      try {
+        return auditDesign(res.layout, undefined, path.basename(entryFilePath));
+      } catch {
+        return undefined;
+      }
+    };
 
     const getPrimaryOutputFile = (): string | null => {
       if (!currentResult || !currentResult.outputFiles || currentResult.outputFiles.length === 0) {
@@ -79,7 +89,8 @@ export function createPreviewServer(
             duration: currentResult.durationMs,
             width: currentResult.canvas.width,
             height: currentResult.canvas.height,
-            filename: path.basename(entryFilePath)
+            filename: path.basename(entryFilePath),
+            audit: computeAuditSafe(currentResult)
           })}\n\n`);
         } else if (currentError) {
           res.write(`data: ${JSON.stringify({
@@ -152,7 +163,15 @@ export function createPreviewServer(
         return;
       }
 
-      // 4. HTML Single Page Preview App
+      // 4. Design Audit API Endpoint
+      if (url.pathname === '/api/audit') {
+        const audit = computeAuditSafe(currentResult);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(audit || { status: 'no_data' }));
+        return;
+      }
+
+      // 5. HTML Single Page Preview App
       if (url.pathname === '/' || url.pathname === '/index.html') {
         const html = generatePreviewHtml(path.basename(entryFilePath));
         res.writeHead(200, {
@@ -191,7 +210,8 @@ export function createPreviewServer(
               duration: result.durationMs,
               width: result.canvas.width,
               height: result.canvas.height,
-              filename: path.basename(entryFilePath)
+              filename: path.basename(entryFilePath),
+              audit: computeAuditSafe(result)
             });
             for (const client of sseClients) {
               try {
@@ -518,6 +538,73 @@ export function generatePreviewHtml(rawFilename: string): string {
       font-family: monospace;
       white-space: pre-wrap;
     }
+
+    .view-tabs {
+      display: flex;
+      gap: 4px;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 3px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-dim);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+    .tab-btn.active {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text);
+    }
+    .audit-pill {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 10px;
+      background: #10b981;
+      color: #000;
+    }
+    .audit-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+    .audit-bar-bg {
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 8px 0;
+    }
+    .audit-bar-fill {
+      height: 100%;
+      background: #10b981;
+      border-radius: 4px;
+      transition: width 0.3s;
+    }
+    .issue-item {
+      padding: 10px 14px;
+      border-radius: 6px;
+      margin-top: 8px;
+      font-size: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border-left: 3px solid #f59e0b;
+    }
+    .issue-error {
+      border-left-color: #ef4444;
+    }
   </style>
 </head>
 <body>
@@ -529,6 +616,11 @@ export function generatePreviewHtml(rawFilename: string): string {
         <span class="status-dot"></span>
         <span id="status-text">Live</span>
       </div>
+    </div>
+
+    <div class="view-tabs">
+      <button id="tab-canvas" class="tab-btn active" onclick="switchTab('canvas')">🖼 Artboard</button>
+      <button id="tab-audit" class="tab-btn" onclick="switchTab('audit')">📊 Design Audit <span id="audit-pill" class="audit-pill">--</span></button>
     </div>
 
     <div class="controls">
@@ -552,6 +644,12 @@ export function generatePreviewHtml(rawFilename: string): string {
       <img id="preview-img" src="/image" alt="toad render preview" />
     </div>
   </main>
+
+  <div id="audit-view" style="display:none; flex:1; overflow-y:auto; padding:24px; background:var(--bg);">
+    <div id="audit-content" style="max-width:920px; margin:0 auto; width:100%;">
+      <p style="color:var(--text-dim); text-align:center;">Lade Design Audit...</p>
+    </div>
+  </div>
 
   <div id="error-toast"></div>
 
@@ -664,6 +762,106 @@ export function generatePreviewHtml(rawFilename: string): string {
       if (currentZoom === 'fit') applyZoom();
     });
 
+    // Tab Switching
+    function switchTab(tab) {
+      const stage = document.getElementById('stage');
+      const auditView = document.getElementById('audit-view');
+      const tabCanvas = document.getElementById('tab-canvas');
+      const tabAudit = document.getElementById('tab-audit');
+
+      if (tab === 'canvas') {
+        stage.style.display = 'flex';
+        auditView.style.display = 'none';
+        tabCanvas.classList.add('active');
+        tabAudit.classList.remove('active');
+        applyZoom();
+      } else {
+        stage.style.display = 'none';
+        auditView.style.display = 'block';
+        tabCanvas.classList.remove('active');
+        tabAudit.classList.add('active');
+        if (!lastAuditData) {
+          fetch('/api/audit').then(r => r.json()).then(renderAudit).catch(() => {});
+        }
+      }
+    }
+
+    let lastAuditData = null;
+
+    function renderAudit(audit) {
+      if (!audit || audit.status === 'no_data') return;
+      lastAuditData = audit;
+
+      const pill = document.getElementById('audit-pill');
+      if (pill) {
+        pill.innerText = audit.score + '%';
+        pill.style.background = audit.score >= 90 ? '#10b981' : (audit.score >= 70 ? '#f59e0b' : '#ef4444');
+        pill.style.color = '#000';
+      }
+
+      const container = document.getElementById('audit-content');
+      if (!container) return;
+
+      const scoreColor = audit.score >= 90 ? '#10b981' : (audit.score >= 70 ? '#f59e0b' : '#ef4444');
+
+      let issuesHtml = '';
+      if (!audit.issues || audit.issues.length === 0) {
+        issuesHtml = '<div style="text-align:center; padding: 40px 20px; color: var(--success);">' +
+          '<div style="font-size:36px; margin-bottom:8px;">✨</div>' +
+          '<div style="font-weight:700; font-size:16px;">Exzellent! Keine Design- oder Kontrast-Probleme gefunden.</div>' +
+          '<div style="color:var(--text-dim); font-size:13px; margin-top:4px;">Alle ' + (audit.stats ? audit.stats.elementsTotal : 0) + ' Elemente entsprechen den Gestaltungs- und WCAG 2.2 Richtlinien.</div>' +
+          '</div>';
+      } else {
+        issuesHtml = audit.issues.map(function(iss) {
+          const isErr = iss.type === 'error';
+          const icon = isErr ? '⛔' : '⚠️';
+          const borderCls = isErr ? 'issue-error' : '';
+          const badgeBg = isErr ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)';
+          const badgeColor = isErr ? '#ef4444' : '#f59e0b';
+          const idPrefix = iss.elementId ? '<code>' + iss.elementId + '</code>: ' : '';
+          const detailsSnippet = iss.details ? '<span>' + iss.details + '</span>' : '';
+          const recoSnippet = iss.recommendation ? '<span style="display:block; margin-top:4px; color:#38bdf8;">💡 ' + iss.recommendation + '</span>' : '';
+
+          return '<div class="issue-item ' + borderCls + '">' +
+            '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">' +
+              '<span style="font-weight:700; color:var(--text);">' + icon + ' ' + idPrefix + iss.message + '</span>' +
+              '<span style="font-size:10px; font-weight:700; text-transform:uppercase; padding:2px 6px; border-radius:4px; background:' + badgeBg + '; color:' + badgeColor + ';">' + iss.category + '</span>' +
+            '</div>' +
+            '<div style="color:var(--text-dim); font-size:12px; margin-top:2px;">' +
+              detailsSnippet + recoSnippet +
+            '</div>' +
+          '</div>';
+        }).join('');
+      }
+
+      const totalElements = audit.stats ? audit.stats.elementsTotal : 0;
+      const totalTexts = audit.stats ? audit.stats.textsTotal : 0;
+      const totalErrors = audit.stats ? audit.stats.errors : 0;
+      const totalWarnings = audit.stats ? audit.stats.warnings : 0;
+
+      container.innerHTML = '<div class="audit-card">' +
+        '<div style="display:flex; justify-content:space-between; align-items:baseline;">' +
+          '<h2 style="font-size:18px; font-weight:700;">Design Quality &amp; Accessibility Score</h2>' +
+          '<span style="font-size:28px; font-weight:800; color:' + scoreColor + ';">' + audit.score + '<span style="font-size:16px; font-weight:600; color:var(--text-dim);"> / 100</span></span>' +
+        '</div>' +
+        '<div class="audit-bar-bg">' +
+          '<div class="audit-bar-fill" style="width: ' + audit.score + '%; background: ' + scoreColor + ';"></div>' +
+        '</div>' +
+        '<div style="display:flex; gap:16px; margin-top:12px; font-size:12px; color:var(--text-dim); flex-wrap: wrap;">' +
+          '<span>Elemente: <strong style="color:var(--text);">' + totalElements + '</strong></span>' +
+          '<span>Texte: <strong style="color:var(--text);">' + totalTexts + '</strong></span>' +
+          '<span>Fehler: <strong style="color:#ef4444;">' + totalErrors + '</strong></span>' +
+          '<span>Warnungen: <strong style="color:#f59e0b;">' + totalWarnings + '</strong></span>' +
+          (audit.metrics ? '<span>Weißraum: <strong style="color:#38bdf8;">' + audit.metrics.negativeSpacePercent + '%</strong></span>' : '') +
+          (audit.metrics && audit.metrics.slopFindingsCount === 0 ? '<span style="color:#10b981; font-weight:700;">🛡 Slop-Free</span>' : '') +
+        '</div>' +
+      '</div>' +
+      '<div class="audit-card">' +
+        '<h3 style="font-size:14px; font-weight:700; margin-bottom:12px; color:var(--text);">Prüfungsdetails &amp; Anti-Slop Heuristiken</h3>' +
+        issuesHtml +
+      '</div>';
+    }
+
     // SSE Live Reload Stream
     const evtSource = new EventSource('/events');
 
@@ -683,6 +881,10 @@ export function generatePreviewHtml(rawFilename: string): string {
           document.getElementById('status-text').innerText = 'Live';
           document.getElementById('error-toast').style.display = 'none';
 
+          if (data.audit) {
+            renderAudit(data.audit);
+          }
+
           if (currentZoom === 'fit') {
             setTimeout(applyZoom, 30);
           }
@@ -701,6 +903,9 @@ export function generatePreviewHtml(rawFilename: string): string {
         console.error('Failed to parse SSE message:', err);
       }
     };
+
+    // Initial audit fetch
+    fetch('/api/audit').then(r => r.json()).then(renderAudit).catch(() => {});
   </script>
 </body>
 </html>`;

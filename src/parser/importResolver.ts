@@ -1336,6 +1336,48 @@ export class ImportResolver {
           target.direction = this.extractString(val) as any;
           break;
         }
+        case 'distribution':
+        case 'justify': {
+          const dist = this.extractString(val) as any;
+          target.distribution = dist;
+          target.justify = dist;
+          break;
+        }
+        case 'ratio':
+        case 'aspect-ratio':
+        case 'aspectRatio': {
+          let ratioVal: number | undefined;
+          if (val.type === 'NumberLiteral') {
+            ratioVal = val.value;
+          } else if (val.type === 'StringLiteral' || val.type === 'Identifier') {
+            const raw = ((val as any).value || (val as any).name || '').trim();
+            if (raw.includes(':') || raw.includes('/')) {
+              const parts = raw.split(/[:/]/).map((p: string) => parseFloat(p.trim()));
+              if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1]) && parts[1] > 0) {
+                ratioVal = parts[0] / parts[1];
+              }
+            } else {
+              const num = parseFloat(raw);
+              if (!isNaN(num) && num > 0) ratioVal = num;
+            }
+          } else if ((val as any).type === 'BinaryExpression') {
+            const left = this.extractNumber((val as any).left);
+            const right = this.extractNumber((val as any).right);
+            if (left && right && right > 0) {
+              ratioVal = left / right;
+            }
+          } else if ((val as any).type === 'ExpressionList' && (val as any).expressions?.length === 3) {
+            const left = this.extractNumber((val as any).expressions[0]);
+            const right = this.extractNumber((val as any).expressions[2]);
+            if (left && right && right > 0) {
+              ratioVal = left / right;
+            }
+          }
+          if (ratioVal && ratioVal > 0) {
+            target.aspectRatio = ratioVal;
+          }
+          break;
+        }
         case 'padding': {
           target.padding = this.extractRadius(val);
           break;
@@ -1652,10 +1694,10 @@ export class ImportResolver {
       return val.value;
     }
     if (val.type === 'Identifier') {
-      if (val.name === 'hug' || val.name === 'fill' || val.name === 'auto') return val.name;
+      if (val.name === 'hug' || val.name === 'fill' || val.name === 'auto' || val.name === 'fit-content' || val.name === 'fit') return val.name;
     }
     if (val.type === 'StringLiteral') {
-      if (val.value === 'hug' || val.value === 'fill' || val.value === 'auto') return val.value;
+      if (val.value === 'hug' || val.value === 'fill' || val.value === 'auto' || val.value === 'fit-content' || val.value === 'fit') return val.value;
       if (val.value.endsWith('%')) return val.value;
     }
     if (val.type === 'CalcValue') {

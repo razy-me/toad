@@ -20,6 +20,8 @@ import {
 import { DependencyGraph } from './dependencyGraph.js';
 import { getIconPath } from '../engine/iconRegistry.js';
 import { generateShapePath } from '../engine/shapeGenerators.js';
+import { FontLoader } from '../engine/fontLoader.js';
+import { TextMeasurementCache } from '../engine/buildCache.js';
 
 // ============================================================================
 // Layout Data Types
@@ -137,6 +139,7 @@ export interface LayoutNode {
   y: number;
   width: number;
   height: number;
+  content?: string;
   fill?: string | GradientStyle;
   stroke?: string;
   strokeColor?: string;
@@ -383,7 +386,7 @@ export function resolveDimension(
 ): number {
   if (val === undefined) return intrinsicSize;
   if (typeof val === 'number') return val;
-  if (val === 'hug' || val === 'auto') return intrinsicSize;
+  if (val === 'hug' || val === 'auto' || val === 'fit' || val === 'fit-content') return intrinsicSize;
   if (val === 'fill') return parentSize; // For stack layout, this will be overridden
   if (typeof val === 'string') {
     const trimmed = val.trim();
@@ -471,6 +474,13 @@ export function layoutText(
     };
   }
 
+  // Check TextMeasurementCache
+  const cacheKey = TextMeasurementCache.makeKey(content, style);
+  const cached = TextMeasurementCache.getInstance().get(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
   // Apply text-transform
   let processedContent = content;
   if (style.textTransform === 'uppercase') {
@@ -542,8 +552,17 @@ export function layoutText(
       sampleMetrics(para);
     }
 
-    const capHeight = maxActualAscent || Math.round(fontSize * 0.7);
-    const opticalCenterOffset = (maxActualAscent - maxActualDescent) / 2;
+    const fontMetrics = FontLoader.getFontMetrics(fontFamily, fontWeight, fontStyle);
+    let capHeight: number;
+    let opticalCenterOffset: number;
+
+    if (fontMetrics && fontMetrics.capHeightRatio > 0) {
+      capHeight = Math.round(fontSize * fontMetrics.capHeightRatio);
+      opticalCenterOffset = (fontSize * (fontMetrics.ascentRatio - fontMetrics.capHeightRatio)) / 2;
+    } else {
+      capHeight = maxActualAscent || Math.round(fontSize * 0.7);
+      opticalCenterOffset = (maxActualAscent - maxActualDescent) / 2;
+    }
 
     let computedHeight: number;
     if (style.trim === 'cap') {
@@ -559,7 +578,7 @@ export function layoutText(
       computedHeight = Math.max(finalLines.length * lineHeight, Math.ceil(maxAscent + maxDescent));
     }
 
-    return {
+    const result: TextLayoutResult = {
       lines: finalLines,
       width: Math.ceil(maxWidth),
       height: computedHeight,
@@ -577,6 +596,8 @@ export function layoutText(
       fontBoundingBoxAscent,
       fontBoundingBoxDescent
     };
+    TextMeasurementCache.getInstance().set(cacheKey, result);
+    return result;
   }
 
   // Case B: Explicit width -> Greedy word wrap
@@ -626,8 +647,17 @@ export function layoutText(
     if (lw > actualMaxW) actualMaxW = lw;
   }
 
-  const capHeight = maxActualAscent || Math.round(fontSize * 0.7);
-  const opticalCenterOffset = (maxActualAscent - maxActualDescent) / 2;
+  const fontMetrics = FontLoader.getFontMetrics(fontFamily, fontWeight, fontStyle);
+  let capHeight: number;
+  let opticalCenterOffset: number;
+
+  if (fontMetrics && fontMetrics.capHeightRatio > 0) {
+    capHeight = Math.round(fontSize * fontMetrics.capHeightRatio);
+    opticalCenterOffset = (fontSize * (fontMetrics.ascentRatio - fontMetrics.capHeightRatio)) / 2;
+  } else {
+    capHeight = maxActualAscent || Math.round(fontSize * 0.7);
+    opticalCenterOffset = (maxActualAscent - maxActualDescent) / 2;
+  }
 
   let computedHeight: number;
   if (style.trim === 'cap') {
@@ -643,7 +673,7 @@ export function layoutText(
     computedHeight = Math.max(outLines.length * lineHeight, Math.ceil(maxAscent + maxDescent));
   }
 
-  return {
+  const result: TextLayoutResult = {
     lines: outLines,
     width: maxW,
     actualWidth: Math.ceil(actualMaxW),
@@ -662,6 +692,8 @@ export function layoutText(
     fontBoundingBoxAscent,
     fontBoundingBoxDescent
   };
+  TextMeasurementCache.getInstance().set(cacheKey, result);
+  return result;
 }
 
 // ============================================================================
@@ -1150,6 +1182,24 @@ export class LayoutSolver {
       if (typeof elem.size?.h === 'number' && typeof elem.size?.w === 'undefined') w = h;
     }
 
+    // Aspect ratio constraint locking
+    if (elem.aspectRatio && elem.aspectRatio > 0) {
+      const isExplicitW = typeof elem.size?.w === 'number' || (typeof elem.size?.w === 'string' && elem.size.w !== 'auto' && elem.size.w !== 'hug' && elem.size.w !== 'fit' && elem.size.w !== 'fit-content');
+      const isExplicitH = typeof elem.size?.h === 'number' || (typeof elem.size?.h === 'string' && elem.size.h !== 'auto' && elem.size.h !== 'hug' && elem.size.h !== 'fit' && elem.size.h !== 'fit-content');
+
+      if (isExplicitW && !isExplicitH) {
+        h = w / elem.aspectRatio;
+      } else if (isExplicitH && !isExplicitW) {
+        w = h * elem.aspectRatio;
+      } else if (!isExplicitW && !isExplicitH) {
+        if (w > 0) {
+          h = w / elem.aspectRatio;
+        } else if (h > 0) {
+          w = h * elem.aspectRatio;
+        }
+      }
+    }
+
     // 2. Resolve Position (x, y)
     let x = 0;
     let y = 0;
@@ -1376,10 +1426,33 @@ export class LayoutSolver {
       const remainingMain = Math.max(0, effectiveMainTotal - mainTotal);
       const fillSize = fillCount > 0 ? remainingMain / fillCount : 0;
 
+      // Fluid distribution (space-between, space-evenly, space-around, center, end)
+      const dist = (elem.distribution || elem.justify || 'start').toLowerCase();
+      const childCount = elem.children.length;
+      let effectiveGap = gap;
+      let initialOffset = 0;
+
+      if (fillCount === 0 && remainingMain > 0) {
+        if (dist === 'space-between' && childCount > 1) {
+          effectiveGap = gap + remainingMain / (childCount - 1);
+        } else if (dist === 'space-evenly') {
+          effectiveGap = gap + remainingMain / (childCount + 1);
+          initialOffset = remainingMain / (childCount + 1);
+        } else if (dist === 'space-around') {
+          const halfGap = remainingMain / (2 * childCount);
+          effectiveGap = gap + 2 * halfGap;
+          initialOffset = halfGap;
+        } else if (dist === 'center') {
+          initialOffset = remainingMain / 2;
+        } else if (dist === 'end' || dist === 'flex-end') {
+          initialOffset = remainingMain;
+        }
+      }
+
       // Cursors start relative to the stack's own origin; the generic
       // coordinate path adds the stack's resolved position for us.
-      let cursorX = paddingLeft;
-      let cursorY = paddingTop;
+      let cursorX = paddingLeft + (dir === 'horizontal' ? initialOffset : 0);
+      let cursorY = paddingTop + (dir === 'vertical' ? initialOffset : 0);
 
       // Update the stack box dimensions so children resolve against the final size
       box.w = w;
@@ -1424,9 +1497,9 @@ export class LayoutSolver {
         this.resolveElementLayout(child, canvasW, canvasH, box);
 
         if (dir === 'vertical') {
-          cursorY += ch + gap;
+          cursorY += ch + effectiveGap;
         } else {
-          cursorX += cw + gap;
+          cursorX += cw + effectiveGap;
         }
       }
 
@@ -1659,6 +1732,7 @@ export class LayoutSolver {
       y: box.y,
       width: box.w,
       height: box.h,
+      content: elem.text,
       fill: style.fill,
       stroke: style.stroke,
       strokeColor: style.stroke,
