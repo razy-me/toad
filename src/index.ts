@@ -104,6 +104,13 @@ export {
   SvgExportOptions
 } from './engine/svgExporter.js';
 
+// 12. Prepress Vector PDF Exporter
+export {
+  PdfExporter,
+  exportToPdfBuffer,
+  PdfExportOptions
+} from './engine/pdfExporter.js';
+
 // 12. Unified Build Pipeline
 export {
   compileToad,
@@ -125,3 +132,28 @@ export { lintDocument } from './tools/linter.js';
 export { ToadLanguageServer } from './tools/lsp/server.js';
 export { runInit } from './scaffold.js';
 export { findToadFiles, resolveEntryFile, getWorkspaces, addWorkspace, removeWorkspace } from './utils/fileFinder.js';
+export { auditDesign, formatTerminalReport, formatFixesSection, FormatReportOptions, DesignAuditResult, DesignIssue } from './tools/designAuditor.js';
+export {
+  bundleAssets,
+  createIcoBuffer,
+  PRESETS,
+  BundlePreset,
+  BundleOptions,
+  BundleResult,
+  GeneratedAssetInfo
+} from './tools/assetBundler.js';
+export {
+  TextMeasurementCache,
+  AstCache,
+  CacheStats
+} from './engine/buildCache.js';
+export {
+  formatRustDiagnostic,
+  generateHelpSuggestion,
+  inferErrorCode,
+  suggestProperty,
+  DiagnosticOptions
+} from './tools/diagnostics.js';
+
+
+

@@ -1744,6 +1744,10 @@ export class PsdExporter {
           size: { units: 'Pixels', value: blur },
           angle: angleDeg,
           useGlobalLight: s.useGlobalLight ?? false,
+          contour: {
+            name: 'Linear',
+            curve: [{ x: 0, y: 0 }, { x: 255, y: 255 }]
+          },
           ...(typeof s.noise === 'number' ? { noise: s.noise } : {})
         };
       });
@@ -1770,7 +1774,11 @@ export class PsdExporter {
           distance: { units: 'Pixels', value: dist },
           size: { units: 'Pixels', value: blur },
           angle: angleDeg,
-          useGlobalLight: false
+          useGlobalLight: false,
+          contour: {
+            name: 'Linear',
+            curve: [{ x: 0, y: 0 }, { x: 255, y: 255 }]
+          }
         }
       ];
       hasAnyEffect = true;

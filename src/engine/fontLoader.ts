@@ -104,10 +104,103 @@ export function parseOpenTypeFontNames(filePath: string): { postScript?: string;
   }
 }
 
+export interface FontHeaderMetrics {
+  unitsPerEm: number;
+  capHeight: number;
+  xHeight?: number;
+  ascender: number;
+  descender: number;
+  capHeightRatio: number;
+  xHeightRatio?: number;
+  ascentRatio: number;
+  descentRatio: number;
+  opticalCapOffsetRatio: number;
+}
+
+export function parseOpenTypeMetrics(filePath: string): FontHeaderMetrics | null {
+  try {
+    const buf = fs.readFileSync(filePath);
+    if (buf.length < 12) return null;
+    const numTables = buf.readUInt16BE(4);
+    let headOffset = 0;
+    let os2Offset = 0;
+    let hheaOffset = 0;
+
+    for (let i = 0; i < numTables; i++) {
+      const pos = 12 + i * 16;
+      if (pos + 16 > buf.length) break;
+      const tag = buf.toString('ascii', pos, pos + 4);
+      if (tag === 'head') headOffset = buf.readUInt32BE(pos + 8);
+      else if (tag === 'OS/2') os2Offset = buf.readUInt32BE(pos + 8);
+      else if (tag === 'hhea') hheaOffset = buf.readUInt32BE(pos + 8);
+    }
+
+    let unitsPerEm = 1000;
+    if (headOffset > 0 && headOffset + 20 <= buf.length) {
+      unitsPerEm = buf.readUInt16BE(headOffset + 18) || 1000;
+    }
+
+    let ascender = Math.round(unitsPerEm * 0.8);
+    let descender = Math.round(-unitsPerEm * 0.2);
+    let capHeight = Math.round(unitsPerEm * 0.7);
+    let xHeight: number | undefined = undefined;
+
+    if (hheaOffset > 0 && hheaOffset + 8 <= buf.length) {
+      ascender = buf.readInt16BE(hheaOffset + 4);
+      descender = buf.readInt16BE(hheaOffset + 6);
+    }
+
+    if (os2Offset > 0 && os2Offset + 72 <= buf.length) {
+      const typoAscender = buf.readInt16BE(os2Offset + 68);
+      const typoDescender = buf.readInt16BE(os2Offset + 70);
+      if (typoAscender !== 0) ascender = typoAscender;
+      if (typoDescender !== 0) descender = typoDescender;
+
+      if (os2Offset + 90 <= buf.length) {
+        const sxH = buf.readInt16BE(os2Offset + 86);
+        const sCapH = buf.readInt16BE(os2Offset + 88);
+        if (sCapH > 0) capHeight = sCapH;
+        if (sxH > 0) xHeight = sxH;
+      }
+    }
+
+    const capHeightRatio = capHeight / unitsPerEm;
+    const ascentRatio = Math.abs(ascender) / unitsPerEm;
+    const descentRatio = Math.abs(descender) / unitsPerEm;
+    const opticalCapOffsetRatio = Math.max(0, (Math.abs(ascender) - capHeight) / (2 * unitsPerEm));
+
+    return {
+      unitsPerEm,
+      capHeight,
+      xHeight,
+      ascender,
+      descender,
+      capHeightRatio,
+      xHeightRatio: xHeight ? xHeight / unitsPerEm : undefined,
+      ascentRatio,
+      descentRatio,
+      opticalCapOffsetRatio
+    };
+  } catch {
+    return null;
+  }
+}
+
 export class FontLoader {
   private static registeredFamilies = new Set<string>();
   private static registeredFaces: FontFaceMeta[] = [];
+  private static metricsCache = new Map<string, FontHeaderMetrics>();
   private static systemFontsIndexed = false;
+
+  public static getFontMetrics(family: string, weight?: string | number, style?: string): FontHeaderMetrics | null {
+    if (!family) return null;
+    const famClean = family.replace(/^['"]+|['"]+$/g, '').trim().toLowerCase();
+    const weightNum = normalizeFontWeightToNumber(weight);
+    const keyWithWeight = `${famClean}:${weightNum}:${style || 'normal'}`;
+    if (this.metricsCache.has(keyWithWeight)) return this.metricsCache.get(keyWithWeight)!;
+    if (this.metricsCache.has(famClean)) return this.metricsCache.get(famClean)!;
+    return null;
+  }
 
   /**
    * Registers a single font file with an optional family alias, weight, and style.
@@ -158,6 +251,16 @@ export class FontLoader {
             postScriptName: names.postScript,
             filePath: resolvedPath
           });
+        }
+
+        // Store parsed font header metrics in cache
+        const metrics = parseOpenTypeMetrics(resolvedPath);
+        if (metrics) {
+          const famKey = familyName.toLowerCase();
+          this.metricsCache.set(famKey, metrics);
+          if (alias) this.metricsCache.set(alias.toLowerCase(), metrics);
+          if (names?.family) this.metricsCache.set(names.family.toLowerCase(), metrics);
+          this.metricsCache.set(`${famKey}:${detectedWeight}:${detectedStyle}`, metrics);
         }
       }
 

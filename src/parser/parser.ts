@@ -526,9 +526,9 @@ export class Parser {
       if (this.check(TokenType.STRING)) {
         return this.parseSingleValue();
       }
-      if (this.check(TokenType.NUMBER) && this.peek(1).type === TokenType.COLON && this.peek(2).type === TokenType.NUMBER) {
+      if (this.check(TokenType.NUMBER) && (this.peek(1).type === TokenType.COLON || this.peek(1).value === '/') && this.peek(2).type === TokenType.NUMBER) {
         const num1 = this.advance().value;
-        this.advance(); // consume ':'
+        this.advance(); // consume ':' or '/'
         const num2 = this.advance().value;
         return {
           type: 'StringLiteral',

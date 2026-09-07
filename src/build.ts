@@ -27,8 +27,10 @@ function flattenForJpeg(canvas: any) {
 }
 import { exportToPsd } from './engine/psdExporter.js';
 import { exportToSvgBuffer, SvgExporter } from './engine/svgExporter.js';
+import { exportToPdfBuffer } from './engine/pdfExporter.js';
 import { loadFontsFromDir, registerFontDirectives } from './engine/fontLoader.js';
 import { ParseError } from './parser/ast.js';
+import { AstCache, TextMeasurementCache } from './engine/buildCache.js';
 
 export interface BuildOptions {
   outDir?: string;
@@ -43,6 +45,7 @@ export interface BuildOptions {
   port?: number;
   humanizeLayerNames?: boolean;
   textToPath?: boolean;
+  dryRun?: boolean;
 }
 
 export interface BuildResult {
@@ -86,9 +89,14 @@ export async function compileToad(
     throw new Error(`Entry path is a directory, expected a .toad file: ${resolvedEntry}`);
   }
 
-  // 2. Read and parse DSL entry file
-  const source = fs.readFileSync(resolvedEntry, 'utf-8');
-  const ast = parseToad(source, resolvedEntry);
+  // 2. Read and parse DSL entry file (with AstCache)
+  const mtimeMs = stat.mtimeMs;
+  let ast = AstCache.getInstance().get(resolvedEntry, mtimeMs);
+  if (!ast) {
+    const source = fs.readFileSync(resolvedEntry, 'utf-8');
+    ast = parseToad(source, resolvedEntry);
+    AstCache.getInstance().set(resolvedEntry, mtimeMs, ast, source);
+  }
 
   if (ast.diagnostics && ast.diagnostics.length > 0) {
     const errorDiag = ast.diagnostics.find(d => d.severity === 'error');
@@ -144,6 +152,20 @@ export async function compileToad(
     if (bNum !== undefined && !isNaN(bNum)) layout.canvas.bleed = Math.max(0, bNum);
   }
 
+  // If dryRun is requested (e.g. for linting, auditing, or AST/layout inspection), return early
+  if (options.dryRun) {
+    return {
+      success: true,
+      entryPath: resolvedEntry,
+      outputFiles: [],
+      layout,
+      canvas: layout.canvas,
+      dependencies: resolved.dependencies || [],
+      warnings: layout.warnings,
+      durationMs: Date.now() - startTime
+    };
+  }
+
   // 6. Ensure output directory
   const outDir = options.outDir
     ? path.resolve(options.outDir)
@@ -170,16 +192,18 @@ export async function compileToad(
     for (const token of rawTokens) {
       if (token === 'all') {
         resolved.push('png', 'jpg', 'webp', 'psd', 'svg');
+      } else if (token === 'print' || token === 'prepress') {
+        resolved.push('pdf');
       } else if (token === 'image' || token === 'images' || token === 'web') {
         resolved.push('png', 'jpg', 'webp', 'svg');
       } else if (token === 'jpeg') {
         resolved.push('jpg');
-      } else if (['png', 'jpg', 'webp', 'psd', 'svg'].includes(token)) {
+      } else if (['png', 'jpg', 'webp', 'psd', 'svg', 'pdf'].includes(token)) {
         resolved.push(token);
       } else {
         // Unknown format tokens previously passed through and produced a
         // silent SUCCESS with zero written files.
-        console.warn(`[warning] Unknown output format '${token}' ignored. Supported: png, jpg, webp, psd, svg, image, all.`);
+        console.warn(`[warning] Unknown output format '${token}' ignored. Supported: png, jpg, webp, psd, svg, pdf, image, all.`);
       }
     }
     return resolved;
@@ -316,6 +340,19 @@ export async function compileToad(
       fs.mkdirSync(path.dirname(svgPath), { recursive: true });
       fs.writeFileSync(svgPath, svgContent, 'utf-8');
       outputFiles.push(svgPath);
+    }
+
+    if (formatsToRender.includes('pdf')) {
+      const pdfBuf = await exportToPdfBuffer(pageLayout, {
+        basePath: resolvedEntry,
+        bleed: pageLayout.canvas.bleed,
+        cropMarks: pageLayout.canvas.cropMarks,
+        colorMode: (pageLayout.canvas as any).colorMode
+      });
+      const pdfPath = path.join(outDir, `${fileBase}.pdf`);
+      fs.mkdirSync(path.dirname(pdfPath), { recursive: true });
+      fs.writeFileSync(pdfPath, pdfBuf);
+      outputFiles.push(pdfPath);
     }
   }
 

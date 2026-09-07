@@ -13,6 +13,9 @@ import chokidar, { FSWatcher } from 'chokidar';
 import { compileToad, BuildOptions, BuildResult } from './build.js';
 import { createPreviewServer, openBrowser, PreviewServerInstance } from './engine/previewServer.js';
 import { resolveEntryFile, getWorkspaces, addWorkspace, removeWorkspace } from './utils/fileFinder.js';
+import { auditDesign, formatTerminalReport, formatFixesSection } from './tools/designAuditor.js';
+import { bundleAssets } from './tools/assetBundler.js';
+import { formatRustDiagnostic, generateHelpSuggestion } from './tools/diagnostics.js';
 
 export interface CliOptions {
   scale?: string;
@@ -44,43 +47,30 @@ export const c = {
 };
 
 /**
- * Formats a compiler error with location and 3-line code preview snippet using rich ANSI colors.
+ * Formats a compiler error with location, pointer, and actionable help suggestions in Clang/Rust style.
  */
 export function formatCompilerError(err: any, entryPath?: string): string {
-  let file = (err.loc && err.loc.file) ? err.loc.file : (entryPath || 'inline.toad');
-  let line = (err.loc && err.loc.start) ? err.loc.start.line : 0;
-  let col = (err.loc && err.loc.start) ? err.loc.start.column : 0;
-  let message = err.message || String(err);
-  let code = err.code || 'TOAD-E001';
+  const file = (err.loc && err.loc.file) ? err.loc.file : (entryPath || 'inline.toad');
+  const line = (err.loc && err.loc.start) ? err.loc.start.line : 1;
+  const col = (err.loc && err.loc.start) ? err.loc.start.column : 1;
+  const message = err.message || String(err);
 
-  let header = `[toad error] ${c.bgRed(' ERROR ')} ${c.bold(c.red(`[${code}]`))} ${c.bold(message)}`;
-  let locLine = line > 0 ? `\n  ${c.dim('-->')} ${c.cyan(`${file}:${line}:${col}`)}` : '';
-  let snippet = '';
-
+  let sourceText = '';
   try {
     if (file && fs.existsSync(file)) {
-      const source = fs.readFileSync(file, 'utf-8');
-      const lines = source.split(/\r?\n/);
-      if (line > 0 && line <= lines.length) {
-        const startLine = Math.max(1, line - 2);
-        const endLine = Math.min(lines.length, line + 1);
-        snippet += '\n';
-        for (let i = startLine; i <= endLine; i++) {
-          const lNum = String(i).padStart(4, ' ');
-          const isTarget = i === line;
-          const marker = isTarget ? c.red('> ') : '  ';
-          const lineText = lines[i - 1];
-          snippet += `\n${marker}${c.dim(lNum + ' |')} ${isTarget ? c.bold(lineText) : c.dim(lineText)}`;
-          if (isTarget) {
-            const pointerIndent = ' '.repeat(Math.max(0, col - 1));
-            snippet += `\n       ${c.dim('|')} ${pointerIndent}${c.bold(c.red('^'))}`;
-          }
-        }
-      }
+      sourceText = fs.readFileSync(file, 'utf-8');
     }
   } catch {}
 
-  return `${header}${locLine}${snippet}\n`;
+  return formatRustDiagnostic({
+    file,
+    line,
+    col,
+    message,
+    code: err.code,
+    sourceText,
+    help: err.help
+  });
 }
 
 /**
@@ -280,8 +270,8 @@ export function createCli(): Command {
         } else if (f.endsWith('.png') || f.endsWith('.jpg') || f.endsWith('.jpeg') || f.endsWith('.webp')) {
           const effectiveScale = buildOptions.scale && buildOptions.scale > 0 ? buildOptions.scale : 1;
           dimStr = c.dim(`(${Math.round(result.canvas.width * effectiveScale)}x${Math.round(result.canvas.height * effectiveScale)})`);
-        } else if (f.endsWith('.svg')) {
-          dimStr = c.dim(`(${Math.round(result.canvas.width * 2.5)}x${Math.round(result.canvas.height * 2.5)})`);
+        } else if (f.endsWith('.svg') || f.endsWith('.pdf')) {
+          dimStr = c.dim(`(${Math.round(result.canvas.width)}x${Math.round(result.canvas.height)} pt)`);
         }
         
         console.log(`  ${c.cyan('➜')} ${c.bold(path.basename(f)).padEnd(24)} ${c.yellow(sizeStr.padStart(8))}  ${dimStr}`);
@@ -310,9 +300,9 @@ export function createCli(): Command {
 
   program
     .command('build [entry]', { isDefault: true })
-    .description('Compile a .toad file into raster images (PNG, JPG, WebP), vector graphics (SVG), or layered Photoshop document (PSD)')
+    .description('Compile a .toad file into raster images (PNG, JPG, WebP), vector graphics (SVG), layered Photoshop document (PSD), or print-ready PDF')
     .option('-s, --scale <number>', 'Scale factor multiplier for raster rendering (e.g. 1, 2, 4)')
-    .option('-f, --format <formats...>', 'Output format(s): png | jpg | webp | psd | svg | image | all (comma or space separated)')
+    .option('-f, --format <formats...>', 'Output format(s): png | jpg | webp | psd | svg | pdf | image | all (comma or space separated)')
     .option('-o, --out <dir>', 'Output directory (defaults to entry directory)')
     .option('--fonts <dir>', 'Directory containing custom font files to register')
     .option('-w, --watch', 'Watch entry file and all transitive imports for changes')
@@ -327,7 +317,7 @@ export function createCli(): Command {
     .command('dev [entry]')
     .description('Start live preview server with hot reload and watch mode')
     .option('-s, --scale <number>', 'Scale factor multiplier for raster rendering (e.g. 1, 2, 4)')
-    .option('-f, --format <formats...>', 'Output format(s): png | jpg | webp | psd | svg | image | all (comma or space separated)')
+    .option('-f, --format <formats...>', 'Output format(s): png | jpg | webp | psd | svg | pdf | image | all (comma or space separated)')
     .option('-o, --out <dir>', 'Output directory (defaults to entry directory)')
     .option('--fonts <dir>', 'Directory containing custom font files to register')
     .option('-q, --quality <number>', 'JPEG/WebP compression quality (1-100 or 0.0-1.0, default: 92)')
@@ -550,6 +540,131 @@ export function createCli(): Command {
 
       console.error(`\n${c.red('✖')} Unbekannte Aktion "${action}". Erlaubt: list, add, remove\n`);
       process.exit(1);
+    });
+
+  // Command: report [entry]
+  program
+    .command('report [entry]')
+    .description('Run deep design quality, WCAG 2.2 accessibility, and anti-slop audit')
+    .option('--strict', 'Fail with exit code 1 on any warnings')
+    .option('--min-score <score>', 'Minimum passing score out of 100', '70')
+    .option('--json', 'Output raw machine-readable JSON report payload')
+    .option('-v, --verbose', 'Show all passed heuristics in detail')
+    .option('--slop-only', 'Focus exclusively on Anti-AI-Slop rule violations')
+    .option('--fixes', 'Show detailed quick-fixes and action plan immediately')
+    .action(async (entry?: string, options?: { strict?: boolean; minScore?: string; json?: boolean; verbose?: boolean; slopOnly?: boolean; fixes?: boolean }) => {
+      try {
+        const resolvedEntry = await resolveEntryFile(entry);
+        if (!resolvedEntry) {
+          process.exit(1);
+        }
+        const buildRes = await compileToad(resolvedEntry, { dryRun: true });
+        const audit = auditDesign(buildRes);
+
+        const hasIssues = audit.findings.filter(f => f.severity !== 'pass').length > 0;
+        const isInteractive = !options?.fixes && !options?.json && process.stdin.isTTY && hasIssues;
+
+        if (options?.json) {
+          console.log(JSON.stringify(audit, null, 2));
+        } else {
+          console.log(`${c.bold('🔍 Deep Auditing toad design:')} ${c.cyan(resolvedEntry)}...\n`);
+          console.log(formatTerminalReport(audit, { 
+            verbose: options?.verbose, 
+            slopOnly: options?.slopOnly,
+            showFixes: options?.fixes ? true : (isInteractive ? false : true)
+          }));
+        }
+
+        if (isInteractive) {
+          process.stdout.write(`\n  ${c.cyan('➜')}  ${c.bold('Drücke [F], [Enter] oder eine beliebige Taste')}, um die Quick-Fixes & Handlungsempfehlungen anzuzeigen (oder [Q] zum Beenden)... `);
+          const keyPressed = await new Promise<string>(resolve => {
+            const onData = (data: Buffer) => {
+              const str = data.toString();
+              process.stdin.removeListener('data', onData);
+              if (process.stdin.isTTY && process.stdin.setRawMode) {
+                process.stdin.setRawMode(false);
+              }
+              process.stdin.pause();
+              resolve(str);
+            };
+
+            if (process.stdin.isTTY && process.stdin.setRawMode) {
+              process.stdin.setRawMode(true);
+            }
+            process.stdin.resume();
+            process.stdin.once('data', onData);
+          });
+
+          process.stdout.write('\n');
+          if (!keyPressed.toLowerCase().includes('q') && keyPressed !== '\u0003') {
+            console.log(formatFixesSection(audit));
+            console.log(c.bold(`└${'─'.repeat(73)}\n`));
+          }
+        }
+
+        const minScore = parseInt(options?.minScore || '70', 10);
+        if (audit.score < minScore) {
+          if (!options?.json) {
+            console.error(`${c.red('✖')} Design score ${audit.score}/100 is below the threshold of ${minScore}/100.\n`);
+          }
+          process.exit(1);
+        }
+        if (options?.strict && audit.stats.warnings > 0) {
+          if (!options?.json) {
+            console.error(`${c.red('✖')} Strict mode enabled: ${audit.stats.warnings} warning(s) detected.\n`);
+          }
+          process.exit(1);
+        }
+      } catch (err: any) {
+        console.error(formatCompilerError(err, entry));
+        process.exit(1);
+      }
+    });
+
+  // Command: bundle [entry]
+  program
+    .command('bundle [entry]')
+    .description('Bundle design into multi-resolution icons, favicons, or social share packages')
+    .option('-p, --preset <preset>', 'Bundle preset: favicons, app-icon, social, all', 'favicons')
+    .option('-o, --out <dir>', 'Output directory for the generated assets')
+    .option('-t, --target <id>', 'Target element ID to isolate and bundle (e.g. "#logo" or "appIcon")')
+    .option('--name <name>', 'Application name for site.webmanifest')
+    .option('--theme <color>', 'Theme color hex for site.webmanifest')
+    .option('--no-manifest', 'Skip generating site.webmanifest and HTML tag snippets')
+    .action(async (entry?: string, options?: any) => {
+      try {
+        const resolvedEntry = await resolveEntryFile(entry);
+        if (!resolvedEntry) {
+          process.exit(1);
+        }
+        console.log(`${c.bold('📦 Bundling assets for:')} ${c.cyan(resolvedEntry)}`);
+        console.log(`${c.dim('   Preset:')} ${c.yellow(options.preset || 'favicons')}`);
+        if (options.target) console.log(`${c.dim('   Target:')} ${c.cyan(options.target)}`);
+
+        const res = await bundleAssets(resolvedEntry, {
+          preset: options.preset,
+          outDir: options.out,
+          target: options.target,
+          name: options.name,
+          themeColor: options.theme,
+          manifest: options.manifest !== false
+        });
+
+        console.log(`\n${c.green('✔')} Successfully generated ${c.bold(String(res.assets.length))} asset(s) in: ${c.cyan(res.outDir)}\n`);
+        for (const a of res.assets) {
+          const kb = (a.bytes / 1024).toFixed(1);
+          console.log(`   ${c.dim('•')} ${a.filename.padEnd(28)} ${c.bold(`${a.width}×${a.height}`.padEnd(12))} ${c.dim(`${kb} kB`)}`);
+        }
+        if (res.manifestPath) {
+          console.log(`\n   ${c.green('✔')} Web App Manifest: ${c.dim(res.manifestPath)}`);
+        }
+        if (res.htmlSnippetPath) {
+          console.log(`   ${c.green('✔')} HTML Embed Tags:   ${c.dim(res.htmlSnippetPath)}\n`);
+        }
+      } catch (err: any) {
+        console.error(formatCompilerError(err, entry));
+        process.exit(1);
+      }
     });
 
   return program;
