@@ -9,8 +9,10 @@ import { createCanvas, loadImage, Image } from '@napi-rs/canvas';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-const imageCache = new Map<string, { img: Image; mtime: number }>();
+const imageCache = new Map<string, { img: Image; mtime: number; bytes: number }>();
 const MAX_CACHE_ENTRIES = 100;
+const MAX_CACHE_BYTES = 256 * 1024 * 1024; // 256 MB budget
+let currentCacheBytes = 0;
 
 export function getImageCacheSize(): number {
   return imageCache.size;
@@ -18,6 +20,7 @@ export function getImageCacheSize(): number {
 
 export function clearImageCache(): void {
   imageCache.clear();
+  currentCacheBytes = 0;
 }
 
 export async function resolveSharedImage(imgSrc: string, basePath?: string): Promise<Image | null> {
@@ -45,17 +48,26 @@ export async function resolveSharedImage(imgSrc: string, basePath?: string): Pro
 
     const cached = imageCache.get(resolvedPath);
     if (cached && cached.mtime === mtime) {
+      // Refresh LRU order
+      imageCache.delete(resolvedPath);
+      imageCache.set(resolvedPath, cached);
       return cached.img;
     }
 
     const buf = fs.readFileSync(resolvedPath);
     const img = await loadImage(buf);
+    const estimatedBytes = (img.width || 1) * (img.height || 1) * 4;
 
-    if (imageCache.size >= MAX_CACHE_ENTRIES) {
-      const firstKey = imageCache.keys().next().value;
-      if (firstKey) imageCache.delete(firstKey);
+    while (imageCache.size >= MAX_CACHE_ENTRIES || (currentCacheBytes + estimatedBytes > MAX_CACHE_BYTES && imageCache.size > 0)) {
+      const firstEntry = imageCache.entries().next().value;
+      if (!firstEntry) break;
+      const [oldKey, oldVal] = firstEntry;
+      currentCacheBytes -= oldVal.bytes || 0;
+      imageCache.delete(oldKey);
     }
-    imageCache.set(resolvedPath, { img, mtime });
+
+    currentCacheBytes += estimatedBytes;
+    imageCache.set(resolvedPath, { img, mtime, bytes: estimatedBytes });
 
     return img;
   } catch {

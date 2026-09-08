@@ -81,9 +81,8 @@ export function lintDocument(doc: DocumentNode): Diagnostic[] {
   };
 
   checkElementIds(doc.elements);
-  if (doc.canvas) {
-    checkElementIds([doc.canvas]);
-  }
+  const canvasesToCheck = doc.canvases && doc.canvases.length > 0 ? doc.canvases : (doc.canvas ? [doc.canvas] : []);
+  checkElementIds(canvasesToCheck);
 
   // Track component local scopes
   const componentLocalScopes = new Map<string, { params: Set<string>; used: Set<string> }>();
@@ -222,12 +221,13 @@ export function lintDocument(doc: DocumentNode): Diagnostic[] {
   }
 
   // Also check canvas properties for variable references
-  if (doc.canvas) {
-    traverse(doc.canvas, (node) => {
+  for (const c of canvasesToCheck) {
+    traverse(c, (node) => {
       if (node.type === 'VariableReference') {
         const ref = node as VariableReferenceNode;
         referencedGlobalVars.add(ref.name);
-        if (!declaredGlobalVars.has(ref.name)) {
+        const rootVarName = ref.name.includes('.') ? ref.name.split('.')[0]! : ref.name;
+        if (!declaredGlobalVars.has(ref.name) && !declaredGlobalVars.has(rootVarName)) {
           diagnostics.push({
             code: 'LINT-UNDECLARED-VAR',
             message: `Variable '>${ref.name}' is referenced on canvas but never declared.`,

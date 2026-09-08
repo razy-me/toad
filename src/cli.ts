@@ -271,7 +271,9 @@ export function createCli(): Command {
         } else if (f.endsWith('.png') || f.endsWith('.jpg') || f.endsWith('.jpeg') || f.endsWith('.webp')) {
           const effectiveScale = buildOptions.scale && buildOptions.scale > 0 ? buildOptions.scale : 1;
           dimStr = c.dim(`(${Math.round(result.canvas.width * effectiveScale)}x${Math.round(result.canvas.height * effectiveScale)})`);
-        } else if (f.endsWith('.svg') || f.endsWith('.pdf')) {
+        } else if (f.endsWith('.svg')) {
+          dimStr = c.dim(`(${Math.round(result.canvas.width)}x${Math.round(result.canvas.height)} px)`);
+        } else if (f.endsWith('.pdf')) {
           dimStr = c.dim(`(${Math.round(result.canvas.width)}x${Math.round(result.canvas.height)} pt)`);
         }
         

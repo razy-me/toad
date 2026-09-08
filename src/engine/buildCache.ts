@@ -87,6 +87,7 @@ export interface CachedFileEntry {
   hash: string;
   ast: DocumentNode;
   dependencies?: string[];
+  dependencyMtimes?: Record<string, number>;
 }
 
 /**
@@ -128,7 +129,8 @@ export class AstCache {
             return null;
           }
           const depMtime = fs.statSync(dep).mtimeMs;
-          if (depMtime > entry.mtimeMs) {
+          const recordedMtime = entry.dependencyMtimes?.[dep];
+          if (recordedMtime !== undefined ? depMtime > recordedMtime : depMtime > entry.mtimeMs) {
             this.cache.delete(filePath);
             this.misses++;
             return null;
@@ -147,13 +149,31 @@ export class AstCache {
 
   public set(filePath: string, mtimeMs: number, ast: DocumentNode, content?: string, dependencies?: string[]): void {
     const hash = content ? crypto.createHash('sha256').update(content).digest('hex') : '';
-    this.cache.set(filePath, { mtimeMs, hash, ast, dependencies });
+    const dependencyMtimes: Record<string, number> = {};
+    if (dependencies && dependencies.length > 0) {
+      for (const dep of dependencies) {
+        try {
+          if (fs.existsSync(dep)) {
+            dependencyMtimes[dep] = fs.statSync(dep).mtimeMs;
+          }
+        } catch {}
+      }
+    }
+    this.cache.set(filePath, { mtimeMs, hash, ast, dependencies, dependencyMtimes });
   }
 
   public setDependencies(filePath: string, dependencies: string[]): void {
     const entry = this.cache.get(filePath);
     if (entry) {
       entry.dependencies = dependencies;
+      entry.dependencyMtimes = {};
+      for (const dep of dependencies) {
+        try {
+          if (fs.existsSync(dep)) {
+            entry.dependencyMtimes[dep] = fs.statSync(dep).mtimeMs;
+          }
+        } catch {}
+      }
     }
   }
 

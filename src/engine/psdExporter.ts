@@ -511,7 +511,7 @@ export class PsdExporter {
       const isBold = fontWeight === 'bold' || fontWeight === 'bolder' || (numericWeight !== null && numericWeight >= 600);
       const isItalic = fontStyle === 'italic' || fontStyle === 'oblique';
       // Only set fauxBold if the font doesn't already have a dedicated bold PostScript cut
-      const fauxBold = isBold && !/bold|black|heavy/i.test(postScriptFontName);
+      const fauxBold = isBold && !/bold|black|heavy|extrabold|ultrabold|semibold/i.test(postScriptFontName);
       const fauxItalic = isItalic && !/italic|oblique/i.test(postScriptFontName);
 
       const textCanvas = await this.renderNodeToIsolatedCanvasAsync(

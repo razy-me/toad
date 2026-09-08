@@ -29,10 +29,16 @@ export function formatToad(source: string, options: FormatOptions = {}): string 
       continue;
     }
 
-    // Decrease indent if line starts with closing brace (outside block comment)
+    // Decrease indent if line starts with closing braces (outside block comment)
     const lineStartsInBlockComment = inBlockComment;
-    if (!inBlockComment && line.startsWith('}')) {
-      indentLevel = Math.max(0, indentLevel - 1);
+    let leadingCloses = 0;
+    if (!inBlockComment) {
+      while (leadingCloses < line.length && line[leadingCloses] === '}') {
+        leadingCloses++;
+      }
+      if (leadingCloses > 0) {
+        indentLevel = Math.max(0, indentLevel - leadingCloses);
+      }
     }
 
     // Apply basic spacing normalization for properties: "key : value ;" -> "key: value;"
@@ -91,8 +97,8 @@ export function formatToad(source: string, options: FormatOptions = {}): string 
     formattedLines.push(currentIndent + line);
 
     // Update indentLevel for subsequent lines:
-    // If the line started with '}', we already decremented once above.
-    const remainingCloses = line.startsWith('}') ? Math.max(0, closeBraces - 1) : closeBraces;
+    // If the line started with '}', we already decremented leadingCloses above.
+    const remainingCloses = Math.max(0, closeBraces - leadingCloses);
     indentLevel = Math.max(0, indentLevel + openBraces - remainingCloses);
   }
 
