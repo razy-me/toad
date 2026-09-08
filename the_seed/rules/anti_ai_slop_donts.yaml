@@ -74,6 +74,106 @@ slop_signatures_and_donts:
       dont: "DO NOT force all feature presentations into identical 3-column icon boxes."
       do: "Vary layout rhythms with asymmetric feature blocks, real UI previews, and modular storytelling."
 
+    - id: "SLOP-WEB-013"
+      name: "shadcn-Monochrom-Paralyse"
+      tell: "Pure unadjusted zinc-900 / neutral-900 palettes (#09090B canvas, #27272A borders, #FAFAFA text) with zero brand personality or color temperature."
+      dont: "DO NOT leave shadcn default dark-mode tokens untouched as a generic substitute for visual brand identity."
+      do: "Inject authentic brand hue and temperature: warm off-blacks (#121110, #181614) or deep cool slate (#0B1120, #0F172A) with distinct chromatic accents."
+
+    - id: "SLOP-WEB-014"
+      name: "Ornamentales Live-Pulse Eyebrow-Badge"
+      tell: "Pill badge with a glowing green pinging dot above the headline pretending to show real-time system status ('v2.0 Just Released', 'System Operational')."
+      dont: "DO NOT attach decorative pseudo-live pulse dots to static marketing headlines."
+      do: "Use clean semantic kicker typography or reserve live indicator beacons strictly for actual real-time telemetry panels."
+
+    - id: "SLOP-WEB-015"
+      name: "Russian-Doll Container Nesting"
+      tell: "Deeply nested cards inside cards inside bento sections with 3-4 concentric 1px borders, creating massive dead space."
+      dont: "DO NOT wrap content in multiple redundant nested containers with borders."
+      do: "Flatten container hierarchies: rely on generous padding, typographic groupings, and subtle surface steps instead of boxing boxes."
+
+    - id: "SLOP-WEB-016"
+      name: "Endlos-Marquee erfundener Partner-Logos"
+      tell: "Infinitely auto-scrolling horizontal band of 6 muted gray fake logos ('Sphere', 'Apex', 'Vortex', 'Polymer') creating an illusion of social proof."
+      dont: "DO NOT populate hero sections with animated marquees of generic invented company logos."
+      do: "Feature genuine verified customer logos, real technical certifications, or confident whitespace without filler marquees."
+
+    - id: "SLOP-GEOM-001"
+      name: "Konzentrischer Radien-Bruch (Soap inside Soap)"
+      tell: "Nested rounded elements where inner child radius equals or exceeds outer card radius (R_child >= R_parent), pinching corners visually."
+    - id: "SLOP-WEB-017"
+      name: "Fake Social Proof Avatar Pile (The 5-Face Stack)"
+      tell: "Cluster of 4-5 overlapping avatar circles with white borders followed by 'Loved by 10k+ founders' with zero actual customer citations."
+      dont: "DO NOT stack fake avatar circles and generic 5-star ratings without real customer names and case studies."
+      do: "Show verified customer quotes with full name, real title, and concrete metric ROI, or leave confident negative space."
+
+    - id: "SLOP-WEB-018"
+      name: "Stereotypical 5-Stage Hero Formula Pipeline"
+      tell: "Rigid sequential template: Pill Eyebrow -> Display H1 with gradient -> Centered 3-line subline -> 2 Buttons -> Tilt Mockup."
+      dont: "DO NOT force every hero section into the exact same 5-stage centered template."
+      do: "Vary layout rhythm with asymmetric leads, split-screen product previews, or disciplined editorial typographic composition."
+
+    - id: "SLOP-WEB-019"
+      name: "Void Glow Halo Backlight"
+      tell: "Massive 50px+ blurred glow floating behind an isolated card without physical lighting fixture or surface context."
+      dont: "DO NOT emit arbitrary radial glow fields behind cards without physical light source."
+      do: "Ground cards with architectural surface stepping (#0F172A -> #1E293B) and crisp 1px borders."
+
+    - id: "SLOP-WEB-020"
+      name: "Infinite Testimonial Grid Hallucination"
+      tell: "Grid of 6+ cards filled with repetitive generic hype quotes ('Total game changer!', 'Supercharge your team!')."
+      dont: "DO NOT populate testimonial sections with generic AI-generated praise quotes."
+      do: "Feature 2-3 verified case studies with real customer metrics, company logos, and domain outcomes."
+
+    - id: "SLOP-UI-001"
+      name: "Contradictory Virtual Lighting Vectors (Specular Chaos)"
+      tell: "Card A casts shadow downwards (90°), Card B casts shadow upwards (-90°), and button has highlight at 45°."
+      dont: "DO NOT mix disparate virtual light angles across components in the same interface."
+      do: "Establish a single global virtual light origin (e.g. 270° from top or 315° from top-left) across the design system."
+
+    - id: "SLOP-UI-002"
+      name: "Luminous / Inverted Shadows"
+      tell: "Drop shadow with higher luminance than the canvas background, glowing instead of subtracting light."
+      dont: "NEVER use shadows that are brighter than the surface they are cast upon."
+      do: "Shadows must subtract luminance: derive shadow colors from darkened background shades or black alpha."
+
+    - id: "SLOP-UI-003"
+      name: "Uncanny Glassmorphism Contrast Collapse"
+      tell: "Translucent glass card (alpha < 0.35) over varied background causing text contrast to collapse below 2.5:1."
+      dont: "DO NOT put text on transparent glassmorphism without a guaranteed contrast floor."
+      do: "Back glassmorphic containers with an opaque fallback layer (min 85% opacity) for WCAG AA compliance."
+
+    - id: "SLOP-UI-004"
+      name: "Safe-Area Blindness & Mobile Bottom Collision"
+      tell: "Mobile layout where bottom-docked navigation touches screen bottom without safe-area inset."
+      dont: "DO NOT stick actions directly to bottom: 0px on mobile screens."
+      do: "Enforce bottom padding: minimum 24px (env(safe-area-inset-bottom)) for iOS Home Indicator clearance."
+
+    - id: "SLOP-UI-005"
+      name: "Destructive Action Ambiguity (The Symmetrical Modal)"
+      tell: "Modal dialog where destructive action (Delete) and Cancel have identical visual styling and button variant."
+      dont: "NEVER give destructive and neutral dismissive actions identical visual weight."
+      do: "Style Cancel as understated secondary ghost button; highlight destructive action in distinct danger color."
+
+    - id: "SLOP-UI-006"
+      name: "Dead Status Pill Overkill (Status Theater)"
+      tell: "Table with 8+ rows where every single row displays an identical green 'Operational' status badge."
+      dont: "DO NOT clutter table rows with redundant zero-variance status pills."
+      do: "Practice exception-based reporting: 1 global health indicator in header; reserve row badges for anomalies."
+
+    - id: "SLOP-MOB-001"
+      name: "Desktop-in-a-Box Viewport Scaling (The CSS Zoom Trap)"
+      tell: "Mobile screen scaling down a complex desktop container with scale < 0.7 instead of reflowing."
+      dont: "DO NOT shrink desktop layouts into mobile viewports using CSS zoom or scale."
+      do: "Implement genuine responsive reflow: 1-column vertical stacks with min 16px body type."
+
+    - id: "SLOP-MOB-002"
+      name: "One-Thumb Hostility"
+      tell: "Primary call-to-action placed in the upper-left corner on mobile screens, unreachable by one hand."
+      dont: "DO NOT place primary mobile actions in the top thumb dead-zone."
+      do: "Place primary mobile actions in the bottom thumb comfort zone (e.g. sticky bottom bar)."
+
+
   logos_and_branding:
     - id: "SLOP-LOGO-001"
       name: "Gradient Infinity Loop / Origami Ribbon"
@@ -166,6 +266,36 @@ slop_signatures_and_donts:
       dont: "DO NOT render backgrounds with identical sharpness and chromatic saturation as foreground heroes."
       do: "Honor atmospheric physics: diminish contrast, soften edges, and introduce cool tinting at distance."
 
+    - id: "SLOP-GFX-009"
+      name: "Impossible Isometric Spatial Intersection (Escher Glitch)"
+      tell: "2.5D axonometric graphics where lower depth elements incorrectly overlap foreground objects."
+      dont: "DO NOT allow z-index conflicts to violate physical perspective projection."
+      do: "Sort isometric geometry strictly by spatial depth: Depth = (x + y) / sqrt(2) + z."
+
+    - id: "SLOP-GFX-010"
+      name: "Faux-Brutalist Decorative Barcode & QR Abuse"
+      tell: "Barcodes or QR codes with rounded corners, missing quiet zones, or invalid checksums used as decals."
+      dont: "NEVER emit rounded, unscannable barcodes as decorative stickers."
+      do: "Ensure 0px border radius, sharp vector edges, and ISO-compliant quiet zones on true functional codes."
+
+    - id: "SLOP-GFX-011"
+      name: "Telemetry Noise & Pseudocode Greebling"
+      tell: "Rando monospace strings ('SYS_BOOT // 0x8849F') stamped onto layout edges to fake technical authority."
+      dont: "DO NOT use fake telemetry strings as visual filler."
+      do: "Display authentic colophon metadata, Git commit hashes, or confident negative space."
+
+    - id: "SLOP-GFX-012"
+      name: "Shader-Toy Iridescent Oil-Slick Blob"
+      tell: "Amorphous fluid path in background filled with 4+ discordant rainbow hues without product context."
+      dont: "DO NOT scatter decorative multi-color fluid meshes behind business headlines."
+      do: "Use disciplined architectural stepping or concrete product engineering schematics."
+
+    - id: "SLOP-COLOR-003"
+      name: "Linear sRGB Dead-Zone Mud Gradient"
+      tell: "2-stop gradient between complementary hues (deltaHue >= 100°) yielding dirty desaturated gray in center."
+      dont: "DO NOT interpolate opposite color wheel hues in linear sRGB without intermediate saturation bridge."
+      do: "Interpolate in OKLCH (linear-gradient(in oklch, ...)) or insert a vibrant bridge stop."
+
   photography_and_scenic:
     - id: "SLOP-PHOTO-001"
       name: "Porcelain Wax Museum Skin & Ringlight Eyes"
@@ -251,6 +381,42 @@ slop_signatures_and_donts:
       tell: "Text inside compact pills, badges, or buttons sitting 2-4px too high due to uncompensated top-baseline font metrics."
       dont: "NEVER rely on raw bounding box centering without verifying glyph optical vertical alignment against container borders."
       do: "Apply optical Cap-Height Offset (+1.5px to +2.5px at 1x; +3px to +5px at 2x) or run pixel-scan verification so (topGap == botGap)."
+
+    - id: "SLOP-DECK-002"
+      name: "Megalithic Quote Monument"
+      tell: "Giant 120pt quotation marks ('“') occupying 60% of canvas/slide area at 15% opacity to disguise text scarcity and cognitive emptiness."
+      dont: "DO NOT inflate punctuation glyphs into giant background filler geometry."
+      do: "Set quotes with disciplined editorial rag, clear source attribution, and confident negative space."
+
+    - id: "SLOP-TYPE-011"
+      name: "Leading Collision & Baseline Strangulation"
+      tell: "Headlines with line-height < 1.08em where umlauts (Ä, Ö, Ü) and descenders (g, j, y) crash into each other."
+      dont: "DO NOT squeeze display headlines into suffocating sub-1.10 leading."
+      do: "Provide minimum 1.15em to 1.25em leading on display titles to allow accents and descenders to breathe."
+
+    - id: "SLOP-TYPE-012"
+      name: "Inconsistent Title/Sentence Case Schizophrenia"
+      tell: "Navigation links or feature lists mixing Title Case and Sentence case randomly within the same container."
+      dont: "DO NOT alternate capitalization styles across sibling UI elements."
+      do: "Adopt a consistent casing rule (e.g. 100% Sentence case for modern SaaS) across all list items."
+
+    - id: "SLOP-TYPE-013"
+      name: "Orphan & Widow Baseline Stragglers"
+      tell: "A single short word (<= 5 chars) stranded on its own on the final line of a paragraph."
+      dont: "DO NOT leave isolated single words on paragraph baselines."
+      do: "Enforce text-wrap: balance or insert non-breaking spaces before the final word."
+
+    - id: "SLOP-TYPE-014"
+      name: "Fractional Sub-Pixel Font Blur"
+      tell: "Text placed on fractional coordinates (e.g. x: 142.37px) or fractional font sizes (15.4px) causing blurry rasterization."
+      dont: "DO NOT position text nodes on non-integer subpixels."
+      do: "Snap text coordinates to integer pixel boundaries (Math.round) for crisp rendering."
+
+    - id: "SLOP-TYPE-015"
+      name: "Hierarchy Gap Deficit (The Flat Typographic Wall)"
+      tell: "H1 and body text differing by less than 1.35x in size with identical medium font weight."
+      dont: "DO NOT build flat text hierarchies where titles fail to establish clear typographic dominance."
+      do: "Follow modular typographic scales (min 1.5x - 2.5x step) and high-contrast weight pairing (Bold vs Regular)."
 
   frontend_dom_and_code:
     - id: "SLOP-CODE-001"
@@ -399,6 +565,140 @@ slop_signatures_and_donts:
       tell: "Surfaces appearing flat (#FFF / #000) reveal thousands of micro-noise artifacts under contrast boost."
       dont: "DO NOT import rasterized flat fills with residual diffusion noise."
       do: "Use pure mathematical TOAD hex color tokens (fill: #FFFFFF;) for vector backgrounds."
+
+  print_and_editorial:
+    - id: "SLOP-PRINT-001"
+      name: "Swiss-Slop & Grid Cosplay"
+      tell: "Arbitrary registration marks (+, ⌖) placed >15mm inside live layout; fake giant numerals ('01', '08') and pseudo-Swiss labels ('Rasterlehre') used as visual filler."
+      dont: "DO NOT scatter fake technical registration marks and meaningless numerals into live art."
+      do: "Build honest mathematical modular grids; place technical marks exclusively in the slug/bleed zone."
+
+    - id: "SLOP-PRINT-002"
+      name: "Unscannable Barcode & QR Decals"
+      tell: "Barcodes and QR codes stuck onto posters as purely decorative aesthetic decals with broken quiet zones and rounded corners."
+      dont: "DO NOT paste invalid, unscannable barcodes as decorative stickers."
+      do: "Generate ISO-compliant, high-contrast black vector barcodes on white quiet zones with valid checksums."
+
+    - id: "SLOP-PRINT-003"
+      name: "Telemetrie-Stamping & Null-Island GPS"
+      tell: "Monospace GPS coordinates ('LAT 35°41'N...') and fake camera EXIF strings stamped onto margins of posters and flyers."
+      dont: "DO NOT use random GPS coordinates and fake telemetry strings to fill layout margins."
+      do: "Document authentic production metadata (colophon, paper weight, font list, ISO profile) or leave confident whitespace."
+
+    - id: "SLOP-PRINT-004"
+      name: "Analog Laundering (Uniform Noise Washing)"
+      tell: "Homogeneous digital Perlin noise applied uniformly across darks and lights to disguise synthetic AI smoothness as 'risograph'."
+      dont: "DO NOT use flat uniform noise washes as a crutch for authentic print texture."
+      do: "Use real paper fiber textures with luminance-dependent density or authentic stochastic screening."
+
+    - id: "SLOP-PRINT-005"
+      name: "Mockup Crease Displacement Deficit"
+      tell: "4-fold or 8-fold digital paper creases overlaid onto artwork while vector typography runs with 0° linear perfection across creases without displacement."
+      dont: "DO NOT apply fake paper crease overlays without physical geometric distortion."
+      do: "Present digital artwork flat, or model physically accurate vector distortion across genuine fold lines."
+
+    - id: "SLOP-PRINT-006"
+      name: "Nihon-Fetischismus & Kanji-Greebling"
+      tell: "Random Japanese Kanji/Katakana characters placed on Western designs; vertical text with horizontal Chōonpu ('ー') rotation bug."
+      dont: "DO NOT drop arbitrary Asian glyphs into designs as cheap cyberpunk aesthetic seasoning."
+      do: "Design typography in the native language of the message; engage native typographers for genuine multilingual work."
+
+    - id: "SLOP-PRINT-007"
+      name: "Fake Paper Fold Texture without Displacement"
+      tell: "Digital paper crease texture overlay while underlying vector text runs perfectly straight with 0° displacement."
+      dont: "DO NOT apply flat digital paper crease textures over live vector graphics."
+      do: "Present print artwork flat as authentic 2D vector art, or model realistic physical geometric fold displacement."
+
+    - id: "SLOP-PRINT-008"
+      name: "Pseudo-Swiss Crop Marks in Live Copy Area"
+      tell: "Printer registration marks (⌖, ⊕, crop marks) placed >15mm inside the live content canvas."
+      dont: "DO NOT scatter technical printer marks inside live layout areas."
+      do: "Confine printer registration marks strictly to the external bleed and slug zones."
+
+    - id: "SLOP-PRINT-009"
+      name: "Analog Laundering (Uniform Noise Washing)"
+      tell: "Homogeneous digital noise applied uniformly across darks and lights to fake risograph or screen-print texture."
+      dont: "DO NOT wash clean vector shapes in uniform digital noise filters."
+      do: "Use real scanned paper fiber substrates with luminance-proportional ink absorption."
+
+    - id: "SLOP-PRINT-010"
+      name: "Gutter Strangulation & Spine Creep Deficit"
+      tell: "Multi-page spread where text crosses or pinches into the central spine without inner gutter allowance."
+      dont: "DO NOT place copy across the inner binding gutter."
+      do: "Provide generous inner gutter margin (min 24–30mm) and compensate for paper bulk creep."
+
+  dataviz_and_dashboards:
+    - id: "SLOP-DASH-001"
+      name: "Hero Fake-Dashboard Mirage"
+      tell: "Decorative analytics dashboard in hero sections featuring a smooth, monotonically rising curve with violet gradient fill, but lacking axes, units, or scales."
+      dont: "DO NOT place decorative fake charts with arbitrary upward curves as hero eye-candy."
+      do: "Display authentic product interfaces with real data domains, realistic metrics, and honest axes."
+
+    - id: "SLOP-DASH-002"
+      name: "Monotonic Utopian Curve (Zero-Variance Trendline)"
+      tell: "Hero revenue curve with monotonic climb (dy/dx >= 0) and zero variance, dips, or seasonal realities."
+      dont: "DO NOT display unrealistically perfect smooth growth lines."
+      do: "Model authentic time-series metrics with natural seasonal variance and transparent data points."
+
+    - id: "SLOP-DASH-003"
+      name: "Ghost Axes & Disembodied Datapoints"
+      tell: "Chart components with visual curve paths but zero axes, timestamps, units ($/%) or scale labels."
+      dont: "DO NOT emit uncalibrated, ungrounded chart curves without numbers."
+      do: "Provide clear calibrated X and Y axes, zero baseline anchors, and explicit domain units."
+
+    - id: "SLOP-DASH-004"
+      name: "Rainbow Spectral Doughnut Catastrophe"
+      tell: "Donut chart sliced into >5 hairline rainbow segments without center KPI summary."
+      dont: "DO NOT overfragment pie or donut charts into unreadable rainbow slivers."
+      do: "Limit donut slices to max 4-5 categories (aggregate rest as 'Other') with prominent center KPI value."
+
+    - id: "SLOP-DASH-005"
+      name: "Chromatic Semantic Polarity Inversion"
+      tell: "Negative business metrics (-18% churn, error rate) colored in success green, or growth in danger red."
+      dont: "NEVER invert standard semantic color polarity in metrics."
+      do: "Reserve green strictly for positive growth and operational health; red for errors, latency, and losses."
+
+    - id: "SLOP-VIZ-001"
+      name: "Truncated Axis Distortion (The Fox News Bar)"
+      tell: "Bar or column charts starting at Y_min > 0, exaggerating trivial 0.5% differences into 10x visual spikes (Tufte Lie Factor >> 1.0)."
+      dont: "NEVER truncate the zero baseline on bar or column charts."
+      do: "Always anchor bar charts at Y=0; use line charts or explicit delta charts for small fluctuations."
+
+    - id: "SLOP-VIZ-002"
+      name: "Technicolor Confusion (Rainbow for Binary Data)"
+      tell: "6 high-saturation spectral rainbow hues used for simple binary (yes/no) or sequential ordered data."
+      dont: "DO NOT use rainbow palettes for ordered or sequential data dimensions."
+      do: "Use monochromatic lightness ramps (light blue to deep navy) or perceptually uniform scales (Viridis/Cividis)."
+
+    - id: "SLOP-VIZ-003"
+      name: "Eyecandy Hula-Hoop Donut"
+      tell: "Ultra-thin donut ring with 10+ hairline segments, zero percentage labels in center, and unreadable legend."
+      dont: "DO NOT use thin unlabeled multi-slice donut charts as decorative filler."
+      do: "Cap donut charts at max 4-5 aggregated categories with prominent center KPI value."
+
+    - id: "SLOP-VIZ-004"
+      name: "Isometrischer 3D-Balken- & Torten-Betrug"
+      tell: "3D perspective distortion causing front slices to appear 40%+ larger in visual area than identical or larger rear slices."
+      dont: "NEVER use pseudo-3D extrusion on 2D charts and data visualizations."
+      do: "Use pure orthogonal 2D charts where screen area is strictly proportional to numerical value."
+
+    - id: "SLOP-DECK-001"
+      name: "Die 4-Schritte-Chevron-Pfeil-Schablone"
+      tell: "Every workflow, roadmap, and lifecycle forced into 4 identical connected chevron arrows ('Discover -> Define -> Develop -> Deliver')."
+      dont: "DO NOT force complex processes into rigid 4-chevron conveyor belts."
+      do: "Model authentic process topologies with iterative loops, parallel streams, and realistic time weighting."
+
+    - id: "SLOP-DECK-004"
+      name: "Clipart-Squircle Feature Matrix"
+      tell: "2x3 grid of pastel rounded squares containing disconnected stock icons (Rocket, Lock, Lightbulb, Cog)."
+      dont: "DO NOT hide real capabilities behind generic icon-in-squircle boxes."
+      do: "Show concrete product artifacts: code blocks, data tables, live previews, and verifiable metrics."
+
+    - id: "SLOP-DECK-005"
+      name: "Pre-Seed Global Dominance Arcs"
+      tell: "Gray dot-matrix world map with glowing curved SVG bezier arcs between London, SF, and Tokyo for pre-customer startups."
+      dont: "DO NOT simulate global enterprise presence with generic world map flight arcs."
+      do: "Show actual server infrastructure regions or real customer distributions with verified data."
 
 forensic_audit_matrix:
   ko_criteria_immediate_rejection:

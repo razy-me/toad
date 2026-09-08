@@ -5,6 +5,7 @@
  */
 
 import * as crypto from 'node:crypto';
+import * as fs from 'node:fs';
 import type { TextLayoutResult } from '../parser/math.js';
 import type { DocumentNode } from '../parser/ast.js';
 
@@ -36,7 +37,9 @@ export class TextMeasurementCache {
   }
 
   public static makeKey(content: string, style: Record<string, any>): string {
-    return `${content}|${style.fontFamily || ''}|${style.fontSize || 16}|${style.fontWeight || ''}|${style.fontStyle || ''}|${style.lineHeight || ''}|${style.letterSpacing || 0}|${style.textTransform || ''}|${style.explicitWidth || ''}|${style.maxLines || ''}|${style.overflow || ''}|${style.trim || ''}`;
+    const ff = style.fontFeatures ? JSON.stringify(style.fontFeatures) : '';
+    const fv = style.fontVariation ? JSON.stringify(style.fontVariation) : '';
+    return `${content}|${style.fontFamily || ''}|${style.fontSize || 16}|${style.fontWeight || ''}|${style.fontStyle || ''}|${style.lineHeight || ''}|${style.letterSpacing || 0}|${style.textTransform || ''}|${style.explicitWidth || ''}|${style.maxLines || ''}|${style.overflow || ''}|${style.trim || ''}|${ff}|${fv}`;
   }
 
   public get(key: string): TextLayoutResult | undefined {
@@ -83,6 +86,7 @@ export interface CachedFileEntry {
   mtimeMs: number;
   hash: string;
   ast: DocumentNode;
+  dependencies?: string[];
 }
 
 /**
@@ -114,13 +118,35 @@ export class AstCache {
       return null;
     }
 
+    if (entry.dependencies && entry.dependencies.length > 0) {
+      for (const dep of entry.dependencies) {
+        try {
+          if (fs.existsSync(dep)) {
+            const depMtime = fs.statSync(dep).mtimeMs;
+            if (depMtime > entry.mtimeMs) {
+              this.cache.delete(filePath);
+              this.misses++;
+              return null;
+            }
+          }
+        } catch {}
+      }
+    }
+
     this.hits++;
     return entry.ast;
   }
 
-  public set(filePath: string, mtimeMs: number, ast: DocumentNode, content?: string): void {
+  public set(filePath: string, mtimeMs: number, ast: DocumentNode, content?: string, dependencies?: string[]): void {
     const hash = content ? crypto.createHash('sha256').update(content).digest('hex') : '';
-    this.cache.set(filePath, { mtimeMs, hash, ast });
+    this.cache.set(filePath, { mtimeMs, hash, ast, dependencies });
+  }
+
+  public setDependencies(filePath: string, dependencies: string[]): void {
+    const entry = this.cache.get(filePath);
+    if (entry) {
+      entry.dependencies = dependencies;
+    }
   }
 
   public invalidate(filePath: string): void {

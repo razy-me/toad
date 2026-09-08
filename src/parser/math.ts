@@ -237,14 +237,17 @@ export function computeGcd(a: number, b: number): number {
   if (!Number.isFinite(a) || !Number.isFinite(b) || isNaN(a) || isNaN(b)) {
     return 1;
   }
-  let x = Math.abs(Math.round(a));
-  let y = Math.abs(Math.round(b));
+  const isFloat = !Number.isInteger(a) || !Number.isInteger(b);
+  const factor = isFloat ? 1000 : 1;
+  let x = Math.abs(Math.round(a * factor));
+  let y = Math.abs(Math.round(b * factor));
   while (y !== 0 && !isNaN(y)) {
     const t = y;
     y = x % y;
     x = t;
   }
-  return x === 0 || isNaN(x) ? 1 : x;
+  const res = x === 0 || isNaN(x) ? 1 : x;
+  return isFloat ? res / factor : res;
 }
 
 export function computeAspectRatio(width: number, height: number): { ratioX: number; ratioY: number; ratioString: string } {
@@ -252,8 +255,8 @@ export function computeAspectRatio(width: number, height: number): { ratioX: num
     return { ratioX: 1, ratioY: 1, ratioString: '1:1' };
   }
   const gcd = computeGcd(width, height);
-  const ratioX = Math.round(width) / gcd;
-  const ratioY = Math.round(height) / gcd;
+  const ratioX = Number(((width) / gcd).toFixed(3));
+  const ratioY = Number(((height) / gcd).toFixed(3));
   return {
     ratioX,
     ratioY,
@@ -329,8 +332,85 @@ export function readImageDimensions(filePath: string): { width: number; height: 
   return null;
 }
 
-export function evaluateCalc(expression: string, parentSize: number, dpi = 96): number {
-  // Simple calc evaluator for things like "100% - 20px" or "50% + 10px"
+export function safeEvaluateMath(expr: string): number {
+  let pos = 0;
+  const str = expr.replace(/\s+/g, '');
+
+  function parseNumber(): number {
+    const start = pos;
+    if (str[pos] === '+' || str[pos] === '-') pos++;
+    let hasDot = false;
+    while (pos < str.length && ((str[pos] >= '0' && str[pos] <= '9') || (!hasDot && str[pos] === '.'))) {
+      if (str[pos] === '.') hasDot = true;
+      pos++;
+    }
+    const sub = str.slice(start, pos);
+    const val = parseFloat(sub);
+    return isNaN(val) ? 0 : val;
+  }
+
+  function parseFactor(): number {
+    if (pos >= str.length) return 0;
+    if (str[pos] === '(') {
+      pos++; // consume '('
+      const val = parseExpr();
+      if (pos < str.length && str[pos] === ')') pos++; // consume ')'
+      return val;
+    }
+    if (str[pos] === '+') {
+      pos++;
+      return parseFactor();
+    }
+    if (str[pos] === '-') {
+      pos++;
+      return -parseFactor();
+    }
+    return parseNumber();
+  }
+
+  function parseTerm(): number {
+    let left = parseFactor();
+    while (pos < str.length && (str[pos] === '*' || str[pos] === '/')) {
+      const op = str[pos++];
+      const right = parseFactor();
+      if (op === '*') {
+        left *= right;
+      } else {
+        left = right !== 0 ? left / right : 0;
+      }
+    }
+    return left;
+  }
+
+  function parseExpr(): number {
+    let left = parseTerm();
+    while (pos < str.length && (str[pos] === '+' || str[pos] === '-')) {
+      const op = str[pos++];
+      const right = parseTerm();
+      if (op === '+') {
+        left += right;
+      } else {
+        left -= right;
+      }
+    }
+    return left;
+  }
+
+  const result = parseExpr();
+  return Number.isFinite(result) ? result : 0;
+}
+
+export function evaluateCalc(
+  expression: string,
+  parentSize: number,
+  dpi = 96,
+  canvasWidth?: number,
+  canvasHeight?: number
+): number {
+  const cw = canvasWidth !== undefined ? canvasWidth : parentSize;
+  const ch = canvasHeight !== undefined ? canvasHeight : parentSize;
+
+  // Simple calc evaluator for things like "100% - 20px" or "50vw + 10px"
   // Remove calc() wrapper
   let expr = expression.trim();
   if (expr.startsWith('calc(') && expr.endsWith(')')) {
@@ -342,9 +422,12 @@ export function evaluateCalc(expression: string, parentSize: number, dpi = 96): 
     return String(parentSize * (parseFloat(pct) / 100));
   });
 
-  // Convert viewport relative units
-  expr = expr.replace(/(-?\d+(?:\.\d+)?)(vw|vh)/gi, (_, num) => {
-    return String(parentSize * (parseFloat(num) / 100));
+  // Convert viewport relative units: vw scales with canvasWidth, vh scales with canvasHeight
+  expr = expr.replace(/(-?\d+(?:\.\d+)?)vw/gi, (_, num) => {
+    return String(cw * (parseFloat(num) / 100));
+  });
+  expr = expr.replace(/(-?\d+(?:\.\d+)?)vh/gi, (_, num) => {
+    return String(ch * (parseFloat(num) / 100));
   });
 
   // Convert font relative units
@@ -364,13 +447,8 @@ export function evaluateCalc(expression: string, parentSize: number, dpi = 96): 
   });
 
   try {
-    // A safe-ish evaluation of basic math operations (+ - * /)
-    // using Function since this is an isolated, trusted AST expression
-    // and we only allow numbers and basic operators.
     if (/^[0-9\.\+\-\*\/\s\(\)]+$/.test(expr)) {
-      const result = new Function(`return (${expr})`)();
-      // Guard against division by zero producing Infinity/NaN layouts.
-      return Number.isFinite(result) ? result : 0;
+      return safeEvaluateMath(expr);
     }
   } catch (e) {
     // Fallback to 0 if syntax error in calc
@@ -382,8 +460,13 @@ export function resolveDimension(
   val: number | string | undefined,
   parentSize: number,
   intrinsicSize: number,
-  dpi = 96
+  dpi = 96,
+  canvasWidth?: number,
+  canvasHeight?: number
 ): number {
+  const cw = canvasWidth !== undefined ? canvasWidth : parentSize;
+  const ch = canvasHeight !== undefined ? canvasHeight : parentSize;
+
   if (val === undefined) return intrinsicSize;
   if (typeof val === 'number') return val;
   if (val === 'hug' || val === 'auto' || val === 'fit' || val === 'fit-content') return intrinsicSize;
@@ -395,11 +478,15 @@ export function resolveDimension(
       return isNaN(pct) ? 0 : parentSize * pct;
     }
     if (trimmed.startsWith('calc(')) {
-      return evaluateCalc(trimmed, parentSize, dpi);
+      return evaluateCalc(trimmed, parentSize, dpi, cw, ch);
     }
-    if (trimmed.endsWith('vw') || trimmed.endsWith('vh')) {
+    if (trimmed.endsWith('vw')) {
       const v = parseFloat(trimmed);
-      return isNaN(v) ? 0 : parentSize * (v / 100);
+      return isNaN(v) ? 0 : cw * (v / 100);
+    }
+    if (trimmed.endsWith('vh')) {
+      const v = parseFloat(trimmed);
+      return isNaN(v) ? 0 : ch * (v / 100);
     }
     if (trimmed.endsWith('em') || trimmed.endsWith('rem')) {
       const v = parseFloat(trimmed);
@@ -1104,8 +1191,8 @@ export class LayoutSolver {
         const childHRaw = child.size?.h;
         const cw = typeof childWRaw === 'number' ? childWRaw : (childWRaw === 'fill' ? 0 : cSize.w);
         const ch = typeof childHRaw === 'number' ? childHRaw : (childHRaw === 'fill' ? 0 : cSize.h);
-        const cx = resolveDimension(child.at?.x, canvasW, 0);
-        const cy = resolveDimension(child.at?.y, canvasH, 0);
+        const cx = resolveDimension(child.at?.x, canvasW, 0, 96, canvasW, canvasH);
+        const cy = resolveDimension(child.at?.y, canvasH, 0, 96, canvasW, canvasH);
         if (cx < minX) minX = cx;
         if (cy < minY) minY = cy;
         if (cx + cw > maxX) maxX = cx + cw;
@@ -1155,8 +1242,9 @@ export class LayoutSolver {
     const parentH = parentBox ? parentBox.h : canvasH;
     const intrinsic = this.computeIntrinsicSize(elem, canvasW, canvasH);
 
-    let w = resolveDimension(elem.size?.w, parentW, intrinsic.w);
-    let h = resolveDimension(elem.size?.h, parentH, intrinsic.h);
+    const dpi = this.doc.canvas?.dpi || 96;
+    let w = resolveDimension(elem.size?.w, parentW, intrinsic.w, dpi, canvasW, canvasH);
+    let h = resolveDimension(elem.size?.h, parentH, intrinsic.h, dpi, canvasW, canvasH);
 
     // Re-measure text height now that we know its layout width
     if (elem.type === 'text' && typeof elem.size?.h !== 'number') {
@@ -1174,7 +1262,7 @@ export class LayoutSolver {
         overflow: (elem as any).overflow,
         trim: (elem as any).trim
       });
-      h = resolveDimension(elem.size?.h, parentH, tLayout.height);
+      h = resolveDimension(elem.size?.h, parentH, tLayout.height, dpi, canvasW, canvasH);
     }
 
     if (elem.type === 'circle') {
@@ -1277,8 +1365,8 @@ export class LayoutSolver {
       } else {
         // Plain coordinates are relative to the containing element's origin
         // (canvas space for top-level elements).
-        const ox = resolveDimension(elem.at.x, parentW, 0);
-        const oy = resolveDimension(elem.at.y, parentH, 0);
+        const ox = resolveDimension(elem.at.x, parentW, 0, dpi, canvasW, canvasH);
+        const oy = resolveDimension(elem.at.y, parentH, 0, dpi, canvasW, canvasH);
         x = (parentBox ? parentBox.x : 0) + ox;
         y = (parentBox ? parentBox.y : 0) + oy;
       }
@@ -1390,8 +1478,8 @@ export class LayoutSolver {
       const childSizes = elem.children.map(child => {
         const cSize = this.computeIntrinsicSize(child, canvasW, canvasH);
         
-        let cw = resolveDimension(child.size?.w, w - paddingLeft - paddingRight, cSize.w);
-        let ch = resolveDimension(child.size?.h, h - paddingTop - paddingBottom, cSize.h);
+        let cw = resolveDimension(child.size?.w, w - paddingLeft - paddingRight, cSize.w, dpi, canvasW, canvasH);
+        let ch = resolveDimension(child.size?.h, h - paddingTop - paddingBottom, cSize.h, dpi, canvasW, canvasH);
 
         const isMainFill = dir === 'horizontal' ? child.size?.w === 'fill' : child.size?.h === 'fill';
         if (isMainFill) fillCount++;

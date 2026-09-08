@@ -296,6 +296,66 @@ stack #calmHero {
       </dos>
     </heuristic>
 
+    <heuristic id="SLOP-WEB-013" severity="error">
+      <trope_name>shadcn-Monochrom-Paralyse</trope_name>
+      <visible_telltale_sign>Unverändertes #09090B/Zinc-900 Darkmode-Template mit grauen 1px-Borders (#27272A) und #FAFAFA Text völlig ohne eigene Farbtemperatur oder Marken-Akzente.</visible_telltale_sign>
+      <why_it_happens>v0, Lovable und Bolt nutzen shadcn-Default-Tokens ohne Brand-Customizing.</why_it_happens>
+      <donts>
+        <dont>Kein reines Standard-Zinc ohne subtile Markentemperatur (warmes Off-Black oder kühles Tiefblau) verwenden.</dont>
+      </donts>
+      <dos>
+        <do>Eigene Markenfarbwerte und gezielte semantische Primärakzente setzen.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-WEB-014" severity="warning">
+      <trope_name>Ornamentales Live-Pulse Eyebrow-Badge</trope_name>
+      <visible_telltale_sign>Zentrierte Pille über der H1 mit grün blinkendem Deko-Punkt ('v2.0 Live Beta'), ohne dass reale Telemetriedaten vorliegen.</visible_telltale_sign>
+      <why_it_happens>Künstliche Erzeugung von Dringlichkeit und Aktivität.</why_it_happens>
+      <donts>
+        <dont>Keine dekorativen grünen Blink-Punkte auf statische Marketing-Headlines kleben.</dont>
+      </donts>
+      <dos>
+        <do>Klares typografisches Kicker-Label nutzen oder Signalleuchten für reale Statusdaten reservieren.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-WEB-015" severity="error">
+      <trope_name>Russian-Doll Container Nesting (Matrjoschka-Karten)</trope_name>
+      <visible_telltale_sign>Verschachtelung von 3 bis 4 Karten ineinander, jeweils mit 1px-Border und 16-24px Padding, was massiven toten Raum erzeugt.</visible_telltale_sign>
+      <why_it_happens>LLMs erzeugen für jede logische Gruppierung reflexartig einen neuen umschließenden Rahmen.</why_it_happens>
+      <donts>
+        <dont>Keine Boxen in Boxen mit repetitiven Rahmen schachteln.</dont>
+      </donts>
+      <dos>
+        <do>Flache Layout-Hierarchien mit typografischer Gliederung und subtilen Flächennuancen bauen.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-WEB-016" severity="warning">
+      <trope_name>Endlos-Marquee erfundener Partner-Logos</trope_name>
+      <visible_telltale_sign>Horizontal endlos durchlaufendes Band aus 6 grauen Phantasie-Logos (Sphere, Apex, Vortex, Polymer).</visible_telltale_sign>
+      <why_it_happens>Imitation von Social-Proof-Mustern ohne echte Kundenbelege.</why_it_happens>
+      <donts>
+        <dont>Keine Fake-Firmenlogos in animierten Marquees als Pseudo-Kundenbeweis einsetzen.</dont>
+      </donts>
+      <dos>
+        <do>Echte Zertifizierungen, verifizierbare Kunden oder selbstbewussten Weißraum zeigen.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-GEOM-001" severity="fatal">
+      <trope_name>Konzentrischer Radien-Bruch (Soap inside Soap)</trope_name>
+      <visible_telltale_sign>Ein abgerundetes Kind-Element im Container besitzt denselben oder einen größeren Radius wie die Außenkarte (R_child >= R_parent), was zu optisch gequetschten Ecken führt.</visible_telltale_sign>
+      <why_it_happens>Unreflektierte Wiederverwendung fixer Radius-Tokens ohne Berücksichtigung des Innenabstands.</why_it_happens>
+      <donts>
+        <dont>Niemals identische große Radien (z. B. 16px in 16px) bei verschachtelten Containern nutzen.</dont>
+      </donts>
+      <dos>
+        <do>Formel für konzentrische Rundung einhalten: R_inner = max(0, R_outer - padding).</do>
+      </dos>
+    </heuristic>
+
   </domain>
 
   <!-- ====================================================================== -->
@@ -1081,6 +1141,152 @@ stack #calmHero {
       </donts>
       <dos>
         <do>Saubere mathematische Hex-Farbwerte in TOAD deklarieren (fill: #FFFFFF;), statt gerasterte Farbflächen zu importieren.</do>
+      </dos>
+    </heuristic>
+
+  </domain>
+
+  <!-- ====================================================================== -->
+  <!-- DOMAIN 12: PRINT, EDITORIAL & POSTER SLOP                              -->
+  <!-- ====================================================================== -->
+  <domain id="print_editorial" name="Print, Editorial &amp; Poster Design">
+
+    <heuristic id="SLOP-PRINT-001" severity="fatal">
+      <trope_name>Swiss-Slop &amp; Grid Cosplay</trope_name>
+      <visible_telltale_sign>Willkürliche Passkreuze (+, ⌖) und Messskalen >15mm innerhalb des Nutzlayouts; gigantische, bedeutungslose Ziffern ('01', '08') und Pseudo-Schweizer Fachbegriffe als reiner Deko-Sticker.</visible_telltale_sign>
+      <why_it_happens>Oberflächliche Imitation der Zürcher Schule (Müller-Brockmann) als grafisches Trend-Klischee.</why_it_happens>
+      <donts>
+        <dont>Keine falschen Passermarken oder Zier-Koordinaten ins Zentrum des Kunstwerks setzen.</dont>
+      </donts>
+      <dos>
+        <do>Echte modulare Rastersysteme konstruieren; technische Druckmarken gehören ausschließlich in den Anschnittbereich.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-PRINT-002" severity="error">
+      <trope_name>Unscannable Barcode &amp; QR Decals</trope_name>
+      <visible_telltale_sign>Barcodes und QR-Codes als rein dekorative Sticker in Ecken platziert, mit verletzter Ruhezone (&lt; 10x Modulbreite) oder abgerundeten Vektorkanten.</visible_telltale_sign>
+      <why_it_happens>Fauler 'Industrial/Techwear'-Reflex zur Kantenbefüllung.</why_it_happens>
+      <donts>
+        <dont>Niemals ungültige oder unleserliche Pseudo-Strichcodes auf Postern platzieren.</dont>
+      </donts>
+      <dos>
+        <do>Valide ISO-Vektor-Barcodes mit korrekter Ruhezone und mathematischer Prüfziffer verwenden.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-PRINT-003" severity="warning">
+      <trope_name>Telemetrie-Stamping &amp; Null-Island-GPS</trope_name>
+      <visible_telltale_sign>Monospace-Koordinaten ('LAT 35°41'N...') und erfundene Kamera-EXIF-Strings an den Rändern von Plakaten und Flyern.</visible_telltale_sign>
+      <why_it_happens>Lückenfüller für fehlendes Vertrauen in echten Weißraum.</why_it_happens>
+      <donts>
+        <dont>Keine Phantasie-Koordinaten (Null Island 0,0 oder Shibuya) als Deko-Rauschen nutzen.</dont>
+      </donts>
+      <dos>
+        <do>Echte Metadaten (Kolophon, Papiergrammatur, Schriftenliste, ISO-Profil) dokumentieren oder leeren Raum wirken lassen.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-PRINT-004" severity="warning">
+      <trope_name>Analog Laundering (Uniform Noise Washing)</trope_name>
+      <visible_telltale_sign>Homogenes digitales Perlin-Rauschen flach über Vektorgrafiken gekippt, um Midjourney-Glattheit als 'Risographie' umzulügen.</visible_telltale_sign>
+      <why_it_happens>Künstliche Textur-Injektion ohne Helligkeitsmodulation.</why_it_happens>
+      <donts>
+        <dont>Kein flaches, unmoduliertes Digitalrauschen über Vektoren legen.</dont>
+      </donts>
+      <dos>
+        <do>Echte Papiertexturen mit Helligkeitsmodulation oder stochastische FM-Rasterung nutzen.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-PRINT-005" severity="error">
+      <trope_name>Mockup-Crutch &amp; Knitterfalten-Displacement-Defizit</trope_name>
+      <visible_telltale_sign>Digitale Masterdatei enthält eingebrannte 4-fach Knitterfalten, während Typografie mit 0° linearer Perfektion unbeeinflusst quer über die 3D-Kanten läuft.</visible_telltale_sign>
+      <why_it_happens>Verwendung von Free-PSD-Mockup-Overlays ohne Vektorumschlag.</why_it_happens>
+      <donts>
+        <dont>Keine Fake-Papierfalten in die digitale Reinzeichnung einbrennen.</dont>
+      </donts>
+      <dos>
+        <do>Digitale Reinzeichnungen plan und rein anlegen; Falzungen nur als reale Druckverarbeitung einsetzen.</do>
+      </dos>
+    </heuristic>
+
+  </domain>
+
+  <!-- ====================================================================== -->
+  <!-- DOMAIN 13: DATA VISUALIZATION & DASHBOARD SLOP                         -->
+  <!-- ====================================================================== -->
+  <domain id="dataviz_dashboards" name="Data Visualization &amp; Dashboard Aesthetics">
+
+    <heuristic id="SLOP-DASH-001" severity="fatal">
+      <trope_name>Hero Fake-Dashboard Mirage</trope_name>
+      <visible_telltale_sign>Dekorativer Dashboard-Screenshot im Hero mit glatter, monoton nach oben rechts ansteigender Kurve und lila Verlauf, aber ohne Achsen, Einheiten oder Skalen.</visible_telltale_sign>
+      <why_it_happens>LLMs erzeugen generische Software-Attrappen statt echter Fachanwendungen.</why_it_happens>
+      <donts>
+        <dont>Keine unbeschrifteten Phantasie-Kurven als Hero-Visual platzieren.</dont>
+      </donts>
+      <dos>
+        <do>Reale Produkt-Interfaces mit echten Datendomänen und beschrifteten Achsen zeigen.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-VIZ-001" severity="fatal">
+      <trope_name>Truncated Axis Distortion (The Fox News Bar)</trope_name>
+      <visible_telltale_sign>Säulendiagramm startet bei Y_min > 0, wodurch minimale Abweichungen von 0.5% wie eine Verzehnfachung wirken (Tufte Lie Factor >> 1.0).</visible_telltale_sign>
+      <why_it_happens>Künstliche Dramatisierung von Messwerten.</why_it_happens>
+      <donts>
+        <dont>Niemals die Null-Basislinie bei Säulen- oder Balkencharts abschneiden.</dont>
+      </donts>
+      <dos>
+        <do>Immer Y_min = 0 erzwingen; für minimale Deltas explizite Liniendiagramme oder Differenzcharts nutzen.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-VIZ-002" severity="error">
+      <trope_name>Technicolor Confusion (Regenbogen für Binärdaten)</trope_name>
+      <visible_telltale_sign>6 schrille Spektralfarben für simple sequentielle oder binäre Zustände (Ja/Nein).</visible_telltale_sign>
+      <why_it_happens>Fehlendes Verständnis für wahrnehmungsgetreue Farbskalen.</why_it_happens>
+      <donts>
+        <dont>Keine ungerichteten Regenbogenpaletten für geordnete Messreihen nutzen.</dont>
+      </donts>
+      <dos>
+        <do>Monochrome Helligkeitsrampen oder wissenschaftliche Skalen (Viridis/Cividis) einsetzen.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-VIZ-003" severity="error">
+      <trope_name>Eyecandy Hula-Hoop Donut</trope_name>
+      <visible_telltale_sign>8px dünner Donut-Ring mit 10+ unbeschrifteten Segmenten, ohne Zentrums-KPI und ohne lesbare Legende.</visible_telltale_sign>
+      <why_it_happens>Donut-Charts als rein dekorative Kreisornamente.</why_it_happens>
+      <donts>
+        <dont>Keine unlesbaren Mehrsegment-Ringe als Dashboard-Füllmasse verwenden.</dont>
+      </donts>
+      <dos>
+        <do>Maximal 4-5 aggregierte Kategorien mit fettem Kern-KPI im Zentrum darstellen.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-VIZ-004" severity="fatal">
+      <trope_name>Isometrischer 3D-Balken- &amp; Torten-Betrug</trope_name>
+      <visible_telltale_sign>3D-Perspektivenverzerrung: Vordere 20%-Stücke wirken optisch größer als hintere 35%-Segmente.</visible_telltale_sign>
+      <why_it_happens>Verwechslung von Informationsgrafik mit 3D-Videospielgrafik.</why_it_happens>
+      <donts>
+        <dont>Niemals Pseudo-3D-Extrusion auf Datenvisualisierungen anwenden.</dont>
+      </donts>
+      <dos>
+        <do>Orthogonale 2D-Grafiken nutzen, bei denen Pixelfläche strikt proportional zum Datenwert ist.</do>
+      </dos>
+    </heuristic>
+
+    <heuristic id="SLOP-DECK-001" severity="warning">
+      <trope_name>Die 4-Schritte-Chevron-Pfeil-Schablone</trope_name>
+      <visible_telltale_sign>Jeder Workflow wird starr in 4 gleich breite Pfeile gepresst ('Discover -> Define -> Develop -> Deliver').</visible_telltale_sign>
+      <why_it_happens>Stereotype Berater- und Agentur-Schablone moderner Slide-Generatoren.</why_it_happens>
+      <donts>
+        <dont>Keine komplexen Prozesse in unreflektierte 4-Pfeil-Einheitsbänder pressen.</dont>
+      </donts>
+      <dos>
+        <do>Reale Topologien mit Feedback-Schleifen und proportionalen Zeitachsen modellieren.</do>
       </dos>
     </heuristic>
 

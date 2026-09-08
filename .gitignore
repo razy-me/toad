@@ -29,3 +29,6 @@ _agents/
 
 # Fonts directory for local PSD/Photopea drag & drop
 fonts/
+
+# Internal brand guidelines & local branding definitions
+the_seed/toad_branding/

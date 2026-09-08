@@ -72,6 +72,12 @@ export class Parser {
   }
 
   public parse(): DocumentNode {
+    for (const tok of this.tokens) {
+      if (tok.type === TokenType.STRING && tok.unterminated) {
+        this.reportError('Unterminated string literal', tok.loc);
+      }
+    }
+
     const startLoc = this.peek().loc.start;
     const directives: DirectiveNode[] = [];
     const variables: VariableDeclarationNode[] = [];

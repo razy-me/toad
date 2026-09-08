@@ -18,20 +18,23 @@
 @font "./fonts/consola.ttf" as "Consolas" weight: 400 style: normal;
 @font "./fonts/consolab.ttf" as "Consolas" weight: 700 style: normal;
 
+// --- Central Brand Tokens ---
+@import "../../../the_seed/toad_branding/toad_brand_tokens.toad";
+
 // --- Design Tokens & Palette ---
->fontDisplay    = "Segoe UI, -apple-system, sans-serif";
->fontMono       = "Consolas, monospace";
+>fontDisplay    = >toadFontDisplay;
+>fontMono       = >toadFontMono;
 
->bgCanvas       = #080c14;
->bgCard         = #0e1626;
+>bgCanvas       = >toadEmeraldDeep;
+>bgCard         = >toadCardDark;
 
->borderMuted    = alpha(#ffffff, 0.08);
+>borderMuted    = >toadBorderDark;
 >gridHairline   = alpha(#ffffff, 0.04);
->crosshairColor = alpha(#10b981, 0.50);
+>crosshairColor = alpha(>toadEmerald, 0.70);
 
->toadEmerald    = #10b981;
->toadWhite      = #ffffff;
->textMuted      = #94a3b8;
+>toadEmerald    = >toadEmeraldBase; // #064E3B Tief-Smaragdgrün
+>toadWhite      = >toadParchment;   // #F8E7C9 Warmes Champagner-Parchment
+>textMuted      = >toadSandLabel;
 
 // --- Canvas Definition: 1920 x 1080 px (Master Architectural Brand Sheet) ---
 canvas "ToadBrandSheet" {

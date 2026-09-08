@@ -45,6 +45,13 @@ describe('Commander CLI Tool (toad)', () => {
       expect(optionNames).toContain('--watch');
       expect(optionNames).toContain('--quality');
     });
+
+    it('defines list command with alias ls', () => {
+      const cli = createCli();
+      const listCmd = cli.commands.find(c => c.name() === 'list');
+      expect(listCmd).toBeDefined();
+      expect(listCmd!.alias()).toBe('ls');
+    });
   });
 
   describe('CLI Help & Version Output', () => {
@@ -111,6 +118,17 @@ describe('Commander CLI Tool (toad)', () => {
       expect(fs.existsSync(path.join(outDir, 'sample_shapes.png'))).toBe(true);
       expect(fs.existsSync(path.join(outDir, 'sample_shapes.jpg'))).toBe(true);
       expect(fs.existsSync(path.join(outDir, 'sample_shapes.psd'))).toBe(true);
+    });
+
+    it('lists all .toad files via "list" and "ls" commands', async () => {
+      const { stdout: stdoutList } = await execAsync('node ./dist/cli.js list');
+      expect(stdoutList).toContain('Suche nach .toad-Dateien');
+      expect(stdoutList).toContain('.toad-Datei(en) gefunden');
+      expect(stdoutList).toContain('toad_brand_sheet.toad');
+
+      const { stdout: stdoutLs } = await execAsync('node ./dist/cli.js ls');
+      expect(stdoutLs).toContain('Suche nach .toad-Dateien');
+      expect(stdoutLs).toContain('.toad-Datei(en) gefunden');
     });
   });
 

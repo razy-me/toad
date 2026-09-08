@@ -17,22 +17,25 @@
 @font "./fonts/consola.ttf" as "Consolas" weight: 400 style: normal;
 @font "./fonts/consolab.ttf" as "Consolas" weight: 700 style: normal;
 
-// --- Design Tokens & Palette ---
->fontDisplay    = "Segoe UI, -apple-system, sans-serif";
->fontMono       = "Consolas, monospace";
+// --- Central Brand Tokens ---
+@import "../../../the_seed/toad_branding/toad_brand_tokens.toad";
 
->bgCanvas       = #080c14;
->bgCardDark     = #0e1626;
+// --- Design Tokens & Palette (Synchronized with Central Tokens) ---
+>fontDisplay    = >toadFontDisplay;
+>fontMono       = >toadFontMono;
+
+>bgCanvas       = >toadEmeraldDeep;
+>bgCardDark     = >toadCardDark;
 >bgCardLight    = #f8fafc;
 
->borderDark     = alpha(#ffffff, 0.08);
+>borderDark     = >toadBorderDark;
 >borderLight    = alpha(#0f172a, 0.12);
 >gridHairline   = alpha(#ffffff, 0.04);
->crosshairColor = alpha(#10b981, 0.50);
+>crosshairColor = alpha(>toadEmerald, 0.70);
 
->toadEmerald    = #10b981;
->toadWhite      = #ffffff;
->textMuted      = #94a3b8;
+>toadEmerald    = >toadEmeraldBase; // #064E3B Alleinige Primärfarbe
+>toadWhite      = >toadParchment;   // #F8E7C9 Sekundärfarbe (Warmes Champagner-Parchment)
+>textMuted      = >toadSandLabel;
 >textDark       = #0f172a;
 >textDarkMuted  = #64748b;
 
@@ -456,7 +459,7 @@ stack #mainContainer {
                     font-family: >fontMono;
                     font-size: 13.5px;
                     font-weight: 700;
-                    color: #34d399;
+                    color: >toadParchment;
                 }
 
                 text #termLine4 {

@@ -17,19 +17,14 @@
 @font "./fonts/consola.ttf" as "Consolas" weight: 400 style: normal;
 @font "./fonts/consolab.ttf" as "Consolas" weight: 700 style: normal;
 
-// --- Design Tokens & Palette ---
->fontDisplay    = "Segoe UI, -apple-system, sans-serif";
->fontMono       = "Consolas, monospace";
-
->bgDark         = #080c14;
->toadEmerald    = #10b981;
->toadWhite      = #ffffff;
+// --- Central Brand Tokens ---
+@import "../../../the_seed/toad_branding/toad_brand_tokens.toad";
 
 // --- Canvas Definition: 1024 x 1024 px (1:1 Master App Icon & Emblem) ---
 canvas "ToadLogoMark" {
     size: 1024px 1024px;
-    font-family: >fontDisplay;
-    background: >bgDark;
+    font-family: >toadFontDisplay;
+    background: >toadBgDark;
     export: all;
     quality: 100;
 }
@@ -64,14 +59,14 @@ stack #masterStack {
             // Left Eye Dome
             circle #eyeLeftDome {
                 size: 130px;
-                fill: >toadWhite;
+                fill: >toadParchment;
                 at: (30px, 0px);
             }
 
             // Right Eye Dome
             circle #eyeRightDome {
                 size: 130px;
-                fill: >toadWhite;
+                fill: >toadParchment;
                 at: (220px, 0px);
             }
 
@@ -79,7 +74,7 @@ stack #masterStack {
             rect #bodyCapsule {
                 size: 380px 190px;
                 radius: 95px;
-                fill: >toadWhite;
+                fill: >toadParchment;
                 at: (0px, 70px);
             }
 
@@ -106,13 +101,13 @@ stack #masterStack {
             content: "toad";
             font-size: 76px;
             font-weight: 700;
-            color: >toadWhite;
+            color: >toadParchment;
             letter-spacing: -2.5px;
         }
 
         text #toadTagline {
             content: "DESIGN GRAPHICS AT THE SPEED OF CODE";
-            font-family: >fontMono;
+            font-family: >toadFontMono;
             font-size: 12px;
             font-weight: 700;
             color: >toadEmerald;

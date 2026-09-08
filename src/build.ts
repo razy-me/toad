@@ -115,6 +115,7 @@ export async function compileToad(
 
   // 4. Resolve imports, variables, and components
   const resolved = await resolveImportsAndComponents(ast, resolvedEntry);
+  AstCache.getInstance().setDependencies(resolvedEntry, resolved.dependencies || []);
 
   // Register inline @font directives if present
   if (resolved.fonts && resolved.fonts.length > 0) {

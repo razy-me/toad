@@ -11,7 +11,7 @@ interface Point {
   y: number;
 }
 
-interface CubicSegment {
+export interface CubicSegment {
   p0: Point; // Start
   cp1: Point; // Control point 1
   cp2: Point; // Control point 2
@@ -184,7 +184,7 @@ function arcToCubicSegments(
 /**
  * Parses an SVG path `d` string into a list of cubic curves per subpath.
  */
-function svgPathToSubpaths(d: string): Array<{ closed: boolean; segments: CubicSegment[] }> {
+export function svgPathToSubpaths(d: string): Array<{ closed: boolean; segments: CubicSegment[] }> {
   const commands = tokenizeSvgPath(d);
   const subpaths: Array<{ closed: boolean; segments: CubicSegment[] }> = [];
 

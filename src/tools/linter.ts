@@ -237,15 +237,19 @@ export function lintDocument(doc: DocumentNode): Diagnostic[] {
     });
   }
 
-  // Check for unused top-level variables
-  for (const [name, decl] of declaredGlobalVars.entries()) {
-    if (!referencedGlobalVars.has(name)) {
-      diagnostics.push({
-        code: 'LINT-UNUSED-VAR',
-        message: `Variable '>${name}' is declared but never used.`,
-        severity: 'warning',
-        loc: decl.loc
-      });
+  // Check for unused top-level variables. Suppress for standalone library/tokens files
+  // that do not declare a canvas (as their declared variables are intended for @import).
+  const hasCanvas = Boolean(doc.canvas || (doc.canvases && doc.canvases.length > 0));
+  if (hasCanvas) {
+    for (const [name, decl] of declaredGlobalVars.entries()) {
+      if (!referencedGlobalVars.has(name)) {
+        diagnostics.push({
+          code: 'LINT-UNUSED-VAR',
+          message: `Variable '>${name}' is declared but never used.`,
+          severity: 'warning',
+          loc: decl.loc
+        });
+      }
     }
   }
 

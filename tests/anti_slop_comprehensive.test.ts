@@ -369,4 +369,148 @@ describe('Anti-AI-Slop Comprehensive Engine (All 26 Heuristics & Drastic Penalti
     expect(audit.categories.antiSlop.grade).toBe('A+');
   });
 
+  it('detects SLOP-WEB-017: Fake Social Proof Avatar Overlap Pile', async () => {
+    const src = `
+      canvas { size: 1000px 800px; background: #ffffff; }
+      circle #av1 { at: 50px 100px; size: 40px; fill: #334155; }
+      circle #av2 { at: 75px 100px; size: 40px; fill: #475569; }
+      circle #av3 { at: 100px 100px; size: 40px; fill: #64748b; }
+      circle #av4 { at: 125px 100px; size: 40px; fill: #94a3b8; }
+      text #proofText {
+        at: 180px 110px;
+        content: "Loved by 10,000+ founders worldwide";
+        font-size: 14px;
+        color: #0f172a;
+      }
+    `;
+    const audit = await auditSnippet(src);
+    const issue = audit.issues.find(i => i.code === 'SLOP-WEB-017');
+    expect(issue).toBeDefined();
+    expect(issue?.severity).toBe('error');
+    expect(issue?.message).toContain('Fake Social Proof Pile');
+  });
+
+  it('detects SLOP-UI-001: Contradictory Virtual Lighting Vectors', async () => {
+    const src = `
+      canvas { size: 1000px 800px; background: #ffffff; }
+      rect #cardA {
+        at: 50px 50px; size: 200px 150px; fill: #f1f5f9;
+        shadow: 0px 16px 24px alpha(#000000, 0.2); // Light from top (shadow down)
+      }
+      rect #cardB {
+        at: 300px 50px; size: 200px 150px; fill: #f1f5f9;
+        shadow: 0px -16px 24px alpha(#000000, 0.2); // Contradictory: Light from bottom (shadow up)
+      }
+      rect #cardC {
+        at: 550px 50px; size: 200px 150px; fill: #f1f5f9;
+        shadow: 0px 12px 20px alpha(#000000, 0.15);
+      }
+    `;
+    const audit = await auditSnippet(src);
+    const issue = audit.issues.find(i => i.code === 'SLOP-UI-001');
+    expect(issue).toBeDefined();
+    expect(issue?.severity).toBe('error');
+    expect(issue?.message).toContain('Specular Chaos');
+  });
+
+  it('detects SLOP-UI-002: Luminous / Inverted Shadows', async () => {
+    const src = `
+      canvas { size: 800px 600px; background: #0f172a; } // Dark background (Luma ~0.10)
+      rect #cardLuma {
+        at: 100px 100px; size: 300px 200px; fill: #1e293b;
+        shadow: 0px 10px 30px #ffffff; // Bright white shadow on dark canvas
+      }
+    `;
+    const audit = await auditSnippet(src);
+    const issue = audit.issues.find(i => i.code === 'SLOP-UI-002');
+    expect(issue).toBeDefined();
+    expect(issue?.severity).toBe('error');
+    expect(issue?.message).toContain('Inverted Shadow');
+  });
+
+  it('detects SLOP-TYPE-011: Leading Collision & Baseline Strangulation', async () => {
+    const src = `
+      canvas { size: 1000px 800px; background: #ffffff; }
+      text #tightTitle {
+        at: 50px 50px;
+        size: 500px;
+        font-size: 48px;
+        line-height: 44px; // lineHeight (44) < fontSize (48) * 1.08 -> Leading collision
+        content: "Überragende Wachstums-Architektur";
+        color: #0f172a;
+      }
+    `;
+    const audit = await auditSnippet(src);
+    const issue = audit.issues.find(i => i.code === 'SLOP-TYPE-011');
+    expect(issue).toBeDefined();
+    expect(issue?.severity).toBe('error');
+    expect(issue?.message).toContain('Leading collision');
+  });
+
+  it('detects SLOP-GFX-010: Faux-Brutalist Decorative Barcode with Rounded Corners', async () => {
+    const src = `
+      canvas { size: 800px 600px; background: #ffffff; }
+      rect #barcode_sticker {
+        at: 50px 50px;
+        size: 180px 80px;
+        fill: #000000;
+        radius: 12px; // Rounded corners on a barcode
+      }
+    `;
+    const audit = await auditSnippet(src);
+    const issue = audit.issues.find(i => i.code === 'SLOP-GFX-010');
+    expect(issue).toBeDefined();
+    expect(issue?.severity).toBe('error');
+    expect(issue?.message).toContain('Unscannable decorative barcode');
+  });
+
+  it('detects SLOP-DASH-005: Chromatic Semantic Polarity Inversion (Negative Churn in Green)', async () => {
+    const src = `
+      canvas { size: 800px 600px; background: #ffffff; }
+      text #churnMetric {
+        at: 50px 50px;
+        font-size: 24px;
+        color: #22c55e; // Green color on negative churn loss
+        content: "-18% Net Revenue Retention Churn";
+      }
+    `;
+    const audit = await auditSnippet(src);
+    const issue = audit.issues.find(i => i.code === 'SLOP-DASH-005');
+    expect(issue).toBeDefined();
+    expect(issue?.severity).toBe('error');
+    expect(issue?.message).toContain('Polarity Inversion');
+  });
+
+  it('computes mathematical telemetry (Centroid, Voronoi Gini, Modular Scale R2, and OKLCH entropy)', async () => {
+    const src = `
+      canvas { size: 1000px 800px; background: #ffffff; }
+      rect #heroCard {
+        at: 100px 80px; size: 800px 400px; fill: #1e293b; radius: 8px;
+        text #t1 { at: 40px 40px; font-size: 32px; content: "Titel"; color: #ffffff; }
+        text #t2 { at: 40px 100px; font-size: 25px; content: "Subtitel"; color: #cbd5e1; }
+        text #t3 { at: 40px 150px; font-size: 20px; content: "Body Text Fließtext"; color: #94a3b8; }
+        text #t4 { at: 40px 190px; font-size: 16px; content: "Fußnote"; color: #64748b; }
+      }
+    `;
+    const audit = await auditSnippet(src);
+    expect(audit.metrics.opticalCentroid).toBeDefined();
+    expect(audit.metrics.opticalCentroid?.visualMassCenter.x).toBeGreaterThan(0);
+    expect(audit.metrics.whitespaceDistribution).toBeDefined();
+    expect(audit.metrics.whitespaceDistribution?.voronoiGini).toBeGreaterThan(0);
+    expect(audit.metrics.typographicTelemetry).toBeDefined();
+    // 16, 20, 25, 32 forms a Major Third scale (1.25)
+    expect(audit.metrics.typographicTelemetry?.modularScale.r2Score).toBeGreaterThanOrEqual(0.95);
+    expect(audit.metrics.colorTelemetry).toBeDefined();
+    expect(audit.metrics.colorTelemetry?.shannonEntropyBits).toBeGreaterThan(0);
+
+    const report = formatTerminalReport(audit);
+    expect(report).toContain('Mathematische Telemetrie & Computational Design');
+    expect(report).toContain('Optischer Schwerpunkt');
+    expect(report).toContain('Raum-Architektur');
+    expect(report).toContain('Typo-Skalen-Fidelity');
+    expect(report).toContain('OKLCH-Farbspektrum');
+    expect(report).toContain('59 Heuristiken aktiv');
+  });
+
 });
+

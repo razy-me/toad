@@ -111,6 +111,7 @@ export interface Token {
   numberValue?: number;
   unit?: string;
   loc: SourceLocation;
+  unterminated?: boolean;
 }
 
 const KEYWORDS: Record<string, TokenType> = {
@@ -451,10 +452,12 @@ export class Lexer {
   private scanString(start: Position, quoteChar: string): Token {
     this.advance(); // consume quote
     let str = '';
+    let closed = false;
     while (this.offset < this.source.length) {
       const char = this.peek();
       if (char === quoteChar) {
         this.advance(); // closing quote
+        closed = true;
         break;
       }
       if (char === '\\') {
@@ -468,17 +471,35 @@ export class Lexer {
         else if (esc === '"') str += '"';
         else if (esc === "'") str += "'";
         else if (esc === 'u') {
+          if (this.peek() === '{') {
+            this.advance(); // consume '{'
+            let hex = '';
+            while (this.offset < this.source.length && /[0-9a-fA-F]/.test(this.peek())) {
+              hex += this.advance();
+            }
+            if (this.peek() === '}') this.advance();
+            const code = parseInt(hex, 16);
+            str += Number.isFinite(code) && code >= 0 ? String.fromCodePoint(code) : '\uFFFD';
+          } else {
+            let hex = '';
+            for (let i = 0; i < 4 && this.offset < this.source.length; i++) {
+              const c = this.peek();
+              if (!/[0-9a-fA-F]/.test(c)) break;
+              hex += this.advance();
+            }
+            if (hex.length === 0 && this.offset < this.source.length) this.advance();
+            const code = parseInt(hex, 16);
+            str += Number.isFinite(code) && code >= 0 && hex.length > 0 ? String.fromCharCode(code) : '\uFFFD';
+          }
+        } else if (esc === 'x') {
           let hex = '';
-          for (let i = 0; i < 4 && this.offset < this.source.length; i++) {
+          for (let i = 0; i < 2 && this.offset < this.source.length; i++) {
             const c = this.peek();
             if (!/[0-9a-fA-F]/.test(c)) break;
             hex += this.advance();
           }
-          // Guarantee scanner progress on malformed escapes and never emit a
-          // silent NUL from parseInt('') — use the replacement character.
-          if (hex.length === 0 && this.offset < this.source.length) this.advance();
           const code = parseInt(hex, 16);
-          str += Number.isFinite(code) && code > 0 ? String.fromCharCode(code) : '\uFFFD';
+          str += Number.isFinite(code) && code >= 0 && hex.length > 0 ? String.fromCharCode(code) : '\uFFFD';
         } else if (esc) {
           str += esc;
         }
@@ -490,7 +511,8 @@ export class Lexer {
     return {
       type: TokenType.STRING,
       value: str,
-      loc: { start, end: this.currentPosition(), file: this.filename }
+      loc: { start, end: this.currentPosition(), file: this.filename },
+      unterminated: !closed
     };
   }
 

@@ -17,6 +17,20 @@ import { LayoutResult, LayoutNode } from '../parser/math.js';
 import { DocumentNode } from '../parser/ast.js';
 import { parseColorToRgba, ColorRgba } from '../engine/drawUtils.js';
 import { runAntiSlopAudit, SlopContext } from './antiSlopRules.js';
+import {
+  calculateOpticalCentroid,
+  calculateWhitespaceDistribution,
+  OpticalCentroidResult,
+  WhitespaceDistributionResult
+} from './metrics/spatialDistribution.js';
+import {
+  analyzeTypographicTelemetry,
+  TypographicTelemetryResult
+} from './metrics/typographicAnalysis.js';
+import {
+  analyzeColorTelemetry,
+  ColorTelemetryResult
+} from './metrics/colorEntropy.js';
 
 export type AuditSeverity = 'pass' | 'info' | 'warn' | 'error';
 
@@ -120,6 +134,10 @@ export interface DesignAuditMetrics {
   paletteSwatches: ColorPaletteSwatch[];
   typeScale: TypeScaleEntry[];
   contrastPairs: ContrastAuditPair[];
+  opticalCentroid?: OpticalCentroidResult;
+  whitespaceDistribution?: WhitespaceDistributionResult;
+  typographicTelemetry?: TypographicTelemetryResult;
+  colorTelemetry?: ColorTelemetryResult;
 }
 
 export interface AuditReport {
@@ -366,6 +384,154 @@ function enrichFinding(f: AuditFinding): AuditFinding {
     case 'SLOP-LOGO-004':
       fixSnippet = 'Erhöhe die minimale Linienstärke im Logo auf mindestens 1.5px bis 2.0px für die Favicon-Skalierung.';
       axiom = 'SLOP-LOGO-004 (Favicon Micro-Detail Smear)';
+      break;
+    case 'SLOP-GEOM-001':
+      fixSnippet = 'Passe den Innenradius nach der Formel R_inner = max(0, R_outer - padding) an.';
+      axiom = 'SLOP-GEOM-001 (Concentric Radii Mismatch)';
+      break;
+    case 'SLOP-WEB-014':
+      fixSnippet = 'Entferne den dekorativen grünen Blink-Punkt oder nutze ein klares semantisches Kicker-Label.';
+      axiom = 'SLOP-WEB-014 (Ornamental Live-Pulse Badge)';
+      break;
+    case 'SLOP-WEB-015':
+      fixSnippet = 'Verflache die Container-Hierarchie und entferne überflüssige umschließende Boxen mit Rahmen.';
+      axiom = 'SLOP-WEB-015 (Russian-Doll Nesting)';
+      break;
+    case 'SLOP-DECK-002':
+      fixSnippet = 'Verzichte auf gigantische Satzzeichen als Füllgrafik; setze das Zitat typografisch edel in den Weißraum.';
+      axiom = 'SLOP-DECK-002 (Megalithic Quote Monument)';
+      break;
+    case 'SLOP-PRINT-001':
+      fixSnippet = 'Entferne Zier-Passmarken aus dem Layout; baue stattdessen ein echtes modulares Rastersystem.';
+      axiom = 'SLOP-PRINT-001 (Swiss-Slop & Grid Cosplay)';
+      break;
+    case 'SLOP-PRINT-003':
+      fixSnippet = 'Entferne beliebige GPS-Koordinaten; dokumentiere echte Kolophondaten oder lasse Negativraum wirken.';
+      axiom = 'SLOP-PRINT-003 (Telemetry Stamping)';
+      break;
+    case 'SLOP-DASH-001':
+      fixSnippet = 'Versehen Sie Datenkurven mit messbaren Achsen, Skalen und realistischen Datenpunkten.';
+      axiom = 'SLOP-DASH-001 (Hero Fake-Dashboard Mirage)';
+      break;
+    case 'SLOP-WEB-017':
+      fixSnippet = 'Verwende verifizierte Fallstudien mit echten Namen anstelle von generischen gestapelten Fake-Avataren.';
+      axiom = 'SLOP-WEB-017 (Fake Social Proof Avatar Pile)';
+      break;
+    case 'SLOP-WEB-018':
+      fixSnippet = 'Brich die stereotype 5-Stufen-Schablone auf: Nutze asymmetrisches Storytelling oder Split-Screen-Layouts.';
+      axiom = 'SLOP-WEB-018 (Stereotypical Hero Formula)';
+      break;
+    case 'SLOP-WEB-019':
+      fixSnippet = 'Erde frei schwebende Karten durch architektonische Helligkeitsabstufung und 1px Kantenlicht statt Riesen-Glows.';
+      axiom = 'SLOP-WEB-019 (Void Glow Halo Backlight)';
+      break;
+    case 'SLOP-WEB-020':
+      fixSnippet = 'Präsentiere maximal 2–3 ausführliche Testimonials mit konkreten Kennzahlen statt generischer Lobeshymnen-Raster.';
+      axiom = 'SLOP-WEB-020 (Infinite Testimonial Grid)';
+      break;
+    case 'SLOP-UI-001':
+      fixSnippet = 'Definiere eine einheitliche virtuelle Lichtquelle (z. B. 270° senkrecht von oben) für alle Schatten.';
+      axiom = 'SLOP-UI-001 (Contradictory Virtual Lighting)';
+      break;
+    case 'SLOP-UI-002':
+      fixSnippet = 'Schatten müssen Helligkeit subtrahieren (abdunkeln). Nutze abgedunkelte Farbtöne oder Alpha-Schwarz.';
+      axiom = 'SLOP-UI-002 (Luminous Inverted Shadows)';
+      break;
+    case 'SLOP-UI-003':
+      fixSnippet = 'Unterlege transluzentes Milchglas mit einem soliden Fallback (min. 85% Opazität) für WCAG-AA Lesbarkeit.';
+      axiom = 'SLOP-UI-003 (Glassmorphism Contrast Collapse)';
+      break;
+    case 'SLOP-UI-004':
+      fixSnippet = 'Halte mindestens 24px unteren Sicherheitsabstand (env(safe-area-inset-bottom)) für mobile Home-Indikatoren.';
+      axiom = 'SLOP-UI-004 (Safe-Area Blindness)';
+      break;
+    case 'SLOP-UI-005':
+      fixSnippet = 'Gestalte "Abbrechen" als dezenten Ghost-Button und hebe destruktive Aktionen klar asymmetrisch hervor.';
+      axiom = 'SLOP-UI-005 (Destructive Action Ambiguity)';
+      break;
+    case 'SLOP-UI-006':
+      fixSnippet = 'Verwende Status-Pills nur für Ausnahmen (Fehler/Warnungen) und fasse 100% laufende Systeme im Header zusammen.';
+      axiom = 'SLOP-UI-006 (Dead Status Pill Overkill)';
+      break;
+    case 'SLOP-TYPE-011':
+      fixSnippet = 'Vergrößere den Zeilenabstand bei Headlines auf mindestens 1.15em bis 1.25em, um Kollisionen zu verhindern.';
+      axiom = 'SLOP-TYPE-011 (Leading Collision & Baseline Strangulation)';
+      break;
+    case 'SLOP-TYPE-012':
+      fixSnippet = 'Vereinheitliche alle Navigations- und Menütexte durchgängig auf Sentence case oder striktes Title Case.';
+      axiom = 'SLOP-TYPE-012 (Inconsistent Title/Sentence Case)';
+      break;
+    case 'SLOP-TYPE-013':
+      fixSnippet = 'Verhindere isolierte Wörter am Zeilenende durch geschützte Leerzeichen oder text-wrap: balance.';
+      axiom = 'SLOP-TYPE-013 (Orphan & Widow Baseline Stragglers)';
+      break;
+    case 'SLOP-TYPE-014':
+      fixSnippet = 'Runde Textkoordinaten auf ganze Pixel (Math.round), um verwaschenes Subpixel-Rendern zu vermeiden.';
+      axiom = 'SLOP-TYPE-014 (Fractional Sub-Pixel Font Blur)';
+      break;
+    case 'SLOP-TYPE-015':
+      fixSnippet = 'Etabliere klaren Schriftgrößen-Kontrast (min. 1.5x Sprung zwischen Titel und Body) und nutze fette Schriftschnitte.';
+      axiom = 'SLOP-TYPE-015 (Hierarchy Gap Deficit)';
+      break;
+    case 'SLOP-GFX-009':
+      fixSnippet = 'Sortiere isometrische Vektoren strikt nach Tiefenformel: Tiefe = (x + y) / sqrt(2) + z.';
+      axiom = 'SLOP-GFX-009 (Impossible Isometric Spatial Intersection)';
+      break;
+    case 'SLOP-GFX-010':
+      fixSnippet = 'Entferne Eckenradien von Barcodes (radius: 0px;) und stelle intakte Ruhezonen für echte Lesbarkeit sicher.';
+      axiom = 'SLOP-GFX-010 (Faux-Brutalist Barcode Abuse)';
+      break;
+    case 'SLOP-GFX-011':
+      fixSnippet = 'Lösche dekorative Fake-Telemetriestrings und zeige stattdessen echte Produktionsdaten oder freien Weißraum.';
+      axiom = 'SLOP-GFX-011 (Telemetry Noise & Pseudocode Greebling)';
+      break;
+    case 'SLOP-GFX-012':
+      fixSnippet = 'Ersetze amorphe Shader-Ölfilm-Blobs durch strukturierte Typografie, technische Diagramme oder echte UI-Artefakte.';
+      axiom = 'SLOP-GFX-012 (Shader-Toy Iridescent Oil-Slick Blob)';
+      break;
+    case 'SLOP-PRINT-007':
+      fixSnippet = 'Präsentiere Druckentwürfe als ehrliche 2D-Vektorgrafik oder wende physikalisch korrekte Displacement-Maps an.';
+      axiom = 'SLOP-PRINT-007 (Fake Paper Fold Texture Deficit)';
+      break;
+    case 'SLOP-PRINT-008':
+      fixSnippet = 'Verschiebe Passermarken und Schnittzeichen vollständig in den externen Anschnittbereich (Slug Zone).';
+      axiom = 'SLOP-PRINT-008 (Pseudo-Swiss Crop Marks in Live Area)';
+      break;
+    case 'SLOP-PRINT-009':
+      fixSnippet = 'Nutze echte fotografierte Papierfasertexturen mit multiplizierender Luminanzdichte statt digitaler Gleichrauschfilter.';
+      axiom = 'SLOP-PRINT-009 (Analog Laundering Noise Washing)';
+      break;
+    case 'SLOP-PRINT-010':
+      fixSnippet = 'Vergrößere den Innenbund (Bundsteg) auf mindestens 20–25mm, damit kein Text im Bindefalz verschwindet.';
+      axiom = 'SLOP-PRINT-010 (Gutter Strangulation)';
+      break;
+    case 'SLOP-DASH-002':
+      fixSnippet = 'Modelliere reale Zeitreihendaten mit natürlicher Varianz und transparenten Messpunkten statt steriler Wunschkurven.';
+      axiom = 'SLOP-DASH-002 (Monotonic Utopian Curve)';
+      break;
+    case 'SLOP-DASH-003':
+      fixSnippet = 'Verankere Diagramme mit expliziten X/Y-Achsen, Zahlenwerten, Einheiten und einem klaren Nullpunkt.';
+      axiom = 'SLOP-DASH-003 (Ghost Axes & Disembodied Datapoints)';
+      break;
+    case 'SLOP-DASH-004':
+      fixSnippet = 'Begrenze Donut-Diagramme auf max. 4–5 Kategorien und platziere den aggregierten KPI-Wert fett im Zentrum.';
+      axiom = 'SLOP-DASH-004 (Rainbow Spectral Doughnut Catastrophe)';
+      break;
+    case 'SLOP-DASH-005':
+      fixSnippet = 'Nutze Grün für Wachstum/Erfolg und Rot/Rose für Verluste/Fehler (semantische Farbpolarität).';
+      axiom = 'SLOP-DASH-005 (Chromatic Semantic Polarity Inversion)';
+      break;
+    case 'SLOP-MOB-001':
+      fixSnippet = 'Baue echtes responsives Reflow: Einspaltiger Stack mit min. 16px Schriftgröße statt Verkleinern via zoom/scale.';
+      axiom = 'SLOP-MOB-001 (Desktop Viewport Zoom Trap)';
+      break;
+    case 'SLOP-MOB-002':
+      fixSnippet = 'Platziere primäre mobile Aktionen in der unteren Daumenzone (z. B. Sticky Bottom Bar) statt links oben.';
+      axiom = 'SLOP-MOB-002 (One-Thumb Hostility)';
+      break;
+    case 'SLOP-COLOR-003':
+      fixSnippet = 'Füge einen Zwischenfarbstop ein oder nutze OKLCH-Interpolation, um schmutzige Grauwerte in der Verlaufmitte zu verhindern.';
+      axiom = 'SLOP-COLOR-003 (Linear sRGB Dead-Zone Mud Gradient)';
       break;
     case 'A11Y-LOW-CONTRAST':
       fixSnippet = 'Erhöhe die Helligkeitsdifferenz zwischen Schrift und Hintergrund für WCAG AA Konformität (min. 4.5:1).';
@@ -746,6 +912,7 @@ export function auditDesign(
   // We measure root-level layout nodes to prevent double-counting children inside cards
   let occupiedArea = 0;
   for (const node of layout.nodes) {
+    if (node.parent || node.parentId) continue;
     // Skip full-canvas background rects (e.g. >= 90% of both dimensions)
     if (node.width >= canvasWidth * 0.90 && node.height >= canvasHeight * 0.90) continue;
     occupiedArea += Math.min(node.width * node.height, canvasArea);
@@ -754,6 +921,7 @@ export function auditDesign(
   // If there are no root non-background nodes (e.g. only canvas background + texts), measure text/shape bounds
   if (occupiedArea === 0) {
     for (const node of allNodes) {
+      if (node.parent || node.parentId) continue;
       if (node.width >= canvasWidth * 0.90 && node.height >= canvasHeight * 0.90) continue;
       occupiedArea += Math.min(node.width * node.height, canvasArea);
     }
@@ -1074,6 +1242,13 @@ export function auditDesign(
   const totalWarnings = uniqueFindings.filter(f => f.severity === 'warn').length;
   const slopFindings = uniqueFindings.filter(f => f.category === 'anti-slop' && f.severity !== 'pass').length;
 
+  // Advanced Statistical & Computational Design Telemetry
+  const opticalCentroid = calculateOpticalCentroid(allNodes, canvasWidth, canvasHeight);
+  const whitespaceDistribution = calculateWhitespaceDistribution(allNodes, canvasWidth, canvasHeight, negativeSpacePercent);
+  const typographicTelemetry = analyzeTypographicTelemetry(textNodes);
+  const allParsedColors = paletteSwatches.map(p => parseColorToRgba(p.hex));
+  const colorTelemetry = analyzeColorTelemetry(allParsedColors);
+
   const metrics: DesignAuditMetrics = {
     canvasWidth,
     canvasHeight,
@@ -1097,7 +1272,11 @@ export function auditDesign(
     elementCensus,
     paletteSwatches,
     typeScale,
-    contrastPairs
+    contrastPairs,
+    opticalCentroid,
+    whitespaceDistribution,
+    typographicTelemetry,
+    colorTelemetry
   };
 
   return {
@@ -1131,7 +1310,7 @@ export interface FormatReportOptions {
   showFixes?: boolean;
 }
 
-export function formatFixesSection(report: AuditReport): string {
+export function formatWarningsSection(report: AuditReport, options?: { standalone?: boolean }): string {
   const c = {
     bold: (s: string) => `\x1b[1m${s}\x1b[22m`,
     dim: (s: string) => `\x1b[2m${s}\x1b[22m`,
@@ -1147,18 +1326,137 @@ export function formatFixesSection(report: AuditReport): string {
 
   const stripAnsi = (str: string) => str.replace(/\x1b\[[0-9;]*m/g, '');
   const RULE_W = 74;
+  const topBorder = (title: string) => c.bold(`┌─ ${title} ${'─'.repeat(Math.max(2, RULE_W - stripAnsi(title).length - 5))}`);
   const midBorder = (title?: string) => {
     if (!title) return c.bold(`├${'─'.repeat(RULE_W - 1)}`);
     return c.bold(`├─ ${title} ${'─'.repeat(Math.max(2, RULE_W - stripAnsi(title).length - 5))}`);
   };
+  const bottomBorder = () => c.bold(`└${'─'.repeat(RULE_W - 1)}`);
   const gutter = (content = '') => c.bold('│  ') + content;
   const emptyGutter = () => c.bold('│');
 
   const lines: string[] = [];
   const activeIssues = report.findings.filter(f => f.severity !== 'pass');
 
+  if (options?.standalone) {
+    lines.push('');
+    lines.push(topBorder('⚠️ Begründungen für Bewertungen < 100% (Warnings & Ursachen)'));
+  } else {
+    lines.push(emptyGutter());
+    lines.push(midBorder('⚠️ Begründungen für Bewertungen < 100% (Warnings & Ursachen)'));
+  }
   lines.push(emptyGutter());
-  lines.push(midBorder('🔍 Befunde & Handlungsempfehlungen (Mit Quick-Fix)'));
+
+  if (activeIssues.length === 0) {
+    lines.push(gutter(c.green('   ✔ Alle Kategorien erreichen 100%. Keine Beanstandungen oder Warnungen vorhanden.')));
+  } else {
+    const categoryMappings: Array<{
+      key: keyof typeof report.categories;
+      matchCats: AuditCategory[];
+    }> = [
+      { key: 'accessibility', matchCats: ['accessibility', 'contrast'] },
+      { key: 'print', matchCats: ['print'] },
+      { key: 'typography', matchCats: ['typography'] },
+      { key: 'density', matchCats: ['density'] },
+      { key: 'antiSlop', matchCats: ['anti-slop'] },
+      { key: 'color', matchCats: ['color'] },
+      { key: 'geometry', matchCats: ['geometry', 'boundary'] },
+      { key: 'hygiene', matchCats: ['hygiene'] }
+    ];
+
+    const renderedIssues = new Set<AuditFinding>();
+
+    for (const entry of categoryMappings) {
+      const cat = report.categories[entry.key];
+      if (!cat) continue;
+      const catIssues = activeIssues.filter(f => entry.matchCats.includes(f.category));
+
+      if (cat.score < 100 || cat.warnings > 0 || cat.errors > 0 || catIssues.length > 0) {
+        lines.push(gutter(`   ${c.bold(c.cyan('📌 ' + cat.name))} ${c.bold(`[${cat.score}% / Note: ${cat.grade}]`)} ${c.dim(`— ${cat.errors} Fehler, ${cat.warnings} Warnung(en)`)}`));
+        lines.push(emptyGutter());
+
+        if (catIssues.length === 0) {
+          lines.push(gutter(c.yellow('     (Punktabzug durch übergreifende Kriterien)')));
+        } else {
+          for (const issue of catIssues) {
+            renderedIssues.add(issue);
+            const isErr = issue.severity === 'error';
+            const sevBadge = isErr ? c.bgRed(' ✖ ERROR ') : (issue.severity === 'warn' ? c.bgYellow(' ⚠ WARN ') : c.bgBlue(' ℹ NOTICE '));
+            const penaltyStr = isErr ? c.red('(-25 bis -35 Pkt)') : c.yellow('(-10 bis -18 Pkt)');
+
+            lines.push(gutter(`     ${sevBadge} ${c.bold(issue.code)} ${penaltyStr}`));
+            if (issue.nodeId) lines.push(gutter(`       ${c.bold('Ziel-Element:')} ${c.cyan(issue.nodeId)}`));
+            lines.push(gutter(`       ${c.bold('Begründung:')}   ${issue.message}`));
+            if (issue.axiom) lines.push(gutter(`       ${c.bold('Axiom/Regel:')}  ${c.dim(issue.axiom)}`));
+            if (issue.details) lines.push(gutter(`       ${c.bold('Details:')}      ${c.dim(issue.details)}`));
+            lines.push(gutter(c.dim(`       ${'─'.repeat(66)}`)));
+          }
+        }
+        lines.push(emptyGutter());
+      }
+    }
+
+    const unrenderedIssues = activeIssues.filter(f => !renderedIssues.has(f));
+    if (unrenderedIssues.length > 0) {
+      lines.push(gutter(`   ${c.bold(c.cyan('📌 Weitere Befunde & Abzüge'))}`));
+      lines.push(emptyGutter());
+      for (const issue of unrenderedIssues) {
+        const isErr = issue.severity === 'error';
+        const sevBadge = isErr ? c.bgRed(' ✖ ERROR ') : (issue.severity === 'warn' ? c.bgYellow(' ⚠ WARN ') : c.bgBlue(' ℹ NOTICE '));
+        const penaltyStr = isErr ? c.red('(-25 Pkt)') : c.yellow('(-10 Pkt)');
+        lines.push(gutter(`     ${sevBadge} ${c.bold(issue.code)} ${penaltyStr} [${c.dim(issue.category)}]`));
+        if (issue.nodeId) lines.push(gutter(`       ${c.bold('Ziel-Element:')} ${c.cyan(issue.nodeId)}`));
+        lines.push(gutter(`       ${c.bold('Begründung:')}   ${issue.message}`));
+        if (issue.axiom) lines.push(gutter(`       ${c.bold('Axiom/Regel:')}  ${c.dim(issue.axiom)}`));
+        if (issue.details) lines.push(gutter(`       ${c.bold('Details:')}      ${c.dim(issue.details)}`));
+        lines.push(gutter(c.dim(`       ${'─'.repeat(66)}`)));
+      }
+      lines.push(emptyGutter());
+    }
+  }
+
+  if (options?.standalone) {
+    lines.push(bottomBorder());
+  }
+
+  return lines.join('\n');
+}
+
+export function formatFixesSection(report: AuditReport, options?: { standalone?: boolean }): string {
+  const c = {
+    bold: (s: string) => `\x1b[1m${s}\x1b[22m`,
+    dim: (s: string) => `\x1b[2m${s}\x1b[22m`,
+    green: (s: string) => `\x1b[32m${s}\x1b[39m`,
+    yellow: (s: string) => `\x1b[33m${s}\x1b[39m`,
+    red: (s: string) => `\x1b[31m${s}\x1b[39m`,
+    cyan: (s: string) => `\x1b[36m${s}\x1b[39m`,
+    blue: (s: string) => `\x1b[34m${s}\x1b[39m`,
+    bgRed: (s: string) => `\x1b[41m\x1b[37m\x1b[1m${s}\x1b[0m`,
+    bgYellow: (s: string) => `\x1b[43m\x1b[30m\x1b[1m${s}\x1b[0m`,
+    bgBlue: (s: string) => `\x1b[44m\x1b[37m\x1b[1m${s}\x1b[0m`
+  };
+
+  const stripAnsi = (str: string) => str.replace(/\x1b\[[0-9;]*m/g, '');
+  const RULE_W = 74;
+  const topBorder = (title: string) => c.bold(`┌─ ${title} ${'─'.repeat(Math.max(2, RULE_W - stripAnsi(title).length - 5))}`);
+  const midBorder = (title?: string) => {
+    if (!title) return c.bold(`├${'─'.repeat(RULE_W - 1)}`);
+    return c.bold(`├─ ${title} ${'─'.repeat(Math.max(2, RULE_W - stripAnsi(title).length - 5))}`);
+  };
+  const bottomBorder = () => c.bold(`└${'─'.repeat(RULE_W - 1)}`);
+  const gutter = (content = '') => c.bold('│  ') + content;
+  const emptyGutter = () => c.bold('│');
+
+  const lines: string[] = [];
+  const activeIssues = report.findings.filter(f => f.severity !== 'pass');
+
+  if (options?.standalone) {
+    lines.push('');
+    lines.push(topBorder('🔍 Befunde & Handlungsempfehlungen (Mit Quick-Fix)'));
+  } else {
+    lines.push(emptyGutter());
+    lines.push(midBorder('🔍 Befunde & Handlungsempfehlungen (Mit Quick-Fix)'));
+  }
   lines.push(emptyGutter());
 
   if (activeIssues.length === 0) {
@@ -1199,6 +1497,11 @@ export function formatFixesSection(report: AuditReport): string {
         lines.push(gutter(`      ${c.green('➜')} ${c.dim(fix.fixSnippet)}`));
       }
     });
+  }
+
+  if (options?.standalone) {
+    lines.push(emptyGutter());
+    lines.push(bottomBorder());
   }
 
   return lines.join('\n');
@@ -1399,6 +1702,36 @@ export function formatTerminalReport(
   } else {
     lines.push(gutter(`   Schnittkanten:     ${c.green('✔ Alle Elemente halten mindestens 12px (3mm) Beschnitt-Abstand')}`));
   }
+  lines.push(emptyGutter());
+
+  // 5. Computational Design & Mathematische Telemetrie
+  lines.push(gutter(c.bold(c.cyan('📐 Mathematische Telemetrie & Computational Design'))));
+  if (m?.opticalCentroid) {
+    const oc = m.opticalCentroid;
+    const dySign = oc.deltaYPercent >= 0 ? '+' : '';
+    const dxSign = oc.deltaXPercent >= 0 ? '+' : '';
+    lines.push(gutter(`   Optischer Schwerpunkt:  [ ${oc.visualMassCenter.x}, ${oc.visualMassCenter.y} ] px (ΔY: ${dySign}${oc.deltaYPercent}%, ΔX: ${dxSign}${oc.deltaXPercent}%) • ${c.dim(oc.balanceStatus)}`));
+    lines.push(gutter(`   Quadranten-Masse:       TL: ${oc.quadrantMass.topLeftPercent}% │ TR: ${oc.quadrantMass.topRightPercent}% │ BL: ${oc.quadrantMass.bottomLeftPercent}% │ BR: ${oc.quadrantMass.bottomRightPercent}%`));
+  }
+  if (m?.whitespaceDistribution) {
+    const wd = m.whitespaceDistribution;
+    const giniBadge = wd.voronoiGini >= 0.40 && wd.voronoiGini <= 0.75 ? c.green(`Gini: ${wd.voronoiGini}`) : c.yellow(`Gini: ${wd.voronoiGini}`);
+    const hviBadge = wd.horrorVacuiIndex <= 0.45 ? c.green(`HVI: ${wd.horrorVacuiIndex}`) : c.red(`HVI: ${wd.horrorVacuiIndex}`);
+    lines.push(gutter(`   Raum-Architektur:       ${giniBadge} • ${hviBadge} • ${c.dim(wd.message)}`));
+  }
+  if (m?.typographicTelemetry) {
+    const tt = m.typographicTelemetry;
+    const r2Badge = tt.modularScale.r2Score >= 0.88 ? c.green(`R² = ${tt.modularScale.r2Score.toFixed(2)}`) : c.yellow(`R² = ${tt.modularScale.r2Score.toFixed(2)}`);
+    lines.push(gutter(`   Typo-Skalen-Fidelity:   ${tt.modularScale.bestScaleName} (${tt.modularScale.bestRatio.toFixed(3)}) • ${r2Badge} [${tt.modularScale.isHarmonious ? c.green('Harmonisch') : c.yellow('Ausreißer')}]`));
+    const marginBadge = tt.hasCenteredProse ? c.red('✖ Zentrierter Fließtext') : c.green('✔ Strikte linke Lesekante');
+    const capsBadge = tt.unspacedAllCapsCount > 0 ? c.yellow(`⚠️ ${tt.unspacedAllCapsCount}x All-Caps ungesperrt`) : c.green('✔ Versalien gesperrt');
+    lines.push(gutter(`   Leseführung & Rhythmus: ${marginBadge} • ${capsBadge}`));
+  }
+  if (m?.colorTelemetry) {
+    const ct = m.colorTelemetry;
+    const triadBadge = ct.slopTriadDistance >= 0.25 ? c.green(`Dist: ${ct.slopTriadDistance}`) : c.red(`Dist: ${ct.slopTriadDistance} (Klon-Verdacht)`);
+    lines.push(gutter(`   OKLCH-Farbspektrum:     Entropie: ${ct.shannonEntropyBits} Bits • Slop-Triad: ${triadBadge} • ${c.dim(ct.paletteCharacter)}`));
+  }
 
   // --------------------------------------------------------------------------
   // Section 2: Anti-AI-Slop Deep Inspection Card
@@ -1407,7 +1740,7 @@ export function formatTerminalReport(
   lines.push(midBorder('🛡 Anti-AI-Slop Scanner Deep Inspection'));
   lines.push(emptyGutter());
   lines.push(gutter(`  Bedrohungs-Stufe:  ${slopThreatBadge}   |   Slop-Score: ${report.categories.antiSlop.score}% [${report.categories.antiSlop.grade}]`));
-  lines.push(gutter(c.dim(`  26 Heuristiken aktiv: Layout (8), Typo (7), Gradients (3), Assets (5), Hygiene (3)`)));
+  lines.push(gutter(c.dim(`  59 Heuristiken aktiv: Web & Hero (15), UI & Lighting (6), Typo (12), Gradients & Color (4), Vektoren & Greebling (11), Print (6), Dashboards (5), Mobile (2)`)));
   lines.push(emptyGutter());
 
   const slopErrors = report.findings.filter(f => f.category === 'anti-slop' && f.severity === 'error');
@@ -1447,38 +1780,38 @@ export function formatTerminalReport(
     { key: 'hygiene', weight: 10 }
   ];
 
-  const colCat = 'Kategorie'.padEnd(38);
-  const colGew = 'Gewicht'.padStart(7) + ' ';
+  const colCat = 'Kategorie'.padEnd(36);
+  const colPkt = 'Pkt'.padStart(5) + ' ';
   const colBar = 'Balken'.padEnd(16);
-  const colPkt = 'Pkt'.padStart(6) + ' ';
+  const colGew = 'Gewicht'.padStart(7) + ' ';
   const colNot = 'Note'.padEnd(7);
   const colSta = 'Status';
-  lines.push(gutter(c.dim(`   ${colCat} ${colGew} ${colBar} ${colPkt} ${colNot} ${colSta}`)));
+  lines.push(gutter(c.dim(`   ${colCat} ${colPkt} ${colBar} ${colGew} ${colNot} ${colSta}`)));
   lines.push(gutter(c.dim(`   ${'─'.repeat(74)}`)));
 
   for (const entry of catEntries) {
     const cat = report.categories[entry.key];
     if (!cat) continue;
 
-    const nameStr = cat.name.padEnd(38);
-    const weightStr = `${entry.weight}%`.padStart(7) + ' ';
+    const nameStr = cat.name.padEnd(36);
+    const scoreStr = (String(cat.score) + '%').padStart(5) + ' ';
     const barStr = makeBar(cat.score, 14) + ' ';
-    const scoreStr = (String(cat.score) + '%').padStart(6) + ' ';
+    const weightStr = `${entry.weight}%`.padStart(7) + ' ';
     const gradeStr = `[${cat.grade}]`.padEnd(7);
     const issues = cat.errors > 0 ? c.red(`${cat.errors} Err`) : (cat.warnings > 0 ? c.yellow(`${cat.warnings} Warn`) : c.green('✔ Sauber'));
 
-    lines.push(gutter(`   ${nameStr} ${weightStr} ${barStr} ${c.bold(scoreStr)} ${gradeStr} ${issues}`));
+    lines.push(gutter(`   ${nameStr} ${c.bold(scoreStr)} ${barStr} ${weightStr} ${gradeStr} ${issues}`));
   }
 
   lines.push(gutter(c.dim(`   ${'─'.repeat(74)}`)));
-  const totName = '★ GESAMT-BEWERTUNG'.padEnd(38);
-  const totWeight = '100%'.padStart(7) + ' ';
+  const totName = '★ GESAMT-BEWERTUNG'.padEnd(36);
+  const totScore = (String(report.overallScore) + '%').padStart(5) + ' ';
   const totBar = makeBar(report.overallScore, 14) + ' ';
-  const totScore = (String(report.overallScore) + '%').padStart(6) + ' ';
+  const totWeight = '100%'.padStart(7) + ' ';
   const totGrade = `[${report.overallGrade}]`.padEnd(7);
   const totStatus = report.overallScore >= 90 ? c.green('Bestanden') : c.yellow('Prüfen');
 
-  lines.push(gutter(c.bold(`   ${totName} ${totWeight} ${totBar} ${totScore} ${totGrade} ${totStatus}`)));
+  lines.push(gutter(c.bold(`   ${totName} ${totScore} ${totBar} ${totWeight} ${totGrade} ${totStatus}`)));
 
   // --------------------------------------------------------------------------
   // Section 4: Detailed Findings with Code & Quick-Fix (Optional / Interactive)
@@ -1486,13 +1819,14 @@ export function formatTerminalReport(
   const activeIssues = report.findings.filter(f => f.severity !== 'pass');
 
   if (options?.showFixes !== false) {
+    lines.push(formatWarningsSection(report));
     lines.push(formatFixesSection(report));
   } else if (activeIssues.length > 0) {
     lines.push(emptyGutter());
     lines.push(midBorder('💡 Handlungsempfehlungen & Quick-Fixes'));
     lines.push(emptyGutter());
     lines.push(gutter(`   ${c.yellow(c.bold(`[ ${activeIssues.length} Befunde & Quick-Fixes verfügbar ]`))}`));
-    lines.push(gutter(c.dim('   Drücke [F] oder [Enter], um detaillierte Quick-Fixes & Aktionsplan anzuzeigen.')));
+    lines.push(gutter(c.dim('   Drücke [Enter], um die Begründungen (< 100%) anzuzeigen, oder [F] zum Kopieren.')));
   }
 
   lines.push(emptyGutter());

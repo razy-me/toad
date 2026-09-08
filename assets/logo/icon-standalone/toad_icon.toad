@@ -17,8 +17,8 @@
 @font "./fonts/consola.ttf" as "Consolas" weight: 400 style: normal;
 @font "./fonts/consolab.ttf" as "Consolas" weight: 700 style: normal;
 
-// --- Design Tokens ---
->toadEmerald = #10b981;
+// --- Central Brand Tokens ---
+@import "../../../the_seed/toad_branding/toad_brand_tokens.toad";
 
 // --- Canvas Definition: Transparent Standalone Frog Icon (Tight Bounding Box) ---
 canvas "ToadIcon" {
@@ -61,7 +61,7 @@ group #frogIcon {
     path #chevronCutout {
         d: "M 224 172 L 288 222 L 224 272";
         size: 512px 360px;
-        stroke: #ffffff 42px;
+        stroke: >toadParchment 42px;
         stroke-cap: round;
         stroke-join: round;
         fill: transparent;
