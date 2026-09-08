@@ -252,12 +252,13 @@ export class ImportResolver {
         }
         const resolvedPath = path.resolve(currentDir, importPath);
         const canonPath = process.platform === 'win32' ? resolvedPath.toLowerCase() : resolvedPath;
+        const canonCurrent = process.platform === 'win32' ? currentFilePath.toLowerCase() : currentFilePath;
 
         if (chain.some(p => (process.platform === 'win32' ? p.toLowerCase() : p) === canonPath)) {
           // Direct two-file mutual imports (entry <-> A) are tolerated by
           // skipping the re-import; deeper cycles throw so users get a clear
           // diagnostic instead of infinite recursion.
-          if (chain.length < 3 && resolvedPath !== currentFilePath) {
+          if (chain.length < 3 && canonPath !== canonCurrent) {
             continue;
           }
           const cycle = [...chain, resolvedPath].map(p => path.basename(p)).join(' -> ');

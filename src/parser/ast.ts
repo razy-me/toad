@@ -420,6 +420,11 @@ export interface Diagnostic {
   severity: 'error' | 'warning' | 'info';
   loc: SourceLocation;
   sourceSnippet?: string; // Formatted 3-line code preview with caret indicator
+  fix?: {
+    title: string;
+    kind?: string;
+    replacement?: string;
+  };
 }
 
 export class ParseError extends Error {

@@ -76,6 +76,9 @@ export class Parser {
       if (tok.type === TokenType.STRING && tok.unterminated) {
         this.reportError('Unterminated string literal', tok.loc);
       }
+      if (tok.type === TokenType.EOF && tok.unterminated) {
+        this.reportError('Unterminated block comment', tok.loc);
+      }
     }
 
     const startLoc = this.peek().loc.start;

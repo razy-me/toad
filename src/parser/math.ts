@@ -76,7 +76,7 @@ export interface ComputedStyle {
   textTransform?: 'uppercase' | 'lowercase' | 'capitalize' | 'none';
   align?: 'left' | 'center' | 'right' | 'justify';
   opacity?: number;
-  borderRadius?: number | [number, number, number, number];
+  borderRadius?: number | [number, number, number, number] | [number, number];
   shadow?: ShadowStyle;
   filter?: string;
   blendMode?: string;

@@ -428,8 +428,10 @@ export class SvgExporter {
 
         // Resolve exact PostScript font name (e.g. SegoeUI-Bold, Consolas-Bold) for Photopea, Photoshop, and Illustrator
         const postScriptName = FontLoader.resolvePostScriptName(primaryFamily, fontWeight, fontStyle);
-        const isMono = primaryFamily.toLowerCase().includes('mono') || primaryFamily.toLowerCase().includes('consolas') || primaryFamily.toLowerCase().includes('courier');
-        const genericFallback = isMono ? 'monospace' : (primaryFamily.toLowerCase().includes('serif') && !primaryFamily.toLowerCase().includes('sans') ? 'serif' : 'sans-serif');
+        const lowerFam = primaryFamily.toLowerCase();
+        const isMono = lowerFam.includes('mono') || lowerFam.includes('consolas') || lowerFam.includes('courier') || lowerFam.includes('code');
+        const isSerif = (lowerFam.includes('serif') || lowerFam.includes('times') || lowerFam.includes('georgia') || lowerFam.includes('garamond') || lowerFam.includes('merriweather') || lowerFam.includes('playfair')) && !lowerFam.includes('sans');
+        const genericFallback = isMono ? 'monospace' : (isSerif ? 'serif' : 'sans-serif');
 
         let familyAttr = primaryFamily;
         if (postScriptName && postScriptName.toLowerCase() !== primaryFamily.toLowerCase()) {

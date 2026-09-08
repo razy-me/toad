@@ -148,7 +148,19 @@ export function createPreviewServer(
       if (url.pathname === '/api/open-folder' || url.pathname === '/open-folder') {
         const origin = req.headers.origin;
         const host = req.headers.host;
-        const originOk = !origin || (host ? origin.endsWith('//'.concat(host)) : false);
+        let originOk = true;
+        if (origin) {
+          try {
+            const parsedOrigin = new URL(origin);
+            originOk = Boolean(host && parsedOrigin.host.toLowerCase() === host.toLowerCase());
+          } catch {
+            originOk = false;
+          }
+        }
+        const secFetchSite = req.headers['sec-fetch-site'];
+        if (secFetchSite === 'cross-site') {
+          originOk = false;
+        }
         if (req.method !== 'POST' || !originOk) {
           res.writeHead(405, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ status: 'error', message: 'Method Not Allowed. Use POST from the preview page.' }));
