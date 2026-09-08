@@ -229,7 +229,12 @@ export class ToadLanguageServer {
     process.stdin.on('data', chunk => {
       buffer = Buffer.concat([buffer, chunk]);
       while (true) {
-        const headerEnd = buffer.indexOf('\r\n\r\n');
+        let headerEnd = buffer.indexOf('\r\n\r\n');
+        let headerLen = 4;
+        if (headerEnd < 0) {
+          headerEnd = buffer.indexOf('\n\n');
+          headerLen = 2;
+        }
         if (headerEnd < 0) break;
         const header = buffer.slice(0, headerEnd).toString('utf8');
         const match = header.match(/Content-Length:\s*(\d+)/i);
@@ -238,9 +243,9 @@ export class ToadLanguageServer {
           break;
         }
         const length = parseInt(match[1], 10);
-        const total = headerEnd + 4 + length;
+        const total = headerEnd + headerLen + length;
         if (buffer.length < total) break;
-        const body = buffer.slice(headerEnd + 4, total).toString('utf8');
+        const body = buffer.slice(headerEnd + headerLen, total).toString('utf8');
         buffer = buffer.slice(total);
         try {
           void handleMessage(JSON.parse(body));

@@ -1759,6 +1759,11 @@ export class ImportResolver {
   private evalCalcExpression(expr: string, referenceSize = 0, dpi = 96): number | undefined {
     if (typeof expr !== 'string' || expr.trim() === '') return undefined;
     try {
+      // Informational hint when bare unitless numbers are present in calc
+      const rawExpr = expr.replace(/^calc\((.*)\)$/, '$1');
+      if (/(?:^|[+\-*/\s(])\d+(?:\.\d+)?(?=[+\-*/\s)]|$)/.test(rawExpr)) {
+        // Unitless numbers in dimensional expressions default to px
+      }
       const evaluated = evaluateCalc(expr, referenceSize, dpi);
       return Number.isFinite(evaluated) ? evaluated : undefined;
     } catch {

@@ -155,7 +155,7 @@ export function getNodeLocalMatrix(node: LayoutNode): Matrix2D | null {
 export function cssGradientAngleToPhotoshop(css?: number | string): number {
   let cssAngle: number | undefined = undefined;
   if (typeof css === 'number' && Number.isFinite(css)) {
-    cssAngle = css;
+    cssAngle = ((css % 360) + 360) % 360;
   } else if (typeof css === 'string') {
     const dir = css.toLowerCase().trim();
     if (dir === 'to top' || dir === 'to top center') cssAngle = 0;

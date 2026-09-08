@@ -44,7 +44,11 @@ export function lintDocument(doc: DocumentNode): Diagnostic[] {
     declaredGlobalVars.set(v.name, v);
     traverse(v.value, (node) => {
       if (node.type === 'VariableReference') {
-        referencedGlobalVars.add((node as VariableReferenceNode).name);
+        const refName = (node as VariableReferenceNode).name;
+        referencedGlobalVars.add(refName);
+        if (refName.includes('.')) {
+          referencedGlobalVars.add(refName.split('.')[0]!);
+        }
       }
     });
   }
@@ -156,7 +160,11 @@ export function lintDocument(doc: DocumentNode): Diagnostic[] {
       if (node.type === 'VariableReference') {
         const ref = node as VariableReferenceNode;
         referencedGlobalVars.add(ref.name);
-        if (!declaredGlobalVars.has(ref.name)) {
+        const rootVarName = ref.name.includes('.') ? ref.name.split('.')[0]! : ref.name;
+        if (ref.name.includes('.')) {
+          referencedGlobalVars.add(rootVarName);
+        }
+        if (!declaredGlobalVars.has(ref.name) && !declaredGlobalVars.has(rootVarName)) {
           diagnostics.push({
             code: 'LINT-UNDECLARED-VAR',
             message: `Variable '>${ref.name}' is referenced but never declared.`,
@@ -166,11 +174,15 @@ export function lintDocument(doc: DocumentNode): Diagnostic[] {
         }
       } else if (node.type === 'CalcValue') {
         const expr = (node as CalcValueNode).expression;
-        const matches = expr.matchAll(/>([a-zA-Z_][a-zA-Z0-9_-]*)/g);
+        const matches = expr.matchAll(/>([a-zA-Z_][a-zA-Z0-9_.-]*)/g);
         for (const m of matches) {
           if (m[1]) {
             referencedGlobalVars.add(m[1]);
-            if (!declaredGlobalVars.has(m[1])) {
+            const rootVar = m[1].includes('.') ? m[1].split('.')[0]! : m[1];
+            if (m[1].includes('.')) {
+              referencedGlobalVars.add(rootVar);
+            }
+            if (!declaredGlobalVars.has(m[1]) && !declaredGlobalVars.has(rootVar)) {
               diagnostics.push({
                 code: 'LINT-UNDECLARED-VAR',
                 message: `Variable '>${m[1]}' in calc() is referenced but never declared.`,

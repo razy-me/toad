@@ -198,6 +198,8 @@ export class Lexer {
   private line = 1;
   private column = 1;
 
+  private hasUnterminatedBlockComment = false;
+
   constructor(source: string, filename = 'inline.toad') {
     this.source = source.replace(/^\uFEFF/, '');
     this.filename = filename;
@@ -219,6 +221,7 @@ export class Lexer {
     tokens.push({
       type: TokenType.EOF,
       value: '',
+      unterminated: this.hasUnterminatedBlockComment,
       loc: {
         start: eofPos,
         end: eofPos,
@@ -279,13 +282,18 @@ export class Lexer {
       if (c === '/' && this.peek(1) === '*') {
         this.advance();
         this.advance();
+        let terminated = false;
         while (this.offset < this.source.length) {
           if (this.peek() === '*' && this.peek(1) === '/') {
             this.advance();
             this.advance();
+            terminated = true;
             break;
           }
           this.advance();
+        }
+        if (!terminated) {
+          this.hasUnterminatedBlockComment = true;
         }
         continue;
       }

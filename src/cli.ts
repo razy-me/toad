@@ -267,7 +267,8 @@ export function createCli(): Command {
         
         let dimStr = '';
         if (f.endsWith('.psd')) {
-          dimStr = c.dim(`(${Math.round(result.canvas.width * 2.5)}x${Math.round(result.canvas.height * 2.5)})`);
+          const effectiveScale = buildOptions.scale && buildOptions.scale > 0 ? buildOptions.scale : 2.5;
+          dimStr = c.dim(`(${Math.round(result.canvas.width * effectiveScale)}x${Math.round(result.canvas.height * effectiveScale)})`);
         } else if (f.endsWith('.png') || f.endsWith('.jpg') || f.endsWith('.jpeg') || f.endsWith('.webp')) {
           const effectiveScale = buildOptions.scale && buildOptions.scale > 0 ? buildOptions.scale : 1;
           dimStr = c.dim(`(${Math.round(result.canvas.width * effectiveScale)}x${Math.round(result.canvas.height * effectiveScale)})`);
