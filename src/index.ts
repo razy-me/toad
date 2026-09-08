@@ -131,8 +131,8 @@ export { formatToad, FormatOptions } from './tools/formatter.js';
 export { lintDocument } from './tools/linter.js';
 export { ToadLanguageServer } from './tools/lsp/server.js';
 export { runInit } from './scaffold.js';
-export { findToadFiles, resolveEntryFile, getWorkspaces, addWorkspace, removeWorkspace } from './utils/fileFinder.js';
-export { auditDesign, formatTerminalReport, formatFixesSection, FormatReportOptions, DesignAuditResult, DesignIssue } from './tools/designAuditor.js';
+export { findToadFiles, resolveEntryFile, getWorkspaces, addWorkspace, removeWorkspace, listAllToadFiles, ToadFileInfo } from './utils/fileFinder.js';
+export { auditDesign, formatTerminalReport, formatWarningsSection, formatFixesSection, FormatReportOptions, DesignAuditResult, DesignIssue } from './tools/designAuditor.js';
 export {
   bundleAssets,
   createIcoBuffer,

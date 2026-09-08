@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { findToadFiles, resolveEntryFile } from '../src/utils/fileFinder.js';
+import { findToadFiles, resolveEntryFile, listAllToadFiles } from '../src/utils/fileFinder.js';
 import {
   sanitizeFilterCss,
   splitUnsafeFilterFns,
@@ -55,6 +55,15 @@ describe('fileFinder', () => {
   it('returns null for hopeless queries instead of throwing', async () => {
     const p = await resolveEntryFile('definitely-does-not-exist-anywhere-xyz');
     expect(p).toBeNull();
+  });
+
+  it('lists all .toad files with metadata via listAllToadFiles', async () => {
+    const list = await listAllToadFiles({ scanDirectories: [root] });
+    expect(list.length).toBe(2);
+    expect(list.some(f => f.name === 'alpha.toad')).toBe(true);
+    expect(list.some(f => f.name === 'gamma.toad')).toBe(true);
+    expect(list[0].size).toBeGreaterThan(0);
+    expect(list[0].mtime).toBeInstanceOf(Date);
   });
 });
 

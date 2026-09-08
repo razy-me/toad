@@ -2,7 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { parseToad } from '../src/parser/parser.js';
 import { resolveImportsAndComponents } from '../src/parser/importResolver.js';
 import { solveLayout } from '../src/parser/math.js';
-import { auditDesign, formatTerminalReport, formatFixesSection } from '../src/tools/designAuditor.js';
+import { auditDesign, formatTerminalReport, formatWarningsSection, formatFixesSection } from '../src/tools/designAuditor.js';
+import { stripAnsi, copyToClipboard } from '../src/utils/clipboard.js';
 import { BuildResult } from '../src/build.js';
 
 describe('Design Auditor & Report (Feature 3)', () => {
@@ -286,4 +287,147 @@ describe('Design Auditor & Report (Feature 3)', () => {
     expect(fixesOnly).toContain('💡 QUICK FIX:');
     expect(fixesOnly).toContain('Befunde & Handlungsempfehlungen');
   });
+
+  it('outputs warnings / justifications for ratings < 100% separately from quick fixes', async () => {
+    const src = `
+      canvas { size: 600px 400px; background: #ffffff; }
+      text #lowContrast {
+        at: 20px 20px;
+        content: "Bad contrast text";
+        font-size: 14px;
+        color: #e0e0e0;
+      }
+    `;
+    const ast = parseToad(src);
+    const resolved = await resolveImportsAndComponents(ast, 'two_stage_test.toad');
+    const layout = await solveLayout(resolved);
+    const audit = auditDesign({ layout, entryPath: 'two_stage_test.toad' });
+
+    // Step 1: formatWarningsSection outputs reasons/justifications for non-100% ratings without quick fix snippets
+    const warningsSection = formatWarningsSection(audit, { standalone: true });
+    expect(warningsSection).toContain('Begründungen für Bewertungen < 100%');
+    expect(warningsSection).toContain('Accessibility & Contrast');
+    expect(warningsSection).toContain('Begründung:');
+    expect(warningsSection).not.toContain('💡 QUICK FIX:');
+
+    // Step 2: formatFixesSection outputs actionable solutions and code fixes
+    const fixesSection = formatFixesSection(audit, { standalone: true });
+    expect(fixesSection).toContain('💡 QUICK FIX:');
+    expect(fixesSection).toContain('Aktionsplan');
+  });
+
+  it('strips ANSI escape codes cleanly for clipboard export', async () => {
+    const colored = '\x1b[1m\x1b[32m✔ Sauber\x1b[0m\x1b[39m - \x1b[31mError (-25 Pkt)\x1b[0m';
+    const plain = stripAnsi(colored);
+    expect(plain).toBe('✔ Sauber - Error (-25 Pkt)');
+
+    // copyToClipboard does not throw
+    const success = await copyToClipboard(colored);
+    expect(typeof success).toBe('boolean');
+  });
+
+  it('detects visual slop: Concentric Radii Mismatch (SLOP-GEOM-001)', async () => {
+    const src = `
+      canvas { size: 800px 600px; background: #ffffff; }
+      rect #parentCard {
+        at: 40px 40px;
+        size: 400px 300px;
+        radius: 12px;
+        fill: #f5f5f5;
+
+        rect #childCard {
+          at: 20px 20px;
+          size: 200px 100px;
+          radius: 16px; // Mismatch: child radius (16px) >= parent radius (12px)
+          fill: #e5e5e5;
+        }
+      }
+    `;
+    const ast = parseToad(src);
+    const resolved = await resolveImportsAndComponents(ast, 'geom.toad');
+    const layout = await solveLayout(resolved);
+    const audit = auditDesign({ layout, entryPath: 'geom.toad' });
+
+    const geomIssue = audit.issues.find(i => i.code === 'SLOP-GEOM-001');
+    expect(geomIssue).toBeDefined();
+    expect(geomIssue?.message).toContain('Concentric Radii Mismatch');
+  });
+
+  it('detects visual slop: Live-Pulse Beacon and Russian-Doll Nesting (SLOP-WEB-014, SLOP-WEB-015)', async () => {
+    const src = `
+      canvas { size: 800px 600px; background: #000000; }
+      circle #livePulse {
+        at: 50px 30px;
+        size: 10px;
+        fill: #22c55e;
+      }
+      rect #cardLevel1 {
+        at: 40px 60px;
+        size: 500px 400px;
+        radius: 12px;
+        stroke: #333333;
+        rect #cardLevel2 {
+          at: 20px 20px;
+          size: 440px 340px;
+          radius: 8px;
+          stroke: #444444;
+          rect #cardLevel3 {
+            at: 20px 20px;
+            size: 380px 280px;
+            radius: 4px;
+            stroke: #555555;
+          }
+        }
+      }
+    `;
+    const ast = parseToad(src);
+    const resolved = await resolveImportsAndComponents(ast, 'nesting.toad');
+    const layout = await solveLayout(resolved);
+    const audit = auditDesign({ layout, entryPath: 'nesting.toad' });
+
+    const pulseIssue = audit.issues.find(i => i.code === 'SLOP-WEB-014');
+    expect(pulseIssue).toBeDefined();
+
+    const nestingIssue = audit.issues.find(i => i.code === 'SLOP-WEB-015');
+    expect(nestingIssue).toBeDefined();
+    expect(nestingIssue?.message).toContain('Russian-Doll Nesting');
+  });
+
+  it('detects visual slop: Megalithic Quote Monument, Swiss-Slop, and GPS Telemetry (SLOP-DECK-002, SLOP-PRINT-001, SLOP-PRINT-003)', async () => {
+    const src = `
+      canvas { size: 1000px 800px; background: #ffffff; }
+      text #giantQuote {
+        at: 50px 50px;
+        content: "“";
+        font-size: 96px;
+        color: #cccccc;
+      }
+      text #swissRegMark {
+        at: 50px 200px;
+        content: "⌖";
+        font-size: 18px;
+        color: #000000;
+      }
+      text #fakeGps {
+        at: 50px 300px;
+        content: "LAT 35°41'22.1N LON 139°41'30.2E // SECTOR 07";
+        font-size: 12px;
+        color: #666666;
+      }
+    `;
+    const ast = parseToad(src);
+    const resolved = await resolveImportsAndComponents(ast, 'poster_slop.toad');
+    const layout = await solveLayout(resolved);
+    const audit = auditDesign({ layout, entryPath: 'poster_slop.toad' });
+
+    const quoteIssue = audit.issues.find(i => i.code === 'SLOP-DECK-002');
+    expect(quoteIssue).toBeDefined();
+
+    const swissIssue = audit.issues.find(i => i.code === 'SLOP-PRINT-001');
+    expect(swissIssue).toBeDefined();
+
+    const gpsIssue = audit.issues.find(i => i.code === 'SLOP-PRINT-003');
+    expect(gpsIssue).toBeDefined();
+  });
 });
+

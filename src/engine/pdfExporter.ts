@@ -12,6 +12,9 @@ import * as path from 'node:path';
 import { LayoutResult, LayoutNode } from '../parser/math.js';
 import { parseColorToRgba } from './drawUtils.js';
 import { resolveSharedImage } from './imageCache.js';
+import { svgPathToSubpaths } from './vectorPathParser.js';
+import { generateShapePath } from './shapeGenerators.js';
+import { getIconPath } from './iconRegistry.js';
 
 export interface PdfExportOptions {
   colorMode?: 'rgb' | 'cmyk';
@@ -282,6 +285,30 @@ export class PdfExporter {
         this.renderPath(node, ops, isCmyk);
         break;
       }
+      case 'star':
+      case 'triangle':
+      case 'arrow':
+      case 'cross': {
+        const d = generateShapePath(node.type, node.box);
+        this.renderPath(node, ops, isCmyk, d);
+        break;
+      }
+      case 'shape': {
+        const shapeType = node.shapeType || 'star';
+        const d = generateShapePath(shapeType, node.box);
+        this.renderPath(node, ops, isCmyk, d);
+        break;
+      }
+      case 'icon': {
+        const iconName = node.iconName || (node as any).icon;
+        if (iconName) {
+          const d = getIconPath(iconName);
+          if (d) {
+            this.renderPath(node, ops, isCmyk, d);
+          }
+        }
+        break;
+      }
     }
 
     ops.push('Q'); // restore graphics state
@@ -333,37 +360,27 @@ export class PdfExporter {
     this.applyFillAndStroke(node, ops, isCmyk);
   }
 
-  private renderPath(node: LayoutNode, ops: string[], isCmyk: boolean): void {
-    const d = node.pathLayout?.d;
+  private renderPath(node: LayoutNode, ops: string[], isCmyk: boolean, customD?: string): void {
+    const d = customD || node.pathLayout?.d || (node as any).d;
     if (!d) return;
 
-    // Convert SVG path commands (M, L, C, Z) into PDF path operators
-    const commands = d.match(/[MLCZz]|[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?/g);
-    if (!commands) return;
+    const subpaths = svgPathToSubpaths(d);
+    if (!subpaths || subpaths.length === 0) return;
 
-    let i = 0;
-    while (i < commands.length) {
-      const cmd = commands[i]!;
-      if (cmd === 'M' || cmd === 'm') {
-        const px = parseFloat(commands[++i] || '0') + node.x;
-        const py = parseFloat(commands[++i] || '0') + node.y;
-        ops.push(`${px.toFixed(2)} ${py.toFixed(2)} m`);
-      } else if (cmd === 'L' || cmd === 'l') {
-        const px = parseFloat(commands[++i] || '0') + node.x;
-        const py = parseFloat(commands[++i] || '0') + node.y;
-        ops.push(`${px.toFixed(2)} ${py.toFixed(2)} l`);
-      } else if (cmd === 'C' || cmd === 'c') {
-        const x1 = parseFloat(commands[++i] || '0') + node.x;
-        const y1 = parseFloat(commands[++i] || '0') + node.y;
-        const x2 = parseFloat(commands[++i] || '0') + node.x;
-        const y2 = parseFloat(commands[++i] || '0') + node.y;
-        const x3 = parseFloat(commands[++i] || '0') + node.x;
-        const y3 = parseFloat(commands[++i] || '0') + node.y;
-        ops.push(`${x1.toFixed(2)} ${y1.toFixed(2)} ${x2.toFixed(2)} ${y2.toFixed(2)} ${x3.toFixed(2)} ${y3.toFixed(2)} c`);
-      } else if (cmd === 'Z' || cmd === 'z') {
+    for (const sp of subpaths) {
+      if (!sp.segments || sp.segments.length === 0) continue;
+      const p0 = sp.segments[0]!.p0;
+      ops.push(`${(p0.x + node.x).toFixed(2)} ${(p0.y + node.y).toFixed(2)} m`);
+      for (const seg of sp.segments) {
+        ops.push(
+          `${(seg.cp1.x + node.x).toFixed(2)} ${(seg.cp1.y + node.y).toFixed(2)} ` +
+          `${(seg.cp2.x + node.x).toFixed(2)} ${(seg.cp2.y + node.y).toFixed(2)} ` +
+          `${(seg.p1.x + node.x).toFixed(2)} ${(seg.p1.y + node.y).toFixed(2)} c`
+        );
+      }
+      if (sp.closed) {
         ops.push('h');
       }
-      i++;
     }
 
     this.applyFillAndStroke(node, ops, isCmyk);
@@ -403,7 +420,8 @@ export class PdfExporter {
 
       // Escape parentheses and backslashes for PDF string literal
       const escaped = line.replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
-      ops.push(`1 0 0 1 ${x.toFixed(2)} ${y.toFixed(2)} Tm`);
+      // Counter-flip vertical axis in text matrix (1 0 0 -1) so glyphs render right-side up
+      ops.push(`1 0 0 -1 ${x.toFixed(2)} ${y.toFixed(2)} Tm`);
       ops.push(`(${escaped}) Tj`);
     }
 

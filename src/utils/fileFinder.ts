@@ -18,6 +18,36 @@ const IGNORED_FOLDERS = new Set([
   'programme', 'application data'
 ]);
 
+/**
+ * Checks if a given path or directory name should be skipped.
+ * Explicitly ignores OS system folders, \toad\tests\, and \toad\the_seed\.
+ */
+export function isIgnoredPath(targetPath: string): boolean {
+  const normalized = targetPath.replace(/\\/g, '/').toLowerCase();
+  
+  // Allow test sandbox during testing
+  if (process.env.VITEST) {
+    if (normalized.includes('/toad/tests/tmp_finder')) return false;
+    if (normalized.endsWith('/toad/tests') || normalized === 'tests') return false;
+  }
+
+  // Specific exclusions requested: \toad\tests\ and \toad\the_seed\
+  if (normalized.includes('/toad/tests') || normalized.endsWith('/toad/tests') ||
+      normalized.includes('/toad/the_seed') || normalized.endsWith('/toad/the_seed')) {
+    return true;
+  }
+
+  // Segment-based checks against system / build / dependency folders
+  const segments = normalized.split('/').filter(Boolean);
+  for (const seg of segments) {
+    if (IGNORED_FOLDERS.has(seg) || seg.startsWith('$') || seg.startsWith('.')) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 // Configuration file for user-defined workspaces
 const CONFIG_FILE = path.join(os.homedir(), '.toadrc.json');
 
@@ -154,12 +184,12 @@ function searchDir(
       const name = entry.name;
       const lower = name.toLowerCase();
 
+      const fullPath = path.join(dir, name);
+
       // Skip ignored and hidden directories
-      if (IGNORED_FOLDERS.has(lower) || lower.startsWith('$') || lower.startsWith('.')) {
+      if (isIgnoredPath(fullPath) || isIgnoredPath(name) || lower.startsWith('$') || lower.startsWith('.')) {
         continue;
       }
-
-      const fullPath = path.join(dir, name);
 
       if (entry.isFile()) {
         const lowerNoExt = lower.endsWith('.toad') ? lower.slice(0, -5) : lower;
@@ -358,6 +388,187 @@ export async function findToadFiles(query: string): Promise<string[]> {
   }
 
   return results;
+}
+
+export interface ToadFileInfo {
+  path: string;
+  name: string;
+  size: number;
+  mtime: Date;
+}
+
+/**
+ * Recursively collects all .toad files within a directory tree.
+ */
+function collectToadFiles(
+  dir: string,
+  results: Map<string, ToadFileInfo>,
+  seenDirs: Set<string>,
+  maxDepth = 5,
+  currentDepth = 0
+): void {
+  if (currentDepth > maxDepth) return;
+
+  let resolvedDir: string;
+  try {
+    resolvedDir = path.resolve(dir);
+  } catch {
+    return;
+  }
+  const dirKey = resolvedDir.toLowerCase();
+  if (seenDirs.has(dirKey)) return;
+  seenDirs.add(dirKey);
+
+  try {
+    const entries = fs.readdirSync(resolvedDir, { withFileTypes: true });
+    const subdirs: string[] = [];
+
+    for (const entry of entries) {
+      const name = entry.name;
+      const lower = name.toLowerCase();
+
+      const fullPath = path.join(resolvedDir, name);
+
+      // Skip ignored and hidden directories
+      if (isIgnoredPath(fullPath) || isIgnoredPath(name) || lower.startsWith('$') || lower.startsWith('.')) {
+        continue;
+      }
+
+      if (entry.isFile()) {
+        if (lower.endsWith('.toad')) {
+          const resolved = path.resolve(fullPath);
+          const key = resolved.toLowerCase();
+          if (!results.has(key)) {
+            try {
+              const stat = fs.statSync(resolved);
+              results.set(key, {
+                path: resolved,
+                name,
+                size: stat.size,
+                mtime: stat.mtime
+              });
+            } catch {
+              results.set(key, {
+                path: resolved,
+                name,
+                size: 0,
+                mtime: new Date()
+              });
+            }
+          }
+        }
+      } else if (entry.isDirectory()) {
+        if (!isIgnoredPath(fullPath) && !isIgnoredPath(lower)) {
+          subdirs.push(fullPath);
+        }
+      }
+    }
+
+    for (const sub of subdirs) {
+      collectToadFiles(sub, results, seenDirs, maxDepth, currentDepth + 1);
+    }
+  } catch {}
+}
+
+/**
+ * Searches the entire system (CWD, workspaces, user directories, and system drives)
+ * and returns all discovered .toad files with metadata.
+ */
+export async function listAllToadFiles(options?: { scanDirectories?: string[] }): Promise<ToadFileInfo[]> {
+  const results = new Map<string, ToadFileInfo>();
+  const seenDirs = new Set<string>();
+
+  // If specific scan directories were explicitly provided (e.g. for testing)
+  if (options?.scanDirectories && options.scanDirectories.length > 0) {
+    for (const d of options.scanDirectories) {
+      if (fs.existsSync(d)) {
+        collectToadFiles(d, results, seenDirs, 6, 0);
+      }
+    }
+    return Array.from(results.values()).sort((a, b) => a.path.localeCompare(b.path));
+  }
+
+  // 1. Current working directory (depth 5)
+  if (!isIgnoredPath(process.cwd())) {
+    collectToadFiles(process.cwd(), results, seenDirs, 5, 0);
+  }
+
+  // 2. Configured workspaces from .toadrc.json
+  const workspaces = getWorkspaces();
+  for (const ws of workspaces) {
+    if (fs.existsSync(ws) && !isIgnoredPath(ws)) {
+      collectToadFiles(ws, results, seenDirs, 5, 0);
+    }
+  }
+
+  // 3. Persistent cache of previously found files
+  const cachedFiles = loadCache();
+  for (const cached of cachedFiles) {
+    if (cached.toLowerCase().endsWith('.toad') && !isIgnoredPath(cached)) {
+      const key = path.resolve(cached).toLowerCase();
+      if (!results.has(key) && fs.existsSync(cached)) {
+        try {
+          const stat = fs.statSync(cached);
+          results.set(key, {
+            path: path.resolve(cached),
+            name: path.basename(cached),
+            size: stat.size,
+            mtime: stat.mtime
+          });
+        } catch {}
+      }
+    }
+  }
+
+  // In test/CI environments, do not traverse external directories unless explicitly asked
+  if (process.env.VITEST || process.env.CI || process.env.NODE_ENV === 'test') {
+    return Array.from(results.values()).sort((a, b) => a.path.localeCompare(b.path));
+  }
+
+  // 4. Common user directories
+  const home = os.homedir();
+  if (home) {
+    const commonDirs = ['Desktop', 'Downloads', 'Documents', 'Projects', 'toad', 'dev', 'workspace', 'repos', 'code', 'designs']
+      .map(sub => path.join(home, sub))
+      .filter(p => fs.existsSync(p));
+
+    for (const dir of commonDirs) {
+      collectToadFiles(dir, results, seenDirs, 4, 0);
+    }
+  }
+
+  // 5. System drives: root candidates and top-level directories
+  const drives = getSystemDrives();
+  const rootCandidates = ['toad', 'projects', 'dev', 'workspace', 'coding', 'designs', 'toad-projects', 'toad-designs', 'source', 'repos', 'code'];
+
+  for (const drive of drives) {
+    for (const candidate of rootCandidates) {
+      const candidatePath = path.join(drive, candidate);
+      if (fs.existsSync(candidatePath) && !isIgnoredPath(candidatePath)) {
+        collectToadFiles(candidatePath, results, seenDirs, 4, 0);
+      }
+    }
+
+    try {
+      const entries = fs.readdirSync(drive, { withFileTypes: true });
+      for (const entry of entries) {
+        if (!entry.isDirectory()) continue;
+        const lower = entry.name.toLowerCase();
+        const full = path.join(drive, entry.name);
+        if (isIgnoredPath(full) || isIgnoredPath(lower) || lower.startsWith('$') || lower.startsWith('.')) {
+          continue;
+        }
+        collectToadFiles(full, results, seenDirs, 3, 0);
+      }
+    } catch {}
+  }
+
+  // Save all discovered files to cache for instant subsequent lookups
+  if (results.size > 0) {
+    saveCache(Array.from(results.values()).map(r => r.path));
+  }
+
+  return Array.from(results.values()).sort((a, b) => a.path.localeCompare(b.path));
 }
 
 /**

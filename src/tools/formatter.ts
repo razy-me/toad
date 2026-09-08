@@ -115,11 +115,19 @@ function normalizePropertyStatement(code: string): string {
   let inSingle = false;
   let colonIdx = -1;
 
+  let escapeRun = 0;
   for (let i = 0; i < code.length; i++) {
     const ch = code[i];
-    if (ch === '"' && !inSingle && (i === 0 || code[i - 1] !== '\\')) {
+    if (ch === '\\') {
+      escapeRun++;
+      continue;
+    }
+    const escaped = escapeRun % 2 === 1;
+    escapeRun = 0;
+
+    if (ch === '"' && !inSingle && !escaped) {
       inDouble = !inDouble;
-    } else if (ch === "'" && !inDouble && (i === 0 || code[i - 1] !== '\\')) {
+    } else if (ch === "'" && !inDouble && !escaped) {
       inSingle = !inSingle;
     } else if (!inDouble && !inSingle && ch === ':') {
       colonIdx = i;

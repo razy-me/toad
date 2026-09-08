@@ -12,8 +12,9 @@ import { fileURLToPath } from 'node:url';
 import chokidar, { FSWatcher } from 'chokidar';
 import { compileToad, BuildOptions, BuildResult } from './build.js';
 import { createPreviewServer, openBrowser, PreviewServerInstance } from './engine/previewServer.js';
-import { resolveEntryFile, getWorkspaces, addWorkspace, removeWorkspace } from './utils/fileFinder.js';
-import { auditDesign, formatTerminalReport, formatFixesSection } from './tools/designAuditor.js';
+import { resolveEntryFile, getWorkspaces, addWorkspace, removeWorkspace, listAllToadFiles } from './utils/fileFinder.js';
+import { auditDesign, formatTerminalReport, formatFixesSection, formatWarningsSection } from './tools/designAuditor.js';
+import { copyToClipboard } from './utils/clipboard.js';
 import { bundleAssets } from './tools/assetBundler.js';
 import { formatRustDiagnostic, generateHelpSuggestion } from './tools/diagnostics.js';
 
@@ -542,9 +543,38 @@ export function createCli(): Command {
       process.exit(1);
     });
 
+  // Command: list
+  program
+    .command('list')
+    .alias('ls')
+    .description('Scan the computer and list all discovered .toad files')
+    .action(async () => {
+      console.log(`\n${c.bold('🔍 Suche nach .toad-Dateien auf dem Rechner...')}\n`);
+      const startTime = Date.now();
+      const files = await listAllToadFiles();
+      const durationMs = Date.now() - startTime;
+
+      if (files.length === 0) {
+        console.log(`  ${c.yellow('Keine .toad-Dateien auf dem Rechner gefunden.')}\n`);
+        return;
+      }
+
+      files.forEach((f, idx) => {
+        let sizeStr = '';
+        const sizeKb = (f.size / 1024).toFixed(1);
+        sizeStr = f.size > 1024 * 1024 ? `${(f.size / 1024 / 1024).toFixed(2)} MB` : `${sizeKb} KB`;
+
+        const padNum = `[${idx + 1}]`.padEnd(String(files.length).length + 3);
+        console.log(`  ${c.cyan(padNum)} ${c.bold(f.name.padEnd(30))} ${c.yellow(sizeStr.padStart(9))}   ${c.dim(f.path)}`);
+      });
+
+      console.log(`\n${c.green('✔')} ${c.bold(String(files.length))} .toad-Datei(en) gefunden in ${durationMs}ms.\n`);
+    });
+
   // Command: report [entry]
   program
     .command('report [entry]')
+    .alias('audit')
     .description('Run deep design quality, WCAG 2.2 accessibility, and anti-slop audit')
     .option('--strict', 'Fail with exit code 1 on any warnings')
     .option('--min-score <score>', 'Minimum passing score out of 100', '70')
@@ -567,38 +597,94 @@ export function createCli(): Command {
         if (options?.json) {
           console.log(JSON.stringify(audit, null, 2));
         } else {
-          console.log(`${c.bold('🔍 Deep Auditing toad design:')} ${c.cyan(resolvedEntry)}...\n`);
-          console.log(formatTerminalReport(audit, { 
+          const reportOutput = formatTerminalReport(audit, { 
             verbose: options?.verbose, 
             slopOnly: options?.slopOnly,
             showFixes: options?.fixes ? true : (isInteractive ? false : true)
-          }));
-        }
+          });
+          console.log(`${c.bold('🔍 Deep Auditing toad design:')} ${c.cyan(resolvedEntry)}...\n`);
+          console.log(reportOutput);
 
-        if (isInteractive) {
-          process.stdout.write(`\n  ${c.cyan('➜')}  ${c.bold('Drücke [F], [Enter] oder eine beliebige Taste')}, um die Quick-Fixes & Handlungsempfehlungen anzuzeigen (oder [Q] zum Beenden)... `);
-          const keyPressed = await new Promise<string>(resolve => {
-            const onData = (data: Buffer) => {
-              const str = data.toString();
-              process.stdin.removeListener('data', onData);
-              if (process.stdin.isTTY && process.stdin.setRawMode) {
-                process.stdin.setRawMode(false);
-              }
-              process.stdin.pause();
-              resolve(str);
+          if (isInteractive) {
+            let accumulatedReport = reportOutput;
+
+            const waitForUserInputKey = async (): Promise<string> => {
+              return new Promise<string>(resolve => {
+                const onData = (data: Buffer) => {
+                  const str = data.toString();
+                  process.stdin.removeListener('data', onData);
+                  if (process.stdin.isTTY && process.stdin.setRawMode) {
+                    process.stdin.setRawMode(false);
+                  }
+                  process.stdin.pause();
+                  resolve(str);
+                };
+
+                if (process.stdin.isTTY && process.stdin.setRawMode) {
+                  process.stdin.setRawMode(true);
+                }
+                process.stdin.resume();
+                process.stdin.once('data', onData);
+              });
             };
 
-            if (process.stdin.isTTY && process.stdin.setRawMode) {
-              process.stdin.setRawMode(true);
-            }
-            process.stdin.resume();
-            process.stdin.once('data', onData);
-          });
+            const isQuit = (k: string) => k.toLowerCase().includes('q') || k === '\u0003' || k === '\u001b';
+            const isEnter = (k: string) => k === '\r' || k === '\n';
+            const isCopy = (k: string) => k.toLowerCase() === 'f';
 
-          process.stdout.write('\n');
-          if (!keyPressed.toLowerCase().includes('q') && keyPressed !== '\u0003') {
-            console.log(formatFixesSection(audit));
-            console.log(c.bold(`└${'─'.repeat(73)}\n`));
+            // Step 1: Warnings / Begründungen für Bewertungen < 100%
+            while (true) {
+              process.stdout.write(`\n  ${c.cyan('➜')}  ${c.bold('Drücke [Enter]')}, um die Begründungen (< 100%) anzuzeigen, oder ${c.bold('[F]')}, um den Report zu kopieren (oder [Q] zum Beenden)... `);
+              const key1 = await waitForUserInputKey();
+              process.stdout.write('\n');
+
+              if (isQuit(key1)) {
+                break;
+              }
+              if (isCopy(key1)) {
+                await copyToClipboard(accumulatedReport);
+                console.log(`  ${c.green('✔')} ${c.bold('Bisheriger Report als Text in die Zwischenablage kopiert!')}`);
+                continue;
+              }
+              if (isEnter(key1)) {
+                const warningsSection = formatWarningsSection(audit, { standalone: true });
+                console.log(warningsSection);
+                accumulatedReport += '\n' + warningsSection;
+
+                // Step 2: Quick-Fixes & Handlungsempfehlungen
+                while (true) {
+                  process.stdout.write(`\n  ${c.cyan('➜')}  ${c.bold('Drücke [Enter]')}, um die Quick-Fixes & Handlungsempfehlungen anzuzeigen, oder ${c.bold('[F]')}, um den Report zu kopieren (oder [Q] zum Beenden)... `);
+                  const key2 = await waitForUserInputKey();
+                  process.stdout.write('\n');
+
+                  if (isQuit(key2)) {
+                    break;
+                  }
+                  if (isCopy(key2)) {
+                    await copyToClipboard(accumulatedReport);
+                    console.log(`  ${c.green('✔')} ${c.bold('Bisheriger Report als Text in die Zwischenablage kopiert!')}`);
+                    continue;
+                  }
+                  if (isEnter(key2)) {
+                    const fixesSection = formatFixesSection(audit, { standalone: true });
+                    console.log(fixesSection);
+                    console.log('');
+                    accumulatedReport += '\n' + fixesSection;
+
+                    // Final prompt: Copy complete report or press Enter/Q to finish
+                    process.stdout.write(`  ${c.cyan('➜')}  ${c.bold('Drücke [F]')}, um den gesamten Report zu kopieren (oder [Enter]/[Q] zum Beenden)... `);
+                    const key3 = await waitForUserInputKey();
+                    process.stdout.write('\n');
+                    if (isCopy(key3)) {
+                      await copyToClipboard(accumulatedReport);
+                      console.log(`  ${c.green('✔')} ${c.bold('Gesamter Report in die Zwischenablage kopiert!')}\n`);
+                    }
+                    break;
+                  }
+                }
+                break;
+              }
+            }
           }
         }
 
