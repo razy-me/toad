@@ -235,7 +235,15 @@ export type ValueNode =
   | ArrayLiteralNode
   | ExpressionListNode
   | ColorTransformNode
-  | CalcValueNode;
+  | CalcValueNode
+  | BinaryExpressionNode;
+
+export interface BinaryExpressionNode extends BaseNode {
+  type: 'BinaryExpression';
+  operator: string;
+  left: ValueNode;
+  right: ValueNode;
+}
 
 export interface CalcValueNode extends BaseNode {
   type: 'CalcValue';
@@ -566,7 +574,7 @@ export interface ResolvedElementNode {
   stroke?: ResolvedStroke;
   opacity?: number;
   fillOpacity?: number;
-  layerColor?: 'none' | 'red' | 'orange' | 'yellow' | 'green' | 'blue' | 'violet' | 'gray';
+  layerColor?: 'none' | 'red' | 'orange' | 'yellow' | 'green' | 'blue' | 'violet' | 'gray' | string;
   lock?: 'all' | 'position' | 'transparency' | 'composite';
   knockout?: boolean;
   blendMode?: string;

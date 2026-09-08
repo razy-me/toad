@@ -23,8 +23,8 @@
  <rect x="120" y="200" width="80" height="28" rx="4" ry="4" fill="#2563eb" />
       <text x="123" y="218.5" font-family="sans-serif" font-size="12" font-weight="bold" font-style="normal" text-anchor="start" xml:space="preserve" style="font-weight: bold; font-style: normal;" fill="#ffffff">NEXT GENERATION</text>
     </g>
-    <text x="120" y="294" font-family="sans-serif" font-size="52" font-weight="900" font-style="normal" text-anchor="start" xml:space="preserve" style="font-weight: 900; font-style: normal;" fill="#ffffff" id="heroTitle"><tspan x="120" y="294">Vector Precision Meets Raster Power in</tspan><tspan x="120" y="353.8">One Unified Engine</tspan></text>
-    <text x="120" y="1068" font-family="sans-serif" font-size="20" font-weight="400" font-style="normal" text-anchor="start" xml:space="preserve" style="font-weight: 400; font-style: normal;" fill="#94a3b8" id="heroBody"><tspan x="120" y="1068">Design seamlessly in code. Export to production rasters at 1x, 2x, 4x, or inspect full layered PSDs in Adobe</tspan><tspan x="120" y="1098">Photoshop.</tspan></text>
+    <text x="120" y="294" font-family="sans-serif" font-size="52" font-weight="900" font-style="normal" text-anchor="start" xml:space="preserve" style="font-weight: 900; font-style: normal;" fill="#ffffff" id="heroTitle"><tspan>Vector Precision Meets Raster Power in</tspan><tspan x="120" y="353.8">One Unified Engine</tspan></text>
+    <text x="120" y="1068" font-family="sans-serif" font-size="20" font-weight="400" font-style="normal" text-anchor="start" xml:space="preserve" style="font-weight: 400; font-style: normal;" fill="#94a3b8" id="heroBody"><tspan>Design seamlessly in code. Export to production rasters at 1x, 2x, 4x, or inspect full layered PSDs in Adobe</tspan><tspan x="120" y="1098">Photoshop.</tspan></text>
     <g id="ctaGroup">
       <g id="primaryBtn">
  <rect x="120" y="1768" width="180" height="52" rx="8" ry="8" fill="#3b82f6" />

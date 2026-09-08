@@ -164,13 +164,30 @@ export function parseColorToRgba(colorStr?: string): ColorRgba {
     }
   }
 
-  // TOAD alpha format: alpha(color, amount) e.g. alpha(#fff, 0.5) or alpha(red, 20%)
-  const alphaMatch = str.match(/^alpha\s*\(\s*(.+?)\s*,\s*([0-9.]+)(%?)\s*\)$/i);
-  if (alphaMatch) {
-    const baseColor = parseColorToRgba(alphaMatch[1]);
-    const num = parseFloat(alphaMatch[2]!);
-    const a = Math.max(0, Math.min(1, alphaMatch[3] === '%' || num > 1 ? num / 100 : num));
-    return { ...baseColor, a };
+  // TOAD alpha format: alpha(color, amount) e.g. alpha(#fff, 0.5) or alpha(red, 20%) or alpha(rgba(...), 0.5)
+  if (/^alpha\s*\(/i.test(str) && str.endsWith(')')) {
+    const inner = str.slice(str.indexOf('(') + 1, str.lastIndexOf(')')).trim();
+    let depth = 0;
+    let splitIdx = -1;
+    for (let i = 0; i < inner.length; i++) {
+      const char = inner[i];
+      if (char === '(') depth++;
+      else if (char === ')') depth--;
+      else if (char === ',' && depth === 0) {
+        splitIdx = i;
+      }
+    }
+    if (splitIdx !== -1) {
+      const colorPart = inner.slice(0, splitIdx).trim();
+      const amountPart = inner.slice(splitIdx + 1).trim();
+      const amountMatch = amountPart.match(/^([0-9.]+)(%?)$/);
+      if (amountMatch) {
+        const baseColor = parseColorToRgba(colorPart);
+        const num = parseFloat(amountMatch[1]!);
+        const a = Math.max(0, Math.min(1, amountMatch[2] === '%' || num > 1 ? num / 100 : num));
+        return { ...baseColor, a };
+      }
+    }
   }
 
   // CMYK format: cmyk(c, m, y, k) or cmyk(c%, m%, y%, k%) or cmyk(c, m, y, k, a)

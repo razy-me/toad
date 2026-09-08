@@ -25,9 +25,10 @@ export interface ColorTelemetryResult {
  * Algorithm: sRGB -> Linear RGB -> OKLab -> OKLCH
  */
 export function sRgbToOklch(rgba: ColorRgba): OklchColor {
+  const sanitize = (v: number) => Number.isFinite(v) ? Math.max(0, Math.min(255, v)) : 0;
   // 1. sRGB to linear sRGB
   const s2lin = (c: number) => {
-    const v = c / 255;
+    const v = sanitize(c) / 255;
     return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
   };
   const r = s2lin(rgba.r);
@@ -48,11 +49,12 @@ export function sRgbToOklch(rgba: ColorRgba): OklchColor {
   const c = Math.hypot(a, b_lab);
   let h = (Math.atan2(b_lab, a) * 180) / Math.PI;
   if (h < 0) h += 360;
+  if (isNaN(h)) h = 0;
 
   return {
-    l: Math.max(0, Math.min(1, L)),
-    c: Math.max(0, c),
-    h: Math.max(0, Math.min(360, h))
+    l: Math.max(0, Math.min(1, Number.isFinite(L) ? L : 0)),
+    c: Math.max(0, Number.isFinite(c) ? c : 0),
+    h: Math.max(0, Math.min(360, Number.isFinite(h) ? h : 0))
   };
 }
 
@@ -64,19 +66,26 @@ export function calculateOklchEntropy(colors: ColorRgba[]): number {
   if (colors.length === 0) return 0;
 
   const voxelCounts = new Map<string, number>();
+  let totalWeight = 0;
+
   for (const rgba of colors) {
+    const alpha = rgba.a !== undefined ? Math.max(0, Math.min(1, rgba.a)) : 1;
+    if (alpha <= 0.001) continue;
+
     const oklch = sRgbToOklch(rgba);
     const lBin = Math.min(9, Math.floor(oklch.l * 10));
     const cBin = Math.min(5, Math.floor(oklch.c * 20));
     const hBin = Math.min(11, Math.floor((oklch.h / 360) * 12));
     const key = `${lBin}_${cBin}_${hBin}`;
-    voxelCounts.set(key, (voxelCounts.get(key) || 0) + 1);
+    voxelCounts.set(key, (voxelCounts.get(key) || 0) + alpha);
+    totalWeight += alpha;
   }
 
-  const total = colors.length;
+  if (totalWeight <= 0) return 0;
+
   let entropy = 0;
   for (const count of voxelCounts.values()) {
-    const p = count / total;
+    const p = count / totalWeight;
     if (p > 0) {
       entropy -= p * Math.log2(p);
     }
@@ -103,9 +112,10 @@ const SLOP_TROPE_TARGETS: OklchColor[] = [
  * Distance < 0.18 indicates high proximity to the cliché.
  */
 export function calculateSlopTriadDistance(colors: ColorRgba[]): number {
-  if (colors.length === 0) return 1.0;
+  const visible = colors.filter(c => (c.a ?? 1) > 0.05);
+  if (visible.length === 0) return 1.0;
 
-  const oklchColors = colors.map(sRgbToOklch);
+  const oklchColors = visible.map(sRgbToOklch);
 
   let sumMinDist = 0;
   for (const target of SLOP_TROPE_TARGETS) {
@@ -143,6 +153,7 @@ export function analyzeColorTelemetry(
 
   const hueSectors = new Set<number>();
   for (const c of colors) {
+    if ((c.a ?? 1) <= 0.05) continue;
     const oklch = sRgbToOklch(c);
     if (oklch.c > 0.04) {
       hueSectors.add(Math.floor((oklch.h / 360) * 8));

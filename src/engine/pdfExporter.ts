@@ -133,14 +133,15 @@ export class PdfExporter {
     this.extGStates.clear();
     this.images.clear();
 
+    const scale = options.scale && options.scale > 0 ? options.scale : 1;
     const bleed = options.bleed !== undefined ? options.bleed : (layout.canvas.bleed || 0);
     const cropMarks = options.cropMarks !== undefined ? options.cropMarks : (layout.canvas.cropMarks === true);
     const margin = Math.max(cropMarks ? 36 : 0, bleed > 0 ? bleed : 0);
 
     const baseW = layout.canvas.width;
     const baseH = layout.canvas.height;
-    const mediaW = baseW + 2 * margin;
-    const mediaH = baseH + 2 * margin;
+    const mediaW = (baseW + 2 * margin) * scale;
+    const mediaH = (baseH + 2 * margin) * scale;
 
     const isCmyk = options.colorMode === 'cmyk' || (layout.canvas as any).colorMode === 'cmyk';
 
@@ -149,6 +150,10 @@ export class PdfExporter {
 
     // Flip PDF coordinate system (origin bottom-left -> top-left matching canvas)
     streamOps.push(`1 0 0 -1 0 ${mediaH.toFixed(2)} cm`);
+
+    if (scale !== 1) {
+      streamOps.push(`${scale.toFixed(4)} 0 0 ${scale.toFixed(4)} 0 0 cm`);
+    }
 
     // Translate to Trim Box origin
     if (margin > 0) {
@@ -203,15 +208,15 @@ export class PdfExporter {
     }
 
     // 6. Build Page Object with MediaBox, TrimBox, and BleedBox
-    const trimLeft = margin;
-    const trimBottom = margin;
-    const trimRight = margin + baseW;
-    const trimTop = margin + baseH;
+    const trimLeft = margin * scale;
+    const trimBottom = margin * scale;
+    const trimRight = (margin + baseW) * scale;
+    const trimTop = (margin + baseH) * scale;
 
-    const bleedLeft = margin - bleed;
-    const bleedBottom = margin - bleed;
-    const bleedRight = margin + baseW + bleed;
-    const bleedTop = margin + baseH + bleed;
+    const bleedLeft = (margin - bleed) * scale;
+    const bleedBottom = (margin - bleed) * scale;
+    const bleedRight = (margin + baseW + bleed) * scale;
+    const bleedTop = (margin + baseH + bleed) * scale;
 
     const pageObjId = this.allocId();
     const catalogObjId = this.allocId();
