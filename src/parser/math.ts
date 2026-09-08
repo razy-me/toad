@@ -225,6 +225,7 @@ export interface LayoutResult {
   canvases?: Array<{ canvas: LayoutCanvasResult; nodes: LayoutNode[] }>;
   fonts: Array<{ family: string; source: string; weight?: string | number; style?: string }>;
   nodes: LayoutNode[];
+  rootNodes?: LayoutNode[];
   warnings: string[];
   dependencies: string[];
 }
@@ -353,17 +354,33 @@ export function readImageDimensions(filePath: string): { width: number; height: 
   return null;
 }
 
-export function safeEvaluateMath(expr: string): number {
+export function safeEvaluateMath(expr: string, warnings?: string[]): number {
   let pos = 0;
   const str = expr.replace(/\s+/g, '');
+  let errorEmitted = false;
+
+  function reportError(msg: string) {
+    if (!errorEmitted) {
+      errorEmitted = true;
+      if (warnings) {
+        warnings.push(msg);
+      }
+    }
+  }
 
   function parseNumber(): number {
     const start = pos;
     if (str[pos] === '+' || str[pos] === '-') pos++;
     let hasDot = false;
+    let digitCount = 0;
     while (pos < str.length && ((str[pos] >= '0' && str[pos] <= '9') || (!hasDot && str[pos] === '.'))) {
       if (str[pos] === '.') hasDot = true;
+      else digitCount++;
       pos++;
+    }
+    if (digitCount === 0) {
+      reportError(`Syntax error in math expression '${expr}': expected number at position ${start}`);
+      return 0;
     }
     const sub = str.slice(start, pos);
     const val = parseFloat(sub);
@@ -371,11 +388,18 @@ export function safeEvaluateMath(expr: string): number {
   }
 
   function parseFactor(): number {
-    if (pos >= str.length) return 0;
+    if (pos >= str.length) {
+      reportError(`Syntax error in math expression '${expr}': unexpected end of expression`);
+      return 0;
+    }
     if (str[pos] === '(') {
       pos++; // consume '('
       const val = parseExpr();
-      if (pos < str.length && str[pos] === ')') pos++; // consume ')'
+      if (pos < str.length && str[pos] === ')') {
+        pos++; // consume ')'
+      } else {
+        reportError(`Syntax error in math expression '${expr}': missing closing parenthesis`);
+      }
       return val;
     }
     if (str[pos] === '+') {
@@ -386,6 +410,11 @@ export function safeEvaluateMath(expr: string): number {
       pos++;
       return -parseFactor();
     }
+    if (str[pos] === '*' || str[pos] === '/') {
+      reportError(`Syntax error in math expression '${expr}': unexpected operator '${str[pos]}' at position ${pos}`);
+      pos++;
+      return 0;
+    }
     return parseNumber();
   }
 
@@ -393,6 +422,10 @@ export function safeEvaluateMath(expr: string): number {
     let left = parseFactor();
     while (pos < str.length && (str[pos] === '*' || str[pos] === '/')) {
       const op = str[pos++];
+      if (pos >= str.length) {
+        reportError(`Syntax error in math expression '${expr}': trailing operator '${op}'`);
+        break;
+      }
       const right = parseFactor();
       if (op === '*') {
         left *= right;
@@ -407,6 +440,10 @@ export function safeEvaluateMath(expr: string): number {
     let left = parseTerm();
     while (pos < str.length && (str[pos] === '+' || str[pos] === '-')) {
       const op = str[pos++];
+      if (pos >= str.length) {
+        reportError(`Syntax error in math expression '${expr}': trailing operator '${op}'`);
+        break;
+      }
       const right = parseTerm();
       if (op === '+') {
         left += right;
@@ -418,6 +455,10 @@ export function safeEvaluateMath(expr: string): number {
   }
 
   const result = parseExpr();
+  if (pos < str.length) {
+    reportError(`Syntax error in math expression '${expr}': unexpected trailing characters '${str.slice(pos)}' at position ${pos}`);
+  }
+
   return Number.isFinite(result) ? result : 0;
 }
 
@@ -426,7 +467,8 @@ export function evaluateCalc(
   parentSize: number,
   dpi = 96,
   canvasWidth?: number,
-  canvasHeight?: number
+  canvasHeight?: number,
+  warnings?: string[]
 ): number {
   const cw = canvasWidth !== undefined ? canvasWidth : parentSize;
   const ch = canvasHeight !== undefined ? canvasHeight : parentSize;
@@ -469,10 +511,10 @@ export function evaluateCalc(
 
   try {
     if (/^[0-9\.\+\-\*\/\s\(\)]+$/.test(expr)) {
-      return safeEvaluateMath(expr);
+      return safeEvaluateMath(expr, warnings);
     }
   } catch (e) {
-    // Fallback to 0 if syntax error in calc
+    warnings?.push(`Error evaluating calc expression '${expression}': ${(e as Error).message}`);
   }
   return 0;
 }
@@ -483,7 +525,8 @@ export function resolveDimension(
   intrinsicSize: number,
   dpi = 96,
   canvasWidth?: number,
-  canvasHeight?: number
+  canvasHeight?: number,
+  warnings?: string[]
 ): number {
   const cw = canvasWidth !== undefined ? canvasWidth : parentSize;
   const ch = canvasHeight !== undefined ? canvasHeight : parentSize;
@@ -499,7 +542,7 @@ export function resolveDimension(
       return isNaN(pct) ? 0 : parentSize * pct;
     }
     if (trimmed.startsWith('calc(')) {
-      return evaluateCalc(trimmed, parentSize, dpi, cw, ch);
+      return evaluateCalc(trimmed, parentSize, dpi, cw, ch, warnings);
     }
     if (trimmed.endsWith('vw')) {
       const v = parseFloat(trimmed);
@@ -1010,11 +1053,14 @@ export class LayoutSolver {
       }
     }
 
+    const rootOnlyNodes = rootNodes.filter(n => !n.parentId && !n.parent);
+
     return {
       canvas: primaryCanvasResult,
       canvases: canvasesResult,
       fonts,
       nodes: rootNodes,
+      rootNodes: rootOnlyNodes,
       warnings: this.warnings,
       dependencies: this.doc.dependencies || []
     };
@@ -1194,11 +1240,12 @@ export class LayoutSolver {
       const count = elem.children.length;
       const rows = Math.ceil(count / cols);
 
+      const dpi = this.doc.canvas.dpi || 96;
       const firstChildSize = this.computeIntrinsicSize(elem.children[0], canvasW, canvasH);
       const fwRaw = elem.children[0].size?.w;
       const fhRaw = elem.children[0].size?.h;
-      const childW = typeof fwRaw === 'number' ? fwRaw : firstChildSize.w;
-      const childH = typeof fhRaw === 'number' ? fhRaw : firstChildSize.h;
+      const childW = typeof fwRaw === 'number' ? fwRaw : typeof fwRaw === 'string' ? resolveDimension(fwRaw, canvasW, firstChildSize.w, dpi, canvasW, canvasH, this.warnings) : firstChildSize.w;
+      const childH = typeof fhRaw === 'number' ? fhRaw : typeof fhRaw === 'string' ? resolveDimension(fhRaw, canvasH, firstChildSize.h, dpi, canvasW, canvasH, this.warnings) : firstChildSize.h;
 
       const gridW = cols * childW + (cols - 1) * colGap;
       const gridH = rows * childH + (rows - 1) * rowGap;
@@ -1210,15 +1257,16 @@ export class LayoutSolver {
     }
 
     if (elem.children && elem.children.length > 0) {
+      const dpi = this.doc.canvas.dpi || 96;
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
       for (const child of elem.children) {
         const cSize = this.computeIntrinsicSize(child, canvasW, canvasH);
         const childWRaw = child.size?.w;
         const childHRaw = child.size?.h;
-        const cw = typeof childWRaw === 'number' ? childWRaw : (childWRaw === 'fill' ? 0 : cSize.w);
-        const ch = typeof childHRaw === 'number' ? childHRaw : (childHRaw === 'fill' ? 0 : cSize.h);
-        const cx = resolveDimension(child.at?.x, canvasW, 0, 96, canvasW, canvasH);
-        const cy = resolveDimension(child.at?.y, canvasH, 0, 96, canvasW, canvasH);
+        const cw = typeof childWRaw === 'number' ? childWRaw : (childWRaw === 'fill' ? 0 : typeof childWRaw === 'string' ? resolveDimension(childWRaw, canvasW, cSize.w, dpi, canvasW, canvasH, this.warnings) : cSize.w);
+        const ch = typeof childHRaw === 'number' ? childHRaw : (childHRaw === 'fill' ? 0 : typeof childHRaw === 'string' ? resolveDimension(childHRaw, canvasH, cSize.h, dpi, canvasW, canvasH, this.warnings) : cSize.h);
+        const cx = resolveDimension(child.at?.x, canvasW, 0, dpi, canvasW, canvasH, this.warnings);
+        const cy = resolveDimension(child.at?.y, canvasH, 0, dpi, canvasW, canvasH, this.warnings);
         if (cx < minX) minX = cx;
         if (cy < minY) minY = cy;
         if (cx + cw > maxX) maxX = cx + cw;
@@ -1806,7 +1854,9 @@ export class LayoutSolver {
       pathLayout = { d: iconD };
     } else if (elem.type === 'shape' || ['star', 'triangle', 'arrow', 'cross'].includes(elem.type)) {
       const typeToGen = elem.shapeType || elem.type;
-      pathLayout = { d: generateShapePath(typeToGen, box) };
+      const thickVal = (elem as any).thickness ?? (elem as any).barThickness;
+      const thickNum = typeof thickVal === 'number' ? thickVal : undefined;
+      pathLayout = { d: generateShapePath(typeToGen, box, { thickness: thickNum }) };
     } else if (elem.type === 'stack') {
       const dir = elem.direction === 'horizontal' || elem.direction === 'row' ? 'horizontal' : 'vertical';
       const pad: [number, number, number, number] = Array.isArray(elem.padding)

@@ -176,7 +176,7 @@ export class PdfExporter {
     }
 
     // 3. Draw Layout Nodes (render root nodes recursively to preserve parent-child transforms)
-    const rootNodes = layout.nodes.filter(n => !n.parentId && !n.parent);
+    const rootNodes = layout.rootNodes || layout.nodes.filter(n => !n.parentId && !n.parent);
     for (const node of (rootNodes.length > 0 ? rootNodes : layout.nodes)) {
       await this.renderNode(node, streamOps, isCmyk);
     }

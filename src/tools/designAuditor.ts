@@ -208,16 +208,33 @@ function sRgbToY(r: number, g: number, b: number): number {
  * Negative = Light text on dark background.
  */
 export function calculateApca(txtRgba: ColorRgba, bgRgba: ColorRgba): number {
-  const Ytxt = sRgbToY(txtRgba.r, txtRgba.g, txtRgba.b);
-  const Ybg = sRgbToY(bgRgba.r, bgRgba.g, bgRgba.b);
+  let Ytxt = sRgbToY(txtRgba.r, txtRgba.g, txtRgba.b);
+  let Ybg = sRgbToY(bgRgba.r, bgRgba.g, bgRgba.b);
+
+  // W3C APCA 0.98G black level soft-clip flare
+  const blkThrs = 0.022;
+  const blkClmp = 1.414;
+  if (Ytxt < blkThrs) Ytxt += Math.pow(blkThrs - Ytxt, blkClmp);
+  if (Ybg < blkThrs) Ybg += Math.pow(blkThrs - Ybg, blkClmp);
+
+  // Delta threshold: imperceptible luminance differences return 0
+  if (Math.abs(Ybg - Ytxt) < 0.0005) {
+    return 0;
+  }
+
+  let sapc = 0;
+  const scale = 1.14;
+  const offset = 0.027;
 
   if (Ybg > Ytxt) {
-    // Dark text on light background
-    const sapc = (Math.pow(Ybg, 0.56) - Math.pow(Ytxt, 0.57)) * 1.14;
+    // Dark text on light background (BoW)
+    sapc = (Math.pow(Ybg, 0.56) - Math.pow(Ytxt, 0.57)) * scale;
+    sapc = sapc < offset ? 0 : sapc - offset;
     return Math.round(sapc * 100);
   } else {
-    // Light text on dark background
-    const sapc = (Math.pow(Ybg, 0.65) - Math.pow(Ytxt, 0.62)) * 1.14;
+    // Light text on dark background (WoB)
+    sapc = (Math.pow(Ybg, 0.65) - Math.pow(Ytxt, 0.62)) * scale;
+    sapc = sapc > -offset ? 0 : sapc + offset;
     return Math.round(sapc * 100);
   }
 }
@@ -1273,7 +1290,7 @@ export function auditDesign(
 
   // Advanced Statistical & Computational Design Telemetry
   const opticalCentroid = calculateOpticalCentroid(allNodes, canvasWidth, canvasHeight);
-  const whitespaceDistribution = calculateWhitespaceDistribution(allNodes, canvasWidth, canvasHeight, negativeSpacePercent);
+  const whitespaceDistribution = calculateWhitespaceDistribution(allNodes, canvasWidth, canvasHeight, negativeSpacePercent, layout.canvas.bleed || 0);
   const typographicTelemetry = analyzeTypographicTelemetry(textNodes);
   const allParsedColors = paletteSwatches.map(p => parseColorToRgba(p.hex));
   const colorTelemetry = analyzeColorTelemetry(allParsedColors);

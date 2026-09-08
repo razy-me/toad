@@ -66,6 +66,21 @@ export function calculateOpticalCentroid(
       continue;
     }
 
+    // Skip transparent containers whose children are already present to avoid duplicate mass
+    const isContainer = node.type === 'group' || node.type === 'stack' || node.type === 'grid' || Boolean(node.children && node.children.length > 0);
+    const hasVisualSurface = Boolean(
+      node.fill ||
+      node.stroke ||
+      node.strokeColor ||
+      node.style?.fill ||
+      node.style?.stroke ||
+      (node.style as any)?.shadow ||
+      (node.style as any)?.outerGlow
+    );
+    if (isContainer && !hasVisualSurface) {
+      continue;
+    }
+
     const w = Math.max(1, node.width || 1);
     const h = Math.max(1, node.height || 1);
     const cx = (node.x || 0) + w / 2;
@@ -145,8 +160,13 @@ export function calculateWhitespaceDistribution(
   nodes: LayoutNode[],
   canvasWidth: number,
   canvasHeight: number,
-  negativeSpacePercent: number
+  negativeSpacePercent: number,
+  bleed: number = 0
 ): WhitespaceDistributionResult {
+  const bleedOffset = Math.max(0, bleed);
+  const totalW = canvasWidth + bleedOffset * 2;
+  const totalH = canvasHeight + bleedOffset * 2;
+
   const visibleNodes = nodes.filter(n => {
     if (n.type === 'rect' && n.width >= canvasWidth * 0.98 && n.height >= canvasHeight * 0.98) return false;
     if ((n.width || 0) <= 0 || (n.height || 0) <= 0) return false;
@@ -169,7 +189,7 @@ export function calculateWhitespaceDistribution(
     return true;
   });
 
-  if (visibleNodes.length < 3 || canvasWidth <= 0 || canvasHeight <= 0) {
+  if (visibleNodes.length < 3 || totalW <= 0 || totalH <= 0) {
     return {
       voronoiGini: 0.5,
       horrorVacuiIndex: Math.max(0, 1 - negativeSpacePercent / 100),
@@ -189,13 +209,15 @@ export function calculateWhitespaceDistribution(
   const GRID_ROWS = 30;
   const cellCounts = new Array(centroids.length).fill(0);
 
-  const stepX = canvasWidth / GRID_COLS;
-  const stepY = canvasHeight / GRID_ROWS;
+  const stepX = totalW / GRID_COLS;
+  const stepY = totalH / GRID_ROWS;
+  const startX = -bleedOffset;
+  const startY = -bleedOffset;
 
   for (let r = 0; r < GRID_ROWS; r++) {
-    const py = (r + 0.5) * stepY;
+    const py = startY + (r + 0.5) * stepY;
     for (let c = 0; c < GRID_COLS; c++) {
-      const px = (c + 0.5) * stepX;
+      const px = startX + (c + 0.5) * stepX;
 
       let nearestIdx = 0;
       let minSqDist = Infinity;
@@ -233,7 +255,7 @@ export function calculateWhitespaceDistribution(
 
   // Horror Vacui Index: combines negative space scarcity with element count
   const negRatio = Math.max(0, Math.min(1, negativeSpacePercent / 100));
-  const optimalNodes = Math.max(6, Math.min(24, Math.round((canvasWidth * canvasHeight) / 50000)));
+  const optimalNodes = Math.max(6, Math.min(24, Math.round((totalW * totalH) / 50000)));
   const crowdingFactor = 1 + Math.log(1 + Math.max(0, visibleNodes.length / optimalNodes));
   const hvi = Math.round(Math.min(1, (1 - negRatio) * (crowdingFactor * 0.6)) * 100) / 100;
 

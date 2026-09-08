@@ -95,7 +95,8 @@ export class CanvasRenderer {
 
         // Apply Vignette if specified
         if (layout.canvas.photoParams?.vignette) {
-          drawVignette(ctx, bgW, bgH, layout.canvas.photoParams.vignette);
+          const vCenter = (layout.canvas.photoParams as any)?.vignetteCenter;
+          drawVignette(ctx, bgW, bgH, layout.canvas.photoParams.vignette, vCenter?.x, vCenter?.y);
         }
       }
       ctx.restore();
@@ -116,7 +117,7 @@ export class CanvasRenderer {
     }
 
     // 4. Render Layout Nodes
-    const rootNodes = layout.nodes.filter(n => !n.parentId && !n.parent);
+    const rootNodes = layout.rootNodes || layout.nodes.filter(n => !n.parentId && !n.parent);
     for (const node of (rootNodes.length > 0 ? rootNodes : layout.nodes)) {
       await this.renderNode(ctx, node, options.basePath, false, undefined, layout.canvas);
     }

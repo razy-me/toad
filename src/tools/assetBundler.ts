@@ -92,9 +92,13 @@ export interface BundleResult {
 
 function flattenNodes(nodes: LayoutNode[]): LayoutNode[] {
   const result: LayoutNode[] = [];
+  const seen = new Set<LayoutNode>();
   function walk(list: LayoutNode[]) {
     for (const node of list) {
-      result.push(node);
+      if (!seen.has(node)) {
+        seen.add(node);
+        result.push(node);
+      }
       if (node.children && node.children.length > 0) walk(node.children);
     }
   }
