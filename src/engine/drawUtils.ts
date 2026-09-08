@@ -164,6 +164,15 @@ export function parseColorToRgba(colorStr?: string): ColorRgba {
     }
   }
 
+  // TOAD alpha format: alpha(color, amount) e.g. alpha(#fff, 0.5) or alpha(red, 20%)
+  const alphaMatch = str.match(/^alpha\s*\(\s*(.+?)\s*,\s*([0-9.]+)(%?)\s*\)$/i);
+  if (alphaMatch) {
+    const baseColor = parseColorToRgba(alphaMatch[1]);
+    const num = parseFloat(alphaMatch[2]!);
+    const a = Math.max(0, Math.min(1, alphaMatch[3] === '%' || num > 1 ? num / 100 : num));
+    return { ...baseColor, a };
+  }
+
   // CMYK format: cmyk(c, m, y, k) or cmyk(c%, m%, y%, k%) or cmyk(c, m, y, k, a)
   const cmykMatch = str.match(/cmyk\s*\(\s*([0-9.]+)(%?)[,\s]+([0-9.]+)(%?)[,\s]+([0-9.]+)(%?)[,\s]+([0-9.]+)(%?)(?:[,\s/]+([0-9.]+)(%?))?\s*\)/i);
   if (cmykMatch) {

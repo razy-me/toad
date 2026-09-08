@@ -115,9 +115,13 @@ export function calculateSlopTriadDistance(colors: ColorRgba[]): number {
       const dC = (c.c - target.c) * 2.0; // scale chroma weight
       let dH = Math.abs(c.h - target.h);
       if (dH > 180) dH = 360 - dH;
-      const dHNorm = dH / 180; // 0 to 1
+      // In polar color spaces, delta H arc length is scaled by chroma: 2 * sqrt(c1 * c2) * sin(dH / 2).
+      // When either color is near-neutral, hue differences have near-zero perceptual effect.
+      const dHRad = (dH * Math.PI) / 180;
+      const chromaWeight = Math.sqrt(Math.max(0, c.c * target.c));
+      const dHMetric = 2 * chromaWeight * Math.sin(dHRad / 2);
 
-      const dist = Math.sqrt(dL * dL + dC * dC + dHNorm * dHNorm);
+      const dist = Math.sqrt(dL * dL + dC * dC + dHMetric * dHMetric);
       if (dist < minDist) minDist = dist;
     }
     sumMinDist += minDist;

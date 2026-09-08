@@ -352,8 +352,12 @@ export class CanvasRenderer {
             if (typeof fill === 'string') {
               ctx.fillStyle = fill;
             } else {
-              // Pass normalized box since ctx is already translated
-              const localBox = { x: 0, y: 0, w: node.width, h: node.height };
+              // Pass normalized box since ctx is already translated.
+              // For icons, the context is already scaled by (node.width / 24, node.height / 24),
+              // so the icon's local coordinate space is 24x24 units.
+              const localBox = node.type === 'icon'
+                ? { x: 0, y: 0, w: 24, h: 24 }
+                : { x: 0, y: 0, w: node.width, h: node.height };
               ctx.fillStyle = createCanvasGradient(ctx, fill as any, localBox);
             }
             ctx.fill(pathObj);

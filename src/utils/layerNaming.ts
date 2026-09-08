@@ -188,10 +188,12 @@ export function resolveHumanLayerName(node: any, context?: LayerNamingContext): 
   if (rawType === 'icon') {
     const iconName = node.iconName || node.name || node.pathLayout?.iconName;
     if (iconName && typeof iconName === 'string' && iconName !== 'icon' && !iconName.startsWith('__auto_')) {
-      return `${humanizeIdentifier(iconName)} Icon`;
+      const base = humanizeIdentifier(iconName);
+      return /icon$/i.test(base.trim()) ? base : `${base} Icon`;
     }
     if (!isSynthetic && rawId) {
-      return `${humanize ? humanizeIdentifier(rawId) : rawId} Icon`;
+      const base = humanize ? humanizeIdentifier(rawId) : rawId;
+      return /icon$/i.test(base.trim()) ? base : `${base} Icon`;
     }
     return 'Icon';
   }

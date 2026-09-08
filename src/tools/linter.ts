@@ -203,6 +203,8 @@ export function lintDocument(doc: DocumentNode): Diagnostic[] {
           maskTarget = node.value.name;
         } else if (node.value?.type === 'StringLiteral') {
           maskTarget = node.value.value;
+        } else if (node.value?.type === 'ColorLiteral' && typeof node.value.value === 'string') {
+          maskTarget = node.value.value;
         }
         if (maskTarget) {
           const cleanTarget = maskTarget.replace(/^#/, '');

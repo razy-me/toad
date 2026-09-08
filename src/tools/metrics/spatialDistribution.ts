@@ -149,7 +149,24 @@ export function calculateWhitespaceDistribution(
 ): WhitespaceDistributionResult {
   const visibleNodes = nodes.filter(n => {
     if (n.type === 'rect' && n.width >= canvasWidth * 0.98 && n.height >= canvasHeight * 0.98) return false;
-    return (n.width || 0) > 0 && (n.height || 0) > 0;
+    if ((n.width || 0) <= 0 || (n.height || 0) <= 0) return false;
+
+    // Filter out transparent layout containers whose centroids duplicate their children's centroids
+    const isContainer = n.type === 'group' || n.type === 'stack' || n.type === 'grid' || Boolean(n.children && n.children.length > 0);
+    const hasVisualSurface = Boolean(
+      n.fill ||
+      n.stroke ||
+      n.strokeColor ||
+      n.style?.fill ||
+      n.style?.stroke ||
+      (n.style as any)?.shadow ||
+      (n.style as any)?.outerGlow
+    );
+    if (isContainer && !hasVisualSurface) {
+      return false;
+    }
+
+    return true;
   });
 
   if (visibleNodes.length < 3 || canvasWidth <= 0 || canvasHeight <= 0) {

@@ -638,8 +638,16 @@ export function auditDesign(
       }
     }
 
-    const contrast = calculateContrastRatio(fgRgba, effectiveBg);
-    const apca = calculateApca(fgRgba, effectiveBg);
+    const effectiveAlpha = (fgRgba.a ?? 1) * (typeof node.style.opacity === 'number' ? node.style.opacity : 1);
+    const blendedFg: ColorRgba = effectiveAlpha < 1 ? {
+      r: Math.round(fgRgba.r * effectiveAlpha + effectiveBg.r * (1 - effectiveAlpha)),
+      g: Math.round(fgRgba.g * effectiveAlpha + effectiveBg.g * (1 - effectiveAlpha)),
+      b: Math.round(fgRgba.b * effectiveAlpha + effectiveBg.b * (1 - effectiveAlpha)),
+      a: 1
+    } : fgRgba;
+
+    const contrast = calculateContrastRatio(blendedFg, effectiveBg);
+    const apca = calculateApca(blendedFg, effectiveBg);
     const absApca = Math.abs(apca);
 
     const fontSize = node.textLayout?.fontSize || 16;
@@ -909,27 +917,48 @@ export function auditDesign(
   // --------------------------------------------------------------------------
   // 4. Negative Space & Density Profiler (Axiom UNI-01 / WENIGER IST MEHR)
   // --------------------------------------------------------------------------
-  // We measure root-level layout nodes to prevent double-counting children inside cards
-  let occupiedArea = 0;
-  for (const node of layout.nodes) {
-    if (node.parent || node.parentId) continue;
-    // Skip full-canvas background rects (e.g. >= 90% of both dimensions)
-    if (node.width >= canvasWidth * 0.90 && node.height >= canvasHeight * 0.90) continue;
-    occupiedArea += Math.min(node.width * node.height, canvasArea);
-  }
+  // We measure non-background content nodes using a 2D sample occupancy grid
+  // to avoid artificial double-counting of overlapping bounding boxes and badges on cards
+  const candidateNodes = layout.nodes.filter(n => {
+    if (n.parent || n.parentId) return false;
+    if (n.width >= canvasWidth * 0.90 && n.height >= canvasHeight * 0.90) return false;
+    return (n.width || 0) > 0 && (n.height || 0) > 0;
+  });
 
-  // If there are no root non-background nodes (e.g. only canvas background + texts), measure text/shape bounds
-  if (occupiedArea === 0) {
-    for (const node of allNodes) {
-      if (node.parent || node.parentId) continue;
-      if (node.width >= canvasWidth * 0.90 && node.height >= canvasHeight * 0.90) continue;
-      occupiedArea += Math.min(node.width * node.height, canvasArea);
+  const nodesToMeasure = candidateNodes.length > 0 ? candidateNodes : allNodes.filter(n => {
+    if (n.parent || n.parentId) return false;
+    if (n.width >= canvasWidth * 0.90 && n.height >= canvasHeight * 0.90) return false;
+    return (n.width || 0) > 0 && (n.height || 0) > 0;
+  });
+
+  const GRID_COLS = 50;
+  const GRID_ROWS = 50;
+  const totalCells = GRID_COLS * GRID_ROWS;
+  const cellW = canvasWidth > 0 ? canvasWidth / GRID_COLS : 1;
+  const cellH = canvasHeight > 0 ? canvasHeight / GRID_ROWS : 1;
+
+  let occupiedCells = 0;
+  if (nodesToMeasure.length > 0 && canvasWidth > 0 && canvasHeight > 0) {
+    const grid = new Uint8Array(totalCells);
+    for (const node of nodesToMeasure) {
+      const minC = Math.max(0, Math.min(GRID_COLS - 1, Math.floor(node.x / cellW)));
+      const maxC = Math.max(0, Math.min(GRID_COLS - 1, Math.floor((node.x + node.width) / cellW)));
+      const minR = Math.max(0, Math.min(GRID_ROWS - 1, Math.floor(node.y / cellH)));
+      const maxR = Math.max(0, Math.min(GRID_ROWS - 1, Math.floor((node.y + node.height) / cellH)));
+
+      for (let r = minR; r <= maxR; r++) {
+        const rowOffset = r * GRID_COLS;
+        for (let c = minC; c <= maxC; c++) {
+          grid[rowOffset + c] = 1;
+        }
+      }
+    }
+    for (let i = 0; i < totalCells; i++) {
+      if (grid[i] === 1) occupiedCells++;
     }
   }
 
-  // Approximate overlapping bounding boxes ratio
-  const rawDensity = Math.min(1.0, occupiedArea / canvasArea);
-  const canvasDensityPercent = Math.round(rawDensity * 100);
+  const canvasDensityPercent = Math.round((occupiedCells / totalCells) * 100);
   const negativeSpacePercent = Math.max(0, 100 - canvasDensityPercent);
 
   // If density is excessive (> 85% occupied / < 15% negative space) with multiple clutter elements

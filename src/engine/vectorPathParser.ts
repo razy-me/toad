@@ -38,8 +38,46 @@ function tokenizeSvgPath(d: string): Array<{ command: string; args: number[] }> 
       currentCmd = match[1];
       currentArgs = [];
     } else if (match[2]) {
-      // Number argument
-      currentArgs.push(parseFloat(match[2]));
+      // Number argument (with special handling for dense arc flags e.g. 0150)
+      let numStr = match[2];
+      const isArc = currentCmd.toUpperCase() === 'A';
+      if (isArc) {
+        const arcPos = currentArgs.length % 7;
+        if (arcPos === 3) {
+          // Expecting large-arc-flag (0 or 1)
+          if (numStr.length > 1 && (numStr[0] === '0' || numStr[0] === '1')) {
+            currentArgs.push(Number(numStr[0]));
+            numStr = numStr.slice(1);
+            // Check if sweep-flag is also attached
+            if (numStr.length > 0 && (numStr[0] === '0' || numStr[0] === '1')) {
+              currentArgs.push(Number(numStr[0]));
+              numStr = numStr.slice(1);
+              if (numStr.length > 0) {
+                currentArgs.push(parseFloat(numStr));
+              }
+            } else if (numStr.length > 0) {
+              currentArgs.push(parseFloat(numStr));
+            }
+          } else {
+            currentArgs.push(parseFloat(numStr));
+          }
+        } else if (arcPos === 4) {
+          // Expecting sweep-flag (0 or 1)
+          if (numStr.length > 1 && (numStr[0] === '0' || numStr[0] === '1')) {
+            currentArgs.push(Number(numStr[0]));
+            numStr = numStr.slice(1);
+            if (numStr.length > 0) {
+              currentArgs.push(parseFloat(numStr));
+            }
+          } else {
+            currentArgs.push(parseFloat(numStr));
+          }
+        } else {
+          currentArgs.push(parseFloat(numStr));
+        }
+      } else {
+        currentArgs.push(parseFloat(numStr));
+      }
     }
   }
 

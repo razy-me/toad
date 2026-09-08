@@ -877,8 +877,13 @@ export class LayoutSolver {
 
     const linkMasks = (nodes: LayoutNode[]) => {
       for (const n of nodes) {
-        if (n.mask && nodeById.has(n.mask)) {
-          n.maskNode = nodeById.get(n.mask);
+        if (n.mask) {
+          const cleanMask = n.mask.replace(/^#/, '');
+          if (nodeById.has(n.mask)) {
+            n.maskNode = nodeById.get(n.mask);
+          } else if (nodeById.has(cleanMask)) {
+            n.maskNode = nodeById.get(cleanMask);
+          }
         }
         if (n.children) linkMasks(n.children);
       }
@@ -1470,6 +1475,18 @@ export class LayoutSolver {
       const paddingBottom = pad[2] || 0;
       const paddingLeft = pad[3] || 0;
 
+      const wOmitted = elem.size?.w === undefined || elem.size?.w === 'hug';
+      const hOmitted = elem.size?.h === undefined || elem.size?.h === 'hug';
+      const hasMainFillChild = elem.children.some(child =>
+        dir === 'horizontal' ? child.size?.w === 'fill' : child.size?.h === 'fill'
+      );
+      const isCircularMainHug = (dir === 'horizontal' && wOmitted && hasMainFillChild) ||
+                                (dir === 'vertical' && hOmitted && hasMainFillChild);
+
+      if (isCircularMainHug) {
+        console.warn(`[Layout] Stack "${elem.id || elem.name || 'stack'}" has 'hug' sizing on its main axis, but contains children with 'fill' sizing. Falling back to intrinsic child sizes.`);
+      }
+
       // First pass: Resolve child sizes and count main-axis fill elements
       let mainTotal = 0;
       let crossMax = 0;
@@ -1482,9 +1499,15 @@ export class LayoutSolver {
         let ch = resolveDimension(child.size?.h, h - paddingTop - paddingBottom, cSize.h, dpi, canvasW, canvasH);
 
         const isMainFill = dir === 'horizontal' ? child.size?.w === 'fill' : child.size?.h === 'fill';
-        if (isMainFill) fillCount++;
-
-        if (!isMainFill) {
+        if (isMainFill) {
+          fillCount++;
+          if (isCircularMainHug) {
+            const fallbackDim = dir === 'horizontal' ? (cSize.w > 0 ? cSize.w : 32) : (cSize.h > 0 ? cSize.h : 32);
+            if (dir === 'horizontal') cw = fallbackDim;
+            else ch = fallbackDim;
+            mainTotal += fallbackDim;
+          }
+        } else {
           if (dir === 'horizontal') mainTotal += cw;
           else mainTotal += ch;
         }
@@ -1498,13 +1521,10 @@ export class LayoutSolver {
           }
         }
 
-        return { cw, ch, isMainFill, isCrossFill };
+        return { cw, ch, isMainFill, isCrossFill, cSize };
       });
 
       mainTotal += (elem.children.length - 1) * gap;
-
-      const wOmitted = elem.size?.w === undefined || elem.size?.w === 'hug';
-      const hOmitted = elem.size?.h === undefined || elem.size?.h === 'hug';
 
       if (wOmitted) w = dir === 'vertical' ? crossMax + paddingLeft + paddingRight : mainTotal + paddingLeft + paddingRight;
       if (hOmitted) h = dir === 'horizontal' ? crossMax + paddingTop + paddingBottom : mainTotal + paddingTop + paddingBottom;
@@ -1551,7 +1571,7 @@ export class LayoutSolver {
         const child = elem.children[i]!;
         let { cw, ch, isMainFill, isCrossFill } = childSizes[i]!;
 
-        if (isMainFill) {
+        if (isMainFill && !isCircularMainHug) {
           if (dir === 'horizontal') cw = fillSize;
           else ch = fillSize;
         }
