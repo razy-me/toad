@@ -11,14 +11,15 @@ export const KNOWN_PROPERTIES = [
   'vertical-align', 'verticalAlign', 'trim', 'text-box-trim', 'textBoxTrim', 'font-features', 'fontFeatures', 'font-variation', 'fontVariation',
   'hanging-punctuation', 'hangingPunctuation',
   'margin', 'padding', 'gap', 'column-gap', 'columnGap', 'row-gap', 'rowGap', 'flow',
-  'direction', 'align', 'text-align', 'columns', 'at', 'position', 'rotation', 'scale', 'scales',
+  'direction', 'align', 'text-align', 'distribution', 'justify', 'columns', 'at', 'position', 'rotation', 'scale', 'scales',
   'skewX', 'skewY', 'skew-x', 'skew-y',
   'transform-origin', 'transformOrigin', 'clip', 'mask', 'blend-mode', 'blendMode',
   'filter', 'backdrop-filter', 'backdropFilter', 'export', 'exports', 'format', 'formats',
   'ratio', 'aspect-ratio', 'aspectRatio', 'resolution', 'density', 'quality', 'compress', 'compression', 'preset',
   'bleed', 'crop-marks', 'cropMarks', 'dpi', 'color-mode', 'colorMode',
   'src', 'fit', 'points', 'd', 'path', 'iconName', 'icon-name', 'shapeType', 'z-index', 'zIndex',
-  'layer-color', 'layerColor', 'fill-opacity', 'fillOpacity', 'lock', 'protected', 'knockout', 'shadows',
+  'layer-color', 'layerColor', 'fill-opacity', 'fillOpacity', 'lock', 'protected', 'knockout', 'shadows', 'shadows-adjust',
+  'photo-src', 'photoSrc', 'photo-params', 'photoParams', 'feather', 'vignette', 'exposure', 'warmth', 'temperature', 'highlights',
   'guides', 'guide', 'global-light', 'globalLight'
 ];
 
@@ -67,8 +68,10 @@ export function suggestProperty(unknownProp: string, threshold = 3): string | nu
   for (const prop of KNOWN_PROPERTIES) {
     const normalizedProp = prop.toLowerCase().replace(/[^a-z0-9]/g, '');
     
-    // Quick skip for very different lengths to save compute
-    if (Math.abs(normalizedProp.length - normalizedUnknown.length) > threshold) {
+    // Quick skip for very different lengths to save compute, unless prefixes match
+    const lenDelta = Math.abs(normalizedProp.length - normalizedUnknown.length);
+    const prefixMatch = normalizedProp.startsWith(normalizedUnknown) || normalizedUnknown.startsWith(normalizedProp);
+    if (lenDelta > threshold && !prefixMatch) {
       continue;
     }
 

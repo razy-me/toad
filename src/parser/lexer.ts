@@ -32,6 +32,9 @@ export enum TokenType {
   KW_CROSS = 'KW_CROSS',                 // cross
   KW_SLOT = 'KW_SLOT',                   // slot
   KW_CHILDREN = 'KW_CHILDREN',           // children
+  KW_PAGES = 'KW_PAGES',                 // pages
+  KW_PAGE = 'KW_PAGE',                   // page
+  KW_ARTBOARD = 'KW_ARTBOARD',           // artboard
 
   // Relational & Spatial Keywords
   KW_AT = 'KW_AT',                       // at
@@ -136,6 +139,9 @@ const KEYWORDS: Record<string, TokenType> = {
   cross: TokenType.KW_CROSS,
   slot: TokenType.KW_SLOT,
   children: TokenType.KW_CHILDREN,
+  pages: TokenType.KW_PAGES,
+  page: TokenType.KW_PAGE,
+  artboard: TokenType.KW_ARTBOARD,
 
   at: TokenType.KW_AT,
   of: TokenType.KW_OF,

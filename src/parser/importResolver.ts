@@ -644,22 +644,24 @@ export class ImportResolver {
           properties.guides = guidesList;
         } else if (propName === 'global-light' || propName === 'globalLight') {
           const rawGl = this.extractRawValue(val);
+          const clampAlt = (alt: number) => Math.max(0, Math.min(90, alt));
           if (typeof rawGl === 'number') {
             properties.globalLight = { angle: rawGl, altitude: 30 };
           } else if (Array.isArray(rawGl)) {
             const angle = typeof rawGl[0] === 'number' ? rawGl[0] : parseFloat(rawGl[0]) || 90;
             const altitude = typeof rawGl[1] === 'number' ? rawGl[1] : parseFloat(rawGl[1]) || 30;
-            properties.globalLight = { angle, altitude };
+            properties.globalLight = { angle, altitude: clampAlt(altitude) };
           } else if (typeof rawGl === 'object' && rawGl !== null) {
+            const rawAlt = typeof rawGl.altitude === 'number' ? rawGl.altitude : parseFloat(rawGl.altitude) || 30;
             properties.globalLight = {
               angle: typeof rawGl.angle === 'number' ? rawGl.angle : parseFloat(rawGl.angle) || 90,
-              altitude: typeof rawGl.altitude === 'number' ? rawGl.altitude : parseFloat(rawGl.altitude) || 30
+              altitude: clampAlt(rawAlt)
             };
           } else if (typeof rawGl === 'string') {
             const parts = rawGl.split(/\s+/).map(parseFloat).filter(n => !isNaN(n));
             properties.globalLight = {
               angle: parts[0] ?? 90,
-              altitude: parts[1] ?? 30
+              altitude: clampAlt(parts[1] ?? 30)
             };
           }
         } else if (propName === 'vignette') {
