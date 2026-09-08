@@ -371,8 +371,11 @@ export async function compileToad(
     }
   }
 
+  const seenImageNodes = new Set<LayoutNode>();
   const collectImageAssets = (nodes: LayoutNode[]) => {
     for (const n of nodes) {
+      if (seenImageNodes.has(n)) continue;
+      seenImageNodes.add(n);
       const src = n.imageLayout?.src || (n as any).src;
       if (src && typeof src === 'string' && !src.startsWith('data:') && !src.startsWith('http://') && !src.startsWith('https://')) {
         const fullImgPath = path.resolve(entryDir, src);

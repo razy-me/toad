@@ -146,7 +146,7 @@ export class SvgExporter {
     }
 
     // 2. Render Nodes
-    const rootNodes = layout.nodes.filter(n => !n.parentId && !n.parent);
+    const rootNodes = layout.rootNodes || layout.nodes.filter(n => !n.parentId && !n.parent);
     const nodesToRender = rootNodes.length > 0 ? rootNodes : layout.nodes;
     const rootSiblingCounts = new Map<string, number>();
     for (const n of nodesToRender) {

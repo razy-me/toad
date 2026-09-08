@@ -1,6 +1,6 @@
 import { LayoutBox } from '../parser/math.js';
 
-export function generateShapePath(type: string, box: LayoutBox): string {
+export function generateShapePath(type: string, box: LayoutBox, options?: { thickness?: number }): string {
   const { w, h } = box;
   
   switch (type) {
@@ -24,7 +24,10 @@ export function generateShapePath(type: string, box: LayoutBox): string {
     case 'arrow':
       return `M 0 ${h * 0.3} L ${w * 0.6} ${h * 0.3} L ${w * 0.6} 0 L ${w} ${h / 2} L ${w * 0.6} ${h} L ${w * 0.6} ${h * 0.7} L 0 ${h * 0.7} Z`;
     case 'cross': {
-      const thick = Math.min(w, h) * 0.2;
+      const customThick = options?.thickness;
+      const thick = typeof customThick === 'number' && customThick > 0
+        ? (customThick <= 1 ? Math.min(w, h) * customThick : Math.min(customThick, Math.min(w, h)))
+        : Math.min(w, h) * 0.2;
       return `M ${w/2 - thick/2} 0 L ${w/2 + thick/2} 0 L ${w/2 + thick/2} ${h/2 - thick/2} L ${w} ${h/2 - thick/2} L ${w} ${h/2 + thick/2} L ${w/2 + thick/2} ${h/2 + thick/2} L ${w/2 + thick/2} ${h} L ${w/2 - thick/2} ${h} L ${w/2 - thick/2} ${h/2 + thick/2} L 0 ${h/2 + thick/2} L 0 ${h/2 - thick/2} L ${w/2 - thick/2} ${h/2 - thick/2} Z`;
     }
     default:

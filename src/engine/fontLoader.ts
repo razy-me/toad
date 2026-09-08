@@ -7,6 +7,7 @@
 import { GlobalFonts } from '@napi-rs/canvas';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import * as os from 'node:os';
 
 export interface FontDirective {
   family: string;
@@ -48,14 +49,22 @@ export function normalizeFontWeightToNumber(weight?: string | number): number {
   return 400;
 }
 
+const fontNameCache = new Map<string, { postScript?: string; family?: string; subfamily?: string } | null>();
+
 /**
  * Extracts PostScript name (nameId 6), Family (nameId 1), and Subfamily (nameId 2)
  * directly from an OpenType / TrueType font binary table without external dependencies.
  */
 export function parseOpenTypeFontNames(filePath: string): { postScript?: string; family?: string; subfamily?: string } | null {
+  if (fontNameCache.has(filePath)) {
+    return fontNameCache.get(filePath)!;
+  }
   try {
     const buf = fs.readFileSync(filePath);
-    if (buf.length < 12) return null;
+    if (buf.length < 12) {
+      fontNameCache.set(filePath, null);
+      return null;
+    }
     const numTables = buf.readUInt16BE(4);
     let nameTableOffset = 0;
     for (let i = 0; i < numTables; i++) {
@@ -67,7 +76,10 @@ export function parseOpenTypeFontNames(filePath: string): { postScript?: string;
         break;
       }
     }
-    if (!nameTableOffset || nameTableOffset + 6 > buf.length) return null;
+    if (!nameTableOffset || nameTableOffset + 6 > buf.length) {
+      fontNameCache.set(filePath, null);
+      return null;
+    }
     const count = buf.readUInt16BE(nameTableOffset + 2);
     const stringStorageOffset = nameTableOffset + buf.readUInt16BE(nameTableOffset + 4);
     let postScript: string | undefined = undefined;
@@ -98,8 +110,11 @@ export function parseOpenTypeFontNames(filePath: string): { postScript?: string;
       if (nameId === 1 && !family && val) family = val;
       if (nameId === 2 && !subfamily && val) subfamily = val;
     }
-    return { postScript, family, subfamily };
+    const result = { postScript, family, subfamily };
+    fontNameCache.set(filePath, result);
+    return result;
   } catch {
+    fontNameCache.set(filePath, null);
     return null;
   }
 }
@@ -331,12 +346,13 @@ export class FontLoader {
   /**
    * Indexes OS system font directories lazily to discover installed PostScript font names.
    */
-  private static indexSystemFontsLazily(): void {
+  public static indexSystemFontsLazily(): void {
     if (this.systemFontsIndexed) return;
     this.systemFontsIndexed = true;
 
     try {
       const sysDirs: string[] = [];
+      const home = os.homedir();
       if (process.platform === 'win32') {
         const winDir = process.env.WINDIR || 'C:\\Windows';
         sysDirs.push(path.join(winDir, 'Fonts'));
@@ -344,20 +360,43 @@ export class FontLoader {
           sysDirs.push(path.join(process.env.LOCALAPPDATA, 'Microsoft', 'Windows', 'Fonts'));
         }
       } else if (process.platform === 'darwin') {
-        sysDirs.push('/System/Library/Fonts', '/Library/Fonts');
+        sysDirs.push('/System/Library/Fonts', '/Library/Fonts', path.join(home, 'Library', 'Fonts'));
       } else {
-        sysDirs.push('/usr/share/fonts', '/usr/local/share/fonts');
+        sysDirs.push(
+          '/usr/share/fonts',
+          '/usr/local/share/fonts',
+          path.join(home, '.fonts'),
+          path.join(home, '.local', 'share', 'fonts')
+        );
       }
+
+      const collectFontFiles = (dir: string, depth = 0): string[] => {
+        if (depth > 4 || !fs.existsSync(dir)) return [];
+        const results: string[] = [];
+        try {
+          const entries = fs.readdirSync(dir, { withFileTypes: true });
+          for (const entry of entries) {
+            const full = path.join(dir, entry.name);
+            if (entry.isDirectory()) {
+              results.push(...collectFontFiles(full, depth + 1));
+            } else if (entry.isFile()) {
+              const l = entry.name.toLowerCase();
+              if (l.endsWith('.ttf') || l.endsWith('.otf')) {
+                results.push(full);
+              }
+            }
+          }
+        } catch {
+          // Gracefully skip unreadable directories
+        }
+        return results;
+      };
 
       for (const sDir of sysDirs) {
         if (!fs.existsSync(sDir)) continue;
-        const fontFiles = fs.readdirSync(sDir).filter(f => {
-          const l = f.toLowerCase();
-          return l.endsWith('.ttf') || l.endsWith('.otf');
-        });
+        const fontFiles = collectFontFiles(sDir);
 
-        for (const f of fontFiles) {
-          const fullPath = path.join(sDir, f);
+        for (const fullPath of fontFiles) {
           const names = parseOpenTypeFontNames(fullPath);
           if (names?.family && names?.postScript) {
             const familyKey = names.family.toLowerCase();

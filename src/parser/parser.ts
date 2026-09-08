@@ -596,11 +596,17 @@ export class Parser {
       const items: ValueNode[] = [];
       while (!this.check(TokenType.SEMICOLON) && !this.isAtEnd()) {
         const tok = this.peek();
-        if (tok.type === TokenType.NUMBER || tok.type === TokenType.DIMENSION) {
-          items.push(this.parseSingleValue());
+        if (tok.type === TokenType.NUMBER) {
+          items.push({
+            type: 'NumberLiteral',
+            value: parseFloat(tok.value),
+            raw: tok.value,
+            loc: { start: tok.loc.start, end: tok.loc.end, file: this.filename }
+          });
+          this.advance();
           this.match(TokenType.COMMA);
-        } else if (tok.type === TokenType.IDENTIFIER && tok.value.endsWith('x')) {
-          const numVal = parseFloat(tok.value.replace(/x$/i, ''));
+        } else if (tok.type === TokenType.DIMENSION) {
+          const numVal = parseFloat(tok.value.replace(/[^0-9.-]/g, ''));
           items.push({
             type: 'NumberLiteral',
             value: numVal,
@@ -608,6 +614,23 @@ export class Parser {
             loc: { start: tok.loc.start, end: tok.loc.end, file: this.filename }
           });
           this.advance();
+          this.match(TokenType.COMMA);
+        } else if (tok.type === TokenType.IDENTIFIER) {
+          const numVal = parseFloat(tok.value.replace(/x$/i, ''));
+          if (!isNaN(numVal)) {
+            items.push({
+              type: 'NumberLiteral',
+              value: numVal,
+              raw: tok.value,
+              loc: { start: tok.loc.start, end: tok.loc.end, file: this.filename }
+            });
+            this.advance();
+            this.match(TokenType.COMMA);
+          } else {
+            break;
+          }
+        } else if (this.check(TokenType.VARIABLE)) {
+          items.push(this.parseSingleValue());
           this.match(TokenType.COMMA);
         } else {
           break;

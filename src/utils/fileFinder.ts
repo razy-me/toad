@@ -232,16 +232,35 @@ function searchDir(
  */
 function getSystemDrives(): string[] {
   if (process.platform === 'win32') {
-    const drives: string[] = [];
-    for (let i = 65; i <= 90; i++) {
+    const drives = new Set<string>();
+
+    // Prioritize known active drives from environment and current working directory
+    const activeCandidates = [
+      process.env.SystemDrive ? process.env.SystemDrive.toUpperCase().slice(0, 2) + ':\\' : 'C:\\',
+      process.env.HOMEDRIVE ? process.env.HOMEDRIVE.toUpperCase().slice(0, 2) + ':\\' : undefined,
+      process.cwd().slice(0, 2).toUpperCase() + ':\\'
+    ];
+    for (const cand of activeCandidates) {
+      if (cand && /^[C-Z]:\\$/i.test(cand)) {
+        try {
+          if (fs.existsSync(cand)) {
+            drives.add(cand);
+          }
+        } catch {}
+      }
+    }
+
+    // Probe remaining drive letters starting strictly from C (ASCII 67), skipping legacy floppy letters A and B
+    for (let i = 67; i <= 90; i++) {
       const drive = String.fromCharCode(i) + ':\\';
+      if (drives.has(drive)) continue;
       try {
         if (fs.existsSync(drive)) {
-          drives.push(drive);
+          drives.add(drive);
         }
       } catch {}
     }
-    return drives;
+    return Array.from(drives);
   }
   return ['/'];
 }

@@ -1001,15 +1001,17 @@ export function drawVignette(
   ctx: CanvasRenderingContext2D | SKRSContext2D,
   width: number,
   height: number,
-  amount: number
+  amount: number,
+  centerX?: number,
+  centerY?: number
 ): void {
   const normAmount = Math.max(0, Math.min(1, amount > 1 ? amount / 100 : amount));
   if (normAmount <= 0) return;
 
   ctx.save();
-  const cx = width / 2;
-  const cy = height / 2;
-  const r = Math.hypot(width, height) / 2;
+  const cx = typeof centerX === 'number' && Number.isFinite(centerX) ? centerX : width / 2;
+  const cy = typeof centerY === 'number' && Number.isFinite(centerY) ? centerY : height / 2;
+  const r = Math.max(Math.hypot(cx, cy), Math.hypot(width - cx, height - cy), Math.hypot(width, height) / 2);
 
   const grad = ctx.createRadialGradient(cx, cy, r * 0.35, cx, cy, r);
   grad.addColorStop(0, 'rgba(0, 0, 0, 0)');
