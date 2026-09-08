@@ -93,7 +93,7 @@ export class ToadLanguageServer {
     if (!text) return out;
     const lines = text.split(/\r?\n/);
     lines.forEach((row, idx) => {
-      const m = row.match(/^\s*(?:>)([A-Za-z_][A-Za-z0-9_]*)\s*[=:]\s*(.+?)\s*;/);
+      const m = row.match(/^\s*(?:>)([A-Za-z_][A-Za-z0-9_.-]*)\s*[=:]\s*(.+?)\s*;/);
       if (m) {
         out.set(m[1], {
           name: m[1],

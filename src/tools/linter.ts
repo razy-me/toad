@@ -148,7 +148,11 @@ export function lintDocument(doc: DocumentNode): Diagnostic[] {
           code: 'LINT-UNUSED-PARAM',
           message: `Parameter '>${param.name}' in component '${comp.name}' is declared but never used.`,
           severity: 'warning',
-          loc: param.loc
+          loc: param.loc,
+          fix: {
+            title: `Remove unused parameter '>${param.name}'`,
+            kind: 'quickfix'
+          }
         });
       }
     }

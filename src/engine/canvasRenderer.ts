@@ -144,10 +144,11 @@ export class CanvasRenderer {
 
     if (format === 'jpg' || format === 'jpeg') {
       const quality = this.normalizeQuality(options.quality);
-      // JPEG has no alpha channel: flatten onto white instead of producing black.
+      // JPEG has no alpha channel: flatten onto canvas background (or white) instead of producing black.
       const flattened = createCanvas(canvas.width, canvas.height);
       const fctx = flattened.getContext('2d');
-      fctx.fillStyle = '#ffffff';
+      const bg = typeof layout.canvas.background === 'string' && layout.canvas.background ? layout.canvas.background : '#ffffff';
+      fctx.fillStyle = bg;
       fctx.fillRect(0, 0, flattened.width, flattened.height);
       fctx.drawImage(canvas, 0, 0);
       return flattened.encode('jpeg', quality);

@@ -702,7 +702,7 @@ export function drawRect(
   y: number,
   w: number,
   h: number,
-  radius?: number | [number, number, number, number]
+  radius?: number | [number, number, number, number] | [number, number]
 ): void {
   ctx.beginPath();
   if (typeof radius === 'number' && radius > 0) {
@@ -721,11 +721,16 @@ export function drawRect(
       ctx.arcTo(x, y, x + r, y, r);
       ctx.closePath();
     }
-  } else if (Array.isArray(radius) && radius.length === 4) {
+  } else if (Array.isArray(radius)) {
+    const corners: [number, number, number, number] = (radius as number[]).length === 2
+      ? [radius[0] ?? 0, radius[1] ?? 0, radius[0] ?? 0, radius[1] ?? 0]
+      : radius.length === 4
+        ? [radius[0] ?? 0, radius[1] ?? 0, radius[2] ?? 0, radius[3] ?? 0]
+        : [radius[0] ?? 0, radius[0] ?? 0, radius[0] ?? 0, radius[0] ?? 0];
     if (typeof (ctx as any).roundRect === 'function') {
-      (ctx as any).roundRect(x, y, w, h, radius);
+      (ctx as any).roundRect(x, y, w, h, corners);
     } else {
-      const [tl = 0, tr = 0, br = 0, bl = 0] = radius;
+      const [tl, tr, br, bl] = corners;
       ctx.moveTo(x + tl, y);
       ctx.lineTo(x + w - tr, y);
       ctx.arcTo(x + w, y, x + w, y + tr, tr);

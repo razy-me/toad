@@ -435,14 +435,40 @@ export class PdfExporter {
         x = node.x + (node.width - lineWidth);
       }
 
-      // Escape parentheses and backslashes for PDF string literal
-      const escaped = line.replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+      // Escape characters and WinAnsi glyphs for PDF Type 1 string literal
+      const escaped = this.encodePdfString(line);
       // Counter-flip vertical axis in text matrix (1 0 0 -1) so glyphs render right-side up
       ops.push(`1 0 0 -1 ${x.toFixed(2)} ${y.toFixed(2)} Tm`);
       ops.push(`(${escaped}) Tj`);
     }
 
     ops.push('ET');
+  }
+
+  private encodePdfString(text: string): string {
+    let out = '';
+    const WIN_ANSI_MAP: Record<string, number> = {
+      '€': 128, '‚': 130, 'ƒ': 131, '„': 132, '…': 133, '†': 134, '‡': 135,
+      'ˆ': 136, '‰': 137, 'Š': 138, '‹': 139, 'Œ': 140, 'Ž': 142,
+      '‘': 145, '’': 146, '“': 147, '”': 148, '•': 149, '–': 150, '—': 151,
+      '˜': 152, '™': 153, 'š': 154, '›': 155, 'œ': 156, 'ž': 158, 'Ÿ': 159
+    };
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i]!;
+      const code = ch.charCodeAt(0);
+      if (ch === '\\') out += '\\\\';
+      else if (ch === '(') out += '\\(';
+      else if (ch === ')') out += '\\)';
+      else if (code >= 32 && code <= 126) out += ch;
+      else if (code >= 160 && code <= 255) {
+        out += '\\' + code.toString(8).padStart(3, '0');
+      } else if (WIN_ANSI_MAP[ch]) {
+        out += '\\' + WIN_ANSI_MAP[ch]!.toString(8).padStart(3, '0');
+      } else {
+        out += ch;
+      }
+    }
+    return out;
   }
 
   private applyFillAndStroke(node: LayoutNode, ops: string[], isCmyk: boolean): void {
@@ -494,10 +520,12 @@ export class PdfExporter {
     y: number,
     w: number,
     h: number,
-    radius: number | [number, number, number, number]
+    radius: number | [number, number, number, number] | [number, number]
   ): void {
     const [tl, tr, br, bl] = Array.isArray(radius)
-      ? [radius[0] || 0, radius[1] || 0, radius[2] || 0, radius[3] || 0]
+      ? (radius as number[]).length === 2
+        ? [radius[0] || 0, radius[1] || 0, radius[0] || 0, radius[1] || 0]
+        : [radius[0] || 0, radius[1] || 0, radius[2] || 0, radius[3] || 0]
       : [radius, radius, radius, radius];
 
     const k = 0.5522847498;
