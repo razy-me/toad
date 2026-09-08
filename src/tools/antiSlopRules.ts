@@ -8,7 +8,7 @@
  * - Modern 2024-2026 AI Design Tropes & Aesthetic Tells
  */
 
-import { LayoutNode, LayoutResult } from '../parser/math.js';
+import { LayoutNode, LayoutResult, GradientStyle } from '../parser/math.js';
 import { parseColorToRgba, ColorRgba } from '../engine/drawUtils.js';
 
 export type SlopSeverity = 'fatal' | 'warn' | 'notice';
@@ -69,6 +69,13 @@ export function getNodeContent(node: LayoutNode): string {
   return '';
 }
 
+export function extractFillStringOrStops(fill: string | GradientStyle | undefined): string {
+  if (!fill) return '';
+  if (typeof fill === 'string') return fill.toLowerCase();
+  const stops = fill.stops ? fill.stops.map(s => s.color).join(' ') : '';
+  return `${fill.type || ''}-gradient ${stops}`.toLowerCase();
+}
+
 // ============================================================================
 // 1. Anti-AI Buzzword Corpus (SLOP-WEB-003 / UNI-07)
 // Comprehensive English & German Hype Phrasing
@@ -123,7 +130,7 @@ function checkPurpleHaze(ctx: SlopContext): SlopRuleResult[] {
 
   for (const node of ctx.allNodes) {
     if (node.type === 'circle' || node.type === 'rect') {
-      const fillStr = typeof node.fill === 'string' ? node.fill.toLowerCase() : '';
+      const fillStr = extractFillStringOrStops(node.fill);
       const isPurpleCyanHaze =
         fillStr.includes('8b5cf6') ||
         fillStr.includes('06b6d4') ||
@@ -270,7 +277,7 @@ function checkRainbowPills(ctx: SlopContext): SlopRuleResult[] {
     if (node.type === 'rect' && node.height >= 26 && node.height <= 56) {
       const radius = Number(node.style?.borderRadius || 0);
       const isPill = radius >= node.height / 2 - 2;
-      const fillStr = typeof node.fill === 'string' ? node.fill.toLowerCase() : '';
+      const fillStr = extractFillStringOrStops(node.fill);
 
       if (isPill && (fillStr.includes('gradient') || fillStr.includes('linear') || fillStr.includes('radial'))) {
         const hasRainbowStops =

@@ -36,6 +36,7 @@ export interface BuildOptions {
   outDir?: string;
   format?: string;
   scale?: number;
+  vectorScale?: number;
   dpi?: number;
   bleed?: number | string;
   fontsDir?: string;
@@ -308,9 +309,9 @@ export async function compileToad(
     }
   }
 
-  // PSD and SVG files are always exported at fixed scale 2.5x of the original canvas,
-  // completely ignoring -s / --scale and canvas.scales options to ensure crisp vector / high-res rendering.
-  const FIXED_VECTOR_SCALE = 2.5;
+  // Vector export scale: respects explicit vectorScale if specified, otherwise
+  // fixed at 2.5x to guarantee crisp vector / high-res rendering regardless of raster -s scale.
+  const vectorScale = options.vectorScale && options.vectorScale > 0 ? options.vectorScale : 2.5;
 
   for (const page of layoutPages) {
     const fileBase = `${baseName}${page.nameSuffix}`;
@@ -319,7 +320,7 @@ export async function compileToad(
     if (formatsToRender.includes('psd')) {
       const effectiveDpi = options.dpi || (pageLayout.canvas.hasExplicitDpi ? pageLayout.canvas.dpi : 72);
       const psdBuf = await exportToPsd(pageLayout, {
-        scale: FIXED_VECTOR_SCALE,
+        scale: vectorScale,
         dpi: effectiveDpi,
         basePath: resolvedEntry,
         humanizeLayerNames: options.humanizeLayerNames
@@ -336,7 +337,7 @@ export async function compileToad(
         humanizeLayerNames: options.humanizeLayerNames,
         textToPath: options.textToPath
       });
-      const svgContent = await exporter.export(pageLayout, FIXED_VECTOR_SCALE);
+      const svgContent = await exporter.export(pageLayout, vectorScale);
       const svgPath = path.join(outDir, `${fileBase}.svg`);
       fs.mkdirSync(path.dirname(svgPath), { recursive: true });
       fs.writeFileSync(svgPath, svgContent, 'utf-8');

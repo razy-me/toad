@@ -8,13 +8,11 @@
 
 import * as zlib from 'node:zlib';
 import * as fs from 'node:fs';
-import * as path from 'node:path';
+import { createCanvas } from '@napi-rs/canvas';
 import { LayoutResult, LayoutNode } from '../parser/math.js';
 import { parseColorToRgba } from './drawUtils.js';
 import { resolveSharedImage } from './imageCache.js';
 import { svgPathToSubpaths } from './vectorPathParser.js';
-import { generateShapePath } from './shapeGenerators.js';
-import { getIconPath } from './iconRegistry.js';
 
 export interface PdfExportOptions {
   colorMode?: 'rgb' | 'cmyk';
@@ -98,8 +96,22 @@ export class PdfExporter {
   private images = new Map<string, { id: number; width: number; height: number }>();
   private basePath?: string;
 
+  private static measureCtx: any = null;
+
   constructor(options: PdfExportOptions = {}) {
     this.basePath = options.basePath;
+  }
+
+  private measureLineWidth(line: string, fontSize: number, fontFamily?: string): number {
+    try {
+      if (!PdfExporter.measureCtx) {
+        PdfExporter.measureCtx = createCanvas(10, 10).getContext('2d');
+      }
+      PdfExporter.measureCtx.font = `${fontSize}px ${fontFamily || 'sans-serif'}`;
+      return PdfExporter.measureCtx.measureText(line).width;
+    } catch {
+      return line.length * fontSize * 0.52;
+    }
   }
 
   private allocId(): number {
@@ -158,8 +170,9 @@ export class PdfExporter {
       }
     }
 
-    // 3. Draw Layout Nodes
-    for (const node of layout.nodes) {
+    // 3. Draw Layout Nodes (render root nodes recursively to preserve parent-child transforms)
+    const rootNodes = layout.nodes.filter(n => !n.parentId && !n.parent);
+    for (const node of (rootNodes.length > 0 ? rootNodes : layout.nodes)) {
       await this.renderNode(node, streamOps, isCmyk);
     }
 
@@ -281,30 +294,28 @@ export class PdfExporter {
         this.renderText(node, ops, isCmyk);
         break;
       }
-      case 'path': {
-        this.renderPath(node, ops, isCmyk);
-        break;
-      }
+      case 'path':
       case 'star':
       case 'triangle':
       case 'arrow':
-      case 'cross': {
-        const d = generateShapePath(node.type, node.box);
-        this.renderPath(node, ops, isCmyk, d);
-        break;
-      }
-      case 'shape': {
-        const shapeType = node.shapeType || 'star';
-        const d = generateShapePath(shapeType, node.box);
-        this.renderPath(node, ops, isCmyk, d);
-        break;
-      }
+      case 'cross':
+      case 'shape':
       case 'icon': {
-        const iconName = node.iconName || (node as any).icon;
-        if (iconName) {
-          const d = getIconPath(iconName);
-          if (d) {
-            this.renderPath(node, ops, isCmyk, d);
+        const d = node.pathLayout?.d;
+        if (d) {
+          this.renderPath(node, ops, isCmyk, d);
+        }
+        break;
+      }
+      case 'group':
+      case 'stack':
+      case 'grid': {
+        if (node.fill || node.stroke) {
+          this.renderRect(node, ops, isCmyk);
+        }
+        if (node.children && node.children.length > 0) {
+          for (const child of node.children) {
+            await this.renderNode(child, ops, isCmyk);
           }
         }
         break;
@@ -367,15 +378,19 @@ export class PdfExporter {
     const subpaths = svgPathToSubpaths(d);
     if (!subpaths || subpaths.length === 0) return;
 
+    const isIcon = node.type === 'icon';
+    const sx = isIcon ? (node.width / 24) : 1;
+    const sy = isIcon ? (node.height / 24) : 1;
+
     for (const sp of subpaths) {
       if (!sp.segments || sp.segments.length === 0) continue;
       const p0 = sp.segments[0]!.p0;
-      ops.push(`${(p0.x + node.x).toFixed(2)} ${(p0.y + node.y).toFixed(2)} m`);
+      ops.push(`${(p0.x * sx + node.x).toFixed(2)} ${(p0.y * sy + node.y).toFixed(2)} m`);
       for (const seg of sp.segments) {
         ops.push(
-          `${(seg.cp1.x + node.x).toFixed(2)} ${(seg.cp1.y + node.y).toFixed(2)} ` +
-          `${(seg.cp2.x + node.x).toFixed(2)} ${(seg.cp2.y + node.y).toFixed(2)} ` +
-          `${(seg.p1.x + node.x).toFixed(2)} ${(seg.p1.y + node.y).toFixed(2)} c`
+          `${(seg.cp1.x * sx + node.x).toFixed(2)} ${(seg.cp1.y * sy + node.y).toFixed(2)} ` +
+          `${(seg.cp2.x * sx + node.x).toFixed(2)} ${(seg.cp2.y * sy + node.y).toFixed(2)} ` +
+          `${(seg.p1.x * sx + node.x).toFixed(2)} ${(seg.p1.y * sy + node.y).toFixed(2)} c`
         );
       }
       if (sp.closed) {
@@ -405,16 +420,18 @@ export class PdfExporter {
     ops.push('BT');
     ops.push(`/F1 ${fontSize.toFixed(2)} Tf`);
 
+    const align = node.style.align || (node.style as any).textAlign || 'left';
+
     for (let i = 0; i < tLayout.lines.length; i++) {
       const line = tLayout.lines[i]!;
       const y = startY + i * lineHeight;
       let x = node.x;
 
-      if (node.style.align === 'center') {
-        const lineWidth = tLayout.width || 0;
+      if (align === 'center') {
+        const lineWidth = this.measureLineWidth(line, fontSize, tLayout.fontFamily);
         x = node.x + (node.width - lineWidth) / 2;
-      } else if (node.style.align === 'right') {
-        const lineWidth = tLayout.width || 0;
+      } else if (align === 'right') {
+        const lineWidth = this.measureLineWidth(line, fontSize, tLayout.fontFamily);
         x = node.x + (node.width - lineWidth);
       }
 

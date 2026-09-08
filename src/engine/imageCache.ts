@@ -22,7 +22,19 @@ export function clearImageCache(): void {
 
 export async function resolveSharedImage(imgSrc: string, basePath?: string): Promise<Image | null> {
   try {
-    const resolvedPath = basePath ? path.resolve(path.dirname(basePath), imgSrc) : path.resolve(imgSrc);
+    let baseDir: string | undefined;
+    if (basePath) {
+      try {
+        if (fs.existsSync(basePath) && fs.statSync(basePath).isDirectory()) {
+          baseDir = basePath;
+        } else {
+          baseDir = path.dirname(basePath);
+        }
+      } catch {
+        baseDir = path.dirname(basePath);
+      }
+    }
+    const resolvedPath = baseDir ? path.resolve(baseDir, imgSrc) : path.resolve(imgSrc);
 
     if (!fs.existsSync(resolvedPath)) {
       return null;

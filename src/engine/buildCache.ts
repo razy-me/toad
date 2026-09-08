@@ -121,15 +121,23 @@ export class AstCache {
     if (entry.dependencies && entry.dependencies.length > 0) {
       for (const dep of entry.dependencies) {
         try {
-          if (fs.existsSync(dep)) {
-            const depMtime = fs.statSync(dep).mtimeMs;
-            if (depMtime > entry.mtimeMs) {
-              this.cache.delete(filePath);
-              this.misses++;
-              return null;
-            }
+          if (!fs.existsSync(dep)) {
+            // A declared dependency was removed from disk -> invalidate
+            this.cache.delete(filePath);
+            this.misses++;
+            return null;
           }
-        } catch {}
+          const depMtime = fs.statSync(dep).mtimeMs;
+          if (depMtime > entry.mtimeMs) {
+            this.cache.delete(filePath);
+            this.misses++;
+            return null;
+          }
+        } catch {
+          this.cache.delete(filePath);
+          this.misses++;
+          return null;
+        }
       }
     }
 

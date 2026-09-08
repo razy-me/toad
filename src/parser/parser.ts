@@ -1549,6 +1549,8 @@ export class Parser {
   }
 
   private synchronizeStatement(): void {
+    this.advance();
+
     while (!this.isAtEnd()) {
       if (this.previous().type === TokenType.SEMICOLON || this.previous().type === TokenType.RBRACE) {
         return;

@@ -86,7 +86,7 @@ export class SvgExporter {
   /**
    * Exports a LayoutResult to an SVG XML string.
    */
-  public async export(layout: LayoutResult, scale = 1): Promise<string> {
+  public async export(layout: LayoutResult, scale = 1, options?: SvgExportOptions): Promise<string> {
     this.defs = [];
     this.gradientCounter = 0;
     this.filterCounter = 0;
@@ -181,7 +181,7 @@ export class SvgExporter {
       `</svg>`
     ].filter(Boolean).join('\n');
 
-    const shouldConvertTextToPath = this.textToPath
+    const shouldConvertTextToPath = (options?.textToPath ?? this.textToPath)
       || Boolean(layout.canvas.properties?.textToPath)
       || Boolean(layout.canvas.properties?.['text-to-path'])
       || Boolean(layout.canvas.properties?.textAsPath)
@@ -189,31 +189,38 @@ export class SvgExporter {
 
     if (shouldConvertTextToPath) {
       try {
+        const effectiveBasePath = options?.basePath || this.basePath;
         if (layout.fonts && layout.fonts.length > 0) {
-          FontLoader.registerFontDirectives(layout.fonts, this.basePath);
+          FontLoader.registerFontDirectives(layout.fonts, effectiveBasePath);
         }
         const { convertSVGTextToPath } = await import('@napi-rs/canvas');
         const textRegex = /<text\b([^>]*)>([\s\S]*?)<\/text>/g;
         return rawSvg.replace(textRegex, (match, attrs) => {
-          const idMatch = attrs.match(/\bid="([^"]+)"/);
-          const dataNameMatch = attrs.match(/\bdata-name="([^"]+)"/);
-          const labelMatch = attrs.match(/\binkscape:label="([^"]+)"/);
+          try {
+            const idMatch = attrs.match(/\bid="([^"]+)"/);
+            const dataNameMatch = attrs.match(/\bdata-name="([^"]+)"/);
+            const labelMatch = attrs.match(/\binkscape:label="([^"]+)"/);
 
-          const idAttr = idMatch ? ` id="${idMatch[1]}"` : '';
-          const dataNameAttr = dataNameMatch ? ` data-name="${dataNameMatch[1]}"` : '';
-          const labelAttr = labelMatch ? ` inkscape:label="${labelMatch[1]}"` : '';
+            const idAttr = idMatch ? ` id="${idMatch[1]}"` : '';
+            const dataNameAttr = dataNameMatch ? ` data-name="${dataNameMatch[1]}"` : '';
+            const labelAttr = labelMatch ? ` inkscape:label="${labelMatch[1]}"` : '';
 
-          const miniSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">${match}</svg>`;
-          const convertedMini = convertSVGTextToPath(Buffer.from(miniSvg)).toString('utf-8');
+            const miniSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">${match}</svg>`;
+            const convertedMini = convertSVGTextToPath(Buffer.from(miniSvg)).toString('utf-8');
 
-          const paths = convertedMini.match(/<path[^>]+>/g);
-          if (!paths || paths.length === 0) {
+            const paths = convertedMini.match(/<path[^>]+>/g);
+            if (!paths || paths.length === 0) {
+              return match;
+            }
+
+            return `<g${idAttr}${dataNameAttr}${labelAttr}>\n        ${paths.join('\n        ')}\n      </g>`;
+          } catch (itemErr: any) {
+            console.warn(`[SvgExporter] text-to-path conversion failed for text element: ${itemErr?.message || String(itemErr)}`);
             return match;
           }
-
-          return `<g${idAttr}${dataNameAttr}${labelAttr}>\n        ${paths.join('\n        ')}\n      </g>`;
         });
-      } catch {
+      } catch (err: any) {
+        console.warn(`[SvgExporter] text-to-path conversion failed: ${err?.message || String(err)}. Falling back to raw text SVG.`);
         return rawSvg;
       }
     }
@@ -971,7 +978,7 @@ export class SvgExporter {
  */
 export async function exportToSvg(layout: LayoutResult, options?: SvgExportOptions): Promise<string> {
   const exporter = new SvgExporter(options);
-  return exporter.export(layout, options?.scale ?? 1);
+  return exporter.export(layout, options?.scale ?? 1, options);
 }
 
 /**

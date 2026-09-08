@@ -38,6 +38,7 @@ import {
   ColorTransformNode
 } from './ast.js';
 import { parseToad } from './parser.js';
+import { evaluateCalc } from './math.js';
 import { applyAlpha, lightenColor, darkenColor } from '../engine/drawUtils.js';
 import { suggestProperty } from '../tools/diagnostics.js';
 
@@ -72,20 +73,8 @@ export function convertDimensionToPx(value: number, unit?: string, dpi = 96): nu
   if (unit === 'em' || unit === 'rem') return value * 16;
   return value;
 }
-
-export function computeGcd(a: number, b: number): number {
-  if (!Number.isFinite(a) || !Number.isFinite(b) || isNaN(a) || isNaN(b)) {
-    return 1;
-  }
-  let x = Math.abs(Math.round(a));
-  let y = Math.abs(Math.round(b));
-  while (y !== 0 && !isNaN(y)) {
-    const t = y;
-    y = x % y;
-    x = t;
-  }
-  return x === 0 || isNaN(x) ? 1 : x;
-}
+import { computeGcd } from './math.js';
+export { computeGcd };
 
 export function computeAspectRatio(width: number, height: number): { w: number; h: number; gcd: number; str: string } {
   if (!width || !height || width <= 0 || height <= 0) {
@@ -1755,37 +1744,21 @@ export class ImportResolver {
     // sizes, offsets); evaluate them with the same finite-result guard the
     // layout solver uses.
     if ((val as any).type === 'CalcValue') {
-      const evaluated = this.evalCalcExpression((val as any).expression ?? '');
+      const evaluated = this.evalCalcExpression((val as any).expression ?? '', 0, dpi);
       return evaluated !== undefined && Number.isFinite(evaluated) ? evaluated : 0;
     }
     return undefined;
   }
 
   /**
-   * Evaluates a calc() expression body ("10px / 0", "20px * 2 + 10px").
-   * Unit suffixes are stripped after conversion; division by zero yields
-   * a non-finite result which callers clamp to 0.
+   * Evaluates a calc() expression safely using recursive descent parsing
+   * from math.ts without unsafe new Function/eval.
    */
-  private evalCalcExpression(expr: string): number | undefined {
+  private evalCalcExpression(expr: string, referenceSize = 0, dpi = 96): number | undefined {
     if (typeof expr !== 'string' || expr.trim() === '') return undefined;
-    // Convert physical units at CSS-reference 96 DPI (parity with
-    // evaluateCalc in math.ts) instead of silently stripping them.
-    const normalized = expr
-      .replace(/(-?\d+(?:\.\d+)?)(px|mm|cm|in|pt|em|rem)/gi, (_m, num: string, unit: string) => {
-        const v = parseFloat(num);
-        const u = unit.toLowerCase();
-        if (u === 'mm') return String(v * (96 / 25.4));
-        if (u === 'cm') return String(v * (96 / 2.54));
-        if (u === 'in') return String(v * 96);
-        if (u === 'pt') return String(v * (96 / 72));
-        if (u === 'em' || u === 'rem') return String(v * 16);
-        return String(v);
-      })
-      .replace(/(-?\d+(?:\.\d+)?)%/g, (_, num: string) => String(parseFloat(num)));
-    if (!/^[0-9.+\-*/\s()]+$/.test(normalized)) return undefined;
     try {
-      const result = new Function(`return (${normalized})`)();
-      return typeof result === 'number' ? result : undefined;
+      const evaluated = evaluateCalc(expr, referenceSize, dpi);
+      return Number.isFinite(evaluated) ? evaluated : undefined;
     } catch {
       return undefined;
     }
@@ -1962,6 +1935,13 @@ export class ImportResolver {
     if (val.type === 'ColorLiteral') return val.value;
     if (val.type === 'StringLiteral') return val.value;
     if (val.type === 'Identifier') return val.name;
+    if (val.type === 'ColorTransform') {
+      const colorStr = this.extractColorString(val.color) || '#000000';
+      const amtNum = this.extractNumber(val.amount) ?? 0.2;
+      if (val.functionName === 'alpha') return applyAlpha(colorStr, amtNum);
+      if (val.functionName === 'lighten') return lightenColor(colorStr, amtNum);
+      if (val.functionName === 'darken') return darkenColor(colorStr, amtNum);
+    }
     return undefined;
   }
 
@@ -1970,6 +1950,13 @@ export class ImportResolver {
     if (val.type === 'ColorLiteral') return val.value;
     if (val.type === 'StringLiteral') return val.value;
     if (val.type === 'Identifier') return val.name;
+    if (val.type === 'ColorTransform') {
+      const colorStr = this.extractColorString(val.color) || '#000000';
+      const amtNum = this.extractNumber(val.amount) ?? 0.2;
+      if (val.functionName === 'alpha') return applyAlpha(colorStr, amtNum);
+      if (val.functionName === 'lighten') return lightenColor(colorStr, amtNum);
+      if (val.functionName === 'darken') return darkenColor(colorStr, amtNum);
+    }
 
     if (val.type === 'LinearGradient') {
       let angleDeg = 180; // default to bottom

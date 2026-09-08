@@ -116,7 +116,7 @@ export class ToadLanguageServer {
     const decl = vars.get(bare);
     if (decl) {
       return {
-        contents: { kind: 'markdown', value: `**variable** \`${decl.name}\`\n\n\`\`\`${'toad'}\n${decl.name}: ${decl.valuePreview};\n\`\`\`` },
+        contents: { kind: 'markdown', value: `**variable** \`${decl.name}\`\n\n\`\`\`${'toad'}\n>${decl.name} = ${decl.valuePreview};\n\`\`\`` },
         range: {
           start: { line: hit.line - 1, character: hit.column - 1 },
           end: { line: hit.line - 1, character: hit.column - 1 + hit.word.length }
@@ -280,7 +280,8 @@ function toLspRange(loc?: any): { start: { line: number; character: number }; en
   const startLine = Math.max(0, (loc?.start?.line ?? 1) - 1);
   const startChar = Math.max(0, (loc?.start?.column ?? 1) - 1);
   const endLine = Math.max(0, (loc?.end?.line ?? loc?.start?.line ?? 1) - 1);
-  const endChar = Math.max(0, loc?.end?.column ?? (startChar + 1));
+  const rawEnd = loc?.end?.column !== undefined ? Math.max(0, loc.end.column - 1) : (startChar + 1);
+  const endChar = endLine === startLine ? Math.max(startChar + 1, rawEnd) : rawEnd;
   return {
     start: { line: startLine, character: startChar },
     end: { line: endLine, character: endChar }
