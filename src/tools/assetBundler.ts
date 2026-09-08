@@ -199,6 +199,10 @@ export async function bundleAssets(
   const renderScale = 2;
   const masterCanvas = await CanvasRenderer.renderToCanvas(layout, { scale: renderScale });
 
+  const bleed = layout.canvas.bleed || 0;
+  const cropMarks = layout.canvas.cropMarks === true;
+  const margin = Math.max(cropMarks ? 30 : 0, bleed > 0 ? bleed : 0);
+
   const generatedAssets: GeneratedAssetInfo[] = [];
   const icoCandidates: Array<{ width: number; height: number; buffer: Buffer }> = [];
 
@@ -216,8 +220,8 @@ export async function bundleAssets(
 
     ctx.drawImage(
       masterCanvas,
-      cropX * renderScale,
-      cropY * renderScale,
+      (cropX + margin) * renderScale,
+      (cropY + margin) * renderScale,
       cropW * renderScale,
       cropH * renderScale,
       0,

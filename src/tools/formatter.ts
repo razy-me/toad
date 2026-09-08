@@ -102,10 +102,12 @@ export function formatToad(source: string, options: FormatOptions = {}): string 
     indentLevel = Math.max(0, indentLevel + openBraces - remainingCloses);
   }
 
-  // Ensure file ends with a single newline
-  let result = formattedLines.join('\n');
-  if (!result.endsWith('\n')) {
-    result += '\n';
+  // Ensure file ends with matching newline format
+  const isCrlf = source.includes('\r\n');
+  const eol = isCrlf ? '\r\n' : '\n';
+  let result = formattedLines.join(eol);
+  if (!result.endsWith(eol)) {
+    result += eol;
   }
 
   return result;
@@ -113,7 +115,7 @@ export function formatToad(source: string, options: FormatOptions = {}): string 
 
 function normalizePropertyStatement(code: string): string {
   // If it's a variable declaration like `>var = ...`, don't treat as property: value
-  if (/^\s*>[a-zA-Z0-9_-]+\s*=/.test(code)) {
+  if (/^\s*>[a-zA-Z0-9_.-]+\s*=/.test(code)) {
     return code.replace(/\s+;$/, ';');
   }
 
