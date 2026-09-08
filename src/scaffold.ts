@@ -1,36 +1,58 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-const defaultMainToad = `canvas {
+const defaultMainToad = `// ============================================================================
+// 🧬 TOAD MULTI-DNA INSPIRATION MATRIX (Min 3 Personas + Min 3 Corporate Systems)
+// ----------------------------------------------------------------------------
+// 🎭 CREATIVE PERSONAS (the_seed/09_CREATIVE_PERSONAS_AND_STYLES/):
+//   1. dieter_rams -> Disciplined functional minimalism and purposeful geometry
+//   2. massimo_vignelli -> Rigorous typographic hierarchy and structural clarity
+//   3. jony_ive -> Precision craft, subtle edge definition, and restrained palette
+// 🏢 CORPORATE DESIGN SYSTEMS (the_seed/10_CORPORATE_DESIGN_SYSTEMS/):
+//   1. apple_human_interface -> Crisp contrast, system sans typography, harmonious tokens
+//   2. stripe_press -> Balanced structural padding, refined elevated surface card
+//   3. vercel_geist -> Monochromatic clarity, high-contrast dark text on clean light ground
+// ============================================================================
+
+canvas {
   size: 800px 600px;
   background: #f8fafc;
 }
 
-group {
-  at: center;
-  
-  rect {
-    size: 240px 240px;
-    fill: #ffffff;
-    radius: 24px;
-    shadow: 0px 10px 30px rgba(0, 0, 0, 0.1);
-  }
+rect #card {
+  at: center of canvas;
+  size: 440px 240px;
+  fill: #ffffff;
+  radius: 12px;
+  stroke: #e2e8f0 1px;
+  shadow: 0px 10px 25px alpha(#0f172a, 0.06);
 
-  icon {
-    iconName: 'check';
-    size: 80px 80px;
-    at: center;
-    stroke: #10b981 4px;
+  icon #statusIcon {
+    at: 36px 36px;
+    iconName: "check";
+    size: 40px 40px;
+    stroke: #059669 3px;
     fill: transparent;
   }
 
-  text {
-    text: "toad is ready!";
-    font-size: 24px;
-    font-family: "Inter";
+  text #title {
+    at: 96px 40px;
+    content: "toad is ready!";
+    font-size: 22px;
+    font-family: "Inter, -apple-system, sans-serif";
     font-weight: 700;
-    fill: #0f172a;
-    at: center;
+    color: #0f172a;
+    size: 300px;
+  }
+
+  text #subtitle {
+    at: 96px 74px;
+    content: "Declarative Visual Design System";
+    font-size: 14px;
+    font-family: "Inter, -apple-system, sans-serif";
+    font-weight: 500;
+    color: #475569;
+    size: 300px;
   }
 }
 `;

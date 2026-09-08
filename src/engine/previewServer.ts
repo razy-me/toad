@@ -22,12 +22,14 @@ export interface PreviewServerInstance {
 export function createPreviewServer(
   initialResult: BuildResult | null,
   entryFilePath: string,
-  preferredPort = 3000
+  preferredPort = 3000,
+  hostBinding?: string
 ): Promise<PreviewServerInstance> {
   return new Promise((resolve, reject) => {
     let currentResult = initialResult;
     let currentError: string | null = null;
     const sseClients = new Set<http.ServerResponse>();
+    const host = hostBinding || process.env.TOAD_HOST || process.env.HOST || '127.0.0.1';
 
     const computeAuditSafe = (res: BuildResult | null) => {
       if (!res || !res.layout) return undefined;
@@ -201,14 +203,13 @@ export function createPreviewServer(
 
     let portAttempts = 0;
     const startListen = (port: number) => {
-      // Bind to loopback explicitly: this is a local development preview and
-      // must not be reachable from the network by default.
-      server.listen(port, '127.0.0.1', () => {
+      server.listen(port, host, () => {
         // Honour ephemeral ports (port 0): report the OS-assigned port so
         // callers can actually reach the server.
         const addr = server.address();
         const actualPort = typeof addr === 'object' && addr ? addr.port : port;
-        const url = `http://localhost:${actualPort}/`;
+        const displayHost = (host === '0.0.0.0' || host === '::') ? 'localhost' : host;
+        const url = `http://${displayHost}:${actualPort}/`;
         const instance: PreviewServerInstance = {
           server,
           port: actualPort,

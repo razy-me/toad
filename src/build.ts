@@ -179,6 +179,9 @@ export async function compileToad(
   const rawQuality = options.quality !== undefined ? options.quality : layout.canvas.quality;
   let quality = 92;
   if (rawQuality !== undefined && !isNaN(rawQuality)) {
+    if (rawQuality <= 0) {
+      layout.warnings.push(`Image export quality ${rawQuality} is invalid or below minimum threshold (1). Clamped to 1.`);
+    }
     const q = rawQuality > 0 && rawQuality <= 1 ? rawQuality * 100 : rawQuality;
     quality = Math.max(1, Math.min(100, Math.round(q)));
   }
