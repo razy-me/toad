@@ -405,7 +405,27 @@ export class PsdExporter {
     const blendMode = mapBlendModeToPsd(node.style.blendMode);
 
     // Photoshop Layer Metadata: layerColor, lock, fillOpacity, knockout
-    const layerColor = node.style.layerColor || (node as any).layerColor;
+    const mapLayerColorToPsd = (col?: string): 'none' | 'red' | 'orange' | 'yellow' | 'green' | 'blue' | 'violet' | 'gray' | undefined => {
+      if (!col) return undefined;
+      const c = col.toLowerCase();
+      const valid = ['none', 'red', 'orange', 'yellow', 'green', 'blue', 'violet', 'gray'];
+      if (valid.includes(c)) return c as any;
+      if (c.startsWith('#')) {
+        const hex = c.replace('#', '');
+        const r = parseInt(hex.length >= 6 ? hex.slice(0, 2) : hex[0]! + hex[0]!, 16) || 0;
+        const g = parseInt(hex.length >= 6 ? hex.slice(2, 4) : hex[1]! + hex[1]!, 16) || 0;
+        const b = parseInt(hex.length >= 6 ? hex.slice(4, 6) : hex[2]! + hex[2]!, 16) || 0;
+        if (r > 180 && g < 100 && b < 100) return 'red';
+        if (r > 180 && g >= 100 && g < 180 && b < 100) return 'orange';
+        if (r > 180 && g > 180 && b < 100) return 'yellow';
+        if (g > 150 && r < 120 && b < 120) return 'green';
+        if (b > 150 && r < 120 && g < 120) return 'blue';
+        if (r > 130 && b > 130 && g < 120) return 'violet';
+        return 'gray';
+      }
+      return undefined;
+    };
+    const layerColor = mapLayerColorToPsd(node.style.layerColor || (node as any).layerColor);
     const fillOpacity = typeof node.style.fillOpacity === 'number' ? node.style.fillOpacity : (node as any).fillOpacity;
     const knockout = node.style.knockout ?? (node as any).knockout;
     const lockVal = node.style.lock || (node as any).lock;

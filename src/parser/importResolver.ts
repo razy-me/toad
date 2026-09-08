@@ -537,7 +537,14 @@ export class ImportResolver {
           const cm = this.extractString(val)?.toLowerCase();
           if (cm === 'cmyk' || cm === 'rgb') colorMode = cm as any;
         } else if (propName === 'ratio' || propName === 'aspect-ratio' || propName === 'aspectRatio') {
-          ratioStr = this.extractString(val) || (typeof this.extractRawValue(val) === 'string' ? this.extractRawValue(val) : undefined);
+          const raw = this.extractRawValue(val);
+          if (typeof raw === 'string') {
+            ratioStr = raw;
+          } else if (typeof raw === 'number') {
+            ratioStr = String(raw);
+          } else if (this.extractString(val)) {
+            ratioStr = this.extractString(val);
+          }
         } else if (propName === 'resolution') {
           if (val.type === 'DimensionLiteral') {
             resolution = (val as any).raw;
@@ -1339,7 +1346,21 @@ export class ImportResolver {
         case 'aspect-ratio':
         case 'aspectRatio': {
           let ratioVal: number | undefined;
-          if (val.type === 'NumberLiteral') {
+          const rawVal = this.extractRawValue(val);
+          if (typeof rawVal === 'number' && rawVal > 0) {
+            ratioVal = rawVal;
+          } else if (typeof rawVal === 'string') {
+            const raw = rawVal.trim();
+            if (raw.includes(':') || raw.includes('/')) {
+              const parts = raw.split(/[:/]/).map((p: string) => parseFloat(p.trim()));
+              if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1]) && parts[1] > 0) {
+                ratioVal = parts[0] / parts[1];
+              }
+            } else {
+              const num = parseFloat(raw);
+              if (!isNaN(num) && num > 0) ratioVal = num;
+            }
+          } else if (val.type === 'NumberLiteral') {
             ratioVal = val.value;
           } else if (val.type === 'StringLiteral' || val.type === 'Identifier') {
             const raw = ((val as any).value || (val as any).name || '').trim();
@@ -1536,10 +1557,14 @@ export class ImportResolver {
         }
         case 'layer-color':
         case 'layerColor': {
-          const col = this.extractString(val)?.toLowerCase();
+          const col = (this.extractColorString(val) || this.extractString(val))?.toLowerCase();
           const validColors = ['none', 'red', 'orange', 'yellow', 'green', 'blue', 'violet', 'gray'];
-          if (col && validColors.includes(col)) {
-            target.layerColor = col as any;
+          if (col) {
+            if (validColors.includes(col) || /^#[0-9a-f]{3,8}$/i.test(col)) {
+              target.layerColor = col as any;
+            } else {
+              this.warnings.push(`Invalid layerColor '${col}'. Expected standard tag ('red', 'orange', 'yellow', 'green', 'blue', 'violet', 'gray', 'none') or hex color.`);
+            }
           }
           break;
         }

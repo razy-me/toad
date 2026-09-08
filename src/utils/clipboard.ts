@@ -77,8 +77,8 @@ export async function copyToClipboard(text: string): Promise<boolean> {
     try {
       if (proc.stdin) {
         if (process.platform === 'win32') {
-          // Windows clip.exe natively requires UTF-16LE for Unicode/UTF-8 characters (box drawing, umlauts, symbols)
-          proc.stdin.write(Buffer.from(clean, 'utf16le'));
+          // Windows clip.exe natively requires UTF-16LE with BOM (\uFEFF) for Unicode/UTF-8 characters (box drawing, umlauts, symbols)
+          proc.stdin.write(Buffer.from('\uFEFF' + clean, 'utf16le'));
         } else {
           proc.stdin.write(clean);
         }

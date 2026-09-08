@@ -535,13 +535,23 @@ export class Parser {
       if (this.check(TokenType.STRING)) {
         return this.parseSingleValue();
       }
-      if (this.check(TokenType.NUMBER) && (this.peek(1).type === TokenType.COLON || this.peek(1).value === '/') && this.peek(2).type === TokenType.NUMBER) {
-        const num1 = this.advance().value;
-        this.advance(); // consume ':' or '/'
-        const num2 = this.advance().value;
+      const isRatioTerm = (tok: Token) => tok.type === TokenType.NUMBER || tok.type === TokenType.VARIABLE || tok.type === TokenType.IDENTIFIER;
+      if (isRatioTerm(this.peek()) && (this.peek(1).type === TokenType.COLON || this.peek(1).value === '/') && isRatioTerm(this.peek(2))) {
+        const left = this.parseSingleValue();
+        const sep = this.advance().value; // consume ':' or '/'
+        const right = this.parseSingleValue();
+        if (left.type === 'NumberLiteral' && right.type === 'NumberLiteral') {
+          return {
+            type: 'StringLiteral',
+            value: `${left.value}:${right.value}`,
+            loc: { start: startLoc, end: this.previous().loc.end, file: this.filename }
+          };
+        }
         return {
-          type: 'StringLiteral',
-          value: `${num1}:${num2}`,
+          type: 'BinaryExpression',
+          operator: sep,
+          left,
+          right,
           loc: { start: startLoc, end: this.previous().loc.end, file: this.filename }
         };
       }

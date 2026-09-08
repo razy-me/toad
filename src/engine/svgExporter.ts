@@ -489,6 +489,9 @@ export class SvgExporter {
         }
 
         const tspans = lines.map((l, i) => {
+          if (i === 0) {
+            return `<tspan>${this.escapeXml(l)}</tspan>`;
+          }
           const lineY = baselineY + i * lineHeight;
           return `<tspan x="${anchorX}" y="${lineY}">${this.escapeXml(l)}</tspan>`;
         }).join('');

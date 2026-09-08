@@ -100,7 +100,7 @@ export interface ComputedStyle {
   verticalAlign?: 'top' | 'middle' | 'bottom';
   trim?: 'cap' | 'both' | 'start' | 'end' | 'none';
   fillOpacity?: number;
-  layerColor?: 'none' | 'red' | 'orange' | 'yellow' | 'green' | 'blue' | 'violet' | 'gray';
+  layerColor?: 'none' | 'red' | 'orange' | 'yellow' | 'green' | 'blue' | 'violet' | 'gray' | string;
   lock?: 'all' | 'position' | 'transparency' | 'composite';
   knockout?: boolean;
   shadows?: Array<{ offsetX: number; offsetY: number; blur: number; color: string; useGlobalLight?: boolean; noise?: number }>;
@@ -257,6 +257,27 @@ export function computeAspectRatio(width: number, height: number): { ratioX: num
   const gcd = computeGcd(width, height);
   const ratioX = Number(((width) / gcd).toFixed(3));
   const ratioY = Number(((height) / gcd).toFixed(3));
+
+  // If computed ratio is non-integer or produced huge prime ratios from float jitter (e.g. 1.778:1 or 800000:600001), check standard presets
+  if (!Number.isInteger(ratioX) || !Number.isInteger(ratioY) || ratioX > 50 || ratioY > 50) {
+    const val = width / height;
+    const presets: Array<[number, number]> = [
+      [16, 9],
+      [9, 16],
+      [4, 3],
+      [3, 4],
+      [1, 1],
+      [21, 9],
+      [3, 2],
+      [2, 3],
+    ];
+    for (const [px, py] of presets) {
+      if (Math.abs(val - (px / py)) <= 0.005) {
+        return { ratioX: px, ratioY: py, ratioString: `${px}:${py}` };
+      }
+    }
+  }
+
   return {
     ratioX,
     ratioY,

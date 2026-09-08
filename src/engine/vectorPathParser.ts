@@ -244,9 +244,11 @@ export function svgPathToSubpaths(d: string): Array<{ closed: boolean; segments:
     while (i < args.length || (currentType === 'Z' && i === 0)) {
       switch (currentType) {
         case 'M': {
+          if (i + 1 >= args.length) { i = args.length; break; }
           const x = isRel ? curX + args[i]! : args[i]!;
           const y = isRel ? curY + args[i + 1]! : args[i + 1]!;
           i += 2;
+          if (isNaN(x) || isNaN(y)) break;
 
           if (currentSubpath.segments.length > 0) {
             subpaths.push(currentSubpath);
@@ -265,9 +267,11 @@ export function svgPathToSubpaths(d: string): Array<{ closed: boolean; segments:
           break;
         }
         case 'L': {
+          if (i + 1 >= args.length) { i = args.length; break; }
           const x = isRel ? curX + args[i]! : args[i]!;
           const y = isRel ? curY + args[i + 1]! : args[i + 1]!;
           i += 2;
+          if (isNaN(x) || isNaN(y)) break;
           currentSubpath.segments.push({
             p0: { x: curX, y: curY },
             cp1: { x: curX, y: curY },
@@ -281,8 +285,10 @@ export function svgPathToSubpaths(d: string): Array<{ closed: boolean; segments:
           break;
         }
         case 'H': {
+          if (i >= args.length) { i = args.length; break; }
           const x = isRel ? curX + args[i]! : args[i]!;
           i += 1;
+          if (isNaN(x)) break;
           currentSubpath.segments.push({
             p0: { x: curX, y: curY },
             cp1: { x: curX, y: curY },
@@ -295,8 +301,10 @@ export function svgPathToSubpaths(d: string): Array<{ closed: boolean; segments:
           break;
         }
         case 'V': {
+          if (i >= args.length) { i = args.length; break; }
           const y = isRel ? curY + args[i]! : args[i]!;
           i += 1;
+          if (isNaN(y)) break;
           currentSubpath.segments.push({
             p0: { x: curX, y: curY },
             cp1: { x: curX, y: curY },
@@ -309,6 +317,7 @@ export function svgPathToSubpaths(d: string): Array<{ closed: boolean; segments:
           break;
         }
         case 'C': {
+          if (i + 5 >= args.length) { i = args.length; break; }
           const cp1x = isRel ? curX + args[i]! : args[i]!;
           const cp1y = isRel ? curY + args[i + 1]! : args[i + 1]!;
           const cp2x = isRel ? curX + args[i + 2]! : args[i + 2]!;
@@ -316,6 +325,8 @@ export function svgPathToSubpaths(d: string): Array<{ closed: boolean; segments:
           const endX = isRel ? curX + args[i + 4]! : args[i + 4]!;
           const endY = isRel ? curY + args[i + 5]! : args[i + 5]!;
           i += 6;
+
+          if (isNaN(cp1x) || isNaN(cp1y) || isNaN(cp2x) || isNaN(cp2y) || isNaN(endX) || isNaN(endY)) break;
 
           currentSubpath.segments.push({
             p0: { x: curX, y: curY },
@@ -331,6 +342,7 @@ export function svgPathToSubpaths(d: string): Array<{ closed: boolean; segments:
           break;
         }
         case 'S': {
+          if (i + 3 >= args.length) { i = args.length; break; }
           // Smooth cubic curve: cp1 is reflection of lastCp or cur if none
           let cp1x = curX;
           let cp1y = curY;
@@ -343,6 +355,8 @@ export function svgPathToSubpaths(d: string): Array<{ closed: boolean; segments:
           const endX = isRel ? curX + args[i + 2]! : args[i + 2]!;
           const endY = isRel ? curY + args[i + 3]! : args[i + 3]!;
           i += 4;
+
+          if (isNaN(cp2x) || isNaN(cp2y) || isNaN(endX) || isNaN(endY)) break;
 
           currentSubpath.segments.push({
             p0: { x: curX, y: curY },
@@ -358,12 +372,15 @@ export function svgPathToSubpaths(d: string): Array<{ closed: boolean; segments:
           break;
         }
         case 'Q': {
+          if (i + 3 >= args.length) { i = args.length; break; }
           // Quadratic curve -> convert to cubic
           const qcx = isRel ? curX + args[i]! : args[i]!;
           const qcy = isRel ? curY + args[i + 1]! : args[i + 1]!;
           const endX = isRel ? curX + args[i + 2]! : args[i + 2]!;
           const endY = isRel ? curY + args[i + 3]! : args[i + 3]!;
           i += 4;
+
+          if (isNaN(qcx) || isNaN(qcy) || isNaN(endX) || isNaN(endY)) break;
 
           const cp1x = curX + (2 / 3) * (qcx - curX);
           const cp1y = curY + (2 / 3) * (qcy - curY);
@@ -384,6 +401,7 @@ export function svgPathToSubpaths(d: string): Array<{ closed: boolean; segments:
           break;
         }
         case 'T': {
+          if (i + 1 >= args.length) { i = args.length; break; }
           // Smooth quadratic curve
           let qcx = curX;
           let qcy = curY;
@@ -394,6 +412,8 @@ export function svgPathToSubpaths(d: string): Array<{ closed: boolean; segments:
           const endX = isRel ? curX + args[i]! : args[i]!;
           const endY = isRel ? curY + args[i + 1]! : args[i + 1]!;
           i += 2;
+
+          if (isNaN(endX) || isNaN(endY)) break;
 
           const cp1x = curX + (2 / 3) * (qcx - curX);
           const cp1y = curY + (2 / 3) * (qcy - curY);
@@ -414,6 +434,7 @@ export function svgPathToSubpaths(d: string): Array<{ closed: boolean; segments:
           break;
         }
         case 'A': {
+          if (i + 6 >= args.length) { i = args.length; break; }
           const rx = args[i]!;
           const ry = args[i + 1]!;
           const xRot = args[i + 2]!;
@@ -422,6 +443,8 @@ export function svgPathToSubpaths(d: string): Array<{ closed: boolean; segments:
           const endX = isRel ? curX + args[i + 5]! : args[i + 5]!;
           const endY = isRel ? curY + args[i + 6]! : args[i + 6]!;
           i += 7;
+
+          if (isNaN(rx) || isNaN(ry) || isNaN(endX) || isNaN(endY)) break;
 
           const arcSegs = arcToCubicSegments(curX, curY, rx, ry, xRot, largeArc, sweep, endX, endY);
           for (const seg of arcSegs) {
@@ -501,9 +524,15 @@ function cubicSegmentsToBezierKnots(
       bwdY = (prevSeg.cp2.y + offsetY) * scale;
     }
 
+    const sanitize = (val: number) => Number.isFinite(val) ? val : 0;
+
     knots.push({
       linked: false,
-      points: [bwdX, bwdY, anchorX, anchorY, fwdX, fwdY]
+      points: [
+        sanitize(bwdX), sanitize(bwdY),
+        sanitize(anchorX), sanitize(anchorY),
+        sanitize(fwdX), sanitize(fwdY)
+      ]
     });
   }
 
@@ -514,10 +543,15 @@ function cubicSegmentsToBezierKnots(
     const anchorY = (lastSeg.p1.y + offsetY) * scale;
     const bwdX = (lastSeg.cp2.x + offsetX) * scale;
     const bwdY = (lastSeg.cp2.y + offsetY) * scale;
+    const sanitize = (val: number) => Number.isFinite(val) ? val : 0;
 
     knots.push({
       linked: false,
-      points: [bwdX, bwdY, anchorX, anchorY, anchorX, anchorY]
+      points: [
+        sanitize(bwdX), sanitize(bwdY),
+        sanitize(anchorX), sanitize(anchorY),
+        sanitize(anchorX), sanitize(anchorY)
+      ]
     });
   }
 
