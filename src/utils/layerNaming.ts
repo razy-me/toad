@@ -129,6 +129,7 @@ export function toSafeXmlId(nameOrId: string): string {
  */
 export function resolveHumanLayerName(node: any, context?: LayerNamingContext): string {
   const humanize = context?.humanizeLayerNames === true;
+  const isRaw = context?.humanizeLayerNames === false;
 
   // 1. Explicitly assigned name string (e.g. rect "Hero Card" or name: "Hero Card")
   if (
@@ -145,7 +146,19 @@ export function resolveHumanLayerName(node: any, context?: LayerNamingContext): 
 
   const rawType = (node.type || '').toLowerCase();
   const rawId = typeof node.id === 'string' ? node.id : '';
-  const isSynthetic = !rawId || rawId.startsWith('__auto_') || (node as any).isSyntheticId;
+  const isSynthetic = !rawId || rawId.startsWith('__auto_') || rawId.startsWith('inst') || (node as any).isSyntheticId;
+
+  // Component instances resolve to their component name with priority over synthetic instance IDs
+  if ((node as any).isComponent) {
+    const comp = (node as any).componentName;
+    if (!comp) return 'Component';
+    return isRaw ? comp : humanizeIdentifier(comp);
+  }
+
+  // If humanization is explicitly disabled, prioritize exact DSL identifiers
+  if (isRaw && !isSynthetic && rawId) {
+    return rawId;
+  }
 
   // 2. Type-specific semantic rules
   if (rawType === 'text') {
@@ -187,21 +200,25 @@ export function resolveHumanLayerName(node: any, context?: LayerNamingContext): 
 
   if (rawType === 'icon') {
     const iconName = node.iconName || node.name || node.pathLayout?.iconName;
+    if (isRaw && iconName && typeof iconName === 'string' && iconName !== 'icon' && !iconName.startsWith('__auto_')) {
+      return iconName;
+    }
     if (iconName && typeof iconName === 'string' && iconName !== 'icon' && !iconName.startsWith('__auto_')) {
       const base = humanizeIdentifier(iconName);
       return /icon$/i.test(base.trim()) ? base : `${base} Icon`;
     }
     if (!isSynthetic && rawId) {
+      if (isRaw) return rawId;
       const base = humanize ? humanizeIdentifier(rawId) : rawId;
       return /icon$/i.test(base.trim()) ? base : `${base} Icon`;
     }
-    return 'Icon';
+    return isRaw ? 'icon' : 'Icon';
   }
 
   if (rawType === 'rect') {
     // Check if it acts as a clipping mask
     if (node.style?.clip === true || (node as any).clip === true) {
-      return 'Clipping Mask';
+      return isRaw && !isSynthetic && rawId ? rawId : 'Clipping Mask';
     }
 
     // Check if it acts as a background in a container (only if anonymous)
@@ -288,7 +305,9 @@ export function resolveHumanLayerName(node: any, context?: LayerNamingContext): 
       return humanize ? humanizeIdentifier(rawId) : rawId;
     }
     if ((node as any).isComponent) {
-      return (node as any).componentName ? humanizeIdentifier((node as any).componentName) : 'Component';
+      const comp = (node as any).componentName;
+      if (!comp) return 'Component';
+      return isRaw ? comp : humanizeIdentifier(comp);
     }
     return 'Group';
   }

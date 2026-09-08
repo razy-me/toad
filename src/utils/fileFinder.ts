@@ -172,11 +172,21 @@ function searchDir(
   results: string[],
   seenPaths: Set<string>,
   maxDepth = 5,
-  currentDepth = 0
+  currentDepth = 0,
+  seenDirs = new Set<string>()
 ): void {
   if (currentDepth > maxDepth || results.length >= 25) return;
 
   try {
+    let canonicalDir = dir;
+    try {
+      canonicalDir = fs.realpathSync(dir).toLowerCase();
+    } catch {
+      canonicalDir = path.resolve(dir).toLowerCase();
+    }
+    if (seenDirs.has(canonicalDir)) return;
+    seenDirs.add(canonicalDir);
+
     const entries = fs.readdirSync(dir, { withFileTypes: true });
     const subdirs: string[] = [];
 
@@ -213,16 +223,30 @@ function searchDir(
             results.push(resolved);
           }
         }
-      } else if (entry.isDirectory()) {
+      } else if (entry.isDirectory() || entry.isSymbolicLink()) {
         if (!IGNORED_FOLDERS.has(lower)) {
-          subdirs.push(fullPath);
+          try {
+            let isDir = entry.isDirectory();
+            if (!isDir && entry.isSymbolicLink()) {
+              const stat = fs.statSync(fullPath);
+              isDir = stat.isDirectory();
+            }
+            if (isDir) {
+              const realSub = fs.realpathSync(fullPath).toLowerCase();
+              if (!seenDirs.has(realSub)) {
+                subdirs.push(fullPath);
+              }
+            }
+          } catch {
+            // Ignore broken symlinks or unreadable paths
+          }
         }
       }
     }
 
     for (const sub of subdirs) {
       if (results.length >= 25) break;
-      searchDir(sub, targetFileName, results, seenPaths, maxDepth, currentDepth + 1);
+      searchDir(sub, targetFileName, results, seenPaths, maxDepth, currentDepth + 1, seenDirs);
     }
   } catch {}
 }

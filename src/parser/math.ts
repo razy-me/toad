@@ -1406,7 +1406,10 @@ export class LayoutSolver {
             case 'center of':
               x = targetBox.x + (targetBox.w - w) / 2 + ox;
               y = targetBox.y + (targetBox.h - h) / 2 + oy;
-              if (elem.type === 'text' && (elem as any).verticalAlign === undefined) {
+              const explicitValign = (elem as any).verticalAlign ?? (elem as any).style?.verticalAlign ?? (elem as any)['vertical-align'];
+              if (explicitValign !== undefined) {
+                (elem as any).verticalAlign = explicitValign;
+              } else if (elem.type === 'text') {
                 (elem as any).verticalAlign = 'middle';
               }
               break;
@@ -1659,7 +1662,10 @@ export class LayoutSolver {
         } else {
           if (alignStr === 'center') {
             cy += (effectiveCrossTotal - ch) / 2;
-            if (child.type === 'text' && (child as any).verticalAlign === undefined) {
+            const explicitChildValign = (child as any).verticalAlign ?? (child as any).style?.verticalAlign ?? (child as any)['vertical-align'];
+            if (explicitChildValign !== undefined) {
+              (child as any).verticalAlign = explicitChildValign;
+            } else if (child.type === 'text') {
               (child as any).verticalAlign = 'middle';
             }
           }

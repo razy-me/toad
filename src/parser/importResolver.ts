@@ -498,6 +498,7 @@ export class ImportResolver {
     let hasExplicitDpi = false;
     let dpi = 96;
     let colorMode: 'rgb' | 'cmyk' = 'rgb';
+    let appliedPreset: string | undefined;
     const properties: Record<string, any> = {};
 
     if (canvasNode) {
@@ -575,6 +576,9 @@ export class ImportResolver {
         } else if (propName === 'quality') {
           const num = this.extractNumber(val);
           if (num !== undefined) {
+            if (num <= 0) {
+              this.warnings.push(`Image export quality ${num} is invalid or below minimum threshold (1). Clamped to 1.`);
+            }
             const q = num <= 1 && num > 0 ? num * 100 : num;
             quality = Math.max(1, Math.min(100, Math.round(q)));
           }
@@ -587,6 +591,10 @@ export class ImportResolver {
           }
         } else if (propName === 'preset') {
           const presetName = this.extractString(val)?.toLowerCase();
+          appliedPreset = presetName;
+          const effectivePresetDpi = hasExplicitDpi && dpi ? dpi : 300;
+          const a4W = Math.round((210 / 25.4) * effectivePresetDpi);
+          const a4H = Math.round((297 / 25.4) * effectivePresetDpi);
           const PRESETS: Record<string, { w: number; h: number }> = {
             'og-image': { w: 1200, h: 630 },
             'banner': { w: 1920, h: 1080 },
@@ -606,8 +614,8 @@ export class ImportResolver {
             'linkedin-post': { w: 1200, h: 627 },
             'pinterest-pin': { w: 1000, h: 1500 },
             'dribbble-shot': { w: 1600, h: 1200 },
-            'a4': { w: 2480, h: 3508 },
-            'a4-landscape': { w: 3508, h: 2480 }
+            'a4': { w: a4W, h: a4H },
+            'a4-landscape': { w: a4H, h: a4W }
           };
           if (presetName && PRESETS[presetName]) {
             if (!explicitWidth) width = PRESETS[presetName].w;
@@ -683,6 +691,13 @@ export class ImportResolver {
           properties[prop.name] = this.extractRawValue(val);
         }
       }
+    }
+
+    if ((appliedPreset === 'a4' || appliedPreset === 'a4-landscape') && hasExplicitDpi && dpi) {
+      const a4W = Math.round((210 / 25.4) * dpi);
+      const a4H = Math.round((297 / 25.4) * dpi);
+      width = appliedPreset === 'a4' ? a4W : a4H;
+      height = appliedPreset === 'a4' ? a4H : a4W;
     }
 
     // Smart Ratio & Resolution Calculation

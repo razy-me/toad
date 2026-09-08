@@ -609,6 +609,8 @@ export function auditDesign(
   const canvasWidth = layout.canvas.width || 800;
   const canvasHeight = layout.canvas.height || 600;
   const canvasArea = canvasWidth * canvasHeight;
+  const bleed = layout.canvas.bleed || 0;
+  const isPrint = Boolean((layout.canvas.dpi && layout.canvas.dpi >= 150) || bleed > 0);
 
   // --------------------------------------------------------------------------
   // 1. Accessibility, WCAG 2.2 & APCA Perceptual Contrast
@@ -670,8 +672,9 @@ export function auditDesign(
     const fontSize = node.textLayout?.fontSize || 16;
     const isBold = Number(node.textLayout?.fontWeight) >= 700 || String(node.textLayout?.fontWeight).includes('bold');
     const isLargeText = fontSize >= 24 || (fontSize >= 18.66 && isBold);
-    const minContrast = isLargeText ? 3.0 : 4.5;
-    const minApca = isLargeText ? 60 : 75;
+    // Differentiate thresholds for screen (emissive pixels) vs print (reflective ink on paper)
+    const minContrast = isPrint ? (isLargeText ? 2.8 : 3.5) : (isLargeText ? 3.0 : 4.5);
+    const minApca = isPrint ? (isLargeText ? 50 : 65) : (isLargeText ? 60 : 75);
 
     const rawId = node.id || node.name || 'text';
     const idLabel = node.id ? `#${node.id}` : (node.name || 'text');
@@ -752,8 +755,6 @@ export function auditDesign(
   // --------------------------------------------------------------------------
   // 2. Print Prepress, Bleed Safety & Total Area Coverage (TAC)
   // --------------------------------------------------------------------------
-  const bleed = layout.canvas.bleed || 0;
-  const isPrint = (layout.canvas.dpi && layout.canvas.dpi >= 150) || bleed > 0;
   const safeMargin = 12; // ~3mm in standard 96 DPI points
 
   if (bleed > 0) {
@@ -1239,16 +1240,27 @@ export function auditDesign(
   const fatalSlopCount = uniqueFindings.filter(f => f.category === 'anti-slop' && f.severity === 'error').length;
   const warnSlopCount = uniqueFindings.filter(f => f.category === 'anti-slop' && f.severity === 'warn').length;
 
-  let computedScore = Math.round(
-    categories.accessibility.score * 0.20 +
-    categories.print.score * 0.10 +
-    categories.typography.score * 0.15 +
-    categories.density.score * 0.15 +
-    categories.antiSlop.score * 0.20 +
-    categories.color.score * 0.05 +
-    categories.geometry.score * 0.05 +
-    categories.hygiene.score * 0.10
-  );
+  let computedScore = isPrint
+    ? Math.round(
+        categories.accessibility.score * 0.15 +
+        categories.print.score * 0.20 +
+        categories.typography.score * 0.15 +
+        categories.density.score * 0.15 +
+        categories.antiSlop.score * 0.15 +
+        categories.color.score * 0.05 +
+        categories.geometry.score * 0.05 +
+        categories.hygiene.score * 0.10
+      )
+    : Math.round(
+        categories.accessibility.score * 0.25 +
+        categories.print.score * 0.05 +
+        categories.typography.score * 0.15 +
+        categories.density.score * 0.15 +
+        categories.antiSlop.score * 0.20 +
+        categories.color.score * 0.05 +
+        categories.geometry.score * 0.05 +
+        categories.hygiene.score * 0.10
+      );
 
   let slopCapActive = false;
   let slopCapScore: number | undefined;

@@ -95,9 +95,15 @@ export interface CachedFileEntry {
  */
 export class AstCache {
   private static instance: AstCache;
+  public static readonly MAX_AST_ENTRIES = 500;
   private cache = new Map<string, CachedFileEntry>();
+  private maxEntries: number = AstCache.MAX_AST_ENTRIES;
   private hits = 0;
   private misses = 0;
+
+  constructor(maxEntries = AstCache.MAX_AST_ENTRIES) {
+    this.maxEntries = maxEntries;
+  }
 
   public static getInstance(): AstCache {
     if (!AstCache.instance) {
@@ -144,6 +150,9 @@ export class AstCache {
     }
 
     this.hits++;
+    // LRU: re-insert to position at end of Map (most recently used)
+    this.cache.delete(filePath);
+    this.cache.set(filePath, entry);
     return entry.ast;
   }
 
@@ -157,6 +166,14 @@ export class AstCache {
             dependencyMtimes[dep] = fs.statSync(dep).mtimeMs;
           }
         } catch {}
+      }
+    }
+    if (this.cache.has(filePath)) {
+      this.cache.delete(filePath);
+    } else if (this.cache.size >= this.maxEntries) {
+      const oldestKey = this.cache.keys().next().value;
+      if (oldestKey !== undefined) {
+        this.cache.delete(oldestKey);
       }
     }
     this.cache.set(filePath, { mtimeMs, hash, ast, dependencies, dependencyMtimes });

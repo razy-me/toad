@@ -181,11 +181,11 @@ export class CanvasRenderer {
 
     // 1. Opacity. Applied exactly ONCE: isolated layers render their subtree
     // with opacity overridden to 1 and re-composite carrying the factor.
-    const ownOpacity = typeof effects?.overrideOpacity === 'number'
-      ? Math.max(0, Math.min(1, effects.overrideOpacity))
-      : typeof node.opacity === 'number'
-        ? Math.max(0, Math.min(1, node.opacity))
-        : 1;
+    const rawOverride = effects?.overrideOpacity;
+    const rawNodeOpacity = typeof node.opacity === 'number' ? node.opacity : (typeof node.style?.opacity === 'number' ? node.style.opacity : 1);
+    const validOverride = typeof rawOverride === 'number' && Number.isFinite(rawOverride) ? Math.max(0, Math.min(1, rawOverride)) : undefined;
+    const validNodeOpacity = typeof rawNodeOpacity === 'number' && Number.isFinite(rawNodeOpacity) ? Math.max(0, Math.min(1, rawNodeOpacity)) : 1;
+    const ownOpacity = validOverride !== undefined ? validOverride : validNodeOpacity;
     if (ownOpacity < 1) {
       ctx.globalAlpha *= ownOpacity;
     }
