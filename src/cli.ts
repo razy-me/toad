@@ -635,58 +635,72 @@ export function createCli(): Command {
             const isEnter = (k: string) => k === '\r' || k === '\n';
             const isCopy = (k: string) => k.toLowerCase() === 'f';
 
-            // Step 1: Warnings / Begründungen für Bewertungen < 100%
-            while (true) {
-              process.stdout.write(`\n  ${c.cyan('➜')}  ${c.bold('Drücke [Enter]')}, um die Begründungen (< 100%) anzuzeigen, oder ${c.bold('[F]')}, um den Report zu kopieren (oder [Q] zum Beenden)... `);
-              const key1 = await waitForUserInputKey();
-              process.stdout.write('\n');
+            const penaltyIssues = audit.findings.filter(f => f.severity === 'error' || f.severity === 'warn');
+            const hasPenalties = penaltyIssues.length > 0;
 
-              if (isQuit(key1)) {
-                break;
-              }
-              if (isCopy(key1)) {
-                await copyToClipboard(accumulatedReport);
-                console.log(`  ${c.green('✔')} ${c.bold('Bisheriger Report als Text in die Zwischenablage kopiert!')}`);
-                continue;
-              }
-              if (isEnter(key1)) {
-                const warningsSection = formatWarningsSection(audit, { standalone: true });
-                console.log(warningsSection);
-                accumulatedReport += '\n' + warningsSection;
+            const runFixesStep = async () => {
+              while (true) {
+                const fixPrompt = hasPenalties
+                  ? `\n  ${c.cyan('➜')}  ${c.bold('Drücke [Enter]')}, um die Quick-Fixes & Handlungsempfehlungen anzuzeigen, oder ${c.bold('[F]')}, um den Report zu kopieren (oder [Q] zum Beenden)... `
+                  : `\n  ${c.cyan('➜')}  ${c.bold('Drücke [Enter]')}, um die Hinweise & Empfehlungen anzuzeigen, oder ${c.bold('[F]')}, um den Report zu kopieren (oder [Q] zum Beenden)... `;
+                process.stdout.write(fixPrompt);
+                const key2 = await waitForUserInputKey();
+                process.stdout.write('\n');
 
-                // Step 2: Quick-Fixes & Handlungsempfehlungen
-                while (true) {
-                  process.stdout.write(`\n  ${c.cyan('➜')}  ${c.bold('Drücke [Enter]')}, um die Quick-Fixes & Handlungsempfehlungen anzuzeigen, oder ${c.bold('[F]')}, um den Report zu kopieren (oder [Q] zum Beenden)... `);
-                  const key2 = await waitForUserInputKey();
-                  process.stdout.write('\n');
-
-                  if (isQuit(key2)) {
-                    break;
-                  }
-                  if (isCopy(key2)) {
-                    await copyToClipboard(accumulatedReport);
-                    console.log(`  ${c.green('✔')} ${c.bold('Bisheriger Report als Text in die Zwischenablage kopiert!')}`);
-                    continue;
-                  }
-                  if (isEnter(key2)) {
-                    const fixesSection = formatFixesSection(audit, { standalone: true });
-                    console.log(fixesSection);
-                    console.log('');
-                    accumulatedReport += '\n' + fixesSection;
-
-                    // Final prompt: Copy complete report or press Enter/Q to finish
-                    process.stdout.write(`  ${c.cyan('➜')}  ${c.bold('Drücke [F]')}, um den gesamten Report zu kopieren (oder [Enter]/[Q] zum Beenden)... `);
-                    const key3 = await waitForUserInputKey();
-                    process.stdout.write('\n');
-                    if (isCopy(key3)) {
-                      await copyToClipboard(accumulatedReport);
-                      console.log(`  ${c.green('✔')} ${c.bold('Gesamter Report in die Zwischenablage kopiert!')}\n`);
-                    }
-                    break;
-                  }
+                if (isQuit(key2)) {
+                  break;
                 }
-                break;
+                if (isCopy(key2)) {
+                  await copyToClipboard(accumulatedReport);
+                  console.log(`  ${c.green('✔')} ${c.bold('Bisheriger Report als Text in die Zwischenablage kopiert!')}`);
+                  continue;
+                }
+                if (isEnter(key2)) {
+                  const fixesSection = formatFixesSection(audit, { standalone: true });
+                  console.log(fixesSection);
+                  console.log('');
+                  accumulatedReport += '\n' + fixesSection;
+
+                  // Final prompt: Copy complete report or press Enter/Q to finish
+                  process.stdout.write(`  ${c.cyan('➜')}  ${c.bold('Drücke [F]')}, um den gesamten Report zu kopieren (oder [Enter]/[Q] zum Beenden)... `);
+                  const key3 = await waitForUserInputKey();
+                  process.stdout.write('\n');
+                  if (isCopy(key3)) {
+                    await copyToClipboard(accumulatedReport);
+                    console.log(`  ${c.green('✔')} ${c.bold('Gesamter Report in die Zwischenablage kopiert!')}\n`);
+                  }
+                  break;
+                }
               }
+            };
+
+            if (hasPenalties) {
+              // Step 1: Warnings / Begründungen für Bewertungen < 100%
+              while (true) {
+                process.stdout.write(`\n  ${c.cyan('➜')}  ${c.bold('Drücke [Enter]')}, um die Begründungen (< 100%) anzuzeigen, oder ${c.bold('[F]')}, um den Report zu kopieren (oder [Q] zum Beenden)... `);
+                const key1 = await waitForUserInputKey();
+                process.stdout.write('\n');
+
+                if (isQuit(key1)) {
+                  break;
+                }
+                if (isCopy(key1)) {
+                  await copyToClipboard(accumulatedReport);
+                  console.log(`  ${c.green('✔')} ${c.bold('Bisheriger Report als Text in die Zwischenablage kopiert!')}`);
+                  continue;
+                }
+                if (isEnter(key1)) {
+                  const warningsSection = formatWarningsSection(audit, { standalone: true });
+                  console.log(warningsSection);
+                  accumulatedReport += '\n' + warningsSection;
+
+                  await runFixesStep();
+                  break;
+                }
+              }
+            } else {
+              // Bei 100%: Keine Abzüge vorhanden, direkt Schritt 2 anbieten
+              await runFixesStep();
             }
           }
         }

@@ -1394,7 +1394,7 @@ export function formatWarningsSection(report: AuditReport, options?: { standalon
   const emptyGutter = () => c.bold('│');
 
   const lines: string[] = [];
-  const activeIssues = report.findings.filter(f => f.severity !== 'pass');
+  const penaltyIssues = report.findings.filter(f => f.severity === 'error' || f.severity === 'warn');
 
   if (options?.standalone) {
     lines.push('');
@@ -1405,7 +1405,7 @@ export function formatWarningsSection(report: AuditReport, options?: { standalon
   }
   lines.push(emptyGutter());
 
-  if (activeIssues.length === 0) {
+  if (penaltyIssues.length === 0) {
     lines.push(gutter(c.green('   ✔ Alle Kategorien erreichen 100%. Keine Beanstandungen oder Warnungen vorhanden.')));
   } else {
     const categoryMappings: Array<{
@@ -1427,7 +1427,7 @@ export function formatWarningsSection(report: AuditReport, options?: { standalon
     for (const entry of categoryMappings) {
       const cat = report.categories[entry.key];
       if (!cat) continue;
-      const catIssues = activeIssues.filter(f => entry.matchCats.includes(f.category));
+      const catIssues = penaltyIssues.filter(f => entry.matchCats.includes(f.category));
 
       if (cat.score < 100 || cat.warnings > 0 || cat.errors > 0 || catIssues.length > 0) {
         lines.push(gutter(`   ${c.bold(c.cyan('📌 ' + cat.name))} ${c.bold(`[${cat.score}% / Note: ${cat.grade}]`)} ${c.dim(`— ${cat.errors} Fehler, ${cat.warnings} Warnung(en)`)}`));
@@ -1439,7 +1439,7 @@ export function formatWarningsSection(report: AuditReport, options?: { standalon
           for (const issue of catIssues) {
             renderedIssues.add(issue);
             const isErr = issue.severity === 'error';
-            const sevBadge = isErr ? c.bgRed(' ✖ ERROR ') : (issue.severity === 'warn' ? c.bgYellow(' ⚠ WARN ') : c.bgBlue(' ℹ NOTICE '));
+            const sevBadge = isErr ? c.bgRed(' ✖ ERROR ') : c.bgYellow(' ⚠ WARN ');
             const penaltyStr = isErr ? c.red('(-25 bis -35 Pkt)') : c.yellow('(-10 bis -18 Pkt)');
 
             lines.push(gutter(`     ${sevBadge} ${c.bold(issue.code)} ${penaltyStr}`));
@@ -1454,13 +1454,13 @@ export function formatWarningsSection(report: AuditReport, options?: { standalon
       }
     }
 
-    const unrenderedIssues = activeIssues.filter(f => !renderedIssues.has(f));
+    const unrenderedIssues = penaltyIssues.filter(f => !renderedIssues.has(f));
     if (unrenderedIssues.length > 0) {
       lines.push(gutter(`   ${c.bold(c.cyan('📌 Weitere Befunde & Abzüge'))}`));
       lines.push(emptyGutter());
       for (const issue of unrenderedIssues) {
         const isErr = issue.severity === 'error';
-        const sevBadge = isErr ? c.bgRed(' ✖ ERROR ') : (issue.severity === 'warn' ? c.bgYellow(' ⚠ WARN ') : c.bgBlue(' ℹ NOTICE '));
+        const sevBadge = isErr ? c.bgRed(' ✖ ERROR ') : c.bgYellow(' ⚠ WARN ');
         const penaltyStr = isErr ? c.red('(-25 Pkt)') : c.yellow('(-10 Pkt)');
         lines.push(gutter(`     ${sevBadge} ${c.bold(issue.code)} ${penaltyStr} [${c.dim(issue.category)}]`));
         if (issue.nodeId) lines.push(gutter(`       ${c.bold('Ziel-Element:')} ${c.cyan(issue.nodeId)}`));
@@ -1522,10 +1522,11 @@ export function formatFixesSection(report: AuditReport, options?: { standalone?:
   } else {
     for (const issue of activeIssues) {
       const isErr = issue.severity === 'error';
-      const sevBadge = isErr ? c.bgRed(' ✖ ERROR ') : (issue.severity === 'warn' ? c.bgYellow(' ⚠ WARN ') : c.bgBlue(' ℹ NOTICE '));
-      const penaltyStr = isErr ? c.red('(-25 bis -35 Pkt)') : c.yellow('(-10 bis -18 Pkt)');
+      const isWarn = issue.severity === 'warn';
+      const sevBadge = isErr ? c.bgRed(' ✖ ERROR ') : (isWarn ? c.bgYellow(' ⚠ WARN ') : c.bgBlue(' ℹ NOTICE '));
+      const penaltyStr = isErr ? c.red('(-25 bis -35 Pkt) ') : (isWarn ? c.yellow('(-10 bis -18 Pkt) ') : '');
 
-      lines.push(gutter(`   ${sevBadge} ${c.bold(issue.code)} ${penaltyStr} [${c.dim(issue.category)}]`));
+      lines.push(gutter(`   ${sevBadge} ${c.bold(issue.code)} ${penaltyStr}[${c.dim(issue.category)}]`));
       if (issue.nodeId) lines.push(gutter(`     ${c.bold('Ziel-Element:')} ${c.cyan(issue.nodeId)}`));
       lines.push(gutter(`     ${c.bold('Problem:')}      ${issue.message}`));
       if (issue.axiom) lines.push(gutter(`     ${c.bold('Axiom/Regel:')}  ${c.dim(issue.axiom)}`));
@@ -1874,17 +1875,24 @@ export function formatTerminalReport(
   // --------------------------------------------------------------------------
   // Section 4: Detailed Findings with Code & Quick-Fix (Optional / Interactive)
   // --------------------------------------------------------------------------
+  const penaltyIssues = report.findings.filter(f => f.severity === 'error' || f.severity === 'warn');
   const activeIssues = report.findings.filter(f => f.severity !== 'pass');
 
   if (options?.showFixes !== false) {
     lines.push(formatWarningsSection(report));
     lines.push(formatFixesSection(report));
-  } else if (activeIssues.length > 0) {
+  } else if (penaltyIssues.length > 0) {
     lines.push(emptyGutter());
     lines.push(midBorder('💡 Handlungsempfehlungen & Quick-Fixes'));
     lines.push(emptyGutter());
-    lines.push(gutter(`   ${c.yellow(c.bold(`[ ${activeIssues.length} Befunde & Quick-Fixes verfügbar ]`))}`));
+    lines.push(gutter(`   ${c.yellow(c.bold(`[ ${penaltyIssues.length} Befunde & Quick-Fixes verfügbar ]`))}`));
     lines.push(gutter(c.dim('   Drücke [Enter], um die Begründungen (< 100%) anzuzeigen, oder [F] zum Kopieren.')));
+  } else if (activeIssues.length > 0) {
+    lines.push(emptyGutter());
+    lines.push(midBorder('💡 Handlungsempfehlungen & Hinweise'));
+    lines.push(emptyGutter());
+    lines.push(gutter(`   ${c.cyan(c.bold(`[ ${activeIssues.length} Empfehlungen & Hinweise verfügbar ]`))}`));
+    lines.push(gutter(c.dim('   Drücke [Enter], um die Hinweise & Empfehlungen anzuzeigen, oder [F] zum Kopieren.')));
   }
 
   lines.push(emptyGutter());
