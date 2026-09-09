@@ -24,7 +24,7 @@
 - 🤖 **Gateway to AI-Generated .PSD Files**: LLMs can write code, but can't generate binary Photoshop files. TOAD bridges that gap: an AI writes simple `.toad` code, and TOAD compiles it into a **native Photoshop document with editable text layers, vector Bézier paths, and real layer styles**.
 - ✍️ **Code-First Design**: Version-control your designs, use variables, and automate graphics generation without heavy GUI tools.
 - ⚡ **Blazing Fast**: Native 2D raster engine (@napi-rs/canvas) with zero browser overhead.
-- 🔄 **Live Hot Reload**: Run `toad hero -w` for instant browser preview with live reload on save.
+- 🔄 **Live Hot Reload**: Run `toad <FILENAME.toad> -w` for instant browser preview with live reload on save.
 
 ---
 
