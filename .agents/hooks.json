@@ -1,0 +1,11 @@
+﻿{
+  "pre-tool-safety": {
+    "enabled": false,
+    "PreToolUse": [
+      {
+        "matcher": "run_command",
+        "hooks": []
+      }
+    ]
+  }
+}

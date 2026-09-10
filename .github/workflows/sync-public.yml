@@ -1,0 +1,46 @@
+﻿name: Sync to Public Repository
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Private Repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Prepare Clean Public Tree
+        run: |
+          # Remove internal confidential directories & files
+          rm -rf .agents _agents the_seed soul-poster GEMINI.md PROJECT.md .github/workflows/sync-public.yml
+
+      - name: Push to Public Repo
+        env:
+          PUBLIC_REPO_TOKEN: ${{ secrets.SYNC_PUBLIC_TOKEN }}
+        run: |
+          git config user.name "razy-me"
+          git config user.email "florian8schuster@gmail.com"
+          
+          # Initialize temporary git repo for public mirror
+          git init public_sync
+          cd public_sync
+          git remote add target "https://x-access-token:${PUBLIC_REPO_TOKEN}@github.com/razy-me/toad.git"
+          git fetch target main || true
+          
+          # Copy all cleaned files into sync repo
+          cp -r ../* . 2>/dev/null || true
+          cp -r ../.* . 2>/dev/null || true
+          rm -rf .git/public_sync public_sync
+          
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No changes to sync."
+          else
+            git commit -m "sync: mirror from private repo $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+            git push target HEAD:main
+          fi
