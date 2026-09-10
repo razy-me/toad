@@ -324,9 +324,19 @@ export class PsdExporter {
    * Additional Layer Information blocks in standard 32-bit PSD layer records
    * MUST have their data padded to 4-byte boundaries ((len + 3) & ~3).
    * ag-psd by default only applies 2-byte alignment to many keys (e.g. SoCo, luni,
-   * vscg, TySh, lsct), which causes Photopea to throw "Error in PSD file: wrong signature."
-   * when jumping across blocks. This method adjusts the padding and updates the
-   * section length headers accordingly.
+   * vscg, TySh, lsct), and computes section alignment relative to writer.offset
+   * rather than the section data itself, causing Photopea to throw "Error in PSD file: wrong signature."
+   * when jumping across blocks.
+   *
+   * This method:
+   * 1. Aligns each Additional Layer Info block data to a 4-byte boundary.
+   * 2. Updates the 4-byte length header of the ALI block to match the aligned data length,
+   *    ensuring both Photopea (which advances by P or P + pad) and ag-psd/Photoshop (which
+   *    advance by P) land exactly on the next '8BIM'/'8B64' signature without misaligning.
+   * 3. Heals any '?' replacement characters in the legacy 1-byte Pascal string caused by
+   *    ag-psd's ASCII clamping when unicode 'luni' is present, substituting clean ASCII
+   *    dashes and transliterated characters in-place.
+   * 4. Updates all parent section length headers (layer records length, layer info length).
    */
   public static enforcePsdFourBytePadding(buf: Buffer): Buffer {
     if (buf.length < 30 || buf.toString('ascii', 0, 4) !== '8BPS') {
@@ -377,23 +387,38 @@ export class PsdExporter {
       let pLen = 1 + nameLen;
       while (pLen % 4 !== 0) pLen++;
       offset += pLen;
-      const extraFixed = buf.subarray(extraFixedStart, offset);
+      const extraFixed = Buffer.from(buf.subarray(extraFixedStart, offset));
+      const nameOffsetInExtra = 4 + maskLen + 4 + blendLen;
 
       const newAlis: Buffer[] = [];
       let extraAlisLength = 0;
+      let unicodeName = '';
 
       while (offset < extraStart + extraLen) {
         const aliSig = buf.subarray(offset, offset + 4);
+        const aliKeyStr = buf.subarray(offset + 4, offset + 8).toString('ascii');
         const aliKey = buf.subarray(offset + 4, offset + 8);
         const aliLen = buf.readUInt32BE(offset + 8);
         const aliData = buf.subarray(offset + 12, offset + 12 + aliLen);
 
+        if (aliKeyStr === 'luni' && aliLen >= 4) {
+          const charCount = aliData.readUInt32BE(0);
+          let str = '';
+          for (let c = 0; c < charCount; c++) {
+            str += String.fromCharCode(aliData.readUInt16BE(4 + c * 2));
+          }
+          unicodeName = str;
+        }
+
+        // Round length up to 4-byte boundary:
         const pad = (4 - (aliLen % 4)) % 4;
-        const totalBlockLen = 12 + aliLen + pad;
+        const alignedLen = aliLen + pad;
+        const totalBlockLen = 12 + alignedLen;
+
         const aliBlock = Buffer.alloc(totalBlockLen);
         aliSig.copy(aliBlock, 0);
         aliKey.copy(aliBlock, 4);
-        aliBlock.writeUInt32BE(aliLen, 8);
+        aliBlock.writeUInt32BE(alignedLen, 8); // Write aligned length to header
         aliData.copy(aliBlock, 12);
         // remaining pad bytes are initialized to 0 by Buffer.alloc
 
@@ -402,6 +427,35 @@ export class PsdExporter {
 
         const origPad = (2 - (aliLen % 2)) % 2;
         offset += 12 + aliLen + origPad;
+      }
+
+      // If unicodeName is available, heal any '?' replacement characters in the legacy Pascal string
+      if (unicodeName && nameLen > 0) {
+        const nameBytes = extraFixed.subarray(nameOffsetInExtra + 1, nameOffsetInExtra + 1 + nameLen);
+        for (let j = 0; j < nameBytes.length; j++) {
+          if (nameBytes[j] === 0x3F) { // '?'
+            const uChar = unicodeName[j] || '';
+            if (uChar === '·' || uChar === '•' || uChar === '–' || uChar === '—') {
+              nameBytes[j] = 0x2D; // '-'
+            } else if (uChar === 'ä') {
+              nameBytes[j] = 0x61; // 'a'
+            } else if (uChar === 'Ä') {
+              nameBytes[j] = 0x41; // 'A'
+            } else if (uChar === 'ö') {
+              nameBytes[j] = 0x6F; // 'o'
+            } else if (uChar === 'Ö') {
+              nameBytes[j] = 0x4F; // 'O'
+            } else if (uChar === 'ü') {
+              nameBytes[j] = 0x75; // 'u'
+            } else if (uChar === 'Ü') {
+              nameBytes[j] = 0x55; // 'U'
+            } else if (uChar === 'ß') {
+              nameBytes[j] = 0x73; // 's'
+            } else if (uChar.charCodeAt(0) > 127) {
+              nameBytes[j] = 0x2D; // '-'
+            }
+          }
+        }
       }
 
       const newExtraLen = extraFixed.length + extraAlisLength;

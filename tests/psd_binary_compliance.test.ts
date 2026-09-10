@@ -142,4 +142,140 @@ describe('PSD Binary Compliance & External Compatibility', () => {
     const trnsIdx = buf.indexOf('TrnS', drshIdx);
     expect(trnsIdx).toBeGreaterThan(drshIdx);
   });
+
+  it('ensures all Additional Layer Information (ALI) blocks have 4-byte aligned lengths and no signature drift', async () => {
+    const src = `
+      canvas { size: 400px 400px; background: #ffffff; }
+      group #mainGroup {
+        at: 20px 20px;
+        size: 300px 300px;
+        rect #card {
+          at: 0px 0px;
+          size: 200px 100px;
+          fill: #3b82f6;
+          stroke: 2px #1d4ed8;
+        }
+        text #label {
+          at: 10px 10px;
+          content: "TEIL 1 · OUTDOOR – Übergrößen";
+          font-size: 16px;
+          fill: #1e293b;
+        }
+      }
+    `;
+    const buf = await generatePsd(src);
+
+    // Read layer count
+    let offset = 26;
+    offset += 4 + buf.readUInt32BE(offset); // Color data
+    offset += 4 + buf.readUInt32BE(offset); // Image resources
+    offset += 4; // Layer & mask section length
+    offset += 4; // Layer info length
+    const layerCount = Math.abs(buf.readInt16BE(offset));
+    offset += 2;
+
+    expect(layerCount).toBeGreaterThan(0);
+
+    for (let i = 0; i < layerCount; i++) {
+      const channels = buf.readUInt16BE(offset + 16);
+      offset += 18 + channels * 6 + 12;
+      const extraLen = buf.readUInt32BE(offset);
+      const extraEnd = offset + 4 + extraLen;
+      offset += 4;
+
+      const maskLen = buf.readUInt32BE(offset);
+      offset += 4 + maskLen;
+      const blendLen = buf.readUInt32BE(offset);
+      offset += 4 + blendLen;
+      const nameLen = buf.readUInt8(offset);
+      let pLen = 1 + nameLen;
+      while (pLen % 4 !== 0) pLen++;
+      offset += pLen;
+
+      let H = offset;
+      while (H < extraEnd) {
+        const sig = buf.toString('ascii', H, H + 4);
+        expect(['8BIM', '8B64']).toContain(sig);
+        const key = buf.toString('ascii', H + 4, H + 8);
+        const pLen = buf.readUInt32BE(H + 8);
+        expect(pLen % 4).toBe(0); // Every ALI length header MUST be 4-byte aligned
+        H += 12 + pLen;
+      }
+      expect(H).toBe(extraEnd);
+      offset = extraEnd;
+    }
+  });
+
+  it('heals non-ASCII layer name characters (·, –, umlauts) so neither Pascal string nor luni contains "?"', async () => {
+    const src = `
+      canvas { size: 300px 200px; background: #ffffff; }
+      text #outdoor {
+        at: 10px 10px;
+        content: "TEIL 1 · OUTDOOR – Geführte Kanufahrt";
+        font-size: 14px;
+        fill: #000000;
+      }
+    `;
+    const buf = await generatePsd(src);
+
+    // Verify raw buffer has no '?' in the layer records area
+    let offset = 26;
+    offset += 4 + buf.readUInt32BE(offset);
+    offset += 4 + buf.readUInt32BE(offset);
+    offset += 8; // skip lsLen, liLen
+    const layerCount = Math.abs(buf.readInt16BE(offset));
+    offset += 2;
+
+    let foundOutdoorLayer = false;
+
+    for (let i = 0; i < layerCount; i++) {
+      const channels = buf.readUInt16BE(offset + 16);
+      offset += 18 + channels * 6 + 12;
+      const extraLen = buf.readUInt32BE(offset);
+      const extraEnd = offset + 4 + extraLen;
+      offset += 4;
+
+      const maskLen = buf.readUInt32BE(offset);
+      offset += 4 + maskLen;
+      const blendLen = buf.readUInt32BE(offset);
+      offset += 4 + blendLen;
+      const nameLen = buf.readUInt8(offset);
+      const pascalName = buf.toString('latin1', offset + 1, offset + 1 + nameLen);
+      let pLen = 1 + nameLen;
+      while (pLen % 4 !== 0) pLen++;
+      offset += pLen;
+
+      if (pascalName.includes('OUTDOOR') || pascalName.includes('TEIL')) {
+        foundOutdoorLayer = true;
+        // Pascal string must not contain '?'
+        expect(pascalName).not.toContain('?');
+        // Must have '-' in place of '·' / '–'
+        expect(pascalName).toContain('-');
+      }
+
+      // Check luni block
+      let H = offset;
+      while (H < extraEnd) {
+        const key = buf.toString('ascii', H + 4, H + 8);
+        const pLen = buf.readUInt32BE(H + 8);
+        if (key === 'luni') {
+          const charCount = buf.readUInt32BE(H + 12);
+          let unicodeStr = '';
+          for (let c = 0; c < charCount; c++) {
+            unicodeStr += String.fromCharCode(buf.readUInt16BE(H + 16 + c * 2));
+          }
+          if (unicodeStr.includes('OUTDOOR')) {
+            expect(unicodeStr).not.toContain('?');
+            expect(unicodeStr).toContain('·');
+            expect(unicodeStr).toContain('ü');
+          }
+        }
+        H += 12 + pLen;
+      }
+
+      offset = extraEnd;
+    }
+
+    expect(foundOutdoorLayer).toBe(true);
+  });
 });
