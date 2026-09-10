@@ -111,14 +111,14 @@ export {
   PdfExportOptions
 } from './engine/pdfExporter.js';
 
-// 12. Unified Build Pipeline
+// 13. Unified Build Pipeline
 export {
   compileToad,
   BuildOptions,
   BuildResult
 } from './build.js';
 
-// 13. Commander CLI
+// 14. Commander CLI
 export {
   createCli,
   program,
@@ -126,7 +126,7 @@ export {
   CliOptions
 } from './cli.js';
 
-// 14. Developer Tools, Linter & LSP
+// 15. Developer Tools, Linter & LSP
 export { formatToad, FormatOptions } from './tools/formatter.js';
 export { lintDocument } from './tools/linter.js';
 export { ToadLanguageServer } from './tools/lsp/server.js';
@@ -154,6 +154,3 @@ export {
   suggestProperty,
   DiagnosticOptions
 } from './tools/diagnostics.js';
-
-
-
