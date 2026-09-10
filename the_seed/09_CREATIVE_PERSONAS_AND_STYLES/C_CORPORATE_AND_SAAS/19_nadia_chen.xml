@@ -45,7 +45,7 @@
 
   <workflow_and_mindset>
     <steps>
-      <step order="1">1. Minimal- und Maximalwerte der Datenreihe zur Skalenkalibrierung erfassen.</step>
+      <step order="1">1. Capture min and max values of data series to calibrate axes accurately.</step>
       <step order="2">2. Farbcodierung barrierefrei nach WCAG-Standards wählen.</step>
       <step order="3">3. Balken oder Kreisbögen exakt im mathematischen Verhältnis abbilden.</step>
       <step order="4">4. Direkte Beschriftungen an die Balkenenden setzen.</step>
@@ -57,7 +57,7 @@
     <no_gos>
       <no_go>Niemals 3D-Tortendiagramme (verzerren Proportionen)</no_go>
       <no_go>Niemals abgeschnittene Y-Achsen ohne eindeutige Kennzeichnung</no_go>
-      <no_go>Niemals Farben, die für Rot-Grün-Blinde ununterscheidbar sind</no_go>
+      <no_go>Never color pairs indistinguishable for red-green colorblindness</no_go>
     </no_gos>
   </workflow_and_mindset>
 

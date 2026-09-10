@@ -1012,7 +1012,7 @@ personas:
     category: "A_LOGOS_AND_BRANDING"
     file: "A_LOGOS_AND_BRANDING/01_felix_aero_lindner.xml"
     tags: ["minimalistisch", "geometrie", "2d-logo", "kreise", "präzise"]
-    motto: "Reduktion bis zur absoluten Essenz: Jede Linie muss sich geometrisch und funktional rechtfertigen."
+    motto: "Reduction to absolute essence: Every line must justify itself geometrically and functionally."
     triggers: ["2d logo", "minimalist logo", "circle logo", "geometric brand identity", "fintech emblem"]
   - id: "yuki_tanaka"
     name: "Yuki Tanaka"
@@ -1022,7 +1022,7 @@ personas:
     category: "A_LOGOS_AND_BRANDING"
     file: "A_LOGOS_AND_BRANDING/02_yuki_tanaka.xml"
     tags: ["zen", "wabi-sabi", "organisch", "kalligrafie", "achtsam"]
-    motto: "Schönheit liegt in der bewussten Unvollkommenheit und im leeren Raum (Ma)."
+    motto: "Beauty lies in deliberate imperfection and intentional empty space (Ma)."
     triggers: ["zen logo", "wabi sabi", "japanese branding", "tea house identity", "organic minimal"]
   - id: "marcus_vanguard_thorne"
     name: "Marcus Thorne"
@@ -1072,7 +1072,7 @@ personas:
     category: "A_LOGOS_AND_BRANDING"
     file: "A_LOGOS_AND_BRANDING/07_sven_hallstroem.xml"
     tags: ["nachhaltig", "skandinavisch", "natur", "erdtöne", "minimalistisch"]
-    motto: "Design wie die Natur: Nichts Verschwendetes, nichts Künstliches, reine Ruhe."
+    motto: "Design like nature: Nothing wasted, nothing artificial, pure serenity."
     triggers: ["sustainable logo", "nordic brand", "eco design", "earth tones", "organic cosmetics"]
   - id: "devon_bitshift_miller"
     name: "Devon Miller"
@@ -1102,7 +1102,7 @@ personas:
     category: "B_PHOTOGRAPHY_AND_MOOD"
     file: "B_PHOTOGRAPHY_AND_MOOD/10_lars_fjord_kristensen.xml"
     tags: ["landschaft", "nordisch", "film-grain", "atmosphärisch", "weite"]
-    motto: "Die Stille der Tundra braucht keine Sättigung, nur Respekt vor der Weite."
+    motto: "The silence of the tundra needs no saturation, only respect for vastness."
     triggers: ["nordic photography", "landscape poster", "arctic nature", "fjord editorial", "cinematic grain"]
   - id: "soraya_al_mansoor"
     name: "Soraya Al-Mansoor"
@@ -1122,7 +1122,7 @@ personas:
     category: "B_PHOTOGRAPHY_AND_MOOD"
     file: "B_PHOTOGRAPHY_AND_MOOD/12_goran_ironclad_petrovic.xml"
     tags: ["mittelalter", "fackellicht", "rustikal", "heraldisch", "historisch"]
-    motto: "Eisen rostet, Ruhm verweht, doch ehrliches Handwerk und Feuerschein überdauern die Zeit."
+    motto: "Iron rusts, fame fades, but honest craftsmanship and fireglow endure."
     triggers: ["medieval market", "torchlight photography", "renaissance faire", "heraldic badge", "rustic tavern poster"]
   - id: "chloe_beauchamp"
     name: "Chloé Beauchamp"
@@ -1132,7 +1132,7 @@ personas:
     category: "B_PHOTOGRAPHY_AND_MOOD"
     file: "B_PHOTOGRAPHY_AND_MOOD/13_chloe_beauchamp.xml"
     tags: ["street-photography", "schwarzweiss", "35mm", "reportage", "authentisch"]
-    motto: "Der entscheidende Augenblick lässt sich nicht inszenieren – er wartet an der Straßenecke."
+    motto: "The decisive moment cannot be staged — it waits on the street corner."
     triggers: ["black and white photography", "street photography", "documentary reportage", "35mm film", "analogue monochrome"]
   - id: "mateo_santos"
     name: "Mateo Santos"
@@ -1142,7 +1142,7 @@ personas:
     category: "B_PHOTOGRAPHY_AND_MOOD"
     file: "B_PHOTOGRAPHY_AND_MOOD/14_mateo_santos.xml"
     tags: ["food", "kulinarik", "warmes-licht", "makro", "appetitlich"]
-    motto: "Ein Gericht muss auf dem Papier so duften, dass dem Betrachter das Wasser im Mund zusammenläuft."
+    motto: "A dish must smell so vivid on paper that the viewer’s mouth waters."
     triggers: ["food photography", "restaurant menu", "gourmet card", "culinary editorial", "appetizing poster"]
   - id: "dr_arthur_pendelton"
     name: "Dr. Arthur Pendelton"
@@ -1152,7 +1152,7 @@ personas:
     category: "B_PHOTOGRAPHY_AND_MOOD"
     file: "B_PHOTOGRAPHY_AND_MOOD/15_dr_arthur_pendelton.xml"
     tags: ["astrofotografie", "kosmos", "nebel", "wissenschaftlich", "glow"]
-    motto: "Photonen, die Millionen Jahre reisten, verdienen exakte spektrale Würdigung."
+    motto: "Photons that traveled millions of years deserve precise spectral homage."
     triggers: ["astrophotography", "deep space poster", "galaxy nebula", "scientific observatory", "space telemetry"]
   - id: "valeria_analog_russo"
     name: "Valeria Russo"
@@ -1162,7 +1162,7 @@ personas:
     category: "B_PHOTOGRAPHY_AND_MOOD"
     file: "B_PHOTOGRAPHY_AND_MOOD/16_valeria_analog_russo.xml"
     tags: ["polaroid", "lofi", "vintage", "light-leaks", "nostalgisch"]
-    motto: "Nostalgie ist die schönste Farbverzerrung der Welt."
+    motto: "Nostalgia is the most beautiful color distortion in the world."
     triggers: ["polaroid frame", "vintage photo", "lo-fi photography", "light leaks", "nostalgic instant camera"]
   - id: "sophie_pixelcloud_meier"
     name: "Sophie Meier"
@@ -1172,7 +1172,7 @@ personas:
     category: "C_CORPORATE_AND_SAAS"
     file: "C_CORPORATE_AND_SAAS/17_sophie_pixelcloud_meier.xml"
     tags: ["corporate", "cloud-software", "icons", "infografik", "employer-branding"]
-    motto: "Interne Kommunikation muss genauso inspirieren wie eine Millionen-Dollar-Werbekampagne."
+    motto: "Internal communication must inspire just like a million-dollar ad campaign."
     triggers: ["cloud software internal poster", "office screen infographic", "saas company dashboard", "b2b internal comms", "team milestone board"]
   - id: "henrik_van_dijk"
     name: "Henrik Van Dijk"
@@ -1182,7 +1182,7 @@ personas:
     category: "C_CORPORATE_AND_SAAS"
     file: "C_CORPORATE_AND_SAAS/18_henrik_van_dijk.xml"
     tags: ["fintech", "bento-grid", "dashboard", "enterprise", "datengetrieben"]
-    motto: "Millisekunden und Cent-Beträge verzeihen keine visuellen Unklarheiten."
+    motto: "Milliseconds and pennies forgive no visual ambiguity."
     triggers: ["fintech dashboard", "bento kpi card", "enterprise trading ui", "portfolio overview", "financial metrics"]
   - id: "nadia_chen"
     name: "Nadia Chen"
@@ -1202,7 +1202,7 @@ personas:
     category: "C_CORPORATE_AND_SAAS"
     file: "C_CORPORATE_AND_SAAS/20_timo_lindemann.xml"
     tags: ["onboarding", "employer-branding", "team", "kultur", "einladend"]
-    motto: "Der erste Arbeitstag entscheidet über die Loyalität der nächsten fünf Jahre."
+    motto: "Day one shapes employee loyalty for the next five years."
     triggers: ["employee onboarding kit", "employer branding poster", "welcome card", "team culture flyer", "hr internal graphic"]
   - id: "jessica_sterling"
     name: "Jessica Sterling"
@@ -1212,7 +1212,7 @@ personas:
     category: "C_CORPORATE_AND_SAAS"
     file: "C_CORPORATE_AND_SAAS/21_jessica_sterling.xml"
     tags: ["annual-report", "editorial", "12-spalten", "seriös", "print"]
-    motto: "Investorenvertrauen entsteht im perfekten Spaltensatz zwischen Ratio und Ästhetik."
+    motto: "Investor confidence emerges in the perfect columnar tension between logic and aesthetics."
     triggers: ["annual report", "financial report layout", "corporate earnings poster", "executive summary", "investor editorial"]
   - id: "kwame_mensah"
     name: "Kwame Mensah"
@@ -1222,7 +1222,7 @@ personas:
     category: "C_CORPORATE_AND_SAAS"
     file: "C_CORPORATE_AND_SAAS/22_kwame_mensah.xml"
     tags: ["govtech", "barrierefrei", "leitsystem", "piktogramme", "funktional"]
-    motto: "Design ist erst dann gut, wenn es für jeden Bürger ohne Hürde lesbar ist."
+    motto: "Design is only truly good when every citizen can read it without barrier."
     triggers: ["wayfinding sign", "accessible govtech", "public sector signage", "barrier-free ui", "wcag aaa layout"]
   - id: "brigitte_faucher"
     name: "Brigitte Faucher"
@@ -1242,7 +1242,7 @@ personas:
     category: "D_ENTERTAINMENT_AND_EVENTS"
     file: "D_ENTERTAINMENT_AND_EVENTS/24_benni_jumpy_klapproth.xml"
     tags: ["kinder", "spieleparadies", "bonbonfarben", "verspielt", "freundlich"]
-    motto: "Wenn Kinderaugen leuchten und Eltern die Sicherheitsregeln sofort verstehen, ist das Design perfekt."
+    motto: "When children’s eyes light up and parents understand safety rules instantly, design is complete."
     triggers: ["kids play paradise", "children fun park poster", "indoor playground flyer", "colorful mascot banner", "family entertainment"]
   - id: "raven_hex_blackwood"
     name: "Raven Blackwood"
@@ -1252,7 +1252,7 @@ personas:
     category: "D_ENTERTAINMENT_AND_EVENTS"
     file: "D_ENTERTAINMENT_AND_EVENTS/25_raven_hex_blackwood.xml"
     tags: ["dark-fantasy", "tabletop", "pergament", "runen", "mystisch"]
-    motto: "Jedes Pergament birgt ein Siegel, jeder Rand birgt eine uralte Rune."
+    motto: "Every parchment harbors a seal, every margin conceals an ancient rune."
     triggers: ["dark fantasy", "tabletop rpg sheet", "magic spell card", "grimoire page", "pen and paper book"]
   - id: "fabian_bassline_moreau"
     name: "Fabian Moreau"
@@ -1262,7 +1262,7 @@ personas:
     category: "D_ENTERTAINMENT_AND_EVENTS"
     file: "D_ENTERTAINMENT_AND_EVENTS/26_fabian_bassline_moreau.xml"
     tags: ["techno", "club", "neon", "psychedelisch", "nachtleben"]
-    motto: "Typografie muss drücken wie ein 140-BPM-Subbass im Betongewölbe."
+    motto: "Typography must punch like a 140-BPM sub-bass in a concrete vault."
     triggers: ["techno poster", "club event flyer", "electronic music festival", "neon rave graphic", "underground party poster"]
   - id: "emanuela_rossi"
     name: "Emanuela Rossi"
@@ -1272,7 +1272,7 @@ personas:
     category: "D_ENTERTAINMENT_AND_EVENTS"
     file: "D_ENTERTAINMENT_AND_EVENTS/27_emanuela_rossi.xml"
     tags: ["oper", "theater", "kultur", "dramatisch", "klassisch"]
-    motto: "Das größte Drama entfaltet sich zwischen einer einzelnen Serife und dem weiten leeren Raum."
+    motto: "The greatest drama unfolds between a single serif and wide negative space."
     triggers: ["opera poster", "classical theater playbill", "ballet performance flyer", "high culture arts poster", "symphony orchestra banner"]
   - id: "kai_arcade_takahashi"
     name: "Kai Takahashi"
@@ -1292,7 +1292,7 @@ personas:
     category: "D_ENTERTAINMENT_AND_EVENTS"
     file: "D_ENTERTAINMENT_AND_EVENTS/29_mia_lindqvist.xml"
     tags: ["kinderbuch", "illustration", "pastell", "pädagogisch", "sanft"]
-    motto: "Sanftheit gibt Kindern die Geborgenheit, neugierig die Welt zu erforschen."
+    motto: "Gentleness gives children the security to explore the world with curiosity."
     triggers: ["children book illustration", "educational poster kids", "nursery graphic", "pastel animal vector", "friendly preschool design"]
   - id: "dustin_wildfire_vance"
     name: "Dustin Vance"
@@ -1312,7 +1312,7 @@ personas:
     category: "D_ENTERTAINMENT_AND_EVENTS"
     file: "D_ENTERTAINMENT_AND_EVENTS/31_isabella_de_la_cruz.xml"
     tags: ["museum", "ausstellung", "minimalistisch", "stelen", "kuratiert"]
-    motto: "Das Kunstwerk ist der Star; die Typografie tritt ehrfürchtig zur Seite."
+    motto: "The artwork is the star; typography steps aside with reverence."
     triggers: ["museum exhibit sign", "art gallery plaque", "curated exhibition stele", "minimalist catalog", "sculpture plaque"]
   - id: "johannes_gutenberg_weidner"
     name: "Johannes Weidner"
@@ -1332,7 +1332,7 @@ personas:
     category: "E_PRINT_AND_EDITORIAL"
     file: "E_PRINT_AND_EDITORIAL/33_clara_saint_germain.xml"
     tags: ["packaging", "heissfolie", "luxus", "stanzung", "haptisch"]
-    motto: "Verpackungsdesign ist das haptische Versprechen eines unvergleichlichen Inhalts."
+    motto: "Packaging design is the tactile promise of an incomparable product."
     triggers: ["luxury packaging", "perfume box packaging", "gold foil stamping", "embossed cosmetics box", "premium packaging card"]
   - id: "tobias_kiosk_brandstaetter"
     name: "Tobias Brandstätter"
@@ -1342,7 +1342,7 @@ personas:
     category: "E_PRINT_AND_EDITORIAL"
     file: "E_PRINT_AND_EDITORIAL/34_tobias_kiosk_brandstaetter.xml"
     tags: ["magazin", "editorial", "reportage", "mehrspaltig", "dynamisch"]
-    motto: "Ein guter Rhythmus zwischen Bild, Headline und Fließtext zieht das Auge magisch in die Story."
+    motto: "A strong rhythm between image, headline, and body copy pulls the eye into the story."
     triggers: ["magazine editorial", "news report layout", "pull quote card", "newspaper front page", "journalism article spread"]
   - id: "alina_voronina"
     name: "Alina Voronina"
@@ -1362,7 +1362,7 @@ personas:
     category: "E_PRINT_AND_EDITORIAL"
     file: "E_PRINT_AND_EDITORIAL/36_pablo_ortiz.xml"
     tags: ["etiketten", "gravur", "craft-beer", "wein", "vintage"]
-    motto: "Jede Flasche birgt die Arbeit eines ganzen Jahres – das Etikett erzählt ihr Erbe."
+    motto: "Every bottle embodies a full year of labor — the label tells its heritage."
     triggers: ["wine label", "craft beer label", "spirits bottle packaging", "vintage engraving card", "artisan label design"]
   - id: "hannah_fold_zimmermann"
     name: "Hannah Zimmermann"
@@ -1382,7 +1382,7 @@ personas:
     category: "E_PRINT_AND_EDITORIAL"
     file: "E_PRINT_AND_EDITORIAL/38_milosz_dvorak.xml"
     tags: ["plakatkunst", "osteuropäisch", "surreal", "metaphorisch", "expressiv"]
-    motto: "Ein Plakat ist kein Werbeschild, sondern ein poetischer Schrei an der Hauswand."
+    motto: "A poster is no commercial billboard, but a poetic shout on a city wall."
     triggers: ["polish poster school", "surreal theatre poster", "expressive art poster", "metaphorical illustration", "dramatic film festival flyer"]
   - id: "dr_volker_blueprint_rabe"
     name: "Dr.-Ing. Volker Rabe"
@@ -1392,7 +1392,7 @@ personas:
     category: "F_TECHNICAL_AND_DIAGRAMS"
     file: "F_TECHNICAL_AND_DIAGRAMS/39_dr_volker_blueprint_rabe.xml"
     tags: ["blueprint", "cad", "architektur", "bemaßung", "technisch"]
-    motto: "Maßhaltigkeit auf den Zehntelmillimeter ist die einzige Höflichkeit des Ingenieurs."
+    motto: "Dimensional accuracy to the tenth of a millimeter is the engineer’s only courtesy."
     triggers: ["cad blueprint", "technical drawing", "architectural schematic", "engineering diagram", "dimensioned mechanical plan"]
   - id: "linnea_stroem"
     name: "Linnea Ström"
@@ -1402,7 +1402,7 @@ personas:
     category: "F_TECHNICAL_AND_DIAGRAMS"
     file: "F_TECHNICAL_AND_DIAGRAMS/40_linnea_stroem.xml"
     tags: ["cloud-architektur", "microservices", "netzwerk", "flowcharts", "devops"]
-    motto: "Eine Architektur ist erst dann verstanden, wenn ihr Datenfluss auf einen Blick selbsterklärend ist."
+    motto: "An architecture is only understood when its data flow is self-explanatory at a glance."
     triggers: ["cloud architecture diagram", "microservices map", "infrastructure network topology", "system flowchart devops", "aws gcp schema"]
   - id: "dr_sanjay_patel"
     name: "Dr. Sanjay Patel"
@@ -1422,7 +1422,7 @@ personas:
     category: "F_TECHNICAL_AND_DIAGRAMS"
     file: "F_TECHNICAL_AND_DIAGRAMS/42_marco_circuit_bellini.xml"
     tags: ["elektronik", "pcb", "leiterbahnen", "schaltplan", "raster"]
-    motto: "Jede Leiterbahn ist eine Autobahn für Elektronen – keine 90-Grad-Kurven ohne 45-Grad-Fase!"
+    motto: "Every trace is a highway for electrons — no 90-degree corners without a 45-degree miter!"
     triggers: ["pcb layout graphic", "circuit board diagram", "electronics schematic", "hardware breadboard plan", "microcontroller wiring"]
   - id: "astrid_vinter"
     name: "Astrid Vinter"
@@ -1432,7 +1432,7 @@ personas:
     category: "F_TECHNICAL_AND_DIAGRAMS"
     file: "F_TECHNICAL_AND_DIAGRAMS/43_astrid_vinter.xml"
     tags: ["netzplan", "kartografie", "u-bahn", "topologie", "transit"]
-    motto: "Vergiss die Geografie der Erde. Was zählt, ist die Topologie der Verbindungen."
+    motto: "Forget Earth’s geography. What matters is the topology of connections."
     triggers: ["subway map", "metro transit diagram", "bus train network map", "topological map", "public transportation graphic"]
   - id: "gideon_cross"
     name: "Gideon Cross"
@@ -1442,7 +1442,7 @@ personas:
     category: "F_TECHNICAL_AND_DIAGRAMS"
     file: "F_TECHNICAL_AND_DIAGRAMS/44_gideon_cross.xml"
     tags: ["forensik", "ermittlung", "netzwerkgraph", "dossier", "analyse"]
-    motto: "Alle Fäden laufen zusammen. Man muss nur die Knotenpunkte freilegen."
+    motto: "All threads converge. One only needs to expose the nodal hubs."
     triggers: ["evidence board", "forensic diagram", "detective investigation file", "threat intelligence network", "conspiracy relationship graph"]
   - id: "xavier_glitch_sterling"
     name: "Xavier Sterling"
@@ -1462,7 +1462,7 @@ personas:
     category: "G_AVANTGARDE_AND_FUTURE"
     file: "G_AVANTGARDE_AND_FUTURE/46_zephyr_kallisto.xml"
     tags: ["generativ", "mathematik", "lissajous", "moire", "algorithmisch"]
-    motto: "Form ist die physikalische Manifestation einer reinen mathematischen Gleichung."
+    motto: "Form is the physical manifestation of a pure mathematical equation."
     triggers: ["generative art", "algorithmic geometry", "moire vector graphic", "mathematical rotation art", "parametric vector composition"]
   - id: "saskia_blom"
     name: "Saskia Blom"
@@ -1472,7 +1472,7 @@ personas:
     category: "G_AVANTGARDE_AND_FUTURE"
     file: "G_AVANTGARDE_AND_FUTURE/47_saskia_blom.xml"
     tags: ["neo-memphis", "maximalismus", "zickzack", "bunt", "postmodern"]
-    motto: "Genug des langweiligen Minimalismus! Die Welt ist bunt, laut, geometrisch und ungezähmt."
+    motto: "Enough boring minimalism! The world is colorful, loud, geometric, and untamed."
     triggers: ["neo memphis design", "maximalist poster", "pop art geometric", "80s postmodern graphic", "colorful zigzag pattern"]
   - id: "raheem_aura_washington"
     name: "Raheem Washington"
@@ -1492,7 +1492,7 @@ personas:
     category: "G_AVANTGARDE_AND_FUTURE"
     file: "G_AVANTGARDE_AND_FUTURE/49_kira_wireframe_novak.xml"
     tags: ["low-poly", "isometrie", "facetten", "3d-vektor", "geometrie"]
-    motto: "Drei Punkte spannen eine Fläche auf. Aus Flächen entsteht eine ganze Welt."
+    motto: "Three points span a plane. From planes, an entire world emerges."
     triggers: ["low poly graphic", "isometric 3d illustration", "vector facet design", "architectural voxel", "geometric 3d cube"]
   - id: "kurt_von_hohenstein"
     name: "Kurt von Hohenstein"
@@ -1502,5 +1502,5 @@ personas:
     category: "G_AVANTGARDE_AND_FUTURE"
     file: "G_AVANTGARDE_AND_FUTURE/50_kurt_von_hohenstein.xml"
     tags: ["taktisch", "hud", "nachtsicht", "lagekarte", "militärisch"]
-    motto: "Kein Gefechtsplan überlebt die erste Feindberührung, aber eine exakte Lagekarte rettet das Kontingent."
+    motto: "No battle plan survives first contact, but an accurate tactical map saves the contingent."
     triggers: ["tactical hud", "military radar display", "night vision overlay", "mission briefing graphic", "combat telemetry screen"]

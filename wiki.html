@@ -20,7 +20,7 @@
       --primary: #064E3B;
       --secondary: #F8E7C9;
 
-      /* Oberflächen & Hintergründe basierend auf #064E3B */
+      /* Surfaces & backgrounds based on #064E3B */
       --bg: #032018;
       --bg-surface: #064E3B;
       --bg-surface-elevated: #09634b;
@@ -30,11 +30,11 @@
 
       /* Typografie mit Sekundärfarbe #F8E7C9 */
       --text-main: #F8E7C9;     /* Sekundärfarbe: Warmes Champagner-Parchment */
-      --text-heading: #FFFDF5;  /* Klares Elfenbein-Weiß für Überschriften */
-      --text-label: #E2D0B0;    /* Sanft abgetöntes Sand-Parchment für Labels */
+      --text-heading: #FFFDF5;  /* Crisp ivory white for headings */
+      --text-label: #E2D0B0;    /* Soft sand parchment for labels */
 
       /* Akzente */
-      --c-cyan: #F8E7C9;        /* Primär-Akzent: Edles #F8E7C9 für Badges, Linien & Highlights */
+      --c-cyan: #F8E7C9;        /* Primary accent: Refined #F8E7C9 for badges, lines & highlights */
       --c-teal: #34d399;        /* Frisches Smaragd-Mint */
       --c-purple: #c084fc;      /* Weiches Pastell-Violett */
       --c-amber: #fcd34d;       /* Warmes Gold */
@@ -430,7 +430,7 @@
       font-family: var(--font-mono);
     }
 
-    /* Überschriften: Moderat dimensioniert, gleiche Helligkeit wie der Text */
+    /* Headings: Moderately sized, same brightness as text */
     h1 {
       font-size: 26px;
       font-weight: 700;
@@ -728,7 +728,7 @@
     </div>
 
     <div class="sidebar-search">
-      <button class="search-btn" onclick="openWikiModal()" title="Syntax und Keywords suchen (Ctrl+K)">
+      <button class="search-btn" onclick="openWikiModal()" title="Search syntax and keywords (Ctrl+K)">
         <div class="search-btn-left">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
           <span>Wiki-Suche...</span>
@@ -761,7 +761,7 @@
         <a href="#groups-grid" class="nav-item">10. Auto-Layout (Stack/Grid)</a>
         <a href="#components" class="nav-item">11. Komponenten & Slots</a>
         <a href="#psd-features" class="nav-item">12. Native PSD Features</a>
-        <a href="#master-examples" class="nav-item">13. Praxis-Beispiele</a>
+        <a href="#master-examples" class="nav-item">13. Practical Examples</a>
       </div>
     </nav>
   </aside>
@@ -772,31 +772,31 @@
       <div class="hero-tag">ENTWICKLER-WIKI &amp; SYNTAX-GUIDE · v1.1</div>
       <h1>toad Entwickler-Wiki</h1>
       <p class="lead">
-        Eine deklarative Design-Sprache, die strukturierte Layouts in pixelgenaue Multi-Scale-Bilder (PNG/JPG/WebP/SVG) und native, editierbare Photoshop-Dateien (.psd) kompiliert. Dezentral über <code>toad &lt;name&gt;</code> von jedem Ordner aus nutzbar.
+        A declarative design language compiling structured layouts into pixel-perfect multi-scale images (PNG/JPG/WebP/SVG) and native, editable Photoshop files (.psd). Globally executable via <code>toad &lt;name&gt;</code> from any workspace directory.
       </p>
     </div>
 
     <!-- 1. Quickstart -->
     <section id="quickstart">
       <h2>1. Schnellstart, Projekt-Initialisierung &amp; CLI</h2>
-      <p>Mit <code>toad init</code> erstellst du in Sekunden ein neues, sofort einsatzbereites Design-Projekt (inkl. automatischer Projekt-Nummerierung, Starter-Template und <code>package.json</code>). Der Compiler liest die in der Datei definierten Export-Optionen (Formate, Presets, Seitenverhältnis, Auflösung) automatisch aus. Ein einfacher Aufruf reicht:</p>
+      <p>Use <code>toad init</code> to scaffold a ready-to-use design project in seconds (including automatic project numbering, starter template, and <code>package.json</code>). The compiler automatically parses export options defined in your file (formats, presets, aspect ratio, resolution). A single command is all it takes:</p>
       
       <div class="code-block">
         <div class="code-header">
           <span>Terminal (PowerShell / Bash / CMD)</span>
-          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
         </div>
         <pre><code><span class="comm"># 1. Neues Projekt scaffolden (erstellt z.B. toad-project-1/ mit main.toad & package.json)</span>
 toad init
 
-<span class="comm"># Oder mit individuellem Projektnamen:</span>
+<span class="comm"># Or with a custom project name:</span>
 toad init mein-banner
 
-<span class="comm"># 2. Dateiname ohne Extension aufrufen — gestaffelte, tiefenbegrenzte Suche findet das Dokument automatisch</span>
+<span class="comm"># 2. Invoke filename without extension — staged, depth-limited search finds the document automatically</span>
 toad logo
 toad social_card
 
-<span class="comm"># 3. Bestimmte Formate exportieren (Komma oder Leerzeichen als Trenner)</span>
+<span class="comm"># 3. Export specific formats (comma or space separated)</span>
 toad logo -f svg
 toad logo -f <span class="val">"svg, png, psd"</span>
 toad logo -f all -s 2
@@ -807,7 +807,7 @@ toad lint logo
 <span class="comm"># 5. Automatischer Code-Formatter (Alias: toad format)</span>
 toad fmt logo
 
-<span class="comm"># 6. Live-Preview mit Browser Hot Reload (kein F5 nötig)</span>
+<span class="comm"># 6. Live preview with browser hot reload (no manual refresh needed)</span>
 toad logo -w
 
 <span class="comm"># 7. In bestimmten Ordner exportieren</span>
@@ -821,11 +821,11 @@ toad logo -f psd --no-human-layers</code></pre>
       <div class="card-grid">
         <div class="card">
           <h4><code>toad init [name]</code></h4>
-          <p>Scaffoldet ein schlüsselfertiges Projekt mit Starter-Template und npm-Scripts für <code>dev</code> und <code>build</code>.</p>
+          <p>Scaffolds a turnkey project with a starter template and npm scripts for <code>dev</code> and <code>build</code>.</p>
         </div>
         <div class="card">
           <h4><code>Gestaffelte Namenssuche</code></h4>
-          <p><code>lint</code>, <code>format</code> &amp; Co. akzeptieren den blo&szlig;en Dokumentnamen — eine gestaffelte, tiefenbegrenzte Ordnersuche findet die Datei.</p>
+          <p><code>lint</code>, <code>format</code> &amp; related commands accept just the document name — a staged, depth-limited search locates the file automatically.</p>
         </div>
         <div class="card">
           <h4><code>Plattform-Presets</code></h4>
@@ -833,7 +833,7 @@ toad logo -f psd --no-human-layers</code></pre>
         </div>
         <div class="card">
           <h4><code>-w, --watch</code></h4>
-          <p>Reagiert live auf Änderungen via SSE. Enthält interaktive Zoom-Controls und einen 1-Klick-Button zum direkten Öffnen des Datei-Ordners im Explorer.</p>
+          <p>Reacts live to changes via SSE. Includes interactive zoom controls and a 1-click button to open the target folder directly in Explorer.</p>
         </div>
       </div>
 
@@ -842,7 +842,7 @@ toad logo -f psd --no-human-layers</code></pre>
           <thead>
             <tr>
               <th>Format-Flag</th>
-              <th>Was wird exportiert</th>
+              <th>What is Exported</th>
             </tr>
           </thead>
           <tbody>
@@ -872,15 +872,15 @@ toad logo -f psd --no-human-layers</code></pre>
             </tr>
             <tr>
               <td><code>-f all</code></td>
-              <td><strong>Alles:</strong> PNG + JPG + WebP + PSD + SVG gleichzeitig</td>
+              <td><strong>All:</strong> PNG + JPG + WebP + PSD + SVG simultaneously</td>
             </tr>
             <tr>
               <td><code>-f "svg, png, psd"</code></td>
-              <td>Beliebige Kombi (kommagetrennt oder mit Leerzeichen)</td>
+              <td>Any combination (comma or space separated)</td>
             </tr>
             <tr>
               <td><code>--no-human-layers</code></td>
-              <td>Verhindert die automatische lesbare Ebenen-Benennung in PSD-Dateien und behält interne Code-IDs bei</td>
+              <td>Prevents automatic human-readable layer naming in PSD files and preserves internal code IDs</td>
             </tr>
           </tbody>
         </table>
@@ -890,20 +890,20 @@ toad logo -f psd --no-human-layers</code></pre>
     <!-- 2. Dateistruktur, Canvas & Presets -->
     <section id="structure">
       <h2>2. Dateistruktur, Canvas &amp; Plattform-Presets</h2>
-      <p>Jede <code>.toad</code>-Datei definiert am Anfang den <code>canvas</code>-Block. Hier legst du Plattform-Presets, Seitenverhältnis, Ziel-Auflösung, Exportformate und Hintergrund fest:</p>
+      <p>Every <code>.toad</code> file defines the <code>canvas</code> block at the top. Here you configure platform presets, aspect ratios, target resolutions, export formats, and backgrounds:</p>
 
       <div class="code-block">
         <div class="code-header">
           <span>banner.toad</span>
-          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
         </div>
         <pre><code><span class="dir">@import</span> <span class="val">"./tokens.toad"</span>;
 <span class="dir">@font</span> <span class="val">"./fonts/Inter.ttf"</span> <span class="kw">as</span> <span class="val">"Inter"</span>;
 
 <span class="comm">// Option A: Sofortiges Social-Media & Web-Preset</span>
 <span class="kw">canvas</span> <span class="val">"OpenGraph-Image"</span> {
-  <span class="prop">preset</span>: <span class="val">og-image</span>;            <span class="comm">// 1200x630 (auch: twitter-header, instagram-post, instagram-story, youtube-thumbnail)</span>
-  <span class="prop">export</span>: <span class="val">all</span>;                 <span class="comm">// Exportiert PNG, JPG, WebP, SVG und PSD</span>
+  <span class="prop">preset</span>: <span class="val">og-image</span>;            <span class="comm">// 1200x630 (also: twitter-header, instagram-post, instagram-story, youtube-thumbnail)</span>
+  <span class="prop">export</span>: <span class="val">all</span>;                 <span class="comm">// Exports PNG, JPG, WebP, SVG, and PSD</span>
   <span class="prop">background</span>: <span class="val">#0f172a</span>;
 }
 
@@ -911,7 +911,7 @@ toad logo -f psd --no-human-layers</code></pre>
 <span class="kw">canvas</span> <span class="val">"Brand Identity"</span> {
   <span class="prop">ratio</span>: <span class="val">16:9</span>;                 <span class="comm">// '16:9', '1:1', '9:16', '4:5', '21:9', etc.</span>
   <span class="prop">resolution</span>: <span class="val">1080p</span>;           <span class="comm">// Presets: sd, hd, fhd, 1080p, qhd, 4k, 8k</span>
-  <span class="prop">export</span>: <span class="val">image</span>;               <span class="comm">// Macros: 'all' oder 'image' (png, jpg, webp, svg)</span>
+  <span class="prop">export</span>: <span class="val">image</span>;               <span class="comm">// Macros: 'all' or 'image' (png, jpg, webp, svg)</span>
   <span class="prop">quality</span>: <span class="val">85%</span>;                <span class="comm">// entspricht: compress: 15%;</span>
   <span class="prop">background</span>: <span class="kw">transparent</span>;     <span class="comm">// Volle Alpha-Transparenz</span>
 }
@@ -928,7 +928,7 @@ toad logo -f psd --no-human-layers</code></pre>
 <span class="kw">canvas</span> <span class="val">"Business-Card"</span> {
   <span class="prop">size</span>: <span class="num">85mm</span> <span class="num">55mm</span>;             <span class="comm">// Print-Einheiten: 'mm', 'cm', 'in', 'pt'</span>
   <span class="prop">dpi</span>: <span class="num">300</span>;                    <span class="comm">// Ziel-Druckauflösung (Standard: 96)</span>
-  <span class="prop">bleed</span>: <span class="num">3mm</span>;                  <span class="comm">// Beschnittzugabe um die Trim-Box</span>
+  <span class="prop">bleed</span>: <span class="num">3mm</span>;                  <span class="comm">// Bleed allowance around the trim box</span>
   <span class="prop">crop-marks</span>: <span class="val">true</span>;            <span class="comm">// Schnittmarken &amp; Passkreuze rendern</span>
   <span class="prop">color-mode</span>: <span class="val">cmyk</span>;            <span class="comm">// 'cmyk' Farbmodus</span>
   <span class="prop">background</span>: <span class="func">cmyk</span>(<span class="num">0</span>, <span class="num">0</span>, <span class="num">0</span>, <span class="num">0.05</span>);
@@ -999,7 +999,7 @@ toad logo -f psd --no-human-layers</code></pre>
             <tr>
               <td><code>app-icon</code> / <code>avatar</code> / <code>favicon</code></td>
               <td>1024&times;1024 / 400&times;400 / 32&times;32 px</td>
-              <td>App-Icon-, Profilbild- und Favicon-Größen</td>
+              <td>App icon, profile picture, and favicon sizes</td>
             </tr>
           </tbody>
         </table>
@@ -1009,12 +1009,12 @@ toad logo -f psd --no-human-layers</code></pre>
     <!-- 3. Variablen -->
     <section id="variables">
       <h2>3. Variablen & Tokens (&gt;)</h2>
-      <p>Definiere wiederverwendbare Farben, Schriftarten oder Abstände mit einem vorangestellten <code>&gt;</code> (oder alternativ <code>$</code>):</p>
+      <p>Define reusable colors, fonts, or spacing tokens with a leading <code>&gt;</code> (or alternatively <code>$</code>):</p>
 
       <div class="code-block">
         <div class="code-header">
           <span>tokens.toad</span>
-          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
         </div>
         <pre><code><span class="id">&gt;primary</span> = <span class="val">#38bdf8</span>;
 <span class="id">&gt;accent</span> = <span class="val">#818cf8</span>;
@@ -1032,27 +1032,27 @@ toad logo -f psd --no-human-layers</code></pre>
     <!-- 4. Formen -->
     <section id="shapes">
       <h2>4. Formen (Shapes &amp; Primitive)</h2>
-      <p>toad bietet vielseitige Vektor-Grundformen mit nativer Photoshop-Ebenen- und SVG-Unterstützung.</p>
+      <p>toad provides versatile vector primitives with native Photoshop shape layers and SVG support.</p>
 
       <div class="table-wrapper">
         <table>
           <thead>
             <tr>
               <th>Typ</th>
-              <th>Beschreibung</th>
+              <th>Description</th>
               <th>Wichtigste Eigenschaften</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <td><code>rect</code></td>
-              <td>Rechteck oder abgerundetes Rechteck</td>
+              <td>Rectangle or rounded rectangle</td>
               <td><code>size</code>, <code>fill</code>, <code>radius</code> (Aliase: <code>border-radius</code>, <code>corner-radius</code>), <code>stroke</code></td>
             </tr>
             <tr>
               <td><code>circle</code></td>
-              <td>Kreis oder Ellipse</td>
-              <td><code>radius</code> oder <code>size: W H</code>, <code>fill</code></td>
+              <td>Circle or ellipse</td>
+              <td><code>radius</code> or <code>size: W H</code>, <code>fill</code></td>
             </tr>
             <tr>
               <td><code>star</code></td>
@@ -1091,7 +1091,7 @@ toad logo -f psd --no-human-layers</code></pre>
       <div class="code-block">
         <div class="code-header">
           <span>shapes.toad</span>
-          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
         </div>
         <pre><code><span class="comm">// 1. Vektor-Primitive mit automatischer Größenanpassung</span>
 <span class="kw">star</span> <span class="id">#favorite</span> {
@@ -1130,12 +1130,12 @@ toad logo -f psd --no-human-layers</code></pre>
     <!-- 4b. Vektor-Icons -->
     <section id="icons">
       <h2>4b. Integrierte Vektor-Icons (Lucide)</h2>
-      <p>Mit dem <code>icon</code>-Element kannst du direkt auf eine integrierte Bibliothek hochauflösender Vektor-Icons zugreifen:</p>
+      <p>Use the <code>icon</code> element to access an integrated library of crisp, high-resolution vector icons:</p>
 
       <div class="code-block">
         <div class="code-header">
           <span>icons.toad</span>
-          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
         </div>
         <pre><code><span class="comm">// Verfügbare Icons: search, check, x, arrow-right, arrow-left, arrow-up, arrow-down, home, user, settings</span>
 <span class="kw">icon</span> <span class="id">#searchIcon</span> {
@@ -1157,28 +1157,28 @@ toad logo -f psd --no-human-layers</code></pre>
     <!-- 5. Text & Typografie -->
     <section id="text">
       <h2>5. Text, Typografie &amp; Kerning</h2>
-      <p>Texte werden über die Skia-Engine millimetergenau ausgemessen und in Photoshop als <strong>echte, editierbare Textebenen</strong> exportiert.</p>
+      <p>Text elements are measured with subpixel precision via the Skia engine and exported to Photoshop as <strong>genuine, editable Type Layers</strong>.</p>
 
       <div class="code-block">
         <div class="code-header">
           <span>typography.toad</span>
-          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
         </div>
         <pre><code><span class="kw">text</span> <span class="id">#headline</span> {
   <span class="prop">at</span>: (<span class="val">80px</span>, <span class="val">120px</span>);
   <span class="prop">size</span>: <span class="val">600px</span>;                  <span class="comm">// Feste Breite aktiviert automatischen Wortumbruch</span>
-  <span class="prop">content</span>: <span class="val">"toad Compiler: Die Zukunft des deklarativen Designs."</span>;
+  <span class="prop">content</span>: <span class="val">"toad Compiler: The future of declarative design."</span>;
   
   <span class="prop">font-family</span>: <span class="val">"Inter"</span>;
   <span class="prop">font-size</span>: <span class="val">36px</span>;
-  <span class="prop">font-weight</span>: <span class="val">700</span>;             <span class="comm">// 100-900 oder 'bold', 'normal'</span>
+  <span class="prop">font-weight</span>: <span class="val">700</span>;             <span class="comm">// 100-900 or 'bold', 'normal'</span>
   <span class="prop">line-height</span>: <span class="val">1.25</span>;
-  <span class="prop">letter-spacing</span>: <span class="val">1.5px</span>;        <span class="comm">// Tracking / Kerning (auch: tracking: 1.5px;)</span>
+  <span class="prop">letter-spacing</span>: <span class="val">1.5px</span>;        <span class="comm">// Tracking / kerning (also: tracking: 1.5px;)</span>
   <span class="prop">text-transform</span>: <span class="kw">uppercase</span>;    <span class="comm">// 'uppercase', 'lowercase', 'capitalize', 'none'</span>
   <span class="prop">font-features</span>: <span class="val">"liga" 1, "smcp" 1</span>; <span class="comm">// OpenType-Features (Ligaturen, Kapitälchen)</span>
   <span class="prop">font-variation</span>: <span class="val">"wght" 700 "wdth" 85</span>; <span class="comm">// Variable Font Achsen</span>
   <span class="prop">align</span>: <span class="kw">justify</span>;               <span class="comm">// 'left', 'center', 'right', 'justify'</span>
-  <span class="prop">hanging-punctuation</span>: <span class="val">true</span>;    <span class="comm">// Optischer Randausgleich für Satzzeichen</span>
+  <span class="prop">hanging-punctuation</span>: <span class="val">true</span>;    <span class="comm">// Optical margin alignment for punctuation</span>
   <span class="prop">trim</span>: <span class="kw">cap</span>;                    <span class="comm">// Leading-Trim ('cap', 'both', 'start', 'end', 'none')</span>
   <span class="prop">vertical-align</span>: <span class="kw">middle</span>;       <span class="comm">// 'top', 'middle', 'bottom' (optische Vertikal-Zentrierung)</span>
   <span class="prop">color</span>: <span class="val">#ffffff</span>;
@@ -1188,28 +1188,28 @@ toad logo -f psd --no-human-layers</code></pre>
       <div class="card-grid">
         <div class="card">
           <h4><code>trim: cap | both | none;</code></h4>
-          <p>Schneidet das typografische Leading (Halb-Geviert) über der Versalhöhe (Cap-Height) oder unter der Baseline ab (Alias: <code>text-box-trim</code>). Eliminiert unerwünschten Weißraum über Großbuchstaben.</p>
+          <p>Trims typographic leading (half-em) above the cap-height or below the baseline (alias: <code>text-box-trim</code>). Eliminates unwanted whitespace above uppercase glyphs.</p>
         </div>
         <div class="card">
           <h4><code>vertical-align: middle;</code></h4>
-          <p>Aktiviert die mathematische und optische Vertikalzentrierung innerhalb von Containern (z.B. Pill-Badges, Buttons, Tabs) unter automatischer Kompensation des Top-Baseline-Bias.</p>
+          <p>Enables mathematical and optical vertical centering within containers (e.g. pill badges, buttons, tabs), automatically compensating for top-baseline bias.</p>
         </div>
         <div class="card">
           <h4><code>Optische Zentrierung (Cap-Height)</code></h4>
-          <p>In engen Elementen (&le; 36px Höhe) gleicht TOAD den Versalhöhen-Versatz automatisch aus, sodass Glyphen geometrisch und optisch exakt auf der Container-Mittellinie sitzen.</p>
+          <p>In compact elements (&le; 36px height), TOAD automatically compensates for cap-height offsets so glyphs sit exactly on the container midline.</p>
         </div>
       </div>
 
       <div class="callout">
         <div class="callout-title">Tipp zu OpenType, Blocksatz &amp; Optischer Zentrierung</div>
-        <p>Wird <code>trim: cap</code> oder <code>vertical-align: middle</code> verwendet, kalkuliert die TOAD-Engine die metrische Versalhöhe der Schriftart und exportiert den Text mit perfektem optischen Ausgleich direkt in Photoshop Type Layers und Vektor-SVGs.</p>
+        <p>When <code>trim: cap</code> or <code>vertical-align: middle</code> is used, the TOAD engine calculates the metric cap-height of the font and exports the text with optical alignment directly into Photoshop Type Layers and vector SVGs.</p>
       </div>
     </section>
 
     <!-- 6. Positionierung & Math Solver -->
     <section id="positioning">
       <h2>6. Positionierung, Math-Solver &amp; calc()</h2>
-      <p>Positioniere Elemente relational oder nutze mathematische Berechnungen direkt im Code:</p>
+      <p>Position elements relationally or use mathematical expressions directly in code:</p>
 
       <div class="rel-diagram">
         <div class="diagram-box">#title (Referenz-Element)</div>
@@ -1220,7 +1220,7 @@ toad logo -f psd --no-human-layers</code></pre>
       <div class="code-block">
         <div class="code-header">
           <span>positioning_and_math.toad</span>
-          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
         </div>
         <pre><code><span class="comm">// 1. Relationale Positionierung</span>
 <span class="prop">at</span>: <span class="kw">below</span> <span class="id">#headline</span> <span class="prop">offset</span> <span class="val">20px</span>;
@@ -1245,12 +1245,12 @@ toad logo -f psd --no-human-layers</code></pre>
     <!-- 7. 2D-Transformationen -->
     <section id="transforms">
       <h2>7. 2D-Transformationen</h2>
-      <p>Jedes Element unterstützt 2D-Affine-Transformationen für Skalierung, Scherung und Rotation:</p>
+      <p>Every element supports 2D affine transformations for scaling, shearing, and rotation:</p>
 
       <div class="code-block">
         <div class="code-header">
           <span>transforms.toad</span>
-          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
         </div>
         <pre><code><span class="kw">rect</span> <span class="id">#tiltedCard</span> {
   <span class="prop">size</span>: <span class="val">200px</span> <span class="val">200px</span>;
@@ -1258,10 +1258,10 @@ toad logo -f psd --no-human-layers</code></pre>
   <span class="prop">radius</span>: <span class="val">16px</span>;
   
   <span class="prop">rotation</span>: <span class="val">45deg</span>;             <span class="comm">// Drehung in Grad</span>
-  <span class="prop">scale</span>: <span class="val">1.2</span> <span class="val">0.8</span>;              <span class="comm">// 2D-Skalierung (X Y) oder einheitlich: scale: 1.2;</span>
+  <span class="prop">scale</span>: <span class="val">1.2</span> <span class="val">0.8</span>;              <span class="comm">// 2D scaling (X Y) or uniform: scale: 1.2;</span>
   <span class="prop">skewX</span>: <span class="val">15deg</span>;                <span class="comm">// Horizontale Scherung</span>
   <span class="prop">skewY</span>: <span class="val">5deg</span>;                 <span class="comm">// Vertikale Scherung</span>
-  <span class="prop">transform-origin</span>: <span class="kw">center</span>;    <span class="comm">// 'center', '50% 50%' oder Pixel '(100px, 100px)'</span>
+  <span class="prop">transform-origin</span>: <span class="kw">center</span>;    <span class="comm">// 'center', '50% 50%' or pixels '(100px, 100px)'</span>
 }</code></pre>
       </div>
     </section>
@@ -1273,7 +1273,7 @@ toad logo -f psd --no-human-layers</code></pre>
       <div class="code-block">
         <div class="code-header">
           <span>styles.toad</span>
-          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
         </div>
         <pre><code><span class="id">&gt;primary</span> = <span class="val">#38bdf8</span>;
 
@@ -1285,7 +1285,7 @@ toad logo -f psd --no-human-layers</code></pre>
   <span class="prop">stroke</span>: <span class="kw">lighten</span>(<span class="id">&gt;primary</span>, <span class="val">20%</span>) <span class="val">2px</span>;
   <span class="comm">// fill: cmyk(0%, 50%, 100%, 0%); // Volle CMYK-Unterstützung</span>
   
-  <span class="comm">// 2. Farbverläufe (Linear, Radial oder Conic)</span>
+  <span class="comm">// 2. Gradients (Linear, Radial, or Conic)</span>
   <span class="comm">// fill: linear-gradient(135deg, #0f172a, #38bdf8);</span>
   <span class="comm">// fill: radial-gradient(circle, #38bdf8 0%, #0f172a 100%);</span>
   <span class="comm">// fill: conic-gradient(from 45deg, #f43f5e, #8b5cf6, #06b6d4, #f43f5e);</span>
@@ -1293,8 +1293,8 @@ toad logo -f psd --no-human-layers</code></pre>
   <span class="comm">// 3. Photoshop Layer FX (Ebenenstile mit nativem PSD fx-Mapping)</span>
   <span class="prop">shadow</span>: <span class="val">0px 20px 40px rgba(0, 0, 0, 0.4)</span>;      <span class="comm">// Drop Shadow</span>
   <span class="prop">inner-shadow</span>: <span class="val">0px 4px 10px rgba(0, 0, 0, 0.3)</span>;  <span class="comm">// Innerer Schatten</span>
-  <span class="prop">glow</span>: <span class="val">16px #60a5fa</span>;                             <span class="comm">// Schein nach außen</span>
-  <span class="prop">inner-glow</span>: <span class="val">8px #ffffff</span>;                        <span class="comm">// Schein nach innen</span>
+  <span class="prop">glow</span>: <span class="val">16px #60a5fa</span>;                             <span class="comm">// Outer glow</span>
+  <span class="prop">inner-glow</span>: <span class="val">8px #ffffff</span>;                        <span class="comm">// Inner glow</span>
   <span class="prop">bevel</span>: <span class="val">inner-bevel 6px</span>;                         <span class="comm">// Abgeflachte Kante &amp; Relief</span>
   <span class="prop">stroke-style</span>: <span class="val">inside 3px #1e3a8a</span>;               <span class="comm">// Ebenenstil-Kontur</span>
   <span class="prop">overlay</span>: <span class="val">#2563eb</span>;                               <span class="comm">// Farb- / Verlaufsüberlagerung</span>
@@ -1315,13 +1315,13 @@ toad logo -f psd --no-human-layers</code></pre>
       <div class="code-block">
         <div class="code-header">
           <span>image.toad</span>
-          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
         </div>
         <pre><code><span class="kw">image</span> <span class="id">#heroImage</span> {
   <span class="prop">at</span>: <span class="kw">center of canvas</span>;
   <span class="prop">size</span>: <span class="val">600px</span> <span class="val">400px</span>;
   <span class="prop">src</span>: <span class="val">"./assets/photo.jpg"</span>;
-  <span class="prop">fit</span>: <span class="kw">cover</span>;                  <span class="comm">// 'cover', 'contain', 'fill' oder 'none'</span>
+  <span class="prop">fit</span>: <span class="kw">cover</span>;                  <span class="comm">// 'cover', 'contain', 'fill', or 'none'</span>
   <span class="prop">radius</span>: <span class="val">16px</span>;
 }</code></pre>
       </div>
@@ -1331,18 +1331,18 @@ toad logo -f psd --no-human-layers</code></pre>
     <section id="groups-grid">
       <h2>10. Layout-Container (Stack mit Hug/Fill, Grid &amp; Gruppen)</h2>
       
-      <h3>Auto-Layout Stack mit 'hug' und 'fill'</h3>
-      <p>Ordnet Kindelemente automatisch vertikal oder horizontal mit konfigurierbarem <code>gap</code> und <code>padding</code> an. Mit <code>hug</code> passt sich die Container-Größe an den Inhalt an, während <code>fill</code> den restlichen Platz ausfüllt:</p>
+      <h3>Auto-Layout Stack with 'hug' and 'fill'</h3>
+      <p>Arranges child elements automatically vertically or horizontally with configurable <code>gap</code> and <code>padding</code>. With <code>hug</code>, the container size hugs its contents, while <code>fill</code> expands to take up remaining space:</p>
       
       <div class="code-block">
         <div class="code-header">
           <span>stack.toad</span>
-          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
         </div>
         <pre><code><span class="kw">stack</span> <span class="id">#navigationBar</span> {
   <span class="prop">at</span>: (<span class="val">40px</span>, <span class="val">40px</span>);
   <span class="prop">size</span>: <span class="val">800px hug</span>;             <span class="comm">// 'hug' schrumpft/wächst automatisch mit den Kindern</span>
-  <span class="prop">direction</span>: <span class="kw">horizontal</span>;       <span class="comm">// 'horizontal' oder 'vertical'</span>
+  <span class="prop">direction</span>: <span class="kw">horizontal</span>;       <span class="comm">// 'horizontal' or 'vertical'</span>
   <span class="prop">align</span>: <span class="kw">center</span>;               <span class="comm">// Cross-axis: 'start', 'center', 'end'</span>
   <span class="prop">gap</span>: <span class="val">16px</span>;
   <span class="prop">padding</span>: <span class="val">12px</span> <span class="val">24px</span>;
@@ -1358,7 +1358,7 @@ toad logo -f psd --no-human-layers</code></pre>
       <div class="code-block">
         <div class="code-header">
           <span>grid.toad</span>
-          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
         </div>
         <pre><code><span class="kw">grid</span> <span class="id">#gallery</span> {
   <span class="prop">at</span>: <span class="kw">center of canvas</span>;
@@ -1375,12 +1375,12 @@ toad logo -f psd --no-human-layers</code></pre>
     <!-- 11. Komponenten & Slots -->
     <section id="components">
       <h2>11. Komponenten &amp; Content-Slots (slot;)</h2>
-      <p>Erstelle wiederverwendbare Komponenten mit Parametern und projiziere beliebige Kindelemente über <code>slot;</code> direkt an die gewünschte Stelle:</p>
+      <p>Create reusable components with parameters and project arbitrary child elements via <code>slot;</code> directly into position:</p>
 
       <div class="code-block">
         <div class="code-header">
           <span>components_and_slots.toad</span>
-          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
         </div>
         <pre><code>component Card(title = "Default Title", bg = #1e293b) {
   group {
@@ -1397,11 +1397,11 @@ toad logo -f psd --no-human-layers</code></pre>
       font-weight: bold;
       color: #ffffff;
     }
-    slot; // Übergebene Kindelemente werden genau hier injiziert
+    slot; // Passed children are projected precisely here
   }
 }
 
-<span class="comm">// 2. Komponente aufrufen und Kindelemente in den Slot übergeben</span>
+<span class="comm">// 2. Instantiate component and pass children into slot</span>
 Card(<span class="val">"Analytics Card"</span>, <span class="val">#0f172a</span>) {
   <span class="kw">icon</span> {
     <span class="prop">iconName</span>: <span class="val">"check"</span>;
@@ -1412,7 +1412,7 @@ Card(<span class="val">"Analytics Card"</span>, <span class="val">#0f172a</span>
   }
   <span class="kw">text</span> {
     <span class="prop">at</span>: <span class="kw">right of previous offset</span> <span class="val">10px</span>;
-    <span class="prop">content</span>: <span class="val">"Alle Systeme laufen fehlerfrei"</span>;
+    <span class="prop">content</span>: <span class="val">"All systems operating nominally"</span>;
     <span class="prop">color</span>: <span class="val">#94a3b8</span>;
   }
 }</code></pre>
@@ -1422,32 +1422,32 @@ Card(<span class="val">"Analytics Card"</span>, <span class="val">#0f172a</span>
     <!-- 12. PSD Native Features -->
     <section id="psd-features">
       <h2>12. Native Photoshop (.psd) Bearbeitbarkeit</h2>
-      <p>Beim Export nach PSD (<code>export: psd;</code> oder <code>toad datei -f psd</code>) generiert der Compiler <strong>keine flachen Pixel-Raster</strong>, sondern echte, native Photoshop-Strukturen:</p>
+      <p>When exporting to PSD (<code>export: psd;</code> or <code>toad &lt;name&gt; -f psd</code>), the compiler generates <strong>no flattened pixel bitmaps</strong>, but genuine, native Photoshop structures:</p>
 
       <div class="card-grid">
         <div class="card">
           <h4><code>Live-Vektor-Formen</code></h4>
-          <p>Rechtecke, Kreise, Polygone und Pfade werden als Formebenen mit Bézier-Ankerpunkten angelegt. Verlustfrei transformierbar (<code>Strg+T</code>).</p>
+          <p>Rectangles, circles, polygons, and paths are created as shape layers with Bézier anchor points. Losslessly transformable (<code>Ctrl+T</code>).</p>
         </div>
         <div class="card">
           <h4><code>Live-Eckenrundung</code></h4>
-          <p>Eckenrundungen von Rechtecken lassen sich im Photoshop Eigenschaften-Bedienfeld (Properties) nachträglich über 4 separate Regler verändern.</p>
+          <p>Corner radii of rectangles can be modified non-destructively in Photoshop Properties panel via 4 independent corner sliders.</p>
         </div>
         <div class="card">
           <h4><code>Vektor-Verläufe</code></h4>
-          <p>Linear- und Radial-Gradients öffnen direkt den nativen Photoshop Verlaufs-Editor mit Farbstopps, Deckkraftstopps und Winkelrad.</p>
+          <p>Linear and radial gradients open directly in the native Photoshop gradient editor with color stops, opacity stops, and angle wheel.</p>
         </div>
         <div class="card">
           <h4><code>fx-Ebenenstile (Layer FX)</code></h4>
-          <p>Schatten (<code>shadow:</code>, <code>inner-shadow:</code>), Schein (<code>glow:</code>, <code>inner-glow:</code>), Kantenrelief (<code>bevel:</code>), Kontur (<code>stroke-style:</code>) und Überlagerung (<code>overlay:</code>) werden als native Photoshop Layer FX mit <code>fx</code>-Badge angelegt.</p>
+          <p>Drop shadows (<code>shadow:</code>, <code>inner-shadow:</code>), glow (<code>glow:</code>, <code>inner-glow:</code>), bevel (<code>bevel:</code>), stroke (<code>stroke-style:</code>), and overlay (<code>overlay:</code>) are created as native Photoshop Layer FX with the <code>fx</code> badge.</p>
         </div>
         <div class="card">
           <h4><code>Editierbarer Text</code></h4>
-          <p>Echte Photoshop Type Layers mit PostScript-Schriftart, Schriftgröße, Zeilenabstand (Leading) und Ausrichtung (inkl. Blocksatz / Justification). Editierbar mit dem Textwerkzeug (<code>T</code>).</p>
+          <p>Genuine Photoshop Type Layers with PostScript font family, font size, leading, tracking, and alignment (including justification). Fully editable with the Type Tool (<code>T</code>).</p>
         </div>
         <div class="card">
           <h4><code>Schnittmasken & Ordner</code></h4>
-          <p><code>clip: true;</code> wird als native Photoshop Schnittmaske angelegt. Gruppen und Stacks werden zu hierarchischen Ebenen-Ordnern.</p>
+          <p><code>clip: true;</code> is created as a native Photoshop clipping mask. Groups and stacks become hierarchical layer folders.</p>
         </div>
         <div class="card">
           <h4><code>Semantische Ebenennamen</code></h4>
@@ -1458,14 +1458,14 @@ Card(<span class="val">"Analytics Card"</span>, <span class="val">#0f172a</span>
 
     <!-- 13. Master Examples -->
     <section id="master-examples">
-      <h2>13. Komplexe Praxis-Beispiele (Masterclass)</h2>
-      <p>Hier siehst du, wie Variablen, Komponenten, Layouting (Stack) und Text zusammenarbeiten, um vollständige Designs modular aufzubauen.</p>
+      <h2>13. Complex Production Examples (Masterclass)</h2>
+      <p>Explore how variables, components, auto-layout stacks, and typography work in concert to build complete modular designs.</p>
 
-      <h3>Beispiel 1: Modernes Social-Media Banner</h3>
+      <h3>Example 1: Modern Social Media Banner</h3>
       <div class="code-block">
         <div class="code-header">
           <span>social_card.toad</span>
-          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
         </div>
         <pre><code><span class="comm">// --- 1. Farben & Variablen ---</span>
 <span class="var">>bgLight</span> = <span class="val">#f8fafc</span>;
@@ -1511,12 +1511,12 @@ Card(<span class="val">"Analytics Card"</span>, <span class="val">#0f172a</span>
   }
 
   <span class="elem">text</span> <span class="id">#title</span> {
-    <span class="prop">content</span>: <span class="val">"Declarative Design für Developer."</span>;
+    <span class="prop">content</span>: <span class="val">"Declarative Design for Developers."</span>;
     <span class="prop">font-family</span>: <span class="val">"Inter"</span>;
     <span class="prop">font-size</span>: <span class="val">82px</span>;
     <span class="prop">font-weight</span>: <span class="val">800</span>;
     <span class="prop">color</span>: <span class="val">#ffffff</span>;
-    <span class="prop">size</span>: <span class="val">1000px</span>; <span class="comm">// Maximalbreite für Umbruch</span>
+    <span class="prop">size</span>: <span class="val">1000px</span>; <span class="comm">// Maximum width for multiline wrapping</span>
   }
 }
 
@@ -1532,15 +1532,15 @@ Card(<span class="val">"Analytics Card"</span>, <span class="val">#0f172a</span>
 
       <div class="callout">
         <div class="callout-title">Tipp zur LLM Nutzung</div>
-        <p>Wenn du diesen Codeblock kopierst und einer KI gibst (z.B. ChatGPT oder Claude) wird sie das Muster sofort verstehen und dir 100% syntaktisch korrekte TOAD-Dateien für deine Use-Cases generieren können.</p>
+        <p>Passing this reference code to AI coding assistants allows them to immediately understand syntax patterns and generate 100% syntactically valid TOAD templates for your use cases.</p>
       </div>
 
-      <h3 id="bauhaus-poster">Beispiel 2: Bauhaus Ausstellungsplakat (Weimar 1923)</h3>
-      <p>Konstruktivistische Präzisionsgeometrie mit 17 parallelen Vektor-Ribbons (SVG Arc <code>A</code>-Befehle), semantischen Farb-Tokens und typografischer Hierarchie mit <code>Haettenschweiler</code>.</p>
+      <h3 id="bauhaus-poster">Example 2: Bauhaus Exhibition Poster (Weimar 1923)</h3>
+      <p>Constructivist precision geometry with 17 parallel vector ribbons (SVG Arc <code>A</code> commands), semantic color tokens, and typographic hierarchy with <code>Haettenschweiler</code>.</p>
       <div class="code-block">
         <div class="code-header">
           <span>bauhaus_1923.toad</span>
-          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
         </div>
         <pre><code><span class="comm">// Bauhaus Exhibition Poster (Weimar, 1923)</span>
 <span class="var">>bgCream</span> = <span class="val">#e5decc</span>;
@@ -1617,12 +1617,12 @@ Card(<span class="val">"Analytics Card"</span>, <span class="val">#0f172a</span>
 }</code></pre>
       </div>
 
-      <h3 id="soul-poster">Beispiel 3: Vintage Soul Music Poster (1979)</h3>
-      <p>5:7 Poster-Format, organische mehrstufige Linear-Gradienten, typografische Schriftzüge ("SOUL") als Vektorkurven und 35mm-Filmkorn-Textur.</p>
+      <h3 id="soul-poster">Example 3: Vintage Soul Music Poster (1979)</h3>
+      <p>5:7 poster format, organic multi-stop linear gradients, typographic display curves ("SOUL"), and 35mm film grain texture.</p>
       <div class="code-block">
         <div class="code-header">
           <span>soul_poster.toad</span>
-          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
         </div>
         <pre><code><span class="comm">// Vintage Soul Music Poster (1979 Live Recording)</span>
 <span class="var">>bgDark</span>     = <span class="val">#131315</span>;
@@ -1639,7 +1639,7 @@ Card(<span class="val">"Analytics Card"</span>, <span class="val">#0f172a</span>
   <span class="prop">quality</span>: <span class="val">95</span>;
 }
 
-<span class="comm">// Vertikale Säulen mit Creme-Rahmen</span>
+<span class="comm">// Vertical pillars with cream borders</span>
 <span class="elem">path</span> <span class="id">#col1Pillar</span> {
   <span class="prop">d</span>: <span class="val">"M 18 0 L 205 0 L 205 851 L 164 851 C 64 851, 61 1008, 27 1008 L 0 1008 L 0 18 A 18 18 0 0 1 18 0 Z"</span>;
   <span class="prop">size</span>: <span class="val">205px 1008px</span>;
@@ -1648,7 +1648,7 @@ Card(<span class="val">"Analytics Card"</span>, <span class="val">#0f172a</span>
   <span class="prop">at</span>: (<span class="val">45px</span>, <span class="val">35px</span>);
 }
 
-<span class="comm">// Typografische Letterforms ("SOUL")</span>
+<span class="comm">// Typographic letterforms ("SOUL")</span>
 <span class="elem">path</span> <span class="id">#letterS</span> {
   <span class="prop">d</span>: <span class="val">"M 0 157 L 27 157 C 61 157, 64 0, 164 0 L 205 0 L 205 91 L 191 91 C 157 91, 155 248, 55 248 L 0 248 Z"</span>;
   <span class="prop">size</span>: <span class="val">205px 248px</span>;
@@ -1668,7 +1668,7 @@ Card(<span class="val">"Analytics Card"</span>, <span class="val">#0f172a</span>
   <span class="prop">at</span>: (<span class="val">366.5px</span>, <span class="val">967px</span>);
 }
 
-<span class="comm">// Vintage Filmkorn Textur-Overlay</span>
+<span class="comm">// Vintage film grain texture overlay</span>
 <span class="elem">image</span> <span class="id">#filmGrain</span> {
   <span class="prop">src</span>: <span class="val">"./grain.png"</span>;
   <span class="prop">size</span>: <span class="val">1000px 1400px</span>;
@@ -1678,12 +1678,12 @@ Card(<span class="val">"Analytics Card"</span>, <span class="val">#0f172a</span>
 }</code></pre>
       </div>
 
-      <h3 id="kamekura-poster">Beispiel 4: Yusaku Kamekura Tokyo Poster (1968)</h3>
-      <p>Komplexe kubische Bézier-Kurven, Textur-Maskierung (<code>mask: #shapeId</code>), subtile Falzlinien, japanische Typografie (<code>Yu Gothic</code>) und geometrisches Ausstellungs-Logo.</p>
+      <h3 id="kamekura-poster">Example 4: Yusaku Kamekura Tokyo Poster (1968)</h3>
+      <p>Complex cubic Bézier curves, texture masking (<code>mask: #shapeId</code>), subtle fold lines, Japanese typography (<code>Yu Gothic</code>), and geometric exhibition logo.</p>
       <div class="code-block">
         <div class="code-header">
           <span>kamekura_poster.toad</span>
-          <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
         </div>
         <pre><code><span class="comm">// Japanese Exhibition Poster (1968) - Yusaku Kamekura</span>
 <span class="var">>bgPaper</span> = <span class="val">#eff2f5</span>;
@@ -1711,7 +1711,7 @@ Card(<span class="val">"Analytics Card"</span>, <span class="val">#0f172a</span>
   <span class="prop">at</span>: (<span class="val">40px</span>, <span class="val">40px</span>);
 }
 
-<span class="comm">// Gemustertes Reispapier mit Maske auf das Band begrenzt</span>
+<span class="comm">// Patterned rice paper masked to the geometric ribbon</span>
 <span class="elem">image</span> <span class="id">#serpentinePaperTexture</span> {
   <span class="prop">src</span>: <span class="val">"./paper_texture.png"</span>;
   <span class="prop">size</span>: <span class="val">1000px 1400px</span>;
@@ -1740,7 +1740,7 @@ Card(<span class="val">"Analytics Card"</span>, <span class="val">#0f172a</span>
   <div class="wiki-modal" onclick="event.stopPropagation()">
     <div class="wiki-search-header">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--c-cyan)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-      <input type="text" id="wikiSearchInput" class="wiki-search-input" placeholder="Syntax, Properties, Keywords oder Presets suchen... (z.B. psd, star, calc, at:, gradient, og-image)" autocomplete="off" spellcheck="false" />
+      <input type="text" id="wikiSearchInput" class="wiki-search-input" placeholder="Search syntax, properties, keywords or presets... (e.g. psd, star, calc, at:, gradient, og-image)" autocomplete="off" spellcheck="false" />
       <span class="kbd-shortcut" style="cursor:pointer" onclick="closeWikiModal()">ESC</span>
     </div>
 
@@ -1759,33 +1759,33 @@ Card(<span class="val">"Analytics Card"</span>, <span class="val">#0f172a</span>
   // Comprehensive Wiki Search Database Index
   const wikiIndex = [
     // 1. Quickstart & CLI
-    { title: "toad init [name]", category: "CLI", desc: "Scaffoldet ein neues, schlüsselfertiges Projekt mit Starter-Template & package.json", link: "#quickstart", tag: "CLI" },
+    { title: "toad init [name]", category: "CLI", desc: "Scaffolds a new turnkey project with starter template & package.json", link: "#quickstart", tag: "CLI" },
     { title: "toad <name> -w", category: "CLI", desc: "Live Preview mit SSE Hot-Reload, Zoom-Controls & 1-Klick-Ordner-Button", link: "#quickstart", tag: "CLI" },
-    { title: "toad lint <name>", category: "CLI", desc: "Statische AST-Code-Analyse (prüft auf nicht-deklarierte Variablen, doppelte IDs etc.)", link: "#quickstart", tag: "CLI" },
-    { title: "toad fmt [name]", category: "CLI", desc: "Automatischer AST-Code-Formatter für saubere Einrückung und Semikolons", link: "#quickstart", tag: "CLI" },
+    { title: "toad lint <name>", category: "CLI", desc: "Static AST code analysis (checks for undeclared variables, duplicate IDs, syntax issues)", link: "#quickstart", tag: "CLI" },
+    { title: "toad fmt [name]", category: "CLI", desc: "Automatic AST code formatter for clean indentation and semicolons", link: "#quickstart", tag: "CLI" },
     { title: "-f, --format <formats>", category: "CLI", desc: "Exportformate: png, jpg, webp, svg, psd, image, all", link: "#quickstart", tag: "CLI" },
-    { title: "-s, --scale <multiplier>", category: "CLI", desc: "Multi-Scale-Faktor (z.B. -s 2 für Retina, -s 4 für Print)", link: "#quickstart", tag: "CLI" },
-    { title: "-o, --out <dir>", category: "CLI", desc: "Zielverzeichnis für die gerenderten Export-Dateien festlegen", link: "#quickstart", tag: "CLI" },
+    { title: "-s, --scale <multiplier>", category: "CLI", desc: "Multi-scale export factor (e.g. -s 2 for Retina, -s 4 for high-res print)", link: "#quickstart", tag: "CLI" },
+    { title: "-o, --out <dir>", category: "CLI", desc: "Specify target output directory for rendered export files", link: "#quickstart", tag: "CLI" },
 
     // 2. Dateistruktur & Canvas
-    { title: "canvas { ... }", category: "Struktur", desc: "Wurzel-Container jeder .toad Datei mit Dimensionen und Export-Regeln", link: "#structure", tag: "Canvas" },
+    { title: "canvas { ... }", category: "Structure", desc: "Root container of every .toad file defining dimensions and export rules", link: "#structure", tag: "Canvas" },
     { title: "preset: <name>", category: "Canvas", desc: "Plattform-Preset (og-image, twitter-header, instagram-post, youtube-thumbnail...)", link: "#structure", tag: "Preset" },
-    { title: "aspect-ratio: 16:9", category: "Canvas", desc: "Seitenverhältnis für automatische Höhen- oder Breitenberechnung", link: "#structure", tag: "Canvas" },
-    { title: "dpi: 300", category: "Canvas", desc: "DPI-Auflösungsmetadaten (z.B. für Print-Exporte)", link: "#structure", tag: "Canvas" },
-    { title: "@import \"path.toad\";", category: "Direktive", desc: "Modulare Multi-Datei-Architektur für Design-Tokens und Komponenten", link: "#structure", tag: "Syntax" },
-    { title: "@font \"Inter.ttf\" as \"Inter\";", category: "Direktive", desc: "Lokale Schriftartendatei in die Skia/Canvas-Font-Engine laden", link: "#structure", tag: "Font" },
+    { title: "aspect-ratio: 16:9", category: "Canvas", desc: "Aspect ratio for automatic height or width calculation", link: "#structure", tag: "Canvas" },
+    { title: "dpi: 300", category: "Canvas", desc: "DPI resolution metadata (e.g. 300 dpi for high-res print exports)", link: "#structure", tag: "Canvas" },
+    { title: "@import \"path.toad\";", category: "Directive", desc: "Modular multi-file architecture for design tokens and reusable components", link: "#structure", tag: "Syntax" },
+    { title: "@font \"Inter.ttf\" as \"Inter\";", category: "Directive", desc: "Load local font file into the Skia/Canvas font engine", link: "#structure", tag: "Font" },
 
     // 3. Variablen & Tokens
-    { title: ">variable = value;", category: "Variablen", desc: "Kanonische Variablen-Deklaration mit '>' Prefix und '=' Zuweisung", link: "#variables", tag: "Tokens" },
+    { title: ">variable = value;", category: "Variables", desc: "Canonical variable declaration with '>' prefix and '=' assignment", link: "#variables", tag: "Tokens" },
     { title: "$variable = value;", category: "Variablen", desc: "Alternative Variablen-Deklaration (rückwärtskompatibel)", link: "#variables", tag: "Tokens" },
-    { title: "alpha(>color, 0.5)", category: "Farben", desc: "Farb-Funktion zum Einstellen der Transparenz (0.0 bis 1.0)", link: "#variables", tag: "Funktion" },
-    { title: "lighten(>color, 15%)", category: "Farben", desc: "Hellt eine Farbe um einen prozentualen Wert auf", link: "#variables", tag: "Funktion" },
-    { title: "darken(>color, 20%)", category: "Farben", desc: "Dunkelt eine Farbe um einen prozentualen Wert ab", link: "#variables", tag: "Funktion" },
+    { title: "alpha(>color, 0.5)", category: "Colors", desc: "Color function to adjust alpha transparency (0.0 to 1.0)", link: "#variables", tag: "Funktion" },
+    { title: "lighten(>color, 15%)", category: "Colors", desc: "Lightens a color by a specified percentage value", link: "#variables", tag: "Funktion" },
+    { title: "darken(>color, 20%)", category: "Colors", desc: "Darkens a color by a specified percentage value", link: "#variables", tag: "Funktion" },
 
     // 4. Formen & Icons
-    { title: "rect { ... }", category: "Formen", desc: "Rechteck mit optionalem einheitlichem oder individuellem Eckenradius", link: "#shapes", tag: "Primitive" },
-    { title: "corner-radius: 12px;", category: "Formen", desc: "Eckenabrundung für Rechtecke (Aliase: radius, border-radius, corner-radius)", link: "#shapes", tag: "Primitive" },
-    { title: "circle { ... }", category: "Formen", desc: "Kreis oder Ellipse (size: 100px; oder size: 120px 80px;)", link: "#shapes", tag: "Primitive" },
+    { title: "rect { ... }", category: "Shapes", desc: "Rectangle with optional uniform or per-corner radius", link: "#shapes", tag: "Primitive" },
+    { title: "corner-radius: 12px;", category: "Shapes", desc: "Corner rounding for rectangles (aliases: radius, border-radius, corner-radius)", link: "#shapes", tag: "Primitive" },
+    { title: "circle { ... }", category: "Shapes", desc: "Circle or ellipse (size: 100px; or size: 120px 80px;)", link: "#shapes", tag: "Primitive" },
     { title: "star { ... }", category: "Formen", desc: "5-zackiger Vektorstern mit goldenem Schnitt", link: "#shapes", tag: "Primitive" },
     { title: "triangle { ... }", category: "Formen", desc: "Gleichschenkliges Vektor-Dreieck", link: "#shapes", tag: "Primitive" },
     { title: "arrow { ... }", category: "Formen", desc: "Vektor-Pfeil mit konfigurierbarer Ausrichtung", link: "#shapes", tag: "Primitive" },
@@ -1796,70 +1796,70 @@ Card(<span class="val">"Analytics Card"</span>, <span class="val">#0f172a</span>
 
     // 5. Typografie
     { title: "text { content: \"...\"; }", category: "Typografie", desc: "Text-Element mit automatischer Skia-Zeilenumbruch-Messung", link: "#text", tag: "Text" },
-    { title: "font-family: \"Inter\";", category: "Typografie", desc: "Schriftart angeben (Systemschriften oder via @font geladen)", link: "#text", tag: "Text" },
+    { title: "font-family: \"Inter\";", category: "Typography", desc: "Specify font family (system fonts or loaded via @font directive)", link: "#text", tag: "Text" },
     { title: "font-size: 24px;", category: "Typografie", desc: "Schriftgröße in Pixeln", link: "#text", tag: "Text" },
-    { title: "font-weight: 700 / bold;", category: "Typografie", desc: "Schriftgewichtung (100–900 oder bold, normal, medium)", link: "#text", tag: "Text" },
+    { title: "font-weight: 700 / bold;", category: "Typography", desc: "Font weight (100–900 or bold, normal, medium, semibold)", link: "#text", tag: "Text" },
     { title: "letter-spacing: 1.5px;", category: "Typografie", desc: "Zeichenabstand / Tracking in Pixeln", link: "#text", tag: "Text" },
-    { title: "line-height: 1.4;", category: "Typografie", desc: "Zeilenhöhe (Multiplikator oder Pixel)", link: "#text", tag: "Text" },
-    { title: "trim: cap | both | none;", category: "Typografie", desc: "Leading-Trimming für bündige Versalhöhe / optische Zentrierung (Alias: text-box-trim)", link: "#text", tag: "Text" },
-    { title: "vertical-align: middle;", category: "Typografie", desc: "Optische Vertikal-Zentrierung unter Kompensation des Top-Baseline-Bias in Badges & Buttons", link: "#text", tag: "Text" },
+    { title: "line-height: 1.4;", category: "Typography", desc: "Line height / leading (multiplier or pixel value)", link: "#text", tag: "Text" },
+    { title: "trim: cap | both | none;", category: "Typography", desc: "Leading trimming for flush cap-height / optical centering (alias: text-box-trim)", link: "#text", tag: "Text" },
+    { title: "vertical-align: middle;", category: "Typography", desc: "Optical vertical centering compensating for top-baseline bias in badges & buttons", link: "#text", tag: "Text" },
     { title: "text-transform: uppercase;", category: "Typografie", desc: "Groß-/Kleinschreibung (uppercase, lowercase, capitalize)", link: "#text", tag: "Text" },
     { title: "text-align: center;", category: "Typografie", desc: "Horizontale Textausrichtung (left, center, right, justify)", link: "#text", tag: "Text" },
 
     // 6. Layout, Math & Positioning
-    { title: "at: center of canvas;", category: "Layout", desc: "Element horizontal und vertikal exakt auf dem Canvas zentrieren", link: "#positioning", tag: "Position" },
-    { title: "at: below #id offset 16px;", category: "Layout", desc: "Relationale Platzierung unterhalb eines Referenz-Elements", link: "#positioning", tag: "Position" },
-    { title: "at: right of #id offset 12px;", category: "Layout", desc: "Relationale Platzierung rechts neben einem Referenz-Element", link: "#positioning", tag: "Position" },
+    { title: "at: center of canvas;", category: "Layout", desc: "Center element horizontally and vertically on canvas", link: "#positioning", tag: "Position" },
+    { title: "at: below #id offset 16px;", category: "Layout", desc: "Relational placement below a reference element", link: "#positioning", tag: "Position" },
+    { title: "at: right of #id offset 12px;", category: "Layout", desc: "Relational placement to the right of a reference element", link: "#positioning", tag: "Position" },
     { title: "at: inside #parent offset 24px;", category: "Layout", desc: "Platzierung oben-links im Inneren des Eltern-Containers mit Inset", link: "#positioning", tag: "Position" },
-    { title: "calc(100% - 40px)", category: "Math", desc: "Integrierter mathematischer Solver für dynamische Größenberechnungen", link: "#positioning", tag: "Math" },
-    { title: "z-index: 10;", category: "Layout", desc: "Explizite Tiefenebene für Überlappungen und Stapelreihenfolge", link: "#positioning", tag: "Layout" },
+    { title: "calc(100% - 40px)", category: "Math", desc: "Integrated mathematical solver for dynamic dimensional calculations", link: "#positioning", tag: "Math" },
+    { title: "z-index: 10;", category: "Layout", desc: "Explicit Z-depth layer for overlapping and stacking order", link: "#positioning", tag: "Layout" },
 
     // 7. 2D Transformationen
-    { title: "rotation: 45deg;", category: "Transforms", desc: "2D-Drehung in Grad (deg) oder Radianten (rad)", link: "#transforms", tag: "2D" },
-    { title: "scale: 1.2 0.8;", category: "Transforms", desc: "2D-Skalierung entlang der X- und Y-Achse", link: "#transforms", tag: "2D" },
+    { title: "rotation: 45deg;", category: "Transforms", desc: "2D rotation in degrees (deg) or radians (rad)", link: "#transforms", tag: "2D" },
+    { title: "scale: 1.2 0.8;", category: "Transforms", desc: "2D scaling along the X and Y axes", link: "#transforms", tag: "2D" },
     { title: "skewX: 12deg; skewY: 5deg;", category: "Transforms", desc: "2D-Scherung / Neigung von Vektorformen", link: "#transforms", tag: "2D" },
-    { title: "transform-origin: center;", category: "Transforms", desc: "Dreh- und Skalierungsursprung (center, top-left, bottom-right...)", link: "#transforms", tag: "2D" },
+    { title: "transform-origin: center;", category: "Transforms", desc: "Rotation and scaling origin (center, top-left, bottom-right...)", link: "#transforms", tag: "2D" },
 
     // 8. Farben, Gradienten & Effekte
-    { title: "linear-gradient(45deg, #f00 0%, #00f 100%)", category: "Gradients", desc: "Linearer Farbverlauf mit konfigurierbarem Winkel und Color-Stops", link: "#colors-gradients", tag: "Farben" },
-    { title: "radial-gradient(circle, #f00 0%, #00f 100%)", category: "Gradients", desc: "Radialer Farbverlauf von Innen nach Außen", link: "#colors-gradients", tag: "Farben" },
-    { title: "conic-gradient(from 90deg, #f00 0%, #00f 100%)", category: "Gradients", desc: "Konischer Winkel-Farbverlauf (z.B. für Farbkreise oder Radar-Effekte)", link: "#colors-gradients", tag: "Farben" },
-    { title: "cmyk(c, m, y, k) / cmyk(c%, m%, y%, k%)", category: "Farben", desc: "Vollwertiges CMYK-Farbmodell für Druckvorstufe und Print-Exporte", link: "#colors-gradients", tag: "Farben" },
-    { title: "shadow: 0 10px 30px rgba(0,0,0,0.5);", category: "Effekte", desc: "Schlagschatten (wird in Photoshop als natives fx Layer-Effect exportiert)", link: "#colors-gradients", tag: "Effekt" },
+    { title: "linear-gradient(45deg, #f00 0%, #00f 100%)", category: "Gradients", desc: "Linear gradient with configurable angle and color stops", link: "#colors-gradients", tag: "Colors" },
+    { title: "radial-gradient(circle, #f00 0%, #00f 100%)", category: "Gradients", desc: "Radial gradient extending outwards from center", link: "#colors-gradients", tag: "Colors" },
+    { title: "conic-gradient(from 90deg, #f00 0%, #00f 100%)", category: "Gradients", desc: "Conic gradient around center angle (e.g. for color wheels or sweep radar effects)", link: "#colors-gradients", tag: "Colors" },
+    { title: "cmyk(c, m, y, k) / cmyk(c%, m%, y%, k%)", category: "Colors", desc: "Native CMYK color model for prepress and commercial print exports", link: "#colors-gradients", tag: "Colors" },
+    { title: "shadow: 0 10px 30px rgba(0,0,0,0.5);", category: "Effects", desc: "Drop shadow (exported as native Photoshop fx layer effect)", link: "#colors-gradients", tag: "Effect" },
     { title: "inner-shadow: 0 4px 8px rgba(0,0,0,0.4);", category: "Effekte", desc: "Innerer Schatten (effects.innerShadow im Photoshop Layer FX Stack)", link: "#colors-gradients", tag: "Effekt" },
-    { title: "glow: 16px #38bdf8; / inner-glow:", category: "Effekte", desc: "Schein nach außen / innen (effects.outerGlow & innerGlow)", link: "#colors-gradients", tag: "Effekt" },
+    { title: "glow: 16px #38bdf8; / inner-glow:", category: "Effects", desc: "Outer / inner glow (effects.outerGlow & innerGlow)", link: "#colors-gradients", tag: "Effect" },
     { title: "bevel: inner-bevel 6px;", category: "Effekte", desc: "Abgeflachte Kante & Relief (effects.bevel in Photoshop)", link: "#colors-gradients", tag: "Effekt" },
     { title: "stroke-style: inside 2px #fff;", category: "Effekte", desc: "Ebenenstil-Kontur (effects.stroke) unabhängig von Vektorkonturen", link: "#colors-gradients", tag: "Effekt" },
     { title: "font-features: \"liga\" 1, \"smcp\" 1;", category: "Typografie", desc: "OpenType-Features (Ligaturen, echte Kapitälchen, Zahlenstile)", link: "#text", tag: "Text" },
-    { title: "font-variation: \"wght\" 700 \"wdth\" 85;", category: "Typografie", desc: "Variable Font Achsensteuerung für dynamische Schriftstärken & Breiten", link: "#text", tag: "Text" },
+    { title: "font-variation: \"wght\" 700 \"wdth\" 85;", category: "Typography", desc: "Variable font axis control for dynamic weights & widths", link: "#text", tag: "Text" },
     { title: "align: justify;", category: "Typografie", desc: "Blocksatz mit dynamischer Wortabstandsberechnung & Photoshop Justification", link: "#text", tag: "Text" },
-    { title: "bleed: 3mm; crop-marks: true;", category: "Canvas", desc: "Beschnittzugabe, Schnittmarken & Passkreuze für den professionellen Druck", link: "#structure", tag: "Print" },
+    { title: "bleed: 3mm; crop-marks: true;", category: "Canvas", desc: "Bleed margins, trim crop marks & registration marks for professional print", link: "#structure", tag: "Print" },
     { title: "canvas \"Front\" { ... } canvas \"Back\" { ... }", category: "Canvas", desc: "Mehrseitige Dokumente mit automatischer Page-Asset-Generierung", link: "#structure", tag: "Canvas" },
-    { title: "filter: blur(12px) brightness(1.2);", category: "Effekte", desc: "CSS-Filterkette (wird in PSD als native Adjustment Layers exportiert)", link: "#colors-gradients", tag: "Filter" },
-    { title: "clip: true;", category: "Effekte", desc: "Clipping-Maske für Kind-Elemente an der Container-Form", link: "#colors-gradients", tag: "Maske" },
+    { title: "filter: blur(12px) brightness(1.2);", category: "Effects", desc: "CSS filter chain (exported as native PSD adjustment layers)", link: "#colors-gradients", tag: "Filter" },
+    { title: "clip: true;", category: "Effects", desc: "Clipping mask constraining child elements to container boundary", link: "#colors-gradients", tag: "Mask" },
 
     // 9. Auto-Layout
-    { title: "stack { direction: vertical; ... }", category: "Auto-Layout", desc: "Flexibler Stack-Container für automatischen vertikalen/horizontalen Fluss", link: "#groups-grid", tag: "Layout" },
+    { title: "stack { direction: vertical; ... }", category: "Auto-Layout", desc: "Flexible stack container for automatic vertical or horizontal flow", link: "#groups-grid", tag: "Layout" },
     { title: "grid { columns: 3; gap: 16px; }", category: "Auto-Layout", desc: "Automatisches Spalten-Grid mit automatischem Zeilenumbruch", link: "#groups-grid", tag: "Layout" },
-    { title: "gap: 16px 24px;", category: "Auto-Layout", desc: "Abstand zwischen Kind-Elementen in Stack und Grid", link: "#groups-grid", tag: "Layout" },
-    { title: "padding: 24px;", category: "Auto-Layout", desc: "Innenabstand für Container-Boxen", link: "#groups-grid", tag: "Layout" },
+    { title: "gap: 16px 24px;", category: "Auto-Layout", desc: "Gap between child elements in stacks and grids", link: "#groups-grid", tag: "Layout" },
+    { title: "padding: 24px;", category: "Auto-Layout", desc: "Internal padding for container boxes", link: "#groups-grid", tag: "Layout" },
 
     // 10. Komponenten & Slots
     { title: "component Name(arg1, arg2) { ... }", category: "Komponenten", desc: "Wiederverwendbare Design-Komponenten mit Parametern", link: "#components", tag: "Modul" },
-    { title: "slot;", category: "Komponenten", desc: "Platzhalter-Slot innerhalb einer Komponente für dynamische Kind-Elemente", link: "#components", tag: "Modul" },
+    { title: "slot;", category: "Components", desc: "Placeholder slot within a component for dynamic child content", link: "#components", tag: "Module" },
 
     // 11. Native Photoshop PSD
-    { title: "vectorMask & Bézier-Pfade", category: "Photoshop PSD", desc: "Echte Vektorpfade mit Ankerpunkten für das Direktauswahl-Werkzeug (A)", link: "#psd-features", tag: "PSD" },
+    { title: "vectorMask & Bézier-Pfade", category: "Photoshop PSD", desc: "Genuine vector paths with anchor points for the Direct Selection Tool (A)", link: "#psd-features", tag: "PSD" },
     { title: "keyOriginRRectRadii", category: "Photoshop PSD", desc: "Live-Eckenradius-Regler direkt im Photoshop Eigenschaften-Bedienfeld", link: "#psd-features", tag: "PSD" },
     { title: "Photoshop Layer FX (fx)", category: "Photoshop PSD", desc: "Vollständiges Layer-FX-Mapping (dropShadow, innerShadow, outerGlow, innerGlow, bevel, stroke, solidFill)", link: "#psd-features", tag: "PSD" },
-    { title: "Adjustment Layers", category: "Photoshop PSD", desc: "Helligkeit/Kontrast, Gradationskurven und Farbton/Sättigung als editierbare Ebenen", link: "#psd-features", tag: "PSD" },
-    { title: "Native Type Layers", category: "Photoshop PSD", desc: "Voll editierbare Textebenen mit PostScript-Font-Mapping für das Text-Werkzeug (T)", link: "#psd-features", tag: "PSD" },
+    { title: "Adjustment Layers", category: "Photoshop PSD", desc: "Brightness/contrast, curves, and hue/saturation as editable adjustment layers", link: "#psd-features", tag: "PSD" },
+    { title: "Native Type Layers", category: "Photoshop PSD", desc: "Fully editable Type Layers with PostScript font mapping for the Type Tool (T)", link: "#psd-features", tag: "PSD" },
     { title: "--no-human-layers", category: "Photoshop PSD", desc: "CLI-Flag: Behält technische Node-IDs statt formatierter menschenlesbarer Ebenennamen", link: "#psd-features", tag: "PSD" },
 
     // 12. Best Practice Master-Poster
-    { title: "Bauhaus Exhibition Poster 1923", category: "Praxis-Beispiele", desc: "Konstruktivistische Vektor-Ribbons (SVG Arc A), Haettenschweiler Typo & harmonische Farbpalette", link: "#bauhaus-poster", tag: "Template" },
-    { title: "Vintage Soul Music Poster 1979", category: "Praxis-Beispiele", desc: "5:7 Poster, organische Multi-Stop-Gradients, gezeichnete Buchstaben & Filmkorn-Overlay", link: "#soul-poster", tag: "Template" },
-    { title: "Yusaku Kamekura Tokyo Poster 1968", category: "Praxis-Beispiele", desc: "Kubische Bézier-Pfade, Textur-Maskierung (mask: #id) & japanische Typografie", link: "#kamekura-poster", tag: "Template" }
+    { title: "Bauhaus Exhibition Poster 1923", category: "Case Studies", desc: "Constructivist vector ribbons (SVG Arc A), Haettenschweiler type & harmonious color palette", link: "#bauhaus-poster", tag: "Template" },
+    { title: "Vintage Soul Music Poster 1979", category: "Case Studies", desc: "5:7 poster format, organic multi-stop gradients, display letterforms & film grain overlay", link: "#soul-poster", tag: "Template" },
+    { title: "Yusaku Kamekura Tokyo Poster 1968", category: "Case Studies", desc: "Cubic Bézier paths, texture masking (mask: #id) & Japanese typography", link: "#kamekura-poster", tag: "Template" }
   ];
 
   let selectedIndex = 0;
@@ -1939,7 +1939,7 @@ Card(<span class="val">"Analytics Card"</span>, <span class="val">#0f172a</span>
     }
 
     if (currentFilteredList.length === 0) {
-      list.innerHTML = `<div class="wiki-empty">Keine Treffer für "<strong>${escapeHtml(query)}</strong>" gefunden.<br><span style="font-size:12px;opacity:0.7">Probiere es mit Keywords wie <code>psd</code>, <code>star</code>, <code>at:</code>, <code>gradient</code> oder <code>preset</code></span></div>`;
+      list.innerHTML = `<div class="wiki-empty">No matches found for "<strong>${escapeHtml(query)}</strong>".<br><span style="font-size:12px;opacity:0.7">Try searching for keywords like <code>psd</code>, <code>star</code>, <code>at:</code>, <code>gradient</code> or <code>preset</code></span></div>`;
       selectedIndex = -1;
       return;
     }

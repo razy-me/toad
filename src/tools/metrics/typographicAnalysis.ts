@@ -107,9 +107,9 @@ export function calculateModularScaleFidelity(textNodes: LayoutNode[]): ModularS
   const clampedR2 = Math.round(Math.max(0, Math.min(1, bestR2)) * 100) / 100;
   const isHarmonious = clampedR2 >= 0.88;
 
-  let message = `Harmonische Skala: ${bestScale.name} (${bestScale.ratio.toFixed(3)}) mit R² = ${clampedR2.toFixed(2)}`;
+  let message = `Harmonious scale: ${bestScale.name} (${bestScale.ratio.toFixed(3)}) with R² = ${clampedR2.toFixed(2)}`;
   if (!isHarmonious) {
-    message = `Unstetige Schriftgrößen (R² = ${clampedR2.toFixed(2)}): ${bestOutliers.length} Ausreißer weichen von ${bestScale.name} ab.`;
+    message = `Inconsistent font sizes (R² = ${clampedR2.toFixed(2)}): ${bestOutliers.length} outlier(s) deviate from ${bestScale.name}.`;
   }
 
   return {

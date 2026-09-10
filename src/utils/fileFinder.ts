@@ -77,7 +77,7 @@ export function getWorkspaces(): string[] {
 export function addWorkspace(dirPath: string): { success: boolean; message: string; workspaces: string[] } {
   const resolved = path.resolve(dirPath);
   if (!fs.existsSync(resolved) || !fs.statSync(resolved).isDirectory()) {
-    return { success: false, message: `Verzeichnis existiert nicht: ${resolved}`, workspaces: getWorkspaces() };
+    return { success: false, message: `Directory does not exist: ${resolved}`, workspaces: getWorkspaces() };
   }
 
   let currentConfig: ToadConfig = {};
@@ -90,13 +90,13 @@ export function addWorkspace(dirPath: string): { success: boolean; message: stri
   const currentWorkspaces = Array.isArray(currentConfig.workspaces) ? currentConfig.workspaces : [];
   const normalizedNew = resolved.toLowerCase();
   if (currentWorkspaces.some(w => path.resolve(w).toLowerCase() === normalizedNew)) {
-    return { success: true, message: `Workspace ist bereits registriert: ${resolved}`, workspaces: currentWorkspaces };
+    return { success: true, message: `Workspace is already registered: ${resolved}`, workspaces: currentWorkspaces };
   }
 
   currentWorkspaces.push(resolved);
   currentConfig.workspaces = currentWorkspaces;
   fs.writeFileSync(CONFIG_FILE, JSON.stringify(currentConfig, null, 2), 'utf-8');
-  return { success: true, message: `Workspace hinzugefügt: ${resolved}`, workspaces: currentWorkspaces };
+  return { success: true, message: `Workspace added: ${resolved}`, workspaces: currentWorkspaces };
 }
 
 export function removeWorkspace(dirPath: string): { success: boolean; message: string; workspaces: string[] } {
@@ -113,12 +113,12 @@ export function removeWorkspace(dirPath: string): { success: boolean; message: s
   const filtered = currentWorkspaces.filter(w => path.resolve(w).toLowerCase() !== normalized);
 
   if (filtered.length === currentWorkspaces.length) {
-    return { success: false, message: `Workspace nicht gefunden: ${dirPath}`, workspaces: currentWorkspaces };
+    return { success: false, message: `Workspace not found: ${dirPath}`, workspaces: currentWorkspaces };
   }
 
   currentConfig.workspaces = filtered;
   fs.writeFileSync(CONFIG_FILE, JSON.stringify(currentConfig, null, 2), 'utf-8');
-  return { success: true, message: `Workspace entfernt: ${resolved}`, workspaces: filtered };
+  return { success: true, message: `Workspace removed: ${resolved}`, workspaces: filtered };
 }
 
 // Persistent cache path for recently discovered .toad files across sessions
@@ -630,32 +630,32 @@ export async function resolveEntryFile(
     } catch {}
 
     if (cwdFiles.length === 1) {
-      console.log(`[toad] Verwende Datei im aktuellen Verzeichnis: ${cwdFiles[0]}`);
+      console.log(`[toad] Using file in current directory: ${cwdFiles[0]}`);
       return cwdFiles[0];
     } else if (cwdFiles.length > 1) {
-      return promptUserSelection(cwdFiles, 'im aktuellen Verzeichnis');
+      return promptUserSelection(cwdFiles, 'in current directory');
     } else {
-      console.error(`[toad error] Keine .toad-Datei im aktuellen Verzeichnis gefunden.`);
-      console.log(`Tipp: Verwende 'toad <dateiname>' (z. B. 'toad logo') um systemweit zu suchen.`);
+      console.error(`[toad error] No .toad file found in current directory.`);
+      console.log(`Tip: Use 'toad <filename>' (e.g. 'toad logo') to search system-wide.`);
       return null;
     }
   }
 
   try {
-    console.log(`[toad] Suche nach "${query}"...`);
+    console.log(`[toad] Searching for "${query}"...`);
     const matches = await findToadFiles(query);
 
     if (matches.length === 0) {
-      console.error(`\n[toad error] Entry file not found. Keine Datei mit dem Namen "${query}" auf der Festplatte gefunden.\n`);
+      console.error(`\n[toad error] Entry file not found. No file named "${query}" found on disk.\n`);
       return null;
     }
 
     if (matches.length === 1) {
-      console.log(`[toad] Gefunden: ${matches[0]}`);
+      console.log(`[toad] Found: ${matches[0]}`);
       return matches[0];
     }
 
-    return promptUserSelection(matches, `für "${query}"`);
+    return promptUserSelection(matches, `for "${query}"`);
   } catch (err: any) {
     console.error(`[toad error] ${err.message || String(err)}`);
     return null;
@@ -671,7 +671,7 @@ function promptUserSelection(matches: string[], contextLabel: string): Promise<s
     return Promise.resolve(matches[0] || null);
   }
   return new Promise((resolve) => {
-    console.log(`\n[toad] Mehrere Dateien ${contextLabel} gefunden:\n`);
+    console.log(`\n[toad] Multiple files ${contextLabel} found:\n`);
     matches.forEach((m, idx) => {
       console.log(`  ${c.bold(c.cyan(`[${idx + 1}]`))} ${m}`);
     });
@@ -682,11 +682,11 @@ function promptUserSelection(matches: string[], contextLabel: string): Promise<s
       output: process.stdout
     });
 
-    rl.question(`Bitte wähle eine Datei [1-${matches.length}] (oder 'q' zum Abbrechen): `, (answer) => {
+    rl.question(`Please select a file [1-${matches.length}] (or 'q' to cancel): `, (answer) => {
       rl.close();
       const trimmed = answer.trim().toLowerCase();
       if (trimmed === 'q' || trimmed === 'exit') {
-        console.log('[toad] Vorgang abgebrochen.');
+        console.log('[toad] Operation cancelled.');
         resolve(null);
         return;
       }
@@ -694,10 +694,10 @@ function promptUserSelection(matches: string[], contextLabel: string): Promise<s
       const num = parseInt(trimmed, 10);
       if (!isNaN(num) && num >= 1 && num <= matches.length) {
         const selected = matches[num - 1];
-        console.log(`[toad] Ausgewählt: ${selected}`);
+        console.log(`[toad] Selected: ${selected}`);
         resolve(selected);
       } else {
-        console.log(c.yellow('[toad] Ungültige Auswahl. Abgebrochen.'));
+        console.log(c.yellow('[toad] Invalid selection. Cancelled.'));
         resolve(null);
       }
     });

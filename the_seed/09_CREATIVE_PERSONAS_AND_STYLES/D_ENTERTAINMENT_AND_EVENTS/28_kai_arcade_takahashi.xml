@@ -29,7 +29,7 @@
       <font_family>&quot;Press Start 2P&quot;, &quot;VT323&quot;, monospace</font_family>
       <weights>400, 700</weights>
       <tracking>normal</tracking>
-      <rules>Pixel-Fonts für Arcade-Scores, schräge metallische Blockschriften für Titel</rules>
+      <rules>Pixel fonts for arcade scores, slanted metallic block faces for titles</rules>
     </typography>
     <geometry>
       <primitives>Perspektivisches Boden-Gitternetz, horizontal gestreifte Retro-Sonne, 45-Grad-Schrägen</primitives>

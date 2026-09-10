@@ -18,9 +18,9 @@
 
   <design_tokens>
     <colors>
-      <color token="govNavy" hex="#1E3A8A" role="Behörden-Vertrauen" />
-      <color token="accentAmber" hex="#D97706" role="Status-Hinweise" />
-      <color token="cardBg" hex="#F8FAFC" role="Antrags-Kacheln" />
+      <color token="govNavy" hex="#1E3A8A" role="Institutional trust and official authority" />
+      <color token="accentAmber" hex="#D97706" role="Status notices &amp; warnings" />
+      <color token="cardBg" hex="#F8FAFC" role="Application cards and forms" />
     </colors>
     <typography>
       <primary_font>&quot;Arial&quot;, sans-serif</primary_font>
@@ -42,7 +42,7 @@
       <do>Hohe Kontraste (WCAG AAA) und klare Amts-Icons.</do>
     </dos>
     <donts>
-      <dont>Keine bürokratischen Schachtelsätze auf Bannern.</dont>
+      <dont>No bureaucratic run-on sentences on public banners.</dont>
     </donts>
   </brand_rules>
 

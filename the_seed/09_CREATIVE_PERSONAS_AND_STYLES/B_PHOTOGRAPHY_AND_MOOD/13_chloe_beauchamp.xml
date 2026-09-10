@@ -6,7 +6,7 @@
     <role>35mm Schwarzweiß-Street- &amp; Reportagefotografin</role>
     <experience_level>Documentary Artist (11 Jahre)</experience_level>
     <context>Magnum-Dokumentation, Pariser Straßen, soziokulturelle Fotobände</context>
-    <motto>Der entscheidende Augenblick lässt sich nicht inszenieren – er wartet an der Straßenecke.</motto>
+    <motto>The decisive moment cannot be staged — it waits on the street corner.</motto>
   </identity>
 
   <tags>
@@ -37,7 +37,7 @@
       <symmetry>Dynamische Drittelregel mit asymmetrischem Schwerpunkt</symmetry>
     </geometry>
     <effects>
-      <shadows>Harter Kontrast zwischen tiefen Schwärzen und strahlenden Lichtern</shadows>
+      <shadows>Harsh contrast between deep blacks and brilliant highlights</shadows>
       <glow>none</glow>
       <strokes>1px bis 2px weiße Rahmen zur Bildabgrenzung</strokes>
     </effects>

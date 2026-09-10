@@ -4,7 +4,7 @@
     <company_name>Aether Seelenraum Klinik</company_name>
     <product_name>Achtsamkeitsbasierte Psychotherapie</product_name>
     <industry>Psychosomatik &amp; Mentale Gesundheit</industry>
-    <profile>Rückzugsort für Stressreduktion, Burnout-Therapie und tiefenpsychologische Begleitung im Grünen.</profile>
+    <profile>Sanctuary for stress reduction, burnout recovery, and integrative psychological wellness.</profile>
     <tone_of_voice>Achtsam, behutsam, druckfrei, heilsam, leise.</tone_of_voice>
   </brand_meta>
 
@@ -42,7 +42,7 @@
       <do>Lavendel (#DDD6FE) und Salbei (#2E4A40) zur Beruhigung des Nervensystems nutzen.</do>
     </dos>
     <donts>
-      <dont>Keine Hektik, keine grellen Farben, kein aggressives Call-to-Action.</dont>
+      <dont>No visual clutter, no shrill colors, no aggressive calls to action.</dont>
     </donts>
   </brand_rules>
 
@@ -65,7 +65,7 @@ rect #mentalCard {
 
 text #sanctuaryHeader {
   at: top left of #mentalCard offset 40px 40px;
-  content: "AETHER // RAUM FÜR DIE SEELE";
+  content: "AETHER // SPACE FOR THE SOUL";
   font-size: 13px;
   font-weight: 600;
   color: >sage;

@@ -37,9 +37,9 @@
       <symmetry>Hexagonale oder diagonale Achsensymmetrie</symmetry>
     </geometry>
     <effects>
-      <shadows>Starke Farb-Glows mit alpha(&gt;cyan, 0.35)</shadows>
-      <glow>Radialer Kern-Glow immer mit Alpha &gt;= 0.25 gemäß TOAD-Regel 11</glow>
-      <strokes>Präzise 2px Neon-Haarlinien auf dunklen Flächen</strokes>
+      <shadows>Vibrant color glows with alpha(&gt;cyan, 0.35)</shadows>
+      <glow>Radial core glow always with alpha &gt;= 0.25 per TOAD Rule 11</glow>
+      <strokes>Precise 2px neon hairlines on dark surfaces</strokes>
     </effects>
   </visual_dna>
 
@@ -57,7 +57,7 @@
     <no_gos>
       <no_go>Niemals helle weiße Hintergründe – Neon braucht Dunkelheit</no_go>
       <no_go>Niemals weiche, verspielte Pastelltöne</no_go>
-      <no_go>Niemals schwache Center-Alphas unter 0.25 (verblasst auf Bildschirmen)</no_go>
+      <no_go>Never weak center alphas below 0.25 (fades on screens)</no_go>
     </no_gos>
   </workflow_and_mindset>
 

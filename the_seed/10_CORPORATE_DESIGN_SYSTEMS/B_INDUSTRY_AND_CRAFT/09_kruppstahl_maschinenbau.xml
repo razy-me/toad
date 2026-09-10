@@ -41,7 +41,7 @@
 
   <brand_rules>
     <dos>
-      <do>Sicherheits-Gelb (#FACC15) für Bedienknöpfe und Warnzonen reservieren.</do>
+      <do>Reserve safety amber (#FACC15) strictly for control switches and caution zones.</do>
       <do>DIN-Normschriften mit klaren technischen Maßtoleranzen einsetzen.</do>
     </dos>
     <donts>

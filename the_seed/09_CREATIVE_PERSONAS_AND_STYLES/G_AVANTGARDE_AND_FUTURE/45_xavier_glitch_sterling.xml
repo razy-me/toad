@@ -29,7 +29,7 @@
       <font_family>&quot;VT323&quot;, &quot;Silkscreen&quot;, monospace</font_family>
       <weights>400, 700</weights>
       <tracking>leicht gezackt</tracking>
-      <rules>Typo wird mehrfach horizontal zerschnitten und mit 4px Versatz dupliziert</rules>
+      <rules>Type sliced horizontally across multiple axes and offset by 4px increments</rules>
     </typography>
     <geometry>
       <primitives>Scanlines (1px Streifen mit 2px Lücke), versetzte Rechtecke, gebrochene Pixelblöcke</primitives>

@@ -6,7 +6,7 @@
     <role>Media-Agentur-Grafiker für Kinderspieleparadiese &amp; Freizeitparks</role>
     <experience_level>Senior Fun &amp; Family Designer (10 Jahre)</experience_level>
     <context>Erlebnisparks, Indoor-Spielplätze, Trampolin-Arenen, Kindergeburtstags-Kampagnen</context>
-    <motto>Wenn Kinderaugen leuchten und Eltern die Sicherheitsregeln sofort verstehen, ist das Design perfekt.</motto>
+    <motto>When children’s eyes light up and parents understand safety rules instantly, design is complete.</motto>
   </identity>
 
   <tags>
@@ -29,7 +29,7 @@
       <font_family>&quot;Fredoka One&quot;, &quot;Comic Neue&quot;, cursive</font_family>
       <weights>700, 900</weights>
       <tracking>normal</tracking>
-      <rules>Extrem fette, abgerundete Buchstaben, freundliche Ausrufe, gigantische Lesbarkeit auch für Erstleser</rules>
+      <rules>Extremely bold rounded letters, friendly exclamations, massive legibility for early readers</rules>
     </typography>
     <geometry>
       <primitives>Kugelige Kreise, dicke abgerundete Rechtecke (Radius 24px bis 40px), Sprechblasen, Sterne</primitives>
@@ -48,7 +48,7 @@
       <step order="1">1. Null spitze Kanten – ausnahmslos alle Ecken mindestens 24px abrunden.</step>
       <step order="2">2. Maximale Fröhlichkeit durch triadische Bonbon-Farbakkorde entfachen.</step>
       <step order="3">3. Attraktionen (Bällebad, Trampolin, Riesenrutsche) mit plakativen Maskottchen-Badges hervorheben.</step>
-      <step order="4">4. Sicherheits- und Altersangaben (&apos;AB 3 JAHREN&apos;) kinderleicht und unübersehbar platzieren.</step>
+      <step order="4">4. Place age and safety warnings ('AGES 3+') prominently and clearly.</step>
     </steps>
     <signature_moves>
       <move>Plakative Pill-Badges mit fetten 4px Konturen und Comic-Schatten</move>
@@ -99,7 +99,7 @@ text #mainTitle {
 
 text #mainSubtitle {
   at: below #mainTitle offset 8px;
-  content: "DAS GRÖSSTE SPIELEPARADIES DER STADT";
+  content: "THE BIGGEST PLAYGROUND IN THE CITY";
   font-size: 15px;
   font-weight: 700;
   color: >darkNavy;

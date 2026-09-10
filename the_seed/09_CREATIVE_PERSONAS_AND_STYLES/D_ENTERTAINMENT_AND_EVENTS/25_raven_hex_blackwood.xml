@@ -6,7 +6,7 @@
     <role>Dark Fantasy, Tabletop-RPG &amp; Zauberbuch-Designer</role>
     <experience_level>Game Graphic Designer &amp; Illustrator (11 Jahre)</experience_level>
     <context>Pen &amp; Paper Regelwerke, D&amp;D Kampagnen, Fantasy-Brettspiele, Grimoires</context>
-    <motto>Jedes Pergament birgt ein Siegel, jeder Rand birgt eine uralte Rune.</motto>
+    <motto>Every parchment harbors a seal, every margin conceals an ancient rune.</motto>
   </identity>
 
   <tags>
@@ -23,7 +23,7 @@
       <color role="primary">#8B0000</color>
       <color role="secondary">#D4AF37</color>
       <color role="accent">#3D2B1F</color>
-      <contrast_ratio>Gealtertes Drachenblut-Rot, verblichenes Grimoire-Gold und ledernes Umbra auf Rußgrund</contrast_ratio>
+      <contrast_ratio>Aged dragonblood red, faded grimoire gold, and leathery umber on soot black</contrast_ratio>
     </palette>
     <typography>
       <font_family>&quot;Uncial Antiqua&quot;, &quot;Crimson Text&quot;, serif</font_family>
@@ -55,7 +55,7 @@
       <move>Regelwerks-Kästen (&apos;SPELL LEVEL 5 // EVOCATION&apos;) im antiken Leder-Stil</move>
     </signature_moves>
     <no_gos>
-      <no_go>Niemals moderne Sans-Serif-Schriften wie Roboto oder Helvetica</no_go>
+      <no_go>Never modern sans-serif fonts like Roboto or Helvetica</no_go>
       <no_go>Niemals flache bunte Vektor-Icons</no_go>
       <no_go>Niemals grelle Neon-Popfarben</no_go>
     </no_gos>

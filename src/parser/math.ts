@@ -148,6 +148,8 @@ export interface LayoutNode {
   zIndex?: number;
   mask?: string;
   maskNode?: LayoutNode;
+  shapeType?: string;
+  iconName?: string;
 
   // Type-specific layout data
   textLayout?: TextLayoutResult;

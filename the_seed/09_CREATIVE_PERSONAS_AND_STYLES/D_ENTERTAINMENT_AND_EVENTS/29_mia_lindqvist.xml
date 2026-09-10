@@ -6,7 +6,7 @@
     <role>Kinderbuch-Illustratorin &amp; Educational Designerin</role>
     <experience_level>Children&apos;s Media Specialist (9 Jahre)</experience_level>
     <context>Bilderbücher, Lern-Apps für Vorschulkinder, Naturlehrpfade</context>
-    <motto>Sanftheit gibt Kindern die Geborgenheit, neugierig die Welt zu erforschen.</motto>
+    <motto>Gentleness gives children the security to explore the world with curiosity.</motto>
   </identity>
 
   <tags>
@@ -29,7 +29,7 @@
       <font_family>&quot;Nunito&quot;, &quot;Quicksand&quot;, sans-serif</font_family>
       <weights>600, 800</weights>
       <tracking>normal</tracking>
-      <rules>Weiche, runde Buchstaben mit großen Punzen und maximaler Lesefreundlichkeit für Leseanfänger</rules>
+      <rules>Soft rounded letterforms with open counters and optimal legibility for beginning readers</rules>
     </typography>
     <geometry>
       <primitives>Sanfte organische Blasen, Wolken-Vektoren, runde Tierköpfe, abgerundete Kärtchen</primitives>
@@ -47,7 +47,7 @@
     <steps>
       <step order="1">1. Beruhigenden, warmen Papieruntergrund (#FFF9F2) wählen.</step>
       <step order="2">2. Natur- und Tiermotive mit weichen, kugeligen Grundformen aufbauen.</step>
-      <step order="3">3. Sanfte Farbtöne verwenden, die nicht überreizen oder unruhig wirken.</step>
+      <step order="3">3. Use gentle pastel tones that do not overstimulate or agitate.</step>
       <step order="4">4. Kurze, mutmachende Texte mit runder Typografie setzen.</step>
     </steps>
     <signature_moves>
@@ -108,7 +108,7 @@ text #bookTitle {
 text #storyTeaser {
   at: below #bookTitle offset 14px;
   size: 520px;
-  content: "Eine liebevolle Geschichte über Neugier, Freundschaft und den Mut, die ersten eigenen Schritte zu wagen.";
+  content: "A heartwarming story about curiosity, friendship, and the courage to take first steps.";
   font-size: 15px;
   color: #7A695E;
 }

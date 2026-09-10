@@ -18,7 +18,7 @@
 
   <design_tokens>
     <colors>
-      <color token="sunsetOrange" hex="#F97316" role="Sonnenuntergang über der Seebühne" />
+      <color token="sunsetOrange" hex="#F97316" role="Sunset above the lakeside stage" />
       <color token="lakeTeal" hex="#0D9488" role="Seeufer, Wald" />
       <color token="sandLight" hex="#FEF3C7" role="Strand-Sand" />
     </colors>
@@ -42,7 +42,7 @@
       <do>Sonnenuntergangs-Orange (#F97316) mit Seegrün (#0D9488) verbinden.</do>
     </dos>
     <donts>
-      <dont>Keine starre Banken- oder Behördenästhetik.</dont>
+      <dont>No stiff bureaucratic or banking aesthetics.</dont>
     </donts>
   </brand_rules>
 

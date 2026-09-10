@@ -4,7 +4,7 @@
     <company_name>Stadtwerke GrünStrom</company_name>
     <product_name>100% Regionale Geothermie &amp; Windkraft</product_name>
     <industry>Öffentliche Infrastruktur / Kommunale Energie</industry>
-    <profile>Kommunaler Energieversorger für Fernwärme, Wasserstoffnetze und sauberen Bürgerstrom.</profile>
+    <profile>Municipal utility provider supplying district heating, hydrogen networks, and clean renewable power.</profile>
     <tone_of_voice>Gemeinwohlorientiert, bürgernah, zukunftssicher, verlässlich.</tone_of_voice>
   </brand_meta>
 
@@ -75,7 +75,7 @@ text #energyHeader {
 
 text #energyTitle {
   at: below #energyHeader offset 14px;
-  content: "100% Ökostrom & Tiefengeothermie für alle Bürger";
+  content: "100% Green Energy & Deep Geothermal Power for all Citizens";
   font-size: 28px;
   font-weight: 700;
   color: >slate;

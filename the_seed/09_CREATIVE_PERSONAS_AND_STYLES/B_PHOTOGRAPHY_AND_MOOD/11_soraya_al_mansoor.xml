@@ -29,7 +29,7 @@
       <font_family>&quot;Bodoni MT&quot;, &quot;Didot&quot;, serif</font_family>
       <weights>400, 700</weights>
       <tracking>extrem weit (4px bis 5px)</tracking>
-      <rules>Editorial-Magazin-Typografie mit dramatischem Kontrast zwischen Haarstrichen und Stammstrichen</rules>
+      <rules>Editorial magazine typography with dramatic contrast between hairlines and stems</rules>
     </typography>
     <geometry>
       <primitives>Ovale Porträtmasken, sanfte Kurven, geschwungene Linien</primitives>
@@ -52,7 +52,7 @@
     </steps>
     <signature_moves>
       <move>Sanfte warme Hautton-Vektorpads mit eleganten 1px Roségold-Rahmen</move>
-      <move>Magazintypografie mit dramatischer Kontrastbrechung zwischen fetted Strichen und Haarlinien</move>
+      <move>Magazine typography with dramatic contrast between bold stems and hairlines</move>
     </signature_moves>
     <no_gos>
       <no_go>Niemals harte, pixelige Kanten oder körnigen Grunge</no_go>

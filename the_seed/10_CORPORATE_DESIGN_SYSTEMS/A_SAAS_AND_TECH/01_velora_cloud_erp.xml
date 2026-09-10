@@ -24,7 +24,7 @@
       <color token="darkSlate" hex="#1F2428" role="Headlines H1/H2, ersetzt hartes Rein-Schwarz für beste Lesbarkeit" />
       <color token="bodySlate" hex="#495057" role="Fließtext und Kartentexte, optimal scannbar" />
       <color token="bgSoft" hex="#F8F9FA" role="Extrem softes Hellgrau/Off-White für visuelle Schichtung" />
-      <color token="cardWhite" hex="#FFFFFF" role="Hintergrundflächen für Feature-Karten und Navigations-Header" />
+      <color token="cardWhite" hex="#FFFFFF" role="Background surfaces for feature cards and nav header" />
     </colors>
     <typography>
       <primary_font>&quot;Plus Jakarta Sans&quot;, &quot;Inter&quot;, sans-serif</primary_font>
@@ -45,14 +45,14 @@
     <dos>
       <do>Aubergine (#6D213F) gezielt als Konversions-Highlight für primäre Aktionen nutzen.</do>
       <do>Icons immer mit dem dezenten, quadratisch abgerundeten Lindgrün-Container (#EBF7DC) hinterlegen.</do>
-      <do>Pill-Shape (radius: 9999px;) konsequent bei allen Buttons und Meta-Badges einhalten.</do>
+      <do>Maintain pill shape (radius: 9999px;) consistently across all buttons and meta badges.</do>
       <do>Großzügigen Weißraum rund um Inhaltsmodule und Teaserblöcke wahren.</do>
     </dos>
     <donts>
-      <dont>Keine scharfen Kanten (0px Radius) bei Buttons oder Cards.</dont>
-      <dont>Kein kaltes B2B-Königsblau oder grelles Neongrün verwenden.</dont>
+      <dont>No sharp rectangular edges (0px radius) on buttons or cards.</dont>
+      <dont>Avoid cold corporate royal blue or garish neon green.</dont>
       <dont>Keine überladenen, textlastigen Cards ohne Icon-Anker.</dont>
-      <dont>Keine generischen Stockfotos im Nadelstreifenanzug – Fokus bleibt auf Team &amp; Software.</dont>
+      <dont>No generic pinstripe stock photography — focus remains on team & software.</dont>
     </donts>
   </brand_rules>
 
@@ -134,7 +134,7 @@ text #heroHeadline {
 text #heroSubtext {
   at: below #heroHeadline offset 16px;
   size: 540px;
-  content: "Mit Velora steuerst Du Warenwirtschaft, CRM und Finanzen in einer einzigen intuitiven Cloud-Plattform – von einem Team, das Dich versteht.";
+  content: "Control inventory, CRM, and finance in a single intuitive cloud platform — built by a team that understands your business.";
   font-size: 16px;
   color: >bodySlate;
 }

@@ -4,7 +4,7 @@
     <company_name>Cura TeleHealth</company_name>
     <product_name>Cura App &amp; e-Rezept</product_name>
     <industry>HealthTech / Telemedizin</industry>
-    <profile>Plattform für ärztliche Videosprechstunden, digitale Krankschreibung und Medikamentenversand.</profile>
+    <profile>Telehealth platform for physician video visits, digital prescriptions, and direct pharmacy delivery.</profile>
     <tone_of_voice>Einfühlsam, medizinisch seriös, barrierefrei, digital souverän.</tone_of_voice>
   </brand_meta>
 
@@ -43,7 +43,7 @@
       <do>Pill-Buttons und beruhigendes Mintgrün (#0D9488) verwenden.</do>
     </dos>
     <donts>
-      <dont>Keine bedrohlichen Alarmsignale oder blutroten Farben.</dont>
+      <dont>No menacing alarm indicators or blood-red alert tones.</dont>
     </donts>
   </brand_rules>
 

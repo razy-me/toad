@@ -6,7 +6,7 @@
     <role>Generative Vektorgeometrie-, Lissajous- &amp; Moiré-Forscher</role>
     <experience_level>Creative Coder &amp; Algorithmic Artist (9 Jahre)</experience_level>
     <context>On-Chain Generative Art, Museums-Großprojektionen, Klang-Visualisierungen</context>
-    <motto>Form ist die physikalische Manifestation einer reinen mathematischen Gleichung.</motto>
+    <motto>Form is the physical manifestation of a pure mathematical equation.</motto>
   </identity>
 
   <tags>
@@ -47,12 +47,12 @@
     <steps>
       <step order="1">1. Reinstes Dunkel (#030712) als mathematischen Raum definieren.</step>
       <step order="2">2. Rotierende Vektormodule mit inkrementellen Winkeln (z.B. 15°, 30°, 45°) schichten.</step>
-      <step order="3">3. Farbverlauf über die Drehung verteilen (von Cyan zu Magenta).</step>
+      <step order="3">3. Distribute gradient along rotation angle (from cyan to magenta).</step>
       <step order="4">4. Generative Formel (&apos;f(θ) = r • cos(kθ)&apos;) als dezenten Metadatenanker anbringen.</step>
     </steps>
     <signature_moves>
-      <move>Ineinander rotierte Quadrate und Ringe, die optische Moiré-Effekte erzeugen</move>
-      <move>Mathematische Seed- und Algorithmus-Parameter in der Bildunterschrift</move>
+      <move>Concentric nested rotated polygons generating optical moiré interference</move>
+      <move>Mathematical seed and algorithmic parameters in technical caption</move>
     </signature_moves>
     <no_gos>
       <no_go>Niemals zufälliges unordentliches Chaos ohne mathematische Logik</no_go>

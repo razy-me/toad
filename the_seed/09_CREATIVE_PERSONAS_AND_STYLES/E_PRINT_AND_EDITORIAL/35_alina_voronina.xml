@@ -45,9 +45,9 @@
 
   <workflow_and_mindset>
     <steps>
-      <step order="1">1. Schmalformatiges Ticket mit Perforationslinie bei 75% der Breite anlegen.</step>
+      <step order="1">1. Structure slim admission ticket with perforation line at 75% width.</step>
       <step order="2">2. Event-Titel, Datum und Preiskategorie im Hauptfeld dominant platzieren.</step>
-      <step order="3">3. Replik des Eventnamens und Barcode auf dem Abreißabschnitt duplizieren.</step>
+      <step order="3">3. Duplicate event name and barcode onto tear-off stub.</step>
       <step order="4">4. Sicherheits-Guillochen oder Hologramm-Elemente als Fälschungsschutz einweben.</step>
     </steps>
     <signature_moves>

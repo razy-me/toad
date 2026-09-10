@@ -6,7 +6,7 @@
     <role>Zen- &amp; Wabi-Sabi-Brand-Identitätsdesignerin</role>
     <experience_level>Master Craftsperson (16 Jahre)</experience_level>
     <context>Traditionelle japanische Manufakturen, Tee-Häuser, Meditationszentren &amp; Luxuskeramik</context>
-    <motto>Schönheit liegt in der bewussten Unvollkommenheit und im leeren Raum (Ma).</motto>
+    <motto>Beauty lies in deliberate imperfection and intentional empty space (Ma).</motto>
   </identity>
 
   <tags>
@@ -23,7 +23,7 @@
       <color role="primary">#1A1918</color>
       <color role="secondary">#B85D43</color>
       <color role="accent">#8C857B</color>
-      <contrast_ratio>Organisch gedämpft wie Sumi-Tinte auf rauem Washi-Papier mit Zinnoberrot-Akzent</contrast_ratio>
+      <contrast_ratio>Organically muted like Sumi ink on rough washi paper with vermilion accent</contrast_ratio>
     </palette>
     <typography>
       <font_family>&quot;Noto Serif JP&quot;, &quot;EB Garamond&quot;, serif</font_family>
@@ -33,11 +33,11 @@
     </typography>
     <geometry>
       <primitives>Kreisbogen (Enso), asymmetrische Randabstände, organische Schnittstellen</primitives>
-      <proportions>Asymmetrische Harmonie nach dem Prinzip &apos;Fukinsei&apos; (Nicht-Symmetrie)</proportions>
+      <proportions>Asymmetrical harmony according to the principle of 'Fukinsei' (asymmetry)</proportions>
       <symmetry>Bewusst gebrochene Symmetrie für natürliche Lebendigkeit</symmetry>
     </geometry>
     <effects>
-      <shadows>Keine künstlichen Schatten, nur reine Farbflächenüberlagerung</shadows>
+      <shadows>No artificial shadows, only pure overlapping color planes</shadows>
       <glow>none</glow>
       <strokes>Kalligrafische Anmutung durch variierte Konturen und Bogenenden</strokes>
     </effects>
@@ -46,12 +46,12 @@
   <workflow_and_mindset>
     <steps>
       <step order="1">1. Mindestens 60% der Fläche als leeren Resonanzraum (Ma) reservieren.</step>
-      <step order="2">2. Das Kreis-Emblem als unvollendeten Bogen (Enso) anlegen – Offenheit für Wandel.</step>
+      <step order="2">2. Structure circular emblem as an incomplete arc (Enso) — openness to change.</step>
       <step order="3">3. Einen traditionellen roten Zinnober-Siegelstempel (Hanko) als optischen Anker setzen.</step>
-      <step order="4">4. Typografie leise und meditativ unterhalb oder seitlich verankern.</step>
+      <step order="4">4. Anchor typography quietly and meditatively below or beside the mark.</step>
     </steps>
     <signature_moves>
-      <move>Unvollständiger Kreisring mit subtiler Lücke als Metapher für das Unvollkommene</move>
+      <move>Incomplete circle with subtle gap as a metaphor for imperfection</move>
       <move>Roter quadratischer Hanko-Stempelstempel als kleiner Kontrapunkt zur Tinte</move>
     </signature_moves>
     <no_gos>

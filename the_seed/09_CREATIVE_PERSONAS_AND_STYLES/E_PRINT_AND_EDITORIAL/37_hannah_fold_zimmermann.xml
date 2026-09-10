@@ -29,12 +29,12 @@
       <font_family>&quot;Montserrat&quot;, &quot;Raleway&quot;, sans-serif</font_family>
       <weights>600, 800</weights>
       <tracking>ausgewogen</tracking>
-      <rules>Kopfüber stehende Texte auf der Rückseite von Tent-Cards (`rotation: 180;`) mit doppelten Rändern</rules>
+      <rules>Inverted text on reverse face of table tent-cards (`rotation: 180;`) with doubled margins</rules>
     </typography>
     <geometry>
       <primitives>Z-Falz-Paneele, Altarfalz-Flügel, 180-Grad-rotierte Tischaufsteller-Seiten</primitives>
       <proportions>Exakte 1/3-Teilung bei Wickelfalz</proportions>
-      <symmetry>Spiegelbildliche Umkehrung über die Faltachse</symmetry>
+      <symmetry>Mirrored reversal across central folding axis</symmetry>
     </geometry>
     <effects>
       <shadows>none</shadows>
@@ -47,15 +47,15 @@
     <steps>
       <step order="1">1. Faltachse in der exakten Mitte des Bogens festlegen.</step>
       <step order="2">2. Obere Hälfte für Tischaufsteller mit `rotation: 180;` invertieren.</step>
-      <step order="3">3. Kopfstege auf der rotierten Seite verdoppeln (TOAD Regel 12: Achseninversion).</step>
-      <step order="4">4. Gestrichelte Biegelinie zur Orientierung für die Druckerei markieren.</step>
+      <step order="3">3. Double head margins on inverted page (TOAD Rule 12: axis inversion).</step>
+      <step order="4">4. Indicate dashed score line for printer finishing orientation.</step>
     </steps>
     <signature_moves>
       <move>Perfekte 180-Grad-Textrotation (`rotation: 180;`) für beidseitig lesbare Tischaufsteller</move>
       <move>Klare gestrichelte Falzmarken (&apos;FOLD HERE // FALZLINIE&apos;)</move>
     </signature_moves>
     <no_gos>
-      <no_go>Niemals den Tischaufsteller ohne Kopfüber-Rotation der zweiten Seite anlegen (steht sonst auf dem Kopf)</no_go>
+      <no_go>Never design tent-cards without inverting second panel (otherwise prints upside down)</no_go>
       <no_go>Niemals Falzlinien vergessen</no_go>
       <no_go>Niemals Text zu nah an der Rillkante platzieren</no_go>
     </no_gos>

@@ -122,13 +122,13 @@ describe('Commander CLI Tool (toad)', () => {
 
     it('lists all .toad files via "list" and "ls" commands', async () => {
       const { stdout: stdoutList } = await execAsync('node ./dist/cli.js list');
-      expect(stdoutList).toContain('Suche nach .toad-Dateien');
-      expect(stdoutList).toContain('.toad-Datei(en) gefunden');
+      expect(stdoutList).toContain('Scanning system for .toad files');
+      expect(stdoutList).toContain('.toad file(s) in');
       expect(stdoutList).toContain('toad_brand_sheet.toad');
 
       const { stdout: stdoutLs } = await execAsync('node ./dist/cli.js ls');
-      expect(stdoutLs).toContain('Suche nach .toad-Dateien');
-      expect(stdoutLs).toContain('.toad-Datei(en) gefunden');
+      expect(stdoutLs).toContain('Scanning system for .toad files');
+      expect(stdoutLs).toContain('.toad file(s) in');
     });
   });
 

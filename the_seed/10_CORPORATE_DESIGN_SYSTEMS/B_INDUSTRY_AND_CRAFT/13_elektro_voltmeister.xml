@@ -4,7 +4,7 @@
     <company_name>Voltmeister Elektrotechnik GmbH</company_name>
     <product_name>Industrie-Schaltanlagen &amp; Gewerbe-PV</product_name>
     <industry>Elektrotechnik / Energieinfrastruktur</industry>
-    <profile>Fachbetrieb für Gebäudeautomation, Trafostationen und gewerbliche Solardachanlagen.</profile>
+    <profile>Specialist contractor for building automation, transformer substations, and commercial solar arrays.</profile>
     <tone_of_voice>Elektrisierend, zukunftssicher, normtreu (VDE), lösungsschnell.</tone_of_voice>
   </brand_meta>
 
@@ -40,7 +40,7 @@
 
   <brand_rules>
     <dos>
-      <do>Volt-Gelb (#EAB308) für Leistungsdaten und Stromstärken nutzen.</do>
+      <do>Use volt yellow (#EAB308) for power telemetry and current metrics.</do>
     </dos>
     <donts>
       <dont>Keine ungenormten Warnfarben.</dont>

@@ -6,7 +6,7 @@
     <role>PCB-Leiterplatten- &amp; Elektronik-Schaltplan-Designer</role>
     <experience_level>Hardware Designer &amp; Layout Specialist (13 Jahre)</experience_level>
     <context>IoT-Hardware, Modular-Synthesizer, High-Speed Mikrocontroller</context>
-    <motto>Jede Leiterbahn ist eine Autobahn für Elektronen – keine 90-Grad-Kurven ohne 45-Grad-Fase!</motto>
+    <motto>Every trace is a highway for electrons — no 90-degree corners without a 45-degree miter!</motto>
   </identity>
 
   <tags>
@@ -29,7 +29,7 @@
       <font_family>&quot;Share Tech Mono&quot;, &quot;Consolas&quot;, monospace</font_family>
       <weights>400, 700</weights>
       <tracking>normal</tracking>
-      <rules>Bauteilbezeichnungen nach IPC-Norm (R1, C3, U2), Pinbelegungen und IC-Kerben</rules>
+      <rules>Component designations per IPC standards (R1, C3, U2), pinouts and IC notches</rules>
     </typography>
     <geometry>
       <primitives>45-Grad-geknickte Leiterbahnen, runde Durchkontaktierungen (Vias), SMD-Pads</primitives>

@@ -6,7 +6,7 @@
     <role>Magazin- &amp; Redaktions-Layout-Spezialist</role>
     <experience_level>Lead Editorial Designer (13 Jahre)</experience_level>
     <context>Wochenmagazine, Kultur-Zines, investigative Journalismus-Dossiers</context>
-    <motto>Ein guter Rhythmus zwischen Bild, Headline und Fließtext zieht das Auge magisch in die Story.</motto>
+    <motto>A strong rhythm between image, headline, and body copy pulls the eye into the story.</motto>
   </identity>
 
   <tags>
@@ -28,7 +28,7 @@
     <typography>
       <font_family>&quot;Libre Baskerville&quot;, &quot;Franklin Gothic&quot;, serif</font_family>
       <weights>400, 700</weights>
-      <tracking>eng bei Headlines, ausgewogen bei Spalten</tracking>
+      <tracking>tight for headlines, balanced for columns</tracking>
       <rules>Dramatischer Größenkontrast (Kicker 12px rot, Headline 44px, Pull-Quote 24px kursiv)</rules>
     </typography>
     <geometry>
@@ -46,9 +46,9 @@
   <workflow_and_mindset>
     <steps>
       <step order="1">1. Klares 3-Spalten-Raster für den redaktionellen Fluss aufbauen.</step>
-      <step order="2">2. Roten Kicker (&apos;DOSSIER // DIE GLOBALE KRISE&apos;) über eine mächtige Headline setzen.</step>
+      <step order="2">2. Set red kicker ('DOSSIER // GLOBAL CRISIS') above a commanding headline.</step>
       <step order="3">3. Herausragendes Zitat (Pull Quote) großflächig als Lese-Köder platzieren.</step>
-      <step order="4">4. Autorenzeile und Erscheinungsdatum in der Kolumne verankern.</step>
+      <step order="4">4. Anchor author byline and publication date within column grid.</step>
     </steps>
     <signature_moves>
       <move>Knallrote Akzentleiste über dem Haupttitel</move>
@@ -96,7 +96,7 @@ text #kickerText {
 text #magazineHeadline {
   at: below #kickerText offset 12px;
   size: 688px;
-  content: "Die Vermessung der Zukunft";
+  content: "Mapping the Future";
   font-size: 42px;
   font-weight: 700;
   color: >ink;
@@ -105,7 +105,7 @@ text #magazineHeadline {
 text #subLead {
   at: below #magazineHeadline offset 16px;
   size: 688px;
-  content: "Wie künstliche Intelligenz und autonome Systeme die Grundpfeiler moderner Demokratien herausfordern – eine Bestandsaufnahme.";
+  content: "How artificial intelligence and autonomous systems challenge the foundations of modern democracy — an analytical audit.";
   font-size: 16px;
   color: #4B5563;
 }
@@ -121,7 +121,7 @@ rect #pullQuoteBox {
 text #quoteContent {
   at: center of #pullQuoteBox;
   size: 620px;
-  content: "»Wer die Algorithmen kontrolliert, formt das Denken von Milliarden Menschen im Sekundentakt.«";
+  content: "“Whoever controls the algorithms shapes the thoughts of billions in subsecond cycles.”";
   font-size: 18px;
   font-style: italic;
   color: >ink;

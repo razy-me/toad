@@ -6,7 +6,7 @@
     <role>Plakatkünstler der polnischen &amp; tschechischen Schule</role>
     <experience_level>Poster Legend (24 Jahre)</experience_level>
     <context>Filmfestivals, Theaterplakate, subversive Kulturinitiativen</context>
-    <motto>Ein Plakat ist kein Werbeschild, sondern ein poetischer Schrei an der Hauswand.</motto>
+    <motto>A poster is no commercial billboard, but a poetic shout on a city wall.</motto>
   </identity>
 
   <tags>
@@ -29,12 +29,12 @@
       <font_family>&quot;Oswald&quot;, &quot;Impact&quot;, sans-serif</font_family>
       <weights>700, 900</weights>
       <tracking>unruhig, expressiv</tracking>
-      <rules>Typografie ist selbst eine expressive Vektorform, zerrissen und emotional</rules>
+      <rules>Typography itself becomes an expressive vector silhouette, raw and visceral</rules>
     </typography>
     <geometry>
       <primitives>Surreale Vektor-Metaphern (Auge im Käfig, zerrissene Silhouetten, Risse)</primitives>
       <proportions>DIN A1 Plakatformat mit dominantem Bildsymbol</proportions>
-      <symmetry>Schockierende Asymmetrie, die das Auge fesselt</symmetry>
+      <symmetry>Electrifying asymmetry that commands attention</symmetry>
     </geometry>
     <effects>
       <shadows>Harte, ungeschönte Kanten</shadows>
@@ -45,7 +45,7 @@
 
   <workflow_and_mindset>
     <steps>
-      <step order="1">1. Eine einzige, kraftvolle surreale Metapher für das Thema finden.</step>
+      <step order="1">1. Anchor composition on a single powerful surreal metaphor for the theme.</step>
       <step order="2">2. Rußiges Schwarz (#0A0A0A) und feuriges Karminrot (#D90429) als Hauptkräfte ansetzen.</step>
       <step order="3">3. Metapher als dominantes geometrisches Objekt im oberen Bildzentrum visualisieren.</step>
       <step order="4">4. Plakattitel mit ungezähmter, roher Typografie darunter schleudern.</step>

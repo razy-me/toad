@@ -39,7 +39,7 @@
 
   <brand_rules>
     <dos>
-      <do>Höchster Kontrast für U-Bahn-Stationen und Linienpläne.</do>
+      <do>Maximum contrast for subway station wayfinding and transit maps.</do>
     </dos>
     <donts>
       <dont>Keine verspielten, schwer lesbaren Schriften.</dont>

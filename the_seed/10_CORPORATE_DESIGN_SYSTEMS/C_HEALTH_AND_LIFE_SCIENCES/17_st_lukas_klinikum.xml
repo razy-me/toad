@@ -4,7 +4,7 @@
     <company_name>St. Lukas Universitätsklinikum</company_name>
     <product_name>Zentrum für Spitzenmedizin</product_name>
     <industry>Krankenhaus / Klinische Versorgung</industry>
-    <profile>Maximalversorger mit 1.400 Betten, Exzellenzzentrum für Kardiologie und Onkologie.</profile>
+    <profile>Tertiary care medical center with 1,400 beds, center of excellence for cardiology and oncology.</profile>
     <tone_of_voice>Medizinisch autoritativ, mitfühlend, transparent, lebensrettend.</tone_of_voice>
   </brand_meta>
 
@@ -39,7 +39,7 @@
 
   <brand_rules>
     <dos>
-      <do>Höchste Lesbarkeit für Patienten und Angehörige.</do>
+      <do>Maximum typographic legibility for patients and family members.</do>
     </dos>
     <donts>
       <dont>Keine verwirrenden Schmuckgrafiken.</dont>

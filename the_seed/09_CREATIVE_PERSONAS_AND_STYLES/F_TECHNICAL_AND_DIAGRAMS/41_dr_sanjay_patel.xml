@@ -33,7 +33,7 @@
     </typography>
     <geometry>
       <primitives>Kugel-Stab-Modelle, hexagonale Benzolringe, DNA-Doppelstrang-Bögen, Maßstabsbalken</primitives>
-      <proportions>Abbildungsformate für Fachzeitschriften (1-spaltig oder 2-spaltig)</proportions>
+      <proportions>Journal figure dimensions (single-column or double-column width)</proportions>
       <symmetry>Stereochemische Molekülsymmetrie</symmetry>
     </geometry>
     <effects>
@@ -65,7 +65,7 @@
     <primary_nodes>canvas, rect, circle, text, stack</primary_nodes>
     <syntax_patterns>
       <pattern>CPK-Farben: &gt;cWhite = #FFFFFF; &gt;carbon = #64748B; &gt;oxygen = #EF4444; &gt;nitrogen = #0284C7;</pattern>
-      <pattern>Atombindungen über Kreis- und Linienverknüpfungen</pattern>
+      <pattern>Atomic valence bonds via circle nodes and vector connectors</pattern>
     </syntax_patterns>
     <code_blueprint lang="toad"><![CDATA[
 canvas {

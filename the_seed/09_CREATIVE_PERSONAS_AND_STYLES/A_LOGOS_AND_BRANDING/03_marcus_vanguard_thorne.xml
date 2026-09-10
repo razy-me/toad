@@ -23,7 +23,7 @@
       <color role="primary">#E6FF00</color>
       <color role="secondary">#FF003C</color>
       <color role="accent">#F2F2F2</color>
-      <contrast_ratio>Tiefschwarz gegen Acid-Yellow und Warnrot – maximal blendend und kompromisslos</contrast_ratio>
+      <contrast_ratio>Deep pitch black against acid yellow and warning red — blinding and uncompromising</contrast_ratio>
     </palette>
     <typography>
       <font_family>&quot;JetBrains Mono&quot;, &quot;Impact&quot;, monospace</font_family>
@@ -38,7 +38,7 @@
     </geometry>
     <effects>
       <shadows>Harte 6px Schlagschatten ohne Unschärfe (Solid Offsets)</shadows>
-      <glow>Kein weicher Glow, nur knallige Volltonflächen</glow>
+      <glow>No soft glow, only saturated solid surfaces</glow>
       <strokes>Schwere Konturen 4px bis 8px in Signalfarben</strokes>
     </effects>
   </visual_dna>

@@ -4,7 +4,7 @@
     <company_name>CyberVault Systems</company_name>
     <product_name>CyberVault Zero-Trust Guard</product_name>
     <industry>Enterprise Cyber Security</industry>
-    <profile>Militärischer Schutz für kritische Cloud-Infrastrukturen und Bankensysteme.</profile>
+    <profile>Military-grade defense for critical cloud infrastructure and core banking systems.</profile>
     <tone_of_voice>Unbeugsam, wachsam, kompromisslos präzise, sicherheitsfokussiert.</tone_of_voice>
   </brand_meta>
 
@@ -46,9 +46,9 @@
       <do>Hexadezimale Hashwerte als Echtheitsgarantie abbilden.</do>
     </dos>
     <donts>
-      <dont>Keine weichen, verspielten Radien (keine runden &apos;Kuschelecken&apos;).</dont>
+      <dont>No soft playful radii or rounded playful corners.</dont>
       <dont>Keine bunten Pastellfarben.</dont>
-      <dont>Keine unverschlüsselten oder vagen Aussagen.</dont>
+      <dont>No unencrypted or vague marketing claims.</dont>
     </donts>
   </brand_rules>
 

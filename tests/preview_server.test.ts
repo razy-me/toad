@@ -26,7 +26,7 @@ describe('Preview Server & Live Reload UI', () => {
     });
 
     expect(html).toContain('id="btn-open-folder"');
-    expect(html).toContain('Ordner');
+    expect(html).toContain('Folder');
     expect(html).toContain('/api/open-folder');
   });
 

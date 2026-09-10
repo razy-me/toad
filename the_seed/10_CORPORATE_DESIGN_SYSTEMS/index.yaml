@@ -1130,7 +1130,7 @@ corporate_designs:
     triggers: ["electrical engineering corporate", "photovoltaic installation brand", "switchboard panel layout", "voltmeister", "electrician styleguide"]
   - id: "dachdeckerei_steinfirst"
     company: "Steinfirst Dach & Fassade"
-    product: "Meisterbetrieb für Steildach und Schiefer"
+    product: "Master Craftsmanship in Pitched Roofs & Slate"
     industry: "Handwerk / Dachdeckerei"
     category: "B_INDUSTRY_AND_CRAFT"
     file: "B_INDUSTRY_AND_CRAFT/14_dachdeckerei_steinfirst.xml"
