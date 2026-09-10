@@ -11,9 +11,17 @@
   "files": [
     "dist",
     "README.md",
-    "wiki.html",
-    "scripts"
+    "wiki.html"
   ],
+  "author": "razy-me <florian8schuster@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/razy-me/toad.git"
+  },
+  "homepage": "https://github.com/razy-me/toad#readme",
+  "bugs": {
+    "url": "https://github.com/razy-me/toad/issues"
+  },
   "license": "MIT",
   "keywords": [
     "dsl",
@@ -23,7 +31,8 @@
     "psd",
     "canvas",
     "graphic-design",
-    "svg"
+    "svg",
+    "pdf"
   ],
   "scripts": {
     "build": "tsc",
@@ -31,6 +40,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "lint": "node dist/cli.js lint",
+    "format": "node dist/cli.js format",
     "start": "node dist/cli.js",
     "prepack": "npm run build"
   },

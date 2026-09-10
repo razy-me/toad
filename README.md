@@ -6,11 +6,11 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20.0.0-339933.svg?style=flat-square&logo=nodedotjs&logoColor=white)](https://nodejs.org)
-[![Tests](https://img.shields.io/badge/Tests-929%20Passing-10b981.svg?style=flat-square&logo=vitest&logoColor=white)](./tests)
-[![Formats](https://img.shields.io/badge/Export-PNG%20%7C%20SVG%20%7C%20PSD%20%7C%20WebP%20%7C%20JPG-38bdf8.svg?style=flat-square)](https://github.com/razy-me/toad)
+[![Tests](https://img.shields.io/badge/Tests-1092%20Passing-10b981.svg?style=flat-square&logo=vitest&logoColor=white)](./tests)
+[![Formats](https://img.shields.io/badge/Export-PNG%20%7C%20SVG%20%7C%20PSD%20%7C%20PDF%20%7C%20WebP%20%7C%20JPG-38bdf8.svg?style=flat-square)](https://github.com/razy-me/toad)
 
 <p align="center">
-  A declarative design language and compiler that turns code into crisp images (<b>PNG, JPG, WebP</b>), scalable vectors (<b>SVG</b>), and fully layered, editable Photoshop documents (<b>PSD</b>).
+  A declarative design language and compiler that turns code into crisp images (<b>PNG, JPG, WebP</b>), scalable vectors (<b>SVG</b>), print documents (<b>PDF</b>), and fully layered, editable Photoshop documents (<b>PSD</b>).
 </p>
 
 [Why TOAD?](#-why-toad) • [Quickstart](#-quickstart) • [Syntax Example](#-syntax-example) • [CLI](#-cli-commands) • [Documentation](#-documentation)
@@ -60,7 +60,7 @@ A complete `.toad` file with components, relational layout, and multi-format exp
 canvas "Hero-Banner" {
     preset: og-image;         // 1200x630
     background: >bg;
-    export: all;              // PNG, JPG, WebP, SVG, and layered PSD
+    export: all;              // PNG, JPG, WebP, SVG, PDF, and layered PSD
 }
 
 component Card(title = "Featured") {
@@ -111,13 +111,16 @@ stack #content {
 
 | Command | What It Does |
 |---|---|
-| `toad init [name]` | Scaffolds a new starter project |
-| `toad <name>` | Compiles `.toad` file (finds it automatically) |
-| `toad dev <name>` / `-w` | Live preview server with Hot Reload (SSE) |
-| `toad lint <name>` | Lints for syntax errors and undefined variables |
-| `toad format <name>` | Formats indentation and syntax (`alias: fmt`) |
-| `-f, --format <formats>` | Choose: `png`, `jpg`, `webp`, `svg`, `psd`, `all` |
-| `-s, --scale <number>` | Resolution scale (e.g. `2`, `4`) |
+| `toad init [name]` | Scaffolds a new starter project with assets and configuration |
+| `toad <name>` | Compiles `.toad` file (locates it automatically across workspaces) |
+| `toad dev <name>` / `-w` | Live preview server with Hot Reload (SSE) and browser sync |
+| `toad lint <name>` | Validates syntax, types, geometry, and undefined variables |
+| `toad format <name>` | Formats code layout, indentation, and syntax (`alias: fmt`) |
+| `toad audit <name>` | Runs deep visual quality and anti-slop design checks |
+| `toad bundle <name>` | Generates favicons, app icons, and web manifest assets |
+| `toad workspace` | Manages preferred design directories and search workspaces |
+| `-f, --format <formats>` | Choose formats: `png`, `jpg`, `webp`, `svg`, `psd`, `pdf`, `all` |
+| `-s, --scale <number>` | Resolution scale multiplier (e.g. `2`, `4`) |
 | `--dpi <number>` | Target DPI for prepress print (e.g. `300`) |
 | `--bleed <dim>` | Print bleed margin override (e.g. `3mm`) |
 
@@ -125,18 +128,18 @@ stack #content {
 
 ## 📚 Documentation & Ecosystem
 
+- 📖 **[`wiki.html`](./wiki.html)**: Interactive documentation with syntax guide, layout engine specifications, and instant search.
 - 🖼️ **[Showcases & Real-World Designs](https://github.com/razy-me/toad-designs)**: Production-grade design gallery, posters (Bauhaus, Kamekura Tokyo 1964, Soul), and banner showcases created in TOAD.
-- 🌿 **[`the_seed/`](./the_seed/README.md)**: Exhaustive machine-readable language manual and grammar specification for LLMs and compiler engineers.
-- 🎨 **[`the_seed/08_PRODUCTION_TEMPLATES/`](./the_seed/08_PRODUCTION_TEMPLATES/)**: Battle-tested `.toad` templates (UI kits, analytics dashboards, print cards, posters).
-- 📖 **[`wiki.html`](./wiki.html)**: Standalone interactive offline web documentation with instant search.
+- 🛠️ **Developer Tooling**: Built-in CLI linter, code formatter, asset generator, and Language Server Protocol (LSP) support.
 
 ---
 
 ## 🧪 Testing
 
 ```bash
-npm test    # Runs 929 tests across 64 test files (Vitest)
+npm test    # Runs 1,092 tests across 82 test suites (Vitest)
 ```
 
-## License
-MIT
+## 📄 License
+MIT License. Created by [razy-me](https://github.com/razy-me).
+
