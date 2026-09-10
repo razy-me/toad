@@ -160,15 +160,15 @@ export function analyzeColorTelemetry(
     }
   }
 
-  let paletteCharacter = 'Disziplinierte 60-30-10 Paletten-Ökonomie';
+  let paletteCharacter = 'Disciplined 60-30-10 palette economy';
   if (slopDist < 0.18) {
-    paletteCharacter = '🚨 Slop-Triad Klon (#8B5CF6 / #06B6D4 Neon-Darkmode)';
+    paletteCharacter = '🚨 Slop-Triad clone (#8B5CF6 / #06B6D4 neon darkmode)';
   } else if (entropy < 1.4) {
-    paletteCharacter = 'Monotoner Darkmode / Kaum chromatische Differenzierung';
+    paletteCharacter = 'Monotone darkmode / minimal chromatic differentiation';
   } else if (entropy > 4.2) {
-    paletteCharacter = 'Chaotisches Farbrauschen (Unkontrollierte Vielfalt)';
+    paletteCharacter = 'Chaotic color noise (uncontrolled variance)';
   } else if (hueSectors.size <= 2) {
-    paletteCharacter = 'Fokussierte Monochromie / Analoge Ruhe';
+    paletteCharacter = 'Focused monochrome / analog calm';
   }
 
   return {

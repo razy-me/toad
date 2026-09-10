@@ -80,7 +80,7 @@ export function sanitizeTextSnippet(text: string, maxLen = 30): string {
 
 /**
  * Formats a text layer name following user convention: "<TEXT> Text".
- * Example: "Willkommen zurück" -> "Willkommen zurück Text"
+ * Example: "Welcome Back" -> "Welcome Back Text"
  */
 export function formatTextLayerName(textSnippet: string): string {
   const clean = textSnippet.trim();

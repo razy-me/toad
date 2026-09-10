@@ -260,17 +260,17 @@ export function calculateWhitespaceDistribution(
   const hvi = Math.round(Math.min(1, (1 - negRatio) * (crowdingFactor * 0.6)) * 100) / 100;
 
   let status: WhitespaceDistributionResult['status'] = 'optimal';
-  let message = 'Vorbildliche Raumspannung & disziplinierter Weißraum.';
+  let message = 'Exemplary spatial tension & disciplined negative space.';
 
   if (hvi > 0.65) {
     status = 'clutter_overload';
-    message = 'Clutter Overload: Canvas leidet unter generativer Überfüllung.';
+    message = 'Clutter Overload: Canvas suffers from excessive density and visual noise.';
   } else if (gini < 0.28) {
     status = 'uniform_noise';
-    message = 'Gleichförmiges Rauschen (Horror Vacui): Elemente ohne Fokus über Fläche verteilt.';
+    message = 'Uniform noise (Horror Vacui): Elements distributed across canvas without clear focal anchor.';
   } else if (gini > 0.80) {
     status = 'clustered';
-    message = 'Extrem asymmetrische Ballung: Inhalte kleben isoliert in einer Ecke.';
+    message = 'Extreme asymmetric clustering: Content packed into isolated corner.';
   }
 
   return {

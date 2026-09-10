@@ -28,7 +28,7 @@ describe('Design Auditor & Report (Feature 3)', () => {
           at: 10px 60px;
           size: 200px;
           align: center;
-          content: "Dies ist ein sehr langer Fliesstext mit mehreren Zeilen Text der mittig ausgerichtet wurde und dadurch schwer zu lesen ist.";
+          content: "This is a very long body paragraph spanning across multiple lines of text that is center aligned and thereby difficult to read.";
           font-size: 14px;
           color: #111111;
         }
@@ -278,14 +278,14 @@ describe('Design Auditor & Report (Feature 3)', () => {
 
     // When showFixes is false
     const reportWithoutFixes = formatTerminalReport(audit, { showFixes: false });
-    expect(reportWithoutFixes).toContain('Handlungsempfehlungen & Quick-Fixes');
-    expect(reportWithoutFixes).toContain('Quick-Fixes verfügbar');
+    expect(reportWithoutFixes).toContain('Actionable Recommendations & Quick-Fixes');
+    expect(reportWithoutFixes).toContain('quick-fixes available');
     expect(reportWithoutFixes).not.toContain('💡 QUICK FIX:');
 
     // formatFixesSection explicitly outputs them
     const fixesOnly = formatFixesSection(audit);
     expect(fixesOnly).toContain('💡 QUICK FIX:');
-    expect(fixesOnly).toContain('Befunde & Handlungsempfehlungen');
+    expect(fixesOnly).toContain('Findings & Actionable Recommendations');
   });
 
   it('outputs warnings / justifications for ratings < 100% separately from quick fixes', async () => {
@@ -305,21 +305,21 @@ describe('Design Auditor & Report (Feature 3)', () => {
 
     // Step 1: formatWarningsSection outputs reasons/justifications for non-100% ratings without quick fix snippets
     const warningsSection = formatWarningsSection(audit, { standalone: true });
-    expect(warningsSection).toContain('Begründungen für Bewertungen < 100%');
+    expect(warningsSection).toContain('Justifications for Scores < 100%');
     expect(warningsSection).toContain('Accessibility & Contrast');
-    expect(warningsSection).toContain('Begründung:');
+    expect(warningsSection).toContain('Justification:');
     expect(warningsSection).not.toContain('💡 QUICK FIX:');
 
     // Step 2: formatFixesSection outputs actionable solutions and code fixes
     const fixesSection = formatFixesSection(audit, { standalone: true });
     expect(fixesSection).toContain('💡 QUICK FIX:');
-    expect(fixesSection).toContain('Aktionsplan');
+    expect(fixesSection).toContain('Action Plan');
   });
 
   it('strips ANSI escape codes cleanly for clipboard export', async () => {
-    const colored = '\x1b[1m\x1b[32m✔ Sauber\x1b[0m\x1b[39m - \x1b[31mError (-25 Pkt)\x1b[0m';
+    const colored = '\x1b[1m\x1b[32m✔ Clean\x1b[0m\x1b[39m - \x1b[31mError (-25 Pts)\x1b[0m';
     const plain = stripAnsi(colored);
-    expect(plain).toBe('✔ Sauber - Error (-25 Pkt)');
+    expect(plain).toBe('✔ Clean - Error (-25 Pts)');
 
     // copyToClipboard does not throw
     const success = await copyToClipboard(colored);

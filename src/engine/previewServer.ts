@@ -328,7 +328,7 @@ export function generatePreviewHtml(rawFilename: string): string {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
   return `<!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -645,9 +645,9 @@ export function generatePreviewHtml(rawFilename: string): string {
       <button onclick="zoomStep(0.2)">+</button>
       <button onclick="zoomStep(-0.2)">-</button>
       <button id="btn-grid" class="active" onclick="toggleGrid()">Grid</button>
-      <button id="btn-open-folder" onclick="openFolder()" title="Ordner der .toad Datei im Datei-Explorer öffnen">
+      <button id="btn-open-folder" onclick="openFolder()" title="Open folder of the .toad file in File Explorer">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:2px"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
-        Ordner
+        Folder
       </button>
     </div>
   </header>
@@ -660,7 +660,7 @@ export function generatePreviewHtml(rawFilename: string): string {
 
   <div id="audit-view" style="display:none; flex:1; overflow-y:auto; padding:24px; background:var(--bg);">
     <div id="audit-content" style="max-width:920px; margin:0 auto; width:100%;">
-      <p style="color:var(--text-dim); text-align:center;">Lade Design Audit...</p>
+      <p style="color:var(--text-dim); text-align:center;">Loading Design Audit...</p>
     </div>
   </div>
 
@@ -821,8 +821,8 @@ export function generatePreviewHtml(rawFilename: string): string {
       if (!audit.issues || audit.issues.length === 0) {
         issuesHtml = '<div style="text-align:center; padding: 40px 20px; color: var(--success);">' +
           '<div style="font-size:36px; margin-bottom:8px;">✨</div>' +
-          '<div style="font-weight:700; font-size:16px;">Exzellent! Keine Design- oder Kontrast-Probleme gefunden.</div>' +
-          '<div style="color:var(--text-dim); font-size:13px; margin-top:4px;">Alle ' + (audit.stats ? audit.stats.elementsTotal : 0) + ' Elemente entsprechen den Gestaltungs- und WCAG 2.2 Richtlinien.</div>' +
+          '<div style="font-weight:700; font-size:16px;">Excellent! No design or contrast issues found.</div>' +
+          '<div style="color:var(--text-dim); font-size:13px; margin-top:4px;">All ' + (audit.stats ? audit.stats.elementsTotal : 0) + ' elements comply with visual design and WCAG 2.2 guidelines.</div>' +
           '</div>';
       } else {
         issuesHtml = audit.issues.map(function(iss) {
@@ -861,16 +861,16 @@ export function generatePreviewHtml(rawFilename: string): string {
           '<div class="audit-bar-fill" style="width: ' + audit.score + '%; background: ' + scoreColor + ';"></div>' +
         '</div>' +
         '<div style="display:flex; gap:16px; margin-top:12px; font-size:12px; color:var(--text-dim); flex-wrap: wrap;">' +
-          '<span>Elemente: <strong style="color:var(--text);">' + totalElements + '</strong></span>' +
-          '<span>Texte: <strong style="color:var(--text);">' + totalTexts + '</strong></span>' +
-          '<span>Fehler: <strong style="color:#ef4444;">' + totalErrors + '</strong></span>' +
-          '<span>Warnungen: <strong style="color:#f59e0b;">' + totalWarnings + '</strong></span>' +
-          (audit.metrics ? '<span>Weißraum: <strong style="color:#38bdf8;">' + audit.metrics.negativeSpacePercent + '%</strong></span>' : '') +
+          '<span>Elements: <strong style="color:var(--text);">' + totalElements + '</strong></span>' +
+          '<span>Texts: <strong style="color:var(--text);">' + totalTexts + '</strong></span>' +
+          '<span>Errors: <strong style="color:#ef4444;">' + totalErrors + '</strong></span>' +
+          '<span>Warnings: <strong style="color:#f59e0b;">' + totalWarnings + '</strong></span>' +
+          (audit.metrics ? '<span>Whitespace: <strong style="color:#38bdf8;">' + audit.metrics.negativeSpacePercent + '%</strong></span>' : '') +
           (audit.metrics && audit.metrics.slopFindingsCount === 0 ? '<span style="color:#10b981; font-weight:700;">🛡 Slop-Free</span>' : '') +
         '</div>' +
       '</div>' +
       '<div class="audit-card">' +
-        '<h3 style="font-size:14px; font-weight:700; margin-bottom:12px; color:var(--text);">Prüfungsdetails &amp; Anti-Slop Heuristiken</h3>' +
+        '<h3 style="font-size:14px; font-weight:700; margin-bottom:12px; color:var(--text);">Audit Details &amp; Anti-Slop Heuristics</h3>' +
         issuesHtml +
       '</div>';
     }

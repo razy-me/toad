@@ -503,9 +503,9 @@ export function createCli(): Command {
         const list = getWorkspaces();
         console.log(`\n${c.bold('TOAD Preferred Workspaces:')}`);
         if (list.length === 0) {
-          console.log(`  ${c.dim('(Keine Workspaces hinterlegt)')}`);
-          console.log(`\n${c.dim('Tipp:')} Füge einen Ordner hinzu mit:`);
-          console.log(`  ${c.cyan('toad workspace add <pfad>')}\n`);
+          console.log(`  ${c.dim('(No workspaces registered)')}`);
+          console.log(`\n${c.dim('Tip:')} Add a folder using:`);
+          console.log(`  ${c.cyan('toad workspace add <path>')}\n`);
         } else {
           list.forEach((w, i) => {
             console.log(`  ${c.green(`[${i + 1}]`)} ${w}`);
@@ -529,7 +529,7 @@ export function createCli(): Command {
 
       if (act === 'remove' || act === 'rm') {
         if (!dir) {
-          console.error(`\n${c.red('✖')} Bitte gib das zu entfernende Verzeichnis an: toad workspace remove <pfad>\n`);
+          console.error(`\n${c.red('✖')} Please specify the directory to remove: toad workspace remove <path>\n`);
           process.exit(1);
         }
         const res = removeWorkspace(dir);
@@ -542,7 +542,7 @@ export function createCli(): Command {
         return;
       }
 
-      console.error(`\n${c.red('✖')} Unbekannte Aktion "${action}". Erlaubt: list, add, remove\n`);
+      console.error(`\n${c.red('✖')} Unknown action "${action}". Allowed: list, add, remove\n`);
       process.exit(1);
     });
 
@@ -552,13 +552,13 @@ export function createCli(): Command {
     .alias('ls')
     .description('Scan the computer and list all discovered .toad files')
     .action(async () => {
-      console.log(`\n${c.bold('🔍 Suche nach .toad-Dateien auf dem Rechner...')}\n`);
+      console.log(`\n${c.bold('🔍 Scanning system for .toad files...')}\n`);
       const startTime = Date.now();
       const files = await listAllToadFiles();
       const durationMs = Date.now() - startTime;
 
       if (files.length === 0) {
-        console.log(`  ${c.yellow('Keine .toad-Dateien auf dem Rechner gefunden.')}\n`);
+        console.log(`  ${c.yellow('No .toad files found on system.')}\n`);
         return;
       }
 
@@ -571,7 +571,7 @@ export function createCli(): Command {
         console.log(`  ${c.cyan(padNum)} ${c.bold(f.name.padEnd(30))} ${c.yellow(sizeStr.padStart(9))}   ${c.dim(f.path)}`);
       });
 
-      console.log(`\n${c.green('✔')} ${c.bold(String(files.length))} .toad-Datei(en) gefunden in ${durationMs}ms.\n`);
+      console.log(`\n${c.green('✔')} Found ${c.bold(String(files.length))} .toad file(s) in ${durationMs}ms.\n`);
     });
 
   // Command: report [entry]
@@ -641,8 +641,8 @@ export function createCli(): Command {
             const runFixesStep = async () => {
               while (true) {
                 const fixPrompt = hasPenalties
-                  ? `\n  ${c.cyan('➜')}  ${c.bold('Drücke [Enter]')}, um die Quick-Fixes & Handlungsempfehlungen anzuzeigen, oder ${c.bold('[F]')}, um den Report zu kopieren (oder [Q] zum Beenden)... `
-                  : `\n  ${c.cyan('➜')}  ${c.bold('Drücke [Enter]')}, um die Hinweise & Empfehlungen anzuzeigen, oder ${c.bold('[F]')}, um den Report zu kopieren (oder [Q] zum Beenden)... `;
+                  ? `\n  ${c.cyan('➜')}  ${c.bold('Press [Enter]')} to view quick-fixes & actionable recommendations, or ${c.bold('[F]')} to copy report (or [Q] to quit)... `
+                  : `\n  ${c.cyan('➜')}  ${c.bold('Press [Enter]')} to view notices & recommendations, or ${c.bold('[F]')} to copy report (or [Q] to quit)... `;
                 process.stdout.write(fixPrompt);
                 const key2 = await waitForUserInputKey();
                 process.stdout.write('\n');
@@ -652,7 +652,7 @@ export function createCli(): Command {
                 }
                 if (isCopy(key2)) {
                   await copyToClipboard(accumulatedReport);
-                  console.log(`  ${c.green('✔')} ${c.bold('Bisheriger Report als Text in die Zwischenablage kopiert!')}`);
+                  console.log(`  ${c.green('✔')} ${c.bold('Report copied to clipboard!')}`);
                   continue;
                 }
                 if (isEnter(key2)) {
@@ -662,12 +662,12 @@ export function createCli(): Command {
                   accumulatedReport += '\n' + fixesSection;
 
                   // Final prompt: Copy complete report or press Enter/Q to finish
-                  process.stdout.write(`  ${c.cyan('➜')}  ${c.bold('Drücke [F]')}, um den gesamten Report zu kopieren (oder [Enter]/[Q] zum Beenden)... `);
+                  process.stdout.write(`  ${c.cyan('➜')}  ${c.bold('Press [F]')} to copy entire report (or [Enter]/[Q] to quit)... `);
                   const key3 = await waitForUserInputKey();
                   process.stdout.write('\n');
                   if (isCopy(key3)) {
                     await copyToClipboard(accumulatedReport);
-                    console.log(`  ${c.green('✔')} ${c.bold('Gesamter Report in die Zwischenablage kopiert!')}\n`);
+                    console.log(`  ${c.green('✔')} ${c.bold('Entire report copied to clipboard!')}\n`);
                   }
                   break;
                 }
@@ -675,9 +675,9 @@ export function createCli(): Command {
             };
 
             if (hasPenalties) {
-              // Step 1: Warnings / Begründungen für Bewertungen < 100%
+              // Step 1: Warnings / Justifications for scores < 100%
               while (true) {
-                process.stdout.write(`\n  ${c.cyan('➜')}  ${c.bold('Drücke [Enter]')}, um die Begründungen (< 100%) anzuzeigen, oder ${c.bold('[F]')}, um den Report zu kopieren (oder [Q] zum Beenden)... `);
+                process.stdout.write(`\n  ${c.cyan('➜')}  ${c.bold('Press [Enter]')} to view justifications (< 100%), or ${c.bold('[F]')} to copy report (or [Q] to quit)... `);
                 const key1 = await waitForUserInputKey();
                 process.stdout.write('\n');
 
@@ -686,7 +686,7 @@ export function createCli(): Command {
                 }
                 if (isCopy(key1)) {
                   await copyToClipboard(accumulatedReport);
-                  console.log(`  ${c.green('✔')} ${c.bold('Bisheriger Report als Text in die Zwischenablage kopiert!')}`);
+                  console.log(`  ${c.green('✔')} ${c.bold('Report copied to clipboard!')}`);
                   continue;
                 }
                 if (isEnter(key1)) {
@@ -699,7 +699,7 @@ export function createCli(): Command {
                 }
               }
             } else {
-              // Bei 100%: Keine Abzüge vorhanden, direkt Schritt 2 anbieten
+              // At 100%: No penalties present, directly offer Step 2
               await runFixesStep();
             }
           }

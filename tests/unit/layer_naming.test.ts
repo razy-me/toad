@@ -36,12 +36,12 @@ describe('Human Layer Naming Engine', () => {
 
   describe('sanitizeTextSnippet & formatTextLayerName', () => {
     it('removes newlines, tabs, and excess whitespace', () => {
-      const raw = '  Willkommen\n\nzurück   auf der\tPlattform  ';
-      expect(sanitizeTextSnippet(raw, 50)).toBe('Willkommen zurück auf der Plattform');
+      const raw = '  Welcome\n\nback   to the\tPlatform  ';
+      expect(sanitizeTextSnippet(raw, 50)).toBe('Welcome back to the Platform');
     });
 
     it('formats text layers according to user spec: "<TEXT> Text"', () => {
-      expect(formatTextLayerName('Willkommen zurück')).toBe('Willkommen zurück Text');
+      expect(formatTextLayerName('Welcome Back')).toBe('Welcome Back Text');
       expect(formatTextLayerName('')).toBe('Text');
     });
 

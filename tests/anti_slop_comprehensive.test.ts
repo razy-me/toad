@@ -180,7 +180,7 @@ describe('Anti-AI-Slop Comprehensive Engine (All 26 Heuristics & Drastic Penalti
         at: 50px 50px;
         size: 300px;
         align: center;
-        content: "Dies ist ein mehrzeiliger Text der unabsichtlich mittig ausgerichtet wurde und die Lesbarkeit drastisch verschlechtert weil das Auge keinen festen Zeilenanfang findet.";
+        content: "This is a multiline paragraph that is accidentally center aligned and drastically impairs legibility because the eye cannot track a consistent line anchor.";
         color: #000;
         font-size: 15px;
       }
@@ -481,15 +481,68 @@ describe('Anti-AI-Slop Comprehensive Engine (All 26 Heuristics & Drastic Penalti
     expect(issue?.message).toContain('Polarity Inversion');
   });
 
+  it('detects SLOP-WEB-021: Near-Miss Grid Alignment (Das Beinahe-Raster)', async () => {
+    const src = `
+      canvas { size: 800px 600px; background: #ffffff; }
+      rect #nearMissCard {
+        at: 121px 50px; // 121px is 1px off 8px grid (120 + 1)
+        size: 200px 100px;
+        fill: #334155;
+      }
+    `;
+    const audit = await auditSnippet(src);
+    const issue = audit.issues.find(i => i.code === 'SLOP-WEB-021');
+    expect(issue).toBeDefined();
+    expect(issue?.severity).toBe('error');
+    expect(issue?.message).toContain('Near-miss grid misalignment');
+  });
+
+  it('detects SLOP-TYPE-018: Smart Quote Chaos', async () => {
+    const src = `
+      canvas { size: 800px 600px; background: #ffffff; }
+      text #t1 {
+        at: 50px 50px;
+        font-size: 20px;
+        content: "Here is a sentence with \\"straight quotes\\".";
+      }
+      text #t2 {
+        at: 50px 100px;
+        font-size: 20px;
+        content: "And here are mixed curly „smart quotes”.";
+      }
+    `;
+    const audit = await auditSnippet(src);
+    const issue = audit.issues.find(i => i.code === 'SLOP-TYPE-018');
+    expect(issue).toBeDefined();
+    expect(issue?.severity).toBe('error');
+    expect(issue?.message).toContain('Mixed quote styles detected');
+  });
+
+  it('detects SLOP-PRINT-011: Neon-to-Mud CMYK Gamut Collapse', async () => {
+    const src = `
+      canvas { size: 1600px 1200px; background: #ffffff; }
+      rect #neonPrintBox {
+        at: 100px 100px;
+        size: 500px 300px;
+        fill: #00ffff; // Hyper-saturated neon cyan in print poster
+      }
+    `;
+    const audit = await auditSnippet(src);
+    const issue = audit.issues.find(i => i.code === 'SLOP-PRINT-011');
+    expect(issue).toBeDefined();
+    expect(issue?.severity).toBe('error');
+    expect(issue?.message).toContain('Out-of-gamut neon RGB');
+  });
+
   it('computes mathematical telemetry (Centroid, Voronoi Gini, Modular Scale R2, and OKLCH entropy)', async () => {
     const src = `
       canvas { size: 1000px 800px; background: #ffffff; }
       rect #heroCard {
         at: 100px 80px; size: 800px 400px; fill: #1e293b; radius: 8px;
-        text #t1 { at: 40px 40px; font-size: 32px; content: "Titel"; color: #ffffff; }
-        text #t2 { at: 40px 100px; font-size: 25px; content: "Subtitel"; color: #cbd5e1; }
-        text #t3 { at: 40px 150px; font-size: 20px; content: "Body Text Fließtext"; color: #94a3b8; }
-        text #t4 { at: 40px 190px; font-size: 16px; content: "Fußnote"; color: #64748b; }
+        text #t1 { at: 40px 40px; font-size: 32px; content: "Title"; color: #ffffff; }
+        text #t2 { at: 40px 100px; font-size: 25px; content: "Subtitle"; color: #cbd5e1; }
+        text #t3 { at: 40px 150px; font-size: 20px; content: "Body paragraph text"; color: #94a3b8; }
+        text #t4 { at: 40px 190px; font-size: 16px; content: "Footnote"; color: #64748b; }
       }
     `;
     const audit = await auditSnippet(src);
@@ -504,12 +557,12 @@ describe('Anti-AI-Slop Comprehensive Engine (All 26 Heuristics & Drastic Penalti
     expect(audit.metrics.colorTelemetry?.shannonEntropyBits).toBeGreaterThan(0);
 
     const report = formatTerminalReport(audit);
-    expect(report).toContain('Mathematische Telemetrie & Computational Design');
-    expect(report).toContain('Optischer Schwerpunkt');
-    expect(report).toContain('Raum-Architektur');
-    expect(report).toContain('Typo-Skalen-Fidelity');
-    expect(report).toContain('OKLCH-Farbspektrum');
-    expect(report).toContain('59 Heuristiken aktiv');
+    expect(report).toContain('Mathematical Telemetry & Computational Design');
+    expect(report).toContain('Optical Centroid');
+    expect(report).toContain('Spatial Architecture');
+    expect(report).toContain('Typographic Scale Fidelity');
+    expect(report).toContain('OKLCH Color Spectrum');
+    expect(report).toContain('68 heuristics active');
   });
 
 });
