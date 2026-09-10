@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   sync:
@@ -12,35 +13,45 @@ jobs:
       - name: Checkout Private Repo
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          path: private_repo
 
-      - name: Prepare Clean Public Tree
-        run: |
-          # Remove internal confidential directories & files
-          rm -rf .agents _agents the_seed soul-poster GEMINI.md PROJECT.md .github/workflows/sync-public.yml
+      - name: Checkout Public Repo
+        uses: actions/checkout@v4
+        with:
+          repository: razy-me/toad
+          ssh-key: ${{ secrets.SYNC_PUBLIC_KEY }}
+          path: public_repo
+          fetch-depth: 1
 
-      - name: Push to Public Repo
-        env:
-          PUBLIC_REPO_TOKEN: ${{ secrets.SYNC_PUBLIC_TOKEN }}
+      - name: Sync and Mirror Clean Files
         run: |
+          cd public_repo
+
+          # Configure Git
           git config user.name "razy-me"
           git config user.email "florian8schuster@gmail.com"
-          
-          # Initialize temporary git repo for public mirror
-          git init public_sync
-          cd public_sync
-          git remote add target "https://x-access-token:${PUBLIC_REPO_TOKEN}@github.com/razy-me/toad.git"
-          git fetch target main || true
-          
-          # Copy all cleaned files into sync repo
-          cp -r ../* . 2>/dev/null || true
-          cp -r ../.* . 2>/dev/null || true
-          rm -rf .git/public_sync public_sync
-          
+
+          # Remove all existing tracked files in public repo (except .git)
+          find . -mindepth 1 -maxdepth 1 -not -name '.git' -exec rm -rf {} +
+
+          # Copy everything from private_repo except excluded private directories/files
+          rsync -av \
+            --exclude='.git' \
+            --exclude='.agents' \
+            --exclude='_agents' \
+            --exclude='the_seed' \
+            --exclude='soul-poster' \
+            --exclude='GEMINI.md' \
+            --exclude='PROJECT.md' \
+            --exclude='.github' \
+            --exclude='scripts/sync-public.ps1' \
+            ../private_repo/ ./
+
+          # Check git status and commit if changes exist
           git add -A
           if git diff --staged --quiet; then
-            echo "No changes to sync."
+            echo "No changes to commit. Public repository is already up to date."
           else
-            git commit -m "sync: mirror from private repo $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
-            git push target HEAD:main
+            git commit -m "sync: release from toad-private $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+            git push origin main
           fi
