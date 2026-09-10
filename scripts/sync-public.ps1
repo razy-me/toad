@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env pwsh
+#!/usr/bin/env pwsh
 # Synchronizes changes from private toad to public toad repository
 
 $ErrorActionPreference = "Stop"
@@ -13,7 +13,7 @@ $tempBranch = "public-sync-temp-" + (Get-Random)
 git checkout -b $tempBranch
 
 # Remove private files
-$removePaths = @(".agents", "_agents", "the_seed", "soul-poster", "GEMINI.md", "PROJECT.md", ".github")
+$removePaths = @(".agents", "_agents", "the_seed", "soul-poster", "assets/logo", "GEMINI.md", "PROJECT.md", ".github")
 foreach ($p in $removePaths) {
     if (Test-Path $p) {
         git rm -rf --cached $p 2>$null

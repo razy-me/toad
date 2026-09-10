@@ -1,4 +1,4 @@
-﻿name: Sync to Public Repository
+name: Sync to Public Repository
 
 on:
   push:
@@ -41,6 +41,7 @@ jobs:
             --exclude='_agents' \
             --exclude='the_seed' \
             --exclude='soul-poster' \
+            --exclude='assets/logo' \
             --exclude='GEMINI.md' \
             --exclude='PROJECT.md' \
             --exclude='.github' \
