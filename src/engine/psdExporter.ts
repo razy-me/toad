@@ -316,7 +316,116 @@ export class PsdExporter {
       generateThumbnail: options.generateThumbnail ?? true
     });
 
-    return buffer;
+    return this.enforcePsdFourBytePadding(buffer);
+  }
+
+  /**
+   * Adobe Photoshop & Photopea Specification Compliance:
+   * Additional Layer Information blocks in standard 32-bit PSD layer records
+   * MUST have their data padded to 4-byte boundaries ((len + 3) & ~3).
+   * ag-psd by default only applies 2-byte alignment to many keys (e.g. SoCo, luni,
+   * vscg, TySh, lsct), which causes Photopea to throw "Error in PSD file: wrong signature."
+   * when jumping across blocks. This method adjusts the padding and updates the
+   * section length headers accordingly.
+   */
+  public static enforcePsdFourBytePadding(buf: Buffer): Buffer {
+    if (buf.length < 30 || buf.toString('ascii', 0, 4) !== '8BPS') {
+      return buf;
+    }
+
+    let offset = 26; // After header
+    const colorDataLen = buf.readUInt32BE(offset);
+    offset += 4 + colorDataLen;
+
+    const imgResLen = buf.readUInt32BE(offset);
+    offset += 4 + imgResLen;
+
+    const lsOffset = offset;
+    const lsLen = buf.readUInt32BE(offset);
+    offset += 4;
+
+    const liOffset = offset;
+    const liLen = buf.readUInt32BE(offset);
+    offset += 4;
+
+    const rawCount = buf.readInt16BE(offset);
+    const layerCount = Math.abs(rawCount);
+    offset += 2;
+
+    if (layerCount === 0 || offset >= buf.length) {
+      return buf;
+    }
+
+    const newRecords: Buffer[] = [];
+
+    for (let i = 0; i < layerCount; i++) {
+      const recStart = offset;
+      const channels = buf.readUInt16BE(offset + 16);
+      offset += 18 + channels * 6 + 12; // top..right, channels, channel info, blend sig/mode, op/clip/flag/fill
+      const fixedPart = buf.subarray(recStart, offset);
+
+      const extraLen = buf.readUInt32BE(offset);
+      const extraStart = offset + 4;
+      offset += 4;
+
+      const extraFixedStart = offset;
+      const maskLen = buf.readUInt32BE(offset);
+      offset += 4 + maskLen;
+      const blendLen = buf.readUInt32BE(offset);
+      offset += 4 + blendLen;
+      const nameLen = buf.readUInt8(offset);
+      let pLen = 1 + nameLen;
+      while (pLen % 4 !== 0) pLen++;
+      offset += pLen;
+      const extraFixed = buf.subarray(extraFixedStart, offset);
+
+      const newAlis: Buffer[] = [];
+      let extraAlisLength = 0;
+
+      while (offset < extraStart + extraLen) {
+        const aliSig = buf.subarray(offset, offset + 4);
+        const aliKey = buf.subarray(offset + 4, offset + 8);
+        const aliLen = buf.readUInt32BE(offset + 8);
+        const aliData = buf.subarray(offset + 12, offset + 12 + aliLen);
+
+        const pad = (4 - (aliLen % 4)) % 4;
+        const totalBlockLen = 12 + aliLen + pad;
+        const aliBlock = Buffer.alloc(totalBlockLen);
+        aliSig.copy(aliBlock, 0);
+        aliKey.copy(aliBlock, 4);
+        aliBlock.writeUInt32BE(aliLen, 8);
+        aliData.copy(aliBlock, 12);
+        // remaining pad bytes are initialized to 0 by Buffer.alloc
+
+        newAlis.push(aliBlock);
+        extraAlisLength += totalBlockLen;
+
+        const origPad = (2 - (aliLen % 2)) % 2;
+        offset += 12 + aliLen + origPad;
+      }
+
+      const newExtraLen = extraFixed.length + extraAlisLength;
+      const extraLenBuf = Buffer.alloc(4);
+      extraLenBuf.writeUInt32BE(newExtraLen, 0);
+
+      newRecords.push(fixedPart, extraLenBuf, extraFixed, ...newAlis);
+    }
+
+    const origRecordsLen = offset - (liOffset + 6);
+    const repackedRecords = Buffer.concat(newRecords);
+    const delta = repackedRecords.length - origRecordsLen;
+    const remainder = buf.subarray(offset);
+
+    const newLsLen = lsLen + delta;
+    const newLiLen = liLen + delta;
+
+    const prefix = buf.subarray(0, lsOffset);
+    const headersBuf = Buffer.alloc(10);
+    headersBuf.writeUInt32BE(newLsLen, 0);
+    headersBuf.writeUInt32BE(newLiLen, 4);
+    headersBuf.writeInt16BE(rawCount, 8);
+
+    return Buffer.concat([prefix, headersBuf, repackedRecords, remainder]);
   }
 
   /**
