@@ -101,12 +101,12 @@ const SLOP_BUZZWORD_PATTERNS: Array<{ pattern: RegExp; severity: SlopSeverity; l
   { pattern: /\bbuilt\s+for\s+the\s+future\s+of\s+work\b/i, severity: 'warn', label: 'Future of Work Cliché' },
 
   // German AI Buzzword Corpus
-  { pattern: /\brevolutioniere(n\s+sie)?\s+(ihren|deinen)\s+(workflow|arbeitsalltag)\b/i, severity: 'fatal', label: 'Deutsches Revolutioniere-Klischee' },
-  { pattern: /\bnahtlos(e)?\s+(synergie|integration|skalierung)\b/i, severity: 'fatal', label: 'Nahtlose Synergie' },
-  { pattern: /\bdas\s+nächste\s+level\b/i, severity: 'warn', label: 'Nächstes Level Floskel' },
-  { pattern: /\bvollautomatisch\s+ohne\s+aufwand\b/i, severity: 'warn', label: 'Vollautomatisch ohne Aufwand' },
-  { pattern: /\bzukunftssicher(e\s+technologie)?\b/i, severity: 'warn', label: 'Zukunftssicher Floskel' },
-  { pattern: /\bpotenzial(e)?\s+entfesseln\b/i, severity: 'warn', label: 'Potenziale entfesseln' }
+  { pattern: /\brevolutioniere(n\s+sie)?\s+(ihren|deinen)\s+(workflow|arbeitsalltag)\b/i, severity: 'fatal', label: 'German "Revolutionize" Cliché' },
+  { pattern: /\bnahtlos(e)?\s+(synergie|integration|skalierung)\b/i, severity: 'fatal', label: 'German "Seamless Synergy" Cliché' },
+  { pattern: /\bdas\s+nächste\s+level\b/i, severity: 'warn', label: 'Next-Level Buzzword' },
+  { pattern: /\bvollautomatisch\s+ohne\s+aufwand\b/i, severity: 'warn', label: 'Zero-Effort Automated Cliché' },
+  { pattern: /\bzukunftssicher(e\s+technologie)?\b/i, severity: 'warn', label: 'Future-Proof Buzzword' },
+  { pattern: /\bpotenzial(e)?\s+entfesseln\b/i, severity: 'warn', label: 'Unleash Potential Buzzword' }
 ];
 
 // System emoji pattern (SLOP-CODE-005)
@@ -474,7 +474,7 @@ function checkCenteredProse(ctx: SlopContext): SlopRuleResult[] {
         elementId: node.id || node.name || 'text',
         message: `${idLabel}: Centered multi-line body paragraph detected (${lines.length || 3} lines, ${content.length} chars).`,
         details: 'Centering body prose longer than 2 lines destroys the reader\'s left-eye scanning anchor.',
-        help: 'Axiom UNI-04: Fließtext mit mehr als 2 Zeilen MUSS immer linksbündig (align: left;) stehen. Zentriere nur 1-zeilige Badges oder H1s.'
+        help: 'Axiom UNI-04: Body text exceeding 2 lines MUST always be left-aligned (align: left;). Only center single-line badges or headlines.'
       });
     }
   }
@@ -501,7 +501,7 @@ function checkUnspacedAllCaps(ctx: SlopContext): SlopRuleResult[] {
         nodeId: idLabel,
         elementId: node.id || node.name || 'text',
         message: `${idLabel}: UPPERCASE text without positive letter-spacing ("${content.slice(0, 18)}...").`,
-        help: 'Axiom UNI-04: Großbuchstaben (ALL CAPS) MÜSSEN immer gesperrt werden (letter-spacing: 0.08em; bis 0.15em;) um Glyphen-Verklebungen zu vermeiden.'
+        help: 'Axiom UNI-04: Uppercase text (ALL CAPS) MUST always be tracked (letter-spacing: 0.08em; to 0.15em;) to prevent glyph collisions.'
       });
     }
   }
@@ -1776,7 +1776,7 @@ function checkChromaticPolarityInversion(ctx: SlopContext): SlopRuleResult[] {
     const content = getNodeContent(node);
     if (negativeMetricsRegex.test(content)) {
       const fillStr = typeof node.fill === 'string' ? node.fill.toLowerCase() : '';
-      const colorStr = (node.style?.color || '').toLowerCase();
+      const colorStr = typeof node.style?.color === 'string' ? node.style.color.toLowerCase() : '';
       const isGreen = greenColors.some(g => fillStr.includes(g) || colorStr.includes(g));
       if (isGreen) {
         findings.push({
@@ -1880,6 +1880,251 @@ function checkLinearSrgbMudGradient(ctx: SlopContext): SlopRuleResult[] {
   return findings;
 }
 
+/**
+ * SLOP-WEB-021: Near-Miss Grid Alignment (Das Beinahe-Raster)
+ * Flag elements positioned 1px or 2px off from 4px/8px modular design grid
+ */
+function checkNearMissGridAlignment(ctx: SlopContext): SlopRuleResult[] {
+  const findings: SlopRuleResult[] = [];
+  for (const node of ctx.allNodes) {
+    if (node.type === 'rect' || node.type === 'stack' || node.type === 'text') {
+      const remX = Math.round(node.x) % 8;
+      const remY = Math.round(node.y) % 8;
+      // 1px or 7px off 8px grid (meaning off by 1px)
+      if ((remX === 1 || remX === 7 || remY === 1 || remY === 7) && node.x > 0 && node.y > 0) {
+        findings.push({
+          code: 'SLOP-WEB-021',
+          domain: 'layout',
+          name: 'Near-Miss Grid Alignment (Das Beinahe-Raster)',
+          severity: 'fatal',
+          nodeId: node.id ? `#${node.id}` : '#gridElement',
+          elementId: node.id || node.name || 'gridElement',
+          message: `Near-miss grid misalignment on #${node.id || 'element'}: coordinates (${Math.round(node.x)}px, ${Math.round(node.y)}px) are 1px off the 8px baseline grid.`,
+          help: 'Snap coordinates and margins strictly to whole multiples of the 4px/8px modular design token grid.'
+        });
+        break;
+      }
+    }
+  }
+  return findings;
+}
+
+/**
+ * SLOP-TYPE-018: Smart Quote Chaos
+ */
+function checkSmartQuoteChaos(ctx: SlopContext): SlopRuleResult[] {
+  const findings: SlopRuleResult[] = [];
+  let straightQuoteCount = 0;
+  let curlyQuoteCount = 0;
+  let germanQuoteCount = 0;
+
+  for (const node of ctx.textNodes) {
+    const content = getNodeContent(node);
+    if (/["']/.test(content)) straightQuoteCount++;
+    if (/[“”‘’]/.test(content)) curlyQuoteCount++;
+    if (/[„“]/.test(content)) germanQuoteCount++;
+  }
+
+  if (straightQuoteCount > 0 && (curlyQuoteCount > 0 || germanQuoteCount > 0)) {
+    findings.push({
+      code: 'SLOP-TYPE-018',
+      domain: 'typography',
+      name: 'Smart Quote Chaos',
+      severity: 'fatal',
+      message: `Mixed quote styles detected across layout: straight typewriter quotes mixed with typographic curly or localized quotes.`,
+      help: 'Enforce consistent localized typographic quotes (DE: „...“, EN: “...”, FR: « ... ») across all text blocks.'
+    });
+  }
+  return findings;
+}
+
+/**
+ * SLOP-TYPE-020: Proportional Figures in Numeric Data (Tabular Figure Misuse)
+ */
+function checkTabularFigureMisuse(ctx: SlopContext): SlopRuleResult[] {
+  const findings: SlopRuleResult[] = [];
+  for (const node of ctx.textNodes) {
+    const idStr = (node.id || node.name || '').toLowerCase();
+    const content = getNodeContent(node);
+    const isFinancialOrTable = idStr.includes('price') || idStr.includes('stat') || idStr.includes('kpi') || idStr.includes('table') || idStr.includes('metric');
+    if (isFinancialOrTable && /[$€£¥]\s*\d+[\d,.]*/.test(content)) {
+      const fontFeatureSettings = (node.style as any)?.fontFeatureSettings || '';
+      if (!fontFeatureSettings.includes('tnum')) {
+        findings.push({
+          code: 'SLOP-TYPE-020',
+          domain: 'typography',
+          name: 'Tabular Figure Misuse',
+          severity: 'fatal',
+          nodeId: node.id ? `#${node.id}` : '#numericData',
+          elementId: node.id || node.name || 'numericData',
+          message: `Tabular Figure Deficit on #${node.id || 'metric'}: Financial value "${content}" rendered without tabular figures ('tnum').`,
+          help: 'Activate tabular lining figures (font-feature-settings: "tnum", "lnum") on all financial metrics and tabular columns.'
+        });
+        break;
+      }
+    }
+  }
+  return findings;
+}
+
+/**
+ * SLOP-PRINT-011: Neon-to-Mud CMYK Gamut Collapse
+ */
+function checkCmykGamutCollapse(ctx: SlopContext): SlopRuleResult[] {
+  const findings: SlopRuleResult[] = [];
+  const dpi = ctx.layout?.canvas?.dpi || 72;
+  const isPrintCanvas = dpi >= 150 || (ctx.canvasWidth >= 1200 && (ctx.canvasWidth / ctx.canvasHeight > 1.3 || ctx.canvasHeight / ctx.canvasWidth > 1.3));
+
+  if (!isPrintCanvas) return findings;
+
+  for (const node of ctx.allNodes) {
+    const fillStr = extractFillStringOrStops((node as any).fill || (node as any).style?.fill);
+    // Detect out-of-gamut neon values (pure #00ffff cyan, #00ff00 neon green, #ff00ff magenta)
+    if (/#00ffff|#06b6d4|#ff00ff|#00ff00|#ff0055/i.test(fillStr) || fillStr.includes('rgb(0, 255, 255)') || fillStr.includes('rgb(0, 255, 0)')) {
+      const idLabel = node.id ? `#${node.id}` : (node.name || 'shape');
+      findings.push({
+        code: 'SLOP-PRINT-011',
+        domain: 'color',
+        name: 'Neon-to-Mud CMYK Gamut Collapse',
+        severity: 'fatal',
+        nodeId: idLabel,
+        elementId: node.id || node.name || 'shape',
+        message: `${idLabel}: Out-of-gamut neon RGB color used in print canvas (${fillStr}). Will collapse to muddy gray/brown in 4-color offset printing.`,
+        help: 'Use certified ISO coated CMYK values or specify dedicated PANTONE spot colors for neon vibrance.'
+      });
+      break;
+    }
+  }
+  return findings;
+}
+
+/**
+ * SLOP-PRINT-012: Bleed and Safety Zone Deficit
+ */
+function checkBleedAndSafetyDeficit(ctx: SlopContext): SlopRuleResult[] {
+  const findings: SlopRuleResult[] = [];
+  const dpi = ctx.layout?.canvas?.dpi || 72;
+  const isPrint = dpi >= 150 || ctx.canvasWidth >= 1000;
+
+  if (!isPrint) return findings;
+
+  const width = ctx.canvasWidth;
+  const height = ctx.canvasHeight;
+  const margin = 12; // 3mm @ typical print scale
+
+  for (const node of ctx.textNodes) {
+    const x = node.x ?? 0;
+    const y = node.y ?? 0;
+    const w = node.width ?? 0;
+    const h = node.height ?? 0;
+
+    const marginL = x;
+    const marginR = width - (x + w);
+    const marginT = y;
+    const marginB = height - (y + h);
+    const minMargin = Math.min(marginL, marginR, marginT, marginB);
+
+    if (minMargin < margin && w > 50) {
+      const idLabel = node.id ? `#${node.id}` : (node.name || 'text');
+      findings.push({
+        code: 'SLOP-PRINT-012',
+        domain: 'layout',
+        name: 'Bleed and Safety Zone Deficit',
+        severity: 'fatal',
+        nodeId: idLabel,
+        elementId: node.id || node.name || 'text',
+        message: `${idLabel}: Critical text placed within 12px (3mm) mechanical guillotine cutting zone (${Math.round(minMargin)}px from edge). Risk of partial truncation.`,
+        help: 'Maintain at least 16px to 24px safety distance from artboard trim boundaries for all live typography.'
+      });
+      break;
+    }
+  }
+  return findings;
+}
+
+/**
+ * SLOP-GFX-013: Round-Number Utopia
+ */
+function checkRoundNumberUtopia(ctx: SlopContext): SlopRuleResult[] {
+  const findings: SlopRuleResult[] = [];
+  let roundMetricsCount = 0;
+
+  for (const node of ctx.textNodes) {
+    const content = getNodeContent(node);
+    if (/\b(100%|100k|1000\+|100\.000|500k|10k|99\.9%)\b/i.test(content)) {
+      roundMetricsCount++;
+    }
+  }
+
+  if (roundMetricsCount >= 3) {
+    findings.push({
+      code: 'SLOP-GFX-013',
+      domain: 'typography',
+      name: 'Round-Number Utopia',
+      severity: 'warn',
+      message: `Multiple suspiciously round metrics (${roundMetricsCount} occurrences) clustered together. Signs of generative placeholder data.`,
+      help: 'Model realistic, unround domain metrics ($97,842, +23.7%, 9,847) with natural seasonal fluctuation.'
+    });
+  }
+  return findings;
+}
+
+/**
+ * SLOP-LOGO-008: Heraldic Crest Overload
+ */
+function checkHeraldicOverload(ctx: SlopContext): SlopRuleResult[] {
+  const findings: SlopRuleResult[] = [];
+  let crestElements = 0;
+  for (const node of ctx.allNodes) {
+    const idStr = (node.id || node.name || '').toLowerCase();
+    if (idStr.includes('crown') || idStr.includes('wreath') || idStr.includes('shield') || idStr.includes('laurel') || idStr.includes('crest') || idStr.includes('banner_ribbon')) {
+      crestElements++;
+    }
+  }
+  if (crestElements >= 4) {
+    findings.push({
+      code: 'SLOP-LOGO-008',
+      domain: 'vectors',
+      name: 'Heraldic Crest Overload',
+      severity: 'fatal',
+      message: `Heraldic trope clustering: ${crestElements} arbitrary crest/badge symbols combined in single brand layout.`,
+      help: 'Radically reduce to 1-2 core visual concepts. Avoid generic stock crests, laurels, and crowns.'
+    });
+  }
+  return findings;
+}
+
+/**
+ * SLOP-GEOM-002: Versatz bei Verdeckung (Occlusion Continuity Error)
+ */
+function checkOcclusionContinuity(ctx: SlopContext): SlopRuleResult[] {
+  const findings: SlopRuleResult[] = [];
+  const lineNodes = ctx.allNodes.filter(n => (n.id || '').toLowerCase().includes('ray') || (n.id || '').toLowerCase().includes('beam') || (n.id || '').toLowerCase().includes('ring_seg'));
+  if (lineNodes.length >= 2) {
+    for (let i = 0; i < lineNodes.length - 1; i++) {
+      const a = lineNodes[i]!;
+      const b = lineNodes[i + 1]!;
+      const rotA = Number((a as any).rotation ?? a.style?.rotation ?? 0);
+      const rotB = Number((b as any).rotation ?? b.style?.rotation ?? 0);
+      // Conflicting slopes for purported continuous segments
+      if (Math.abs(a.y - b.y) < 50 && Math.abs(rotA - rotB) > 5 && Math.abs(rotA - rotB) < 45) {
+        findings.push({
+          code: 'SLOP-GEOM-002',
+          domain: 'vectors',
+          name: 'Versatz bei Verdeckung (Occlusion Continuity Error)',
+          severity: 'fatal',
+          nodeId: a.id ? `#${a.id}` : '#lineSeg',
+          elementId: a.id || a.name || 'lineSeg',
+          message: `Occluded segment axis fracture: #${a.id} and #${b.id} diverge across intersection by ${Math.abs(rotA - rotB)}°.`,
+          help: 'Project occluded geometry across obstacles along a continuous collinear axis.'
+        });
+        break;
+      }
+    }
+  }
+  return findings;
+}
+
 // ============================================================================
 // 3. Master Anti-Slop Audit Orchestrator
 // ============================================================================
@@ -1903,6 +2148,7 @@ export function runAntiSlopAudit(ctx: SlopContext): SlopRuleResult[] {
   results.push(...checkStereotypicalHeroFormula(ctx));
   results.push(...checkVoidGlowHalo(ctx));
   results.push(...checkInfiniteTestimonialGrid(ctx));
+  results.push(...checkNearMissGridAlignment(ctx));
 
   // Domain B: UI/UX & Lighting Physics
   results.push(...checkContradictoryVirtualLighting(ctx));
@@ -1926,12 +2172,15 @@ export function runAntiSlopAudit(ctx: SlopContext): SlopRuleResult[] {
   results.push(...checkOrphanWidowBaseline(ctx));
   results.push(...checkSubpixelFontBlur(ctx));
   results.push(...checkHierarchyGapDeficit(ctx));
+  results.push(...checkSmartQuoteChaos(ctx));
+  results.push(...checkTabularFigureMisuse(ctx));
 
   // Domain D: Colors & Gradients
   results.push(...checkMuddyGradients(ctx));
   results.push(...checkCyberpunkSpectrum(ctx));
   results.push(...checkMudShadow(ctx));
   results.push(...checkLinearSrgbMudGradient(ctx));
+  results.push(...checkCmykGamutCollapse(ctx));
 
   // Domain E: Vectors, Icons & Greebling
   results.push(...checkEmojiIcons(ctx));
@@ -1945,18 +2194,22 @@ export function runAntiSlopAudit(ctx: SlopContext): SlopRuleResult[] {
   results.push(...checkFauxBrutalistBarcodeAbuse(ctx));
   results.push(...checkTelemetryGreeblingNoise(ctx));
   results.push(...checkIridescentOilSlickBlob(ctx));
+  results.push(...checkHeraldicOverload(ctx));
+  results.push(...checkOcclusionContinuity(ctx));
 
   // Domain F: Print, Editorial & Poster
   results.push(...checkFakePaperFoldTexture(ctx));
   results.push(...checkCropMarksInLiveArea(ctx));
   results.push(...checkAnalogLaunderingNoise(ctx));
   results.push(...checkGutterStrangulation(ctx));
+  results.push(...checkBleedAndSafetyDeficit(ctx));
 
   // Domain G: Dashboards & Data Visualization
   results.push(...checkMonotonicUtopianCurve(ctx));
   results.push(...checkGhostAxesDatapoints(ctx));
   results.push(...checkRainbowDoughnutCatastrophe(ctx));
   results.push(...checkChromaticPolarityInversion(ctx));
+  results.push(...checkRoundNumberUtopia(ctx));
 
   // Domain H: Mobile UX & Touch Ergonomics
   results.push(...checkDesktopInABoxScaling(ctx));
