@@ -763,13 +763,13 @@ export class PsdExporter {
       const baseLineHeight = node.textLayout?.lineHeight || (node.textLayout?.fontSize || 16) * 1.25;
       const lineHeightPx = baseLineHeight * scale;
       const lineHeightPt = Number(((lineHeightPx * 72) / dpi).toFixed(2));
-      // Photoshop tracking is expressed in 1/1000 em, which is scale-independent.
+      const hasExplicitLs = node.style.letterSpacing !== undefined || (node as any).letterSpacingPx !== undefined;
       const lsRaw = typeof node.style.letterSpacing === 'number'
         ? node.style.letterSpacing
         : typeof (node as any).letterSpacingPx === 'number'
           ? (node as any).letterSpacingPx
           : 0;
-      const tracking = baseFontSize > 0 && typeof lsRaw === 'number' && lsRaw !== 0
+      const tracking = hasExplicitLs && baseFontSize > 0 && typeof lsRaw === 'number'
         ? Math.round((lsRaw / baseFontSize) * 1000)
         : undefined;
       const numericWeight = typeof fontWeight === 'number' ? fontWeight
@@ -932,7 +932,7 @@ export class PsdExporter {
               ? { r: Math.round(rgba.r), g: Math.round(rgba.g), b: Math.round(rgba.b), a: Math.round(rgba.a * 255) }
               : { r: Math.round(rgba.r), g: Math.round(rgba.g), b: Math.round(rgba.b) },
             leading: lineHeightPt,
-            ...(tracking !== undefined && tracking !== 0 ? { tracking } : {}),
+            ...(tracking !== undefined ? { tracking } : {}),
             ...(fauxBold ? { fauxBold: true } : {}),
             ...(fauxItalic ? { fauxItalic: true } : {}),
             ...(node.style.textTransform === 'uppercase' ? { fontCaps: 2 } : {}),

@@ -152,7 +152,9 @@ export function parseColorToRgba(colorStr?: string): ColorRgba {
       const g = parseInt(hex[1]! + hex[1]!, 16);
       const b = parseInt(hex[2]! + hex[2]!, 16);
       const a = parseInt(hex[3]! + hex[3]!, 16) / 255;
-      return { r, g, b, a };
+      if (!isNaN(r) && !isNaN(g) && !isNaN(b) && !isNaN(a)) {
+        return { r, g, b, a };
+      }
     }
     if (hex.length === 6) {
       const r = parseInt(hex.slice(0, 2), 16);

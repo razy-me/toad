@@ -114,6 +114,7 @@ export class ImportResolver {
   private activeImportStack = new Set<string>();
   private instanceCounter = 0;
   private defaultFontFamily?: string;
+  private currentVariables = new Map<string, ValueNode>();
   public warnings: string[] = [];
 
   constructor(entryDoc: DocumentNode, entryPath: string, options: ImportResolverOptions = {}) {
@@ -189,6 +190,7 @@ export class ImportResolver {
 
     // 5. Resolve variable values (substitute nested variable references)
     const resolvedVariables = this.resolveAllVariables(rawVariables);
+    this.currentVariables = resolvedVariables;
 
     // 5b. Determine document default font-family from canvas or @font directives
     let canvasFontFamily: string | undefined;
@@ -1620,11 +1622,13 @@ export class ImportResolver {
           break;
         }
         case 'mask': {
-          let maskId = this.extractString(val);
-          if (!maskId && val.type === 'ColorLiteral' && typeof val.value === 'string' && val.value.startsWith('#')) {
-            // Hex-like ids (e.g. #cafe) lex as colors; in reference position
-            // they unambiguously mean an element id.
+          let maskId: string | undefined;
+          if (val.type === 'ElementReference') {
+            maskId = val.targetId.startsWith('#') ? val.targetId : `#${val.targetId}`;
+          } else if (val.type === 'ColorLiteral' && typeof val.value === 'string' && val.value.startsWith('#')) {
             maskId = val.value;
+          } else {
+            maskId = this.extractString(val);
           }
           target.mask = maskId;
           break;
@@ -1896,6 +1900,9 @@ export class ImportResolver {
 
   private extractNumber(val: ValueNode, dpi = 96): number | undefined {
     if (!val) return undefined;
+    if (val.type === 'VariableReference' && this.currentVariables.has(val.name)) {
+      return this.extractNumber(this.currentVariables.get(val.name)!, dpi);
+    }
     if (val.type === 'NumberLiteral') {
       return val.value;
     }
@@ -2087,6 +2094,7 @@ export class ImportResolver {
     if (val.type === 'StringLiteral') return val.value;
     if (val.type === 'Identifier') return val.name;
     if (val.type === 'ElementReference') return val.targetId;
+    if (val.type === 'ColorLiteral' && typeof val.value === 'string' && val.value.startsWith('#')) return val.value;
     return undefined;
   }
 
@@ -2099,6 +2107,9 @@ export class ImportResolver {
 
   private extractColorString(val: ValueNode): string | undefined {
     if (!val) return undefined;
+    if (val.type === 'VariableReference' && this.currentVariables.has(val.name)) {
+      return this.extractColorString(this.currentVariables.get(val.name)!);
+    }
     if (val.type === 'ColorLiteral') return val.value;
     if (val.type === 'StringLiteral') return val.value;
     if (val.type === 'Identifier') return val.name;
@@ -2114,6 +2125,9 @@ export class ImportResolver {
 
   private extractColorOrGradient(val: ValueNode): string | ResolvedGradient | undefined {
     if (!val) return undefined;
+    if (val.type === 'VariableReference' && this.currentVariables.has(val.name)) {
+      return this.extractColorOrGradient(this.currentVariables.get(val.name)!);
+    }
     if (val.type === 'ColorLiteral') return val.value;
     if (val.type === 'StringLiteral') return val.value;
     if (val.type === 'Identifier') return val.name;

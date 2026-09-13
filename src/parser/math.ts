@@ -1052,13 +1052,21 @@ export class LayoutSolver {
       bgStyle = this.convertGradient(this.doc.canvas.fill);
     }
 
-    // Fonts list
-    const fonts = (this.doc.fonts || []).map(f => ({
-      family: f.family,
-      source: f.path,
-      weight: f.weight,
-      style: f.style
-    }));
+    // Deduplicated fonts list
+    const fontSeen = new Set<string>();
+    const fonts: Array<{ family: string; source: string; weight?: string | number; style?: string }> = [];
+    for (const f of this.doc.fonts || []) {
+      const key = `${f.family}::${f.path}::${f.weight || ''}::${f.style || ''}`;
+      if (!fontSeen.has(key)) {
+        fontSeen.add(key);
+        fonts.push({
+          family: f.family,
+          source: f.path,
+          weight: f.weight,
+          style: f.style
+        });
+      }
+    }
 
     const photoParams = this.doc.canvas.mode === 'photo' || this.doc.canvas.photoSrc ? {
       exposure: typeof this.doc.canvas.properties.exposure === 'number' ? this.doc.canvas.properties.exposure : undefined,
@@ -1333,14 +1341,29 @@ export class LayoutSolver {
       const rows = Math.ceil(count / cols);
 
       const dpi = this.doc.canvas.dpi || 96;
-      const firstChildSize = this.computeIntrinsicSize(elem.children[0], canvasW, canvasH);
-      const fwRaw = elem.children[0].size?.w;
-      const fhRaw = elem.children[0].size?.h;
-      const childW = typeof fwRaw === 'number' ? fwRaw : typeof fwRaw === 'string' ? resolveDimension(fwRaw, canvasW, firstChildSize.w, dpi, canvasW, canvasH, this.warnings) : firstChildSize.w;
-      const childH = typeof fhRaw === 'number' ? fhRaw : typeof fhRaw === 'string' ? resolveDimension(fhRaw, canvasH, firstChildSize.h, dpi, canvasW, canvasH, this.warnings) : firstChildSize.h;
+      let totalColsW = 0;
+      for (let c = 0; c < cols; c++) {
+        let maxColW = 0;
+        for (let i = c; i < elem.children.length; i += cols) {
+          const ch = elem.children[i];
+          const cSize = this.computeIntrinsicSize(ch, canvasW, canvasH);
+          const fwRaw = ch.size?.w;
+          const cw = typeof fwRaw === 'number' ? fwRaw : typeof fwRaw === 'string' ? resolveDimension(fwRaw, canvasW, cSize.w, dpi, canvasW, canvasH, this.warnings) : cSize.w;
+          if (cw > maxColW) maxColW = cw;
+        }
+        totalColsW += maxColW;
+      }
 
-      const gridW = cols * childW + (cols - 1) * colGap;
-      const gridH = rows * childH + (rows - 1) * rowGap;
+      let maxRowH = 0;
+      for (const ch of elem.children) {
+        const cSize = this.computeIntrinsicSize(ch, canvasW, canvasH);
+        const fhRaw = ch.size?.h;
+        const chH = typeof fhRaw === 'number' ? fhRaw : typeof fhRaw === 'string' ? resolveDimension(fhRaw, canvasH, cSize.h, dpi, canvasW, canvasH, this.warnings) : cSize.h;
+        if (chH > maxRowH) maxRowH = chH;
+      }
+
+      const gridW = totalColsW + (cols - 1) * colGap;
+      const gridH = rows * maxRowH + (rows - 1) * rowGap;
 
       return {
         w: typeof wRaw === 'number' && wRaw > 0 ? wRaw : gridW,
@@ -1589,13 +1612,52 @@ export class LayoutSolver {
       const rows = Math.ceil(elem.children.length / cols);
       const cellWBase = (w - (cols - 1) * colGap) / cols;
       const rowHBase = rows > 1 ? (h - (rows - 1) * rowGap) / rows : h;
-      // An explicit numeric size on the first child defines the tile;
-      // otherwise tiles are derived from the grid's own box.
-      const explicitW = typeof firstChild?.size?.w === 'number' && firstChild.size.w > 0;
+
+      // Track allocation: compute column widths supporting mixed explicit and flexible tracks
+      const colExplicitWidths: (number | null)[] = new Array(cols).fill(null);
+      for (let c = 0; c < cols; c++) {
+        let maxExplicit = 0;
+        let hasExplicit = false;
+        for (let i = c; i < elem.children.length; i += cols) {
+          const ch = elem.children[i];
+          const rawW = ch.size?.w;
+          if (typeof rawW === 'number' && rawW > 0) {
+            hasExplicit = true;
+            if (rawW > maxExplicit) maxExplicit = rawW;
+          }
+        }
+        if (hasExplicit) {
+          colExplicitWidths[c] = maxExplicit;
+        }
+      }
+
+      const hasExplicitFlexTrack = elem.children.some(ch => {
+        const wVal = ch.size?.w;
+        return wVal === 'fill' || wVal === '1fr' || wVal === 'auto';
+      });
+      const hasDifferentExplicit = colExplicitWidths.some(ew => ew !== null && ew !== colExplicitWidths[0]);
+
+      let colWidths: number[];
+      if (!hasExplicitFlexTrack && !hasDifferentExplicit && colExplicitWidths[0] !== null) {
+        colWidths = new Array(cols).fill(colExplicitWidths[0]);
+      } else {
+        const totalExplicitW = colExplicitWidths.reduce((sum: number, ew) => sum + (ew ?? 0), 0);
+        const flexCols = colExplicitWidths.filter(ew => ew === null).length;
+        const totalColGap = (cols - 1) * colGap;
+        const remainingW = Math.max(0, w - totalColGap - totalExplicitW);
+        const flexCellW = flexCols > 0 ? remainingW / flexCols : cellWBase;
+        colWidths = colExplicitWidths.map(ew => (ew !== null ? ew : flexCellW));
+      }
+
+      // Calculate prefix positions for column offsets
+      const colXOffsets: number[] = [];
+      let runningX = 0;
+      for (let c = 0; c < cols; c++) {
+        colXOffsets.push(runningX);
+        runningX += colWidths[c] + colGap;
+      }
+
       const explicitH = typeof firstChild?.size?.h === 'number' && firstChild.size.h > 0;
-      const cellW = explicitW ? (firstChild!.size!.w as number) : cellWBase;
-      // Percentage/fill heights resolve against a SINGLE row's height, not
-      // the whole grid height (parity with the width/columns math).
       const cellH = explicitH ? (firstChild!.size!.h as number) : rowHBase;
 
       const resolveCellDim = (v: any, cell: number): number => {
@@ -1615,8 +1677,9 @@ export class LayoutSolver {
         const child = elem.children[i];
         const row = Math.floor(i / cols);
         const col = i % cols;
+        const cellW = colWidths[col];
         // Child tile origins are relative to the grid's own origin.
-        const cx = col * (cellW + colGap);
+        const cx = colXOffsets[col];
         const cy = row * (cellH + rowGap);
 
         child.at = { x: cx, y: cy };
@@ -2044,7 +2107,7 @@ export class LayoutSolver {
       opacity: style.opacity,
       fit: imageLayout?.fit,
       zIndex: elem.zIndex || 0,
-      mask: elem.mask,
+      mask: elem.mask ? elem.mask.replace(/^#/, '') : undefined,
       textLayout,
       polygonLayout,
       pathLayout,

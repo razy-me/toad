@@ -71,9 +71,11 @@ export function lintDocument(doc: DocumentNode, filePath?: string): Diagnostic[]
           const elem = node as ElementNode;
           if (elem.id) {
             if (seenIds.has(elem.id)) {
+              const prevLoc = seenIds.get(elem.id);
+              const origInfo = prevLoc ? ` (first declared at line ${prevLoc.start.line}, column ${prevLoc.start.column})` : '';
               diagnostics.push({
                 code: 'LINT-DUPLICATE-ID',
-                message: `Duplicate element ID '#${elem.id}' found. Element IDs should be unique.`,
+                message: `Duplicate element ID '#${elem.id}' found${origInfo}. Element IDs should be unique.`,
                 severity: 'warning',
                 loc: elem.loc
               });
@@ -130,19 +132,21 @@ export function lintDocument(doc: DocumentNode, filePath?: string): Diagnostic[]
     for (const prop of comp.properties) {
       traverse(prop, visitCompNode);
     }
-    const compSeenIds = new Set<string>();
+    const compSeenIds = new Map<string, any>();
     for (const elem of comp.elements) {
       traverse(elem, (node) => {
         if (node.id) {
           if (compSeenIds.has(node.id)) {
+            const prevLoc = compSeenIds.get(node.id);
+            const origInfo = prevLoc ? ` (first declared at line ${prevLoc.start.line}, column ${prevLoc.start.column})` : '';
             diagnostics.push({
               code: 'LINT-DUPLICATE-ID',
-              message: `Duplicate element ID '#${node.id}' in component '${comp.name}'. Element IDs within a component should be unique.`,
+              message: `Duplicate element ID '#${node.id}' in component '${comp.name}'${origInfo}. Element IDs within a component should be unique.`,
               severity: 'warning',
               loc: node.loc
             });
           } else {
-            compSeenIds.add(node.id);
+            compSeenIds.set(node.id, node.loc);
           }
         }
       });

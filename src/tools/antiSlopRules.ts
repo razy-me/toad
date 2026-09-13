@@ -196,14 +196,32 @@ function checkBentoOverkill(ctx: SlopContext): SlopRuleResult[] {
         return findings;
       }
 
-      // Check content shallowness: cards with very few characters
+      // Check content shallowness: cards with very few characters and no dense graphics/metrics
       let shallowCount = 0;
       for (const card of glassCards) {
         const textsInside = ctx.textNodes.filter(
           t => t.x >= card.x && t.x + t.width <= card.x + card.width && t.y >= card.y && t.y + t.height <= card.y + card.height
         );
-        const totalChars = textsInside.reduce((acc, t) => acc + getNodeContent(t).length, 0);
-        if (totalChars < 40) shallowCount++;
+        const textContent = textsInside.map(t => getNodeContent(t)).join(' ');
+        const totalChars = textContent.length;
+
+        // Check if card contains rich non-text elements (sparkline paths, icons, photos, charts)
+        const richElementsInside = ctx.allNodes.filter(
+          n => n !== card &&
+               n.type !== 'text' &&
+               n.x >= card.x &&
+               n.x + n.width <= card.x + card.width &&
+               n.y >= card.y &&
+               n.y + n.height <= card.y + card.height &&
+               ['icon', 'image', 'path', 'polygon', 'barcode', 'qrcode'].includes(n.type)
+        );
+
+        // Check if text indicates a dense telemetry / KPI metric
+        const isTelemetryMetric = /[\d]+(\.[\d]+)?\s*(%|k|M|B|ms|s|fps|rpm|req|users|\$|€|£|¥)|\+[\d]+%|#\d+/i.test(textContent);
+
+        if (totalChars < 40 && richElementsInside.length === 0 && !isTelemetryMetric) {
+          shallowCount++;
+        }
       }
 
       findings.push({

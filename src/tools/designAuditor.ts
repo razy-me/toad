@@ -248,13 +248,14 @@ export function calculateTac(rgba: ColorRgba): { c: number; m: number; y: number
   const yNorm = 1 - rgba.b / 255;
   const kNorm = Math.min(cNorm, Math.min(mNorm, yNorm));
 
-  if (kNorm >= 1) {
+  if (kNorm >= 0.999) {
     return { c: 0, m: 0, y: 0, k: 100, tac: 100 };
   }
 
-  const c = Math.round(((cNorm - kNorm) / (1 - kNorm)) * 100);
-  const m = Math.round(((mNorm - kNorm) / (1 - kNorm)) * 100);
-  const y = Math.round(((yNorm - kNorm) / (1 - kNorm)) * 100);
+  const denom = Math.max(0.001, 1 - kNorm);
+  const c = Math.min(100, Math.max(0, Math.round(((cNorm - kNorm) / denom) * 100)));
+  const m = Math.min(100, Math.max(0, Math.round(((mNorm - kNorm) / denom) * 100)));
+  const y = Math.min(100, Math.max(0, Math.round(((yNorm - kNorm) / denom) * 100)));
   const k = Math.round(kNorm * 100);
   return { c, m, y, k, tac: c + m + y + k };
 }
@@ -640,21 +641,59 @@ export function auditDesign(
           other.x + other.width >= node.x + node.width &&
           other.y + other.height >= node.y + node.height
         );
-        if (containsText && typeof other.fill === 'string') {
-          const shapeCol = parseColorToRgba(other.fill);
-          if (shapeCol.a >= 0.95) {
-            effectiveBg = shapeCol;
-          } else if (shapeCol.a > 0) {
-            // Composite alpha over current effective background
-            effectiveBg = {
-              r: Math.round(shapeCol.r * shapeCol.a + effectiveBg.r * (1 - shapeCol.a)),
-              g: Math.round(shapeCol.g * shapeCol.a + effectiveBg.g * (1 - shapeCol.a)),
-              b: Math.round(shapeCol.b * shapeCol.a + effectiveBg.b * (1 - shapeCol.a)),
-              a: 1
-            };
+        if (containsText) {
+          if (typeof other.fill === 'string') {
+            const shapeCol = parseColorToRgba(other.fill);
+            if (shapeCol.a >= 0.95) {
+              effectiveBg = shapeCol;
+            } else if (shapeCol.a > 0) {
+              // Composite alpha over current effective background
+              effectiveBg = {
+                r: Math.round(shapeCol.r * shapeCol.a + effectiveBg.r * (1 - shapeCol.a)),
+                g: Math.round(shapeCol.g * shapeCol.a + effectiveBg.g * (1 - shapeCol.a)),
+                b: Math.round(shapeCol.b * shapeCol.a + effectiveBg.b * (1 - shapeCol.a)),
+                a: 1
+              };
+            }
+          } else if (typeof other.fill === 'object' && other.fill && Array.isArray((other.fill as any).stops) && (other.fill as any).stops.length > 0) {
+            // Gradient fill on containing shape: find worst-case stop against text foreground
+            const stops = (other.fill as any).stops;
+            let worstBg = effectiveBg;
+            let minC = Infinity;
+            for (const s of stops) {
+              const stopCol = parseColorToRgba(s.color || '#000000');
+              const blended = stopCol.a >= 0.95 ? stopCol : {
+                r: Math.round(stopCol.r * stopCol.a + effectiveBg.r * (1 - stopCol.a)),
+                g: Math.round(stopCol.g * stopCol.a + effectiveBg.g * (1 - stopCol.a)),
+                b: Math.round(stopCol.b * stopCol.a + effectiveBg.b * (1 - stopCol.a)),
+                a: 1
+              };
+              const c = calculateContrastRatio(fgRgba, blended);
+              if (c < minC) {
+                minC = c;
+                worstBg = blended;
+              }
+            }
+            effectiveBg = worstBg;
           }
         }
       }
+    }
+
+    // If canvas background is a gradient and effective background equals initial bg
+    const bgFill = layout.canvas.background ?? (layout.canvas as any).fill;
+    if (typeof bgFill === 'object' && bgFill && Array.isArray((bgFill as any).stops) && (bgFill as any).stops.length > 0) {
+      let worstBg = effectiveBg;
+      let minC = calculateContrastRatio(fgRgba, effectiveBg);
+      for (const s of (bgFill as any).stops) {
+        const stopCol = parseColorToRgba(s.color || '#ffffff');
+        const c = calculateContrastRatio(fgRgba, stopCol);
+        if (c < minC) {
+          minC = c;
+          worstBg = stopCol;
+        }
+      }
+      effectiveBg = worstBg;
     }
 
     const effectiveAlpha = (fgRgba.a ?? 1) * (typeof node.style.opacity === 'number' ? node.style.opacity : 1);

@@ -558,6 +558,25 @@ export class Parser {
     if (propName === 'at') {
       return this.parseAtValue();
     }
+    if (propName === 'mask' || propName === 'clip-path' || propName === 'clipPath' || propName === 'clip') {
+      const startLoc = this.peek().loc.start;
+      if (this.check(TokenType.HEX_COLOR)) {
+        const tok = this.advance();
+        return {
+          type: 'ElementReference',
+          targetId: tok.value.replace(/^#/, ''),
+          loc: { start: startLoc, end: this.previous().loc.end, file: this.filename }
+        };
+      }
+      if (this.check(TokenType.ELEMENT_ID)) {
+        const tok = this.advance();
+        return {
+          type: 'ElementReference',
+          targetId: tok.value,
+          loc: { start: startLoc, end: this.previous().loc.end, file: this.filename }
+        };
+      }
+    }
     if (propName === 'points') {
       return this.parsePointsValue();
     }
