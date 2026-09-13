@@ -20,6 +20,8 @@ import {
 import { DependencyGraph } from './dependencyGraph.js';
 import { getIconPath } from '../engine/iconRegistry.js';
 import { generateShapePath } from '../engine/shapeGenerators.js';
+import { generateQrCode } from '../engine/qrGenerator.js';
+import { generateBarcode, BarcodeBar } from '../engine/barcodeGenerator.js';
 import { FontLoader } from '../engine/fontLoader.js';
 import { TextMeasurementCache } from '../engine/buildCache.js';
 
@@ -72,6 +74,7 @@ export interface ComputedStyle {
   strokeStyle?: 'solid' | 'dashed' | 'dotted';
   strokeCap?: 'round' | 'square' | 'butt';
   strokeJoin?: 'miter' | 'round' | 'bevel';
+  strokeAlign?: 'inside' | 'outside' | 'center';
   letterSpacing?: number;
   textTransform?: 'uppercase' | 'lowercase' | 'capitalize' | 'none';
   align?: 'left' | 'center' | 'right' | 'justify';
@@ -130,7 +133,7 @@ export interface LayoutNode {
   id?: string;
   name: string;
   isSyntheticId?: boolean;
-  type: 'rect' | 'circle' | 'polygon' | 'path' | 'text' | 'image' | 'adjust' | 'group' | 'grid' | 'stack' | 'icon' | 'star' | 'triangle' | 'arrow' | 'cross' | 'shape' | 'slot';
+  type: 'rect' | 'circle' | 'polygon' | 'path' | 'text' | 'image' | 'adjust' | 'group' | 'grid' | 'stack' | 'icon' | 'star' | 'triangle' | 'arrow' | 'cross' | 'shape' | 'slot' | 'barcode' | 'qrcode';
   box: LayoutBox;
   style: ComputedStyle;
 
@@ -158,6 +161,20 @@ export interface LayoutNode {
   };
   pathLayout?: {
     d: string;
+  };
+  qrcodeLayout?: {
+    value: string;
+    ecl: 'L' | 'M' | 'Q' | 'H';
+    logo?: string;
+    matrix: boolean[][];
+    logoBox?: { x: number; y: number; width: number; height: number };
+  };
+  barcodeLayout?: {
+    value: string;
+    format: string;
+    bars: BarcodeBar[];
+    text?: string;
+    showText: boolean;
   };
   stackLayout?: {
     direction: 'horizontal' | 'vertical';
@@ -224,7 +241,7 @@ export interface LayoutCanvasResult {
 
 export interface LayoutResult {
   canvas: LayoutCanvasResult;
-  canvases?: Array<{ canvas: LayoutCanvasResult; nodes: LayoutNode[] }>;
+  canvases?: Array<{ canvas: LayoutCanvasResult; nodes: LayoutNode[]; rootNodes?: LayoutNode[]; warnings?: string[] }>;
   fonts: Array<{ family: string; source: string; weight?: string | number; style?: string }>;
   nodes: LayoutNode[];
   rootNodes?: LayoutNode[];
@@ -1030,7 +1047,7 @@ export class LayoutSolver {
       properties: this.doc.canvas.properties
     };
 
-    let canvasesResult: Array<{ canvas: LayoutCanvasResult; nodes: LayoutNode[]; warnings: string[] }> | undefined;
+    let canvasesResult: Array<{ canvas: LayoutCanvasResult; nodes: LayoutNode[]; rootNodes?: LayoutNode[]; warnings: string[] }> | undefined;
     if (this.doc.canvases && this.doc.canvases.length > 1) {
       // Multi-canvas pages are independent documents: each renders ONLY its
       // own scoped elements. The "inherit top-level elements" fallback is
@@ -1050,6 +1067,7 @@ export class LayoutSolver {
         canvasesResult.push({
           canvas: subResult.canvas,
           nodes: subResult.nodes,
+          rootNodes: subResult.rootNodes,
           warnings: subResult.warnings
         });
       }
@@ -1161,6 +1179,24 @@ export class LayoutSolver {
       if (nw > 0 && nh === 0) return { w: nw, h: nw };
       if (nh > 0 && nw === 0) return { w: nh, h: nh };
       return { w: 100, h: 100 };
+    }
+
+    if (elem.type === 'qrcode') {
+      const nw = typeof wRaw === 'number' && wRaw > 0 ? wRaw : 0;
+      const nh = typeof hRaw === 'number' && hRaw > 0 ? hRaw : 0;
+      if (nw > 0 && nh === 0) return { w: nw, h: nw };
+      if (nh > 0 && nw === 0) return { w: nh, h: nh };
+      if (nw > 0 && nh > 0) return { w: nw, h: nh };
+      return { w: 150, h: 150 };
+    }
+
+    if (elem.type === 'barcode') {
+      const nw = typeof wRaw === 'number' && wRaw > 0 ? wRaw : 0;
+      const nh = typeof hRaw === 'number' && hRaw > 0 ? hRaw : 0;
+      return {
+        w: nw > 0 ? nw : 240,
+        h: nh > 0 ? nh : 80
+      };
     }
 
     if (elem.type === 'polygon') {
@@ -1763,12 +1799,13 @@ export class LayoutSolver {
     // Convert styling properties
     const style: ComputedStyle = {
       color: typeof elem.fill === 'string' ? elem.fill : '#000000',
-      fill: typeof elem.fill === 'string' ? elem.fill : elem.fill ? this.convertGradient(elem.fill) : undefined,
+      fill: typeof elem.fill === 'string' ? elem.fill : elem.fill ? this.convertGradient(elem.fill) : (elem.type === 'barcode' || elem.type === 'qrcode') ? '#000000' : undefined,
       stroke: elem.stroke?.color,
       strokeWidth: elem.stroke?.width,
       strokeStyle: elem.stroke?.style,
       strokeCap: elem.stroke?.cap || elem.strokeCap,
       strokeJoin: elem.stroke?.join || elem.strokeJoin,
+      strokeAlign: elem.stroke?.align || elem.strokeAlign,
       letterSpacing: elem.font?.letterSpacing ?? elem.letterSpacing,
       textTransform: elem.font?.textTransform ?? elem.textTransform,
       align: elem.align || (elem.font as any)?.align,
@@ -1884,6 +1921,30 @@ export class LayoutSolver {
     }
 
     let adjustLayout: LayoutNode['adjustLayout'] | undefined;
+    let qrcodeLayout: LayoutNode['qrcodeLayout'] | undefined;
+    let barcodeLayout: LayoutNode['barcodeLayout'] | undefined;
+
+    if (elem.type === 'qrcode') {
+      const qrRes = generateQrCode(elem.value || '', { ecl: elem.ecl, logo: elem.logo });
+      qrcodeLayout = {
+        value: elem.value || '',
+        ecl: qrRes.ecl,
+        logo: elem.logo,
+        matrix: qrRes.matrix,
+        logoBox: qrRes.logoBox
+      };
+      pathLayout = { d: qrRes.toSvgPath(box.w, box.h) };
+    } else if (elem.type === 'barcode') {
+      const barRes = generateBarcode(elem.value || '', { format: elem.barcodeFormat as any, showText: elem.showText });
+      barcodeLayout = {
+        value: elem.value || '',
+        format: barRes.format,
+        bars: barRes.bars,
+        text: barRes.text,
+        showText: elem.showText ?? false
+      };
+      pathLayout = { d: barRes.toSvgPath(box.w, box.h) };
+    }
     if (elem.type === 'adjust') {
       const radius = typeof elem.adjustRadius === 'number'
         ? elem.adjustRadius
@@ -1930,6 +1991,8 @@ export class LayoutSolver {
       textLayout,
       polygonLayout,
       pathLayout,
+      qrcodeLayout,
+      barcodeLayout,
       stackLayout,
       imageLayout,
       adjustLayout,

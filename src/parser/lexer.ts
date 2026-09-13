@@ -31,6 +31,9 @@ export enum TokenType {
   KW_ARROW = 'KW_ARROW',                 // arrow
   KW_CROSS = 'KW_CROSS',                 // cross
   KW_SLOT = 'KW_SLOT',                   // slot
+  KW_BARCODE = 'KW_BARCODE',             // barcode
+  KW_QRCODE = 'KW_QRCODE',               // qrcode
+  KW_QR = 'KW_QR',                       // qr
   KW_CHILDREN = 'KW_CHILDREN',           // children
   KW_PAGES = 'KW_PAGES',                 // pages
   KW_PAGE = 'KW_PAGE',                   // page
@@ -138,6 +141,9 @@ const KEYWORDS: Record<string, TokenType> = {
   arrow: TokenType.KW_ARROW,
   cross: TokenType.KW_CROSS,
   slot: TokenType.KW_SLOT,
+  barcode: TokenType.KW_BARCODE,
+  qrcode: TokenType.KW_QRCODE,
+  qr: TokenType.KW_QR,
   children: TokenType.KW_CHILDREN,
   pages: TokenType.KW_PAGES,
   page: TokenType.KW_PAGE,

@@ -546,6 +546,61 @@ export class SvgExporter {
         return `${indent}<path d="${d}" transform="${pathTransforms.join(' ')}" ${fillAttr} ${strokeAttrs} ${filteredAttrs.join(' ')} />`.replace(/\s+/g, ' ');
       }
 
+      case 'qrcode': {
+        const d = node.pathLayout?.d;
+        if (!d) return '';
+        const pathTransforms: string[] = [];
+        if (transforms.length > 0) {
+          pathTransforms.push(...transforms);
+        }
+        pathTransforms.push(`translate(${node.x} ${node.y})`);
+        const filteredAttrs = attrs.filter(a => !a.startsWith('transform='));
+        const effectiveFill = fillAttr || 'fill="#000000"';
+        let qrMarkup = `${indent}<path d="${d}" transform="${pathTransforms.join(' ')}" ${effectiveFill} ${strokeAttrs} ${filteredAttrs.join(' ')} />`.replace(/\s+/g, ' ');
+
+        if (node.qrcodeLayout?.logo && node.qrcodeLayout.logoBox) {
+          const { x: lbX, y: lbY, width: lbW, height: lbH } = node.qrcodeLayout.logoBox;
+          const matrixLen = node.qrcodeLayout.matrix.length || 1;
+          const absX = node.x + (lbX / matrixLen) * node.width;
+          const absY = node.y + (lbY / matrixLen) * node.height;
+          const absW = (lbW / matrixLen) * node.width;
+          const absH = (lbH / matrixLen) * node.height;
+
+          let href = node.qrcodeLayout.logo;
+          if (this.embedImages && href && !href.startsWith('data:') && !href.startsWith('http')) {
+            href = this.resolveAndEncodeImage(href);
+          }
+
+          const logoPlate = `\n${indent}<rect x="${absX.toFixed(2)}" y="${absY.toFixed(2)}" width="${absW.toFixed(2)}" height="${absH.toFixed(2)}" fill="#ffffff" />`;
+          const logoImg = `\n${indent}<image x="${absX.toFixed(2)}" y="${absY.toFixed(2)}" width="${absW.toFixed(2)}" height="${absH.toFixed(2)}" href="${href}" preserveAspectRatio="xMidYMid meet" />`;
+          qrMarkup += logoPlate + logoImg;
+        }
+        return qrMarkup;
+      }
+
+      case 'barcode': {
+        const d = node.pathLayout?.d;
+        if (!d) return '';
+        const pathTransforms: string[] = [];
+        if (transforms.length > 0) {
+          pathTransforms.push(...transforms);
+        }
+        pathTransforms.push(`translate(${node.x} ${node.y})`);
+        const filteredAttrs = attrs.filter(a => !a.startsWith('transform='));
+        const effectiveFill = fillAttr || 'fill="#000000"';
+        let barMarkup = `${indent}<path d="${d}" transform="${pathTransforms.join(' ')}" ${effectiveFill} ${strokeAttrs} ${filteredAttrs.join(' ')} />`.replace(/\s+/g, ' ');
+
+        if (node.barcodeLayout?.showText && node.barcodeLayout.text) {
+          const fontSize = Math.max(10, Math.min(16, Math.floor(node.height * 0.18)));
+          const textX = node.x + node.width / 2;
+          const textY = node.y + node.height;
+          const textFill = typeof (node.style.fill || node.fill) === 'string' ? (node.style.fill || node.fill || '#000000') : '#000000';
+          const textMarkup = `\n${indent}<text x="${textX.toFixed(2)}" y="${textY.toFixed(2)}" font-family="monospace" font-size="${fontSize}" text-anchor="middle" dominant-baseline="alphabetic" fill="${this.escapeAttr(String(textFill))}">${this.escapeXml(node.barcodeLayout.text)}</text>`;
+          barMarkup += textMarkup;
+        }
+        return barMarkup;
+      }
+
       case 'stack':
       case 'group':
       case 'grid': {
@@ -833,7 +888,7 @@ export class SvgExporter {
     } else if (node.type === 'polygon' && node.polygonLayout) {
       const pts = node.polygonLayout.canvasPoints.map(p => `${p.x},${p.y}`).join(' ');
       innerContent = `<polygon points="${this.escapeAttr(pts)}" />`;
-    } else if ((node.type === 'path' || node.type === 'shape' || ['star', 'triangle', 'arrow', 'cross'].includes(node.type)) && node.pathLayout) {
+    } else if ((node.type === 'path' || node.type === 'shape' || ['star', 'triangle', 'arrow', 'cross', 'barcode', 'qrcode'].includes(node.type)) && node.pathLayout) {
       // Path data is generated in LOCAL coordinates; anchor it at the node's
       // position (parity with raster clipping).
       innerContent = `<path d="${this.escapeAttr(node.pathLayout.d)}" transform="translate(${node.x} ${node.y})" />`;

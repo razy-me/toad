@@ -105,7 +105,9 @@ export type ElementType =
   | 'component_instance'
   | 'icon'
   | 'shape'
-  | 'slot';
+  | 'slot'
+  | 'barcode'
+  | 'qrcode';
 
 export type ElementNode =
   | RectElementNode
@@ -114,6 +116,8 @@ export type ElementNode =
   | PolygonElementNode
   | PathElementNode
   | ImageElementNode
+  | BarcodeElementNode
+  | QrCodeElementNode
   | AdjustElementNode
   | GroupElementNode
   | GridElementNode
@@ -201,6 +205,19 @@ export interface ShapeElementNode extends BaseElementNode {
 
 export interface SlotElementNode extends BaseElementNode {
   type: 'SlotElement';
+}
+
+export interface BarcodeElementNode extends BaseElementNode {
+  type: 'BarcodeElement';
+  value?: string;
+  format?: string;
+}
+
+export interface QrCodeElementNode extends BaseElementNode {
+  type: 'QrCodeElement';
+  value?: string;
+  ecl?: 'L' | 'M' | 'Q' | 'H';
+  logo?: string;
 }
 
 // ============================================================================
@@ -531,6 +548,7 @@ export interface ResolvedStroke {
   style: 'solid' | 'dashed' | 'dotted';
   cap?: 'round' | 'square' | 'butt';
   join?: 'miter' | 'round' | 'bevel';
+  align?: 'inside' | 'center' | 'outside';
 }
 
 export interface ResolvedFont {
@@ -554,7 +572,7 @@ export interface ResolvedFilter {
 export interface ResolvedElementNode {
   id?: string;
   name: string;
-  type: 'rect' | 'circle' | 'text' | 'polygon' | 'path' | 'image' | 'adjust' | 'group' | 'grid' | 'stack' | 'icon' | 'shape' | 'slot';
+  type: 'rect' | 'circle' | 'text' | 'polygon' | 'path' | 'image' | 'adjust' | 'group' | 'grid' | 'stack' | 'icon' | 'shape' | 'slot' | 'barcode' | 'qrcode';
   isComponent?: boolean;
   // Computed & resolved styling properties
   at?: {
@@ -589,6 +607,7 @@ export interface ResolvedElementNode {
   mask?: string;         // ID of the mask element
   strokeCap?: 'round' | 'square' | 'butt';
   strokeJoin?: 'miter' | 'round' | 'bevel';
+  strokeAlign?: 'inside' | 'center' | 'outside';
   shadow?: { offsetX: number; offsetY: number; blur: number; color: string; useGlobalLight?: boolean; noise?: number };
   shadows?: Array<{ offsetX: number; offsetY: number; blur: number; color: string; useGlobalLight?: boolean; noise?: number }>;
   innerShadow?: { offsetX: number; offsetY: number; blur: number; color: string };
@@ -648,4 +667,10 @@ export interface ResolvedElementNode {
     highlights?: number;
     shadows?: number;
   };
+  // Barcode & QR code specifics
+  value?: string;
+  ecl?: 'L' | 'M' | 'Q' | 'H';
+  logo?: string;
+  barcodeFormat?: 'code128' | 'ean13' | 'upc' | 'code39' | string;
+  showText?: boolean;
 }

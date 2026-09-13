@@ -506,6 +506,74 @@ export class CanvasRenderer {
         break;
       }
 
+      case 'qrcode': {
+        const d = node.pathLayout?.d;
+        if (d) {
+          const pathObj = new Path2D(d);
+          ctx.save();
+          ctx.translate(node.x, node.y);
+          const fill = node.style.fill || node.fill || '#000000';
+          if (typeof fill === 'string') {
+            ctx.fillStyle = fill;
+          } else {
+            ctx.fillStyle = createCanvasGradient(ctx, fill as any, { x: 0, y: 0, w: node.width, h: node.height });
+          }
+          ctx.fill(pathObj);
+          ctx.restore();
+        }
+
+        if (node.qrcodeLayout?.logo && node.qrcodeLayout.logoBox) {
+          const { x: lbX, y: lbY, width: lbW, height: lbH } = node.qrcodeLayout.logoBox;
+          const matrixLen = node.qrcodeLayout.matrix.length || 1;
+          const absX = node.x + (lbX / matrixLen) * node.width;
+          const absY = node.y + (lbY / matrixLen) * node.height;
+          const absW = (lbW / matrixLen) * node.width;
+          const absH = (lbH / matrixLen) * node.height;
+
+          // Draw quiet plate behind logo
+          ctx.save();
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(absX, absY, absW, absH);
+          ctx.restore();
+
+          const logoImg = await this.resolveImage(node.qrcodeLayout.logo, basePath);
+          if (logoImg) {
+            drawImageWithFit(ctx, logoImg, 'contain', absX, absY, absW, absH);
+          }
+        }
+        break;
+      }
+
+      case 'barcode': {
+        const d = node.pathLayout?.d;
+        if (d) {
+          const pathObj = new Path2D(d);
+          ctx.save();
+          ctx.translate(node.x, node.y);
+          const fill = node.style.fill || node.fill || '#000000';
+          if (typeof fill === 'string') {
+            ctx.fillStyle = fill;
+          } else {
+            ctx.fillStyle = createCanvasGradient(ctx, fill as any, { x: 0, y: 0, w: node.width, h: node.height });
+          }
+          ctx.fill(pathObj);
+          ctx.restore();
+        }
+
+        if (node.barcodeLayout?.showText && node.barcodeLayout.text) {
+          ctx.save();
+          const fill = typeof (node.style.fill || node.fill) === 'string' ? (node.style.fill || node.fill || '#000000') : '#000000';
+          ctx.fillStyle = String(fill);
+          const fontSize = Math.max(10, Math.min(16, Math.floor(node.height * 0.18)));
+          ctx.font = `${fontSize}px monospace`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          ctx.fillText(node.barcodeLayout.text, node.x + node.width / 2, node.y + node.height);
+          ctx.restore();
+        }
+        break;
+      }
+
       case 'adjust': {
         if (node.adjustLayout && layoutCanvas?.photoSrc) {
           const img = await this.resolveImage(layoutCanvas.photoSrc, basePath);

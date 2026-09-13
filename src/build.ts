@@ -99,10 +99,16 @@ export async function compileToad(
     AstCache.getInstance().set(resolvedEntry, mtimeMs, ast, source);
   }
 
+  const parserWarnings: string[] = [];
   if (ast.diagnostics && ast.diagnostics.length > 0) {
     const errorDiag = ast.diagnostics.find(d => d.severity === 'error');
     if (errorDiag) {
       throw new ParseError(errorDiag.message, errorDiag.loc, errorDiag.code);
+    }
+    for (const d of ast.diagnostics) {
+      if (d.severity !== 'error') {
+        parserWarnings.push(d.message);
+      }
     }
   }
 
@@ -131,28 +137,100 @@ export async function compileToad(
     );
   }
 
-  // 5. Solve layout geometry, Skia text bounding boxes, currentColor, and DAG
-  const layout = await solveLayout(resolved);
-
+  // 5. Apply explicit DPI and Bleed before layout solver runs
   if (options.dpi !== undefined && !isNaN(options.dpi)) {
-    layout.canvas.dpi = options.dpi;
+    resolved.canvas.dpi = options.dpi;
+    resolved.canvas.hasExplicitDpi = true;
+    if (resolved.canvases) {
+      for (const c of resolved.canvases) {
+        c.dpi = options.dpi;
+        c.hasExplicitDpi = true;
+      }
+    }
   }
+
   if (options.bleed !== undefined) {
-    // Accept dimension strings ("3mm", "0.125in", "12px", "10") and convert
-    // physical units at the canvas DPI instead of silently reading them as px.
     const raw = String(options.bleed).trim();
     const m = raw.match(/^(-?\d*\.?\d+)\s*(px|mm|cm|in|pt)?$/i);
     let bNum: number | undefined;
     if (m) {
       const v = parseFloat(m[1]);
       const unit = (m[2] || 'px').toLowerCase();
-      const dpi = layout.canvas.dpi || 96;
+      const dpi = resolved.canvas.dpi || 96;
       bNum = convertDimensionToPx(v, unit === 'px' ? undefined : unit, dpi);
     } else {
       bNum = parseFloat(raw);
     }
-    if (bNum !== undefined && !isNaN(bNum)) layout.canvas.bleed = Math.max(0, bNum);
+    if (bNum !== undefined && !isNaN(bNum)) {
+      const effectiveBleed = Math.max(0, bNum);
+      resolved.canvas.bleed = effectiveBleed;
+      if (resolved.canvases) {
+        for (const c of resolved.canvases) {
+          c.bleed = effectiveBleed;
+        }
+      }
+    }
   }
+
+  // 6. Solve layout geometry, Skia text bounding boxes, currentColor, and DAG
+  const layout = await solveLayout(resolved);
+
+  // 7. Collect and deduplicate all transitive dependencies (toad files, fonts, and images)
+  const assetDeps: string[] = [];
+  const entryDir = path.dirname(resolvedEntry);
+
+  if (layout.fonts) {
+    for (const f of layout.fonts) {
+      if (f.source) {
+        const fullFontPath = path.isAbsolute(f.source) ? f.source : path.resolve(entryDir, f.source);
+        if (fs.existsSync(fullFontPath)) assetDeps.push(fullFontPath);
+      }
+    }
+  }
+
+  // Track canvas photoSrc backgrounds
+  const checkPhotoSrc = (photoSrc?: string) => {
+    if (photoSrc && typeof photoSrc === 'string' && !photoSrc.startsWith('data:') && !photoSrc.startsWith('http://') && !photoSrc.startsWith('https://')) {
+      const fullPath = path.isAbsolute(photoSrc) ? photoSrc : path.resolve(entryDir, photoSrc);
+      if (fs.existsSync(fullPath)) assetDeps.push(fullPath);
+    }
+  };
+  checkPhotoSrc(layout.canvas?.photoSrc);
+  if (layout.canvases) {
+    for (const c of layout.canvases) {
+      checkPhotoSrc(c.canvas?.photoSrc);
+    }
+  }
+
+  const seenImageNodes = new Set<LayoutNode>();
+  const collectImageAssets = (nodes: LayoutNode[]) => {
+    for (const n of nodes) {
+      if (seenImageNodes.has(n)) continue;
+      seenImageNodes.add(n);
+      const src = n.imageLayout?.src || (n as any).src;
+      if (src && typeof src === 'string' && !src.startsWith('data:') && !src.startsWith('http://') && !src.startsWith('https://')) {
+        const fullImgPath = path.isAbsolute(src) ? src : path.resolve(entryDir, src);
+        if (fs.existsSync(fullImgPath)) assetDeps.push(fullImgPath);
+      }
+      if (n.children && n.children.length > 0) {
+        collectImageAssets(n.children);
+      }
+    }
+  };
+  collectImageAssets(layout.nodes);
+  if (layout.canvases) {
+    for (const c of layout.canvases) {
+      collectImageAssets(c.nodes);
+    }
+  }
+
+  const rawDeps = [
+    resolvedEntry,
+    ...(resolved.dependencies || []),
+    ...(layout.dependencies || []),
+    ...assetDeps
+  ];
+  const dependencies = Array.from(new Set(rawDeps.map(p => path.resolve(p))));
 
   // If dryRun is requested (e.g. for linting, auditing, or AST/layout inspection), return early
   if (options.dryRun) {
@@ -162,8 +240,8 @@ export async function compileToad(
       outputFiles: [],
       layout,
       canvas: layout.canvas,
-      dependencies: resolved.dependencies || [],
-      warnings: layout.warnings,
+      dependencies,
+      warnings: Array.from(new Set([...parserWarnings, ...(resolved.warnings || []), ...(layout.warnings || [])])),
       durationMs: Date.now() - startTime
     };
   }
@@ -255,19 +333,33 @@ export async function compileToad(
       }
       usedSuffixes.add(candidate);
 
+      const pageWarnings = Array.from(new Set([
+        ...parserWarnings,
+        ...(layout.warnings || []),
+        ...(c.warnings || [])
+      ]));
+      const pageRootNodes = c.rootNodes || c.nodes.filter(n => !n.parentId && !n.parent);
+
       layoutPages.push({
         nameSuffix: candidate,
         pageLayout: {
           canvas: c.canvas,
           fonts: layout.fonts,
           nodes: c.nodes,
-          warnings: layout.warnings,
+          rootNodes: pageRootNodes,
+          warnings: pageWarnings,
           dependencies: layout.dependencies
         }
       });
     }
   } else {
-    layoutPages.push({ nameSuffix: '', pageLayout: layout });
+    layoutPages.push({
+      nameSuffix: '',
+      pageLayout: {
+        ...layout,
+        warnings: Array.from(new Set([...parserWarnings, ...(layout.warnings || [])]))
+      }
+    });
   }
 
   // 7. Render outputs according to requested formats and scale factors
@@ -361,44 +453,6 @@ export async function compileToad(
     }
   }
 
-  // 8. Collect and deduplicate all transitive dependencies (toad files, fonts, and images)
-  const assetDeps: string[] = [];
-  const entryDir = path.dirname(resolvedEntry);
-
-  if (layout.fonts) {
-    for (const f of layout.fonts) {
-      if (f.source) {
-        const fullFontPath = path.resolve(entryDir, f.source);
-        if (fs.existsSync(fullFontPath)) assetDeps.push(fullFontPath);
-      }
-    }
-  }
-
-  const seenImageNodes = new Set<LayoutNode>();
-  const collectImageAssets = (nodes: LayoutNode[]) => {
-    for (const n of nodes) {
-      if (seenImageNodes.has(n)) continue;
-      seenImageNodes.add(n);
-      const src = n.imageLayout?.src || (n as any).src;
-      if (src && typeof src === 'string' && !src.startsWith('data:') && !src.startsWith('http://') && !src.startsWith('https://')) {
-        const fullImgPath = path.resolve(entryDir, src);
-        if (fs.existsSync(fullImgPath)) assetDeps.push(fullImgPath);
-      }
-      if (n.children && n.children.length > 0) {
-        collectImageAssets(n.children);
-      }
-    }
-  };
-  collectImageAssets(layout.nodes);
-
-  const rawDeps = [
-    resolvedEntry,
-    ...(resolved.dependencies || []),
-    ...(layout.dependencies || []),
-    ...assetDeps
-  ];
-  const dependencies = Array.from(new Set(rawDeps.map(p => path.resolve(p))));
-
   const durationMs = Date.now() - startTime;
 
   return {
@@ -408,7 +462,7 @@ export async function compileToad(
     layout,
     canvas: layout.canvas,
     dependencies,
-    warnings: [...(resolved.warnings || []), ...(layout.warnings || [])],
+    warnings: Array.from(new Set([...parserWarnings, ...(resolved.warnings || []), ...(layout.warnings || [])])),
     durationMs
   };
 }

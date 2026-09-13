@@ -20,7 +20,9 @@ export const KNOWN_PROPERTIES = [
   'src', 'fit', 'points', 'd', 'path', 'iconName', 'icon-name', 'shapeType', 'z-index', 'zIndex',
   'layer-color', 'layerColor', 'fill-opacity', 'fillOpacity', 'lock', 'protected', 'knockout', 'shadows', 'shadows-adjust',
   'photo-src', 'photoSrc', 'photo-params', 'photoParams', 'feather', 'vignette', 'exposure', 'warmth', 'temperature', 'highlights',
-  'guides', 'guide', 'global-light', 'globalLight'
+  'guides', 'guide', 'global-light', 'globalLight',
+  'value', 'data', 'url', 'link', 'ecl', 'error-correction', 'errorCorrection',
+  'logo', 'logo-image', 'logoImage', 'barcode-format', 'barcodeFormat', 'show-text', 'showText'
 ];
 
 /**

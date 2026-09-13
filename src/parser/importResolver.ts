@@ -137,12 +137,17 @@ export class ImportResolver {
     const fontDirectives: FontDirectiveNode[] = [];
     const seenFonts = new Set<string>();
     for (const doc of allDocs) {
+      const docDir = doc.loc?.file ? path.dirname(doc.loc.file) : path.dirname(this.entryPath);
       for (const dir of doc.directives) {
         if (dir.type === 'FontDirective') {
           const key = `${dir.family}-${dir.weight || 'normal'}-${dir.style || 'normal'}`;
           if (!seenFonts.has(key)) {
             seenFonts.add(key);
-            fontDirectives.push(dir);
+            const resolvedPath = path.isAbsolute(dir.path) ? dir.path : path.resolve(docDir, dir.path);
+            fontDirectives.push({
+              ...dir,
+              path: resolvedPath
+            });
           }
         }
       }
@@ -506,7 +511,7 @@ export class ImportResolver {
         const val = this.substituteVariablesInValue(prop.value, n => vars.get(n));
         const propName = prop.name;
 
-        if (propName === 'src' || propName === 'photo-src' || propName === 'photoSrc') {
+        if (propName === 'src' || propName === 'photo-src' || propName === 'photoSrc' || propName === 'photo') {
           photoSrc = this.extractString(val) || photoSrc;
           mode = 'photo';
         } else if (propName === 'size' || propName === 'dimensions') {
@@ -1037,6 +1042,19 @@ export class ImportResolver {
       resolved.text = elemText;
     }
 
+    let elemVal = (elem as any).value;
+    if ((rawType === 'barcode' || rawType === 'qrcode') && elemVal) {
+      if (elemVal.startsWith('>') || elemVal.startsWith('$')) {
+        const varName = elemVal.slice(1);
+        const resolvedVar = vars.get(varName);
+        if (resolvedVar) {
+          const str = this.extractString(resolvedVar);
+          elemVal = str !== undefined ? str : (resolvedVar as any).value !== undefined ? String((resolvedVar as any).value) : elemVal;
+        }
+      }
+      resolved.value = elemVal;
+    }
+
     // Apply properties
     this.applyPropertiesToResolved(resolved, elem.properties, vars);
 
@@ -1329,6 +1347,13 @@ export class ImportResolver {
           const join = this.extractString(val) as any;
           target.strokeJoin = join;
           if (target.stroke) target.stroke.join = join;
+          break;
+        }
+        case 'stroke-align':
+        case 'strokeAlign': {
+          const align = this.extractString(val) as any;
+          target.strokeAlign = align;
+          if (target.stroke) target.stroke.align = align;
           break;
         }
         case 'letter-spacing':
@@ -1625,6 +1650,51 @@ export class ImportResolver {
               target.adjustParams.shadows = num;
             }
           }
+          break;
+        }
+        case 'value':
+        case 'data':
+        case 'url':
+        case 'link': {
+          const str = this.extractString(val);
+          if (str !== undefined) {
+            target.value = str;
+            if (target.type === 'text') {
+              target.text = str;
+            }
+          }
+          break;
+        }
+        case 'ecl':
+        case 'error-correction':
+        case 'errorCorrection': {
+          const raw = this.extractString(val)?.toUpperCase();
+          if (raw === 'L' || raw === 'M' || raw === 'Q' || raw === 'H') {
+            target.ecl = raw;
+          }
+          break;
+        }
+        case 'logo':
+        case 'logo-image':
+        case 'logoImage': {
+          const logo = this.extractString(val);
+          if (logo !== undefined) {
+            target.logo = logo;
+          }
+          break;
+        }
+        case 'format':
+        case 'barcode-format':
+        case 'barcodeFormat': {
+          const fmt = this.extractString(val)?.toLowerCase();
+          if (fmt) {
+            target.barcodeFormat = fmt;
+          }
+          break;
+        }
+        case 'show-text':
+        case 'showText': {
+          target.showText = this.extractBoolean(val);
           break;
         }
         default: {
