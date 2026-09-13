@@ -301,7 +301,7 @@ export function lightenColor(colorStr: string, amount: number): string {
     h /= 6;
   }
 
-  const amt = amount > 1 ? amount / 100 : amount;
+  const amt = Math.abs(amount) > 1 ? amount / 100 : amount;
   l = Math.max(0, Math.min(1, l + amt));
 
   const hue2rgb = (p: number, q: number, t: number) => {
@@ -329,7 +329,7 @@ export function lightenColor(colorStr: string, amount: number): string {
 }
 
 export function darkenColor(colorStr: string, amount: number): string {
-  const amt = amount > 1 ? amount / 100 : amount;
+  const amt = Math.abs(amount) > 1 ? amount / 100 : amount;
   return lightenColor(colorStr, -amt);
 }
 

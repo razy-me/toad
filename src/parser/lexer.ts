@@ -435,8 +435,15 @@ export class Lexer {
   private scanVariable(start: Position): Token {
     this.advance(); // consume '>'
     let name = '';
-    while (this.offset < this.source.length && (this.isIdentifierChar(this.peek()) || this.peek() === '-' || this.peek() === '.')) {
-      name += this.advance();
+    while (this.offset < this.source.length) {
+      const ch = this.peek();
+      if (this.isIdentifierChar(ch) || ch === '-') {
+        name += this.advance();
+      } else if (ch === '.' && name.length > 0 && !name.endsWith('.') && this.offset + 1 < this.source.length && (this.isIdentifierChar(this.peek(1)) || this.peek(1) === '-')) {
+        name += this.advance();
+      } else {
+        break;
+      }
     }
     return {
       type: TokenType.VARIABLE,

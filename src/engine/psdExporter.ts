@@ -1946,7 +1946,7 @@ export class PsdExporter {
           smoothness: 1,
           colorStops,
           opacityStops,
-          style: fill.type === 'radial' ? 'radial' : 'linear',
+          style: (fill as any).type === 'radial' ? 'radial' : (fill as any).type === 'conic' ? 'angle' : 'linear',
           angle: cssGradientAngleToPhotoshop(typeof fill.angle === 'number' ? fill.angle : fill.direction)
         } as any;
       }
@@ -2122,17 +2122,48 @@ export class PsdExporter {
     // Stroke Effect
     const strokeFx = node.style.layerStroke;
     if (strokeFx) {
-      const color = parseColorToRgba(strokeFx.color || '#000000');
-      effects.stroke = [
-        {
-          enabled: true,
-          size: { units: 'Pixels', value: (strokeFx.width || 1) * scale },
-          position: strokeFx.position || 'inside',
-          fillType: 'color',
-          color: { r: color.r, g: color.g, b: color.b },
-          opacity: strokeFx.opacity ?? color.a
-        }
-      ];
+      if (strokeFx.gradient && strokeFx.gradient.stops) {
+        const distributed = distributeGradientStops(strokeFx.gradient.stops);
+        const colorStops = distributed.map(s => {
+          const c = parseColorToRgba(s.color);
+          return { color: { r: c.r, g: c.g, b: c.b }, location: s.offset, midpoint: 0.5 };
+        });
+        const opacityStops = distributed.map(s => {
+          const c = parseColorToRgba(s.color);
+          return { opacity: c.a, location: s.offset, midpoint: 0.5 };
+        });
+        const gradType = strokeFx.gradient.type === 'radial' ? 'radial' : strokeFx.gradient.type === 'conic' ? 'angle' : 'linear';
+        effects.stroke = [
+          {
+            enabled: true,
+            size: { units: 'Pixels', value: (strokeFx.width || 1) * scale },
+            position: strokeFx.position || 'inside',
+            fillType: 'gradient',
+            type: gradType,
+            angle: cssGradientAngleToPhotoshop(typeof (strokeFx.gradient as any).angle === 'number' ? (strokeFx.gradient as any).angle : (strokeFx.gradient as any).direction),
+            gradient: {
+              name: 'Gradient Stroke',
+              type: 'solid',
+              smoothness: 1,
+              colorStops,
+              opacityStops
+            },
+            opacity: strokeFx.opacity ?? 1
+          } as any
+        ];
+      } else {
+        const color = parseColorToRgba(strokeFx.color || '#000000');
+        effects.stroke = [
+          {
+            enabled: true,
+            size: { units: 'Pixels', value: (strokeFx.width || 1) * scale },
+            position: strokeFx.position || 'inside',
+            fillType: 'color',
+            color: { r: color.r, g: color.g, b: color.b },
+            opacity: strokeFx.opacity ?? color.a
+          }
+        ];
+      }
       hasAnyEffect = true;
     }
 
@@ -2174,7 +2205,7 @@ export class PsdExporter {
       effects.gradientOverlay = [
         {
           enabled: true,
-          type: gradOverlay.type === 'radial' ? 'radial' : 'linear',
+          type: gradOverlay.type === 'radial' ? 'radial' : gradOverlay.type === 'conic' ? 'angle' : 'linear',
           angle: cssGradientAngleToPhotoshop(typeof gradOverlay.angle === 'number' ? gradOverlay.angle : gradOverlay.direction),
           scale: 1,
           gradient: {
@@ -2184,7 +2215,7 @@ export class PsdExporter {
             colorStops,
             opacityStops
           }
-        }
+        } as any
       ];
       hasAnyEffect = true;
     }

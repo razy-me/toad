@@ -169,7 +169,7 @@ export function lintDocument(doc: DocumentNode, filePath?: string): Diagnostic[]
   }
 
   // 2nd pass: Lint top-level canvas & elements
-  for (const elem of doc.elements) {
+  const checkElementTree = (elem: any, isDirectCanvasProp = false) => {
     traverse(elem, (node) => {
       if (node.type === 'VariableReference') {
         const ref = node as VariableReferenceNode;
@@ -181,7 +181,9 @@ export function lintDocument(doc: DocumentNode, filePath?: string): Diagnostic[]
         if (!declaredGlobalVars.has(ref.name) && !declaredGlobalVars.has(rootVarName)) {
           diagnostics.push({
             code: 'LINT-UNDECLARED-VAR',
-            message: `Variable '>${ref.name}' is referenced but never declared.`,
+            message: isDirectCanvasProp
+              ? `Variable '>${ref.name}' is referenced on canvas but never declared.`
+              : `Variable '>${ref.name}' is referenced but never declared.`,
             severity: 'error',
             loc: ref.loc
           });
@@ -244,25 +246,26 @@ export function lintDocument(doc: DocumentNode, filePath?: string): Diagnostic[]
         }
       }
     });
+  };
+
+  for (const elem of doc.elements) {
+    checkElementTree(elem, false);
   }
 
-  // Also check canvas properties for variable references
+  // Also check canvas properties and canvas-nested elements
   for (const c of canvasesToCheck) {
-    traverse(c, (node) => {
-      if (node.type === 'VariableReference') {
-        const ref = node as VariableReferenceNode;
-        referencedGlobalVars.add(ref.name);
-        const rootVarName = ref.name.includes('.') ? ref.name.split('.')[0]! : ref.name;
-        if (!declaredGlobalVars.has(ref.name) && !declaredGlobalVars.has(rootVarName)) {
-          diagnostics.push({
-            code: 'LINT-UNDECLARED-VAR',
-            message: `Variable '>${ref.name}' is referenced on canvas but never declared.`,
-            severity: 'error',
-            loc: ref.loc
-          });
-        }
+    // Check canvas's own properties
+    if (c.properties) {
+      for (const p of c.properties) {
+        checkElementTree(p, true);
       }
-    });
+    }
+    // Check canvas-nested elements
+    if (c.elements) {
+      for (const elem of c.elements) {
+        checkElementTree(elem, false);
+      }
+    }
   }
 
   // Collect all instantiated or referenced components across canvas, elements, and components

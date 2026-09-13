@@ -102,6 +102,7 @@ export async function startWatcher(
       const result = await compileToad(resolvedEntry, buildOptions);
 
       console.log(`[toad] Build succeeded in ${result.durationMs}ms`);
+      const maxNameLen = Math.max(20, ...result.outputFiles.map(f => path.basename(f).length));
       for (const f of result.outputFiles) {
         let sizeStr = '';
         try {
@@ -115,7 +116,7 @@ export async function startWatcher(
            dimStr = `(${result.canvas.width}x${result.canvas.height})`;
         }
         
-        console.log(`  -> ${path.basename(f).padEnd(20)} ${sizeStr.padStart(8)}  ${dimStr}`);
+        console.log(`  -> ${path.basename(f).padEnd(maxNameLen)} ${sizeStr.padStart(8)}  ${dimStr}`);
       }
 
       if (result.warnings.length > 0) {
@@ -258,6 +259,7 @@ export function createCli(): Command {
 
     const formatOutput = (result: BuildResult) => {
       console.log(`\n${c.bgGreen(' SUCCESS ')} ${c.bold(c.green(`Build completed in ${result.durationMs}ms`))}`);
+      const maxBaseLen = Math.max(24, ...result.outputFiles.map(f => path.basename(f).length));
       for (const f of result.outputFiles) {
         let sizeStr = '';
         try {
@@ -279,7 +281,7 @@ export function createCli(): Command {
           dimStr = c.dim(`(${Math.round(result.canvas.width)}x${Math.round(result.canvas.height)} pt)`);
         }
         
-        console.log(`  ${c.cyan('➜')} ${c.bold(path.basename(f)).padEnd(24)} ${c.yellow(sizeStr.padStart(8))}  ${dimStr}`);
+        console.log(`  ${c.cyan('➜')} ${c.bold(path.basename(f)).padEnd(maxBaseLen)} ${c.yellow(sizeStr.padStart(8))}  ${dimStr}`);
       }
       if (result.warnings.length > 0) {
         console.log('');

@@ -461,6 +461,28 @@ export class CanvasRenderer {
           ? node.y + (node.height - (lineCount - 1) * lineHeight) / 2 + opticalOffset
           : node.y + (node.style.verticalAlign === 'bottom' ? Math.max(0, node.height - tlHeight) : 0);
 
+        const hasTextStroke = Boolean(node.style?.stroke || node.stroke);
+        if (hasTextStroke) {
+          ctx.save();
+          ctx.strokeStyle = (node.style?.stroke || node.stroke) as string;
+          ctx.lineWidth = Number(node.style?.strokeWidth || (node as any).strokeWidth || 1);
+          if (node.style?.strokeStyle === 'dashed') {
+            ctx.setLineDash([6, 6]);
+          } else if (node.style?.strokeStyle === 'dotted') {
+            ctx.setLineDash([2, 2]);
+          }
+          if (node.textLayout && node.textLayout.lines && node.textLayout.lines.length > 0) {
+            for (let i = 0; i < node.textLayout.lines.length; i++) {
+              const line = node.textLayout.lines[i]!;
+              const lineY = baselineY0 + i * lineHeight;
+              ctx.strokeText(line, anchorX, lineY);
+            }
+          } else if (node.name) {
+            ctx.strokeText(node.name, anchorX, isMiddle ? node.y + node.height / 2 + opticalOffset : node.y);
+          }
+          ctx.restore();
+        }
+
         if (align === 'justify' && node.textLayout && node.textLayout.lines && node.textLayout.lines.length > 0) {
           ctx.textAlign = 'left';
           for (let i = 0; i < node.textLayout.lines.length; i++) {
@@ -841,9 +863,25 @@ export class CanvasRenderer {
     // Layer Stroke (Independent Stroke FX)
     if (node.style.layerStroke) {
       ctx.save();
+      const strokeW = node.style.layerStroke.width || 1;
+      const strokePos = node.style.layerStroke.position || 'center';
+      if (node.style.layerStroke.opacity !== undefined) {
+        ctx.globalAlpha *= Math.max(0, Math.min(1, node.style.layerStroke.opacity));
+      }
       ctx.strokeStyle = node.style.layerStroke.color || '#000000';
-      ctx.lineWidth = node.style.layerStroke.width || 1;
-      ctx.stroke();
+      if (strokePos === 'inside') {
+        ctx.save();
+        ctx.clip();
+        ctx.lineWidth = strokeW * 2;
+        ctx.stroke();
+        ctx.restore();
+      } else if (strokePos === 'outside') {
+        ctx.lineWidth = strokeW * 2;
+        ctx.stroke();
+      } else {
+        ctx.lineWidth = strokeW;
+        ctx.stroke();
+      }
       ctx.restore();
     }
   }

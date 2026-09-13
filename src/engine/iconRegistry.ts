@@ -34,5 +34,5 @@ export function getIconPath(iconName: string): string {
 }
 
 export function hasIcon(iconName: string): boolean {
-  return iconName in lucideIcons;
+  return Boolean(iconName && Object.prototype.hasOwnProperty.call(lucideIcons, iconName));
 }
