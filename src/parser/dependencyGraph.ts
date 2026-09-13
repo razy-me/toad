@@ -34,13 +34,21 @@ export class DependencyGraph {
       (element as any).isSyntheticId = true;
     }
     const id = element.id || `__auto_${++this.syntheticIdCounter}`;
-    element.id = id;
-
     if (this.nodes.has(id)) {
       this.warnings.push(
         `Duplicate element id '#${id}' detected; the later definition overwrites the earlier one.`
       );
+      const existing = this.nodes.get(id)!;
+      let dupCounter = 1;
+      while (this.nodes.has(`${id}__prev${dupCounter}`)) {
+        dupCounter++;
+      }
+      const prevId = `${id}__prev${dupCounter}`;
+      existing.id = prevId;
+      existing.element.id = prevId;
+      this.nodes.set(prevId, existing);
     }
+    element.id = id;
 
     const dependencies: string[] = [];
     if (element.at && element.at.relational && element.at.relational.targetId) {

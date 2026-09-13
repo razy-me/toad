@@ -272,6 +272,10 @@ export interface ObjectLiteralNode extends BaseNode {
   properties: Record<string, ValueNode>;
 }
 
+export function isObjectLiteralNode(node: unknown): node is ObjectLiteralNode {
+  return typeof node === 'object' && node !== null && (node as any).type === 'ObjectLiteral';
+}
+
 export interface ColorTransformNode extends BaseNode {
   type: 'ColorTransform';
   functionName: 'alpha' | 'lighten' | 'darken';

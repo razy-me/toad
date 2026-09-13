@@ -77,12 +77,15 @@ import { computeGcd } from './math.js';
 export { computeGcd };
 
 export function computeAspectRatio(width: number, height: number): { w: number; h: number; gcd: number; str: string } {
-  if (!width || !height || width <= 0 || height <= 0) {
+  if (!width || !height || width <= 0 || height <= 0 || !Number.isFinite(width) || !Number.isFinite(height)) {
     return { w: 1, h: 1, gcd: 1, str: '1:1' };
   }
   const gcd = computeGcd(width, height);
   const w = Math.round(width) / gcd;
   const h = Math.round(height) / gcd;
+  if (!w || !h || w <= 0 || h <= 0 || !Number.isFinite(w) || !Number.isFinite(h)) {
+    return { w: 1, h: 1, gcd: 1, str: '1:1' };
+  }
   return { w, h, gcd, str: `${w}:${h}` };
 }
 
@@ -442,6 +445,16 @@ export class ImportResolver {
         return {
           ...value,
           elements: value.elements.map(e => this.substituteVariablesInValue(e, lookup))
+        };
+      }
+      case 'ObjectLiteral': {
+        const substitutedProps: Record<string, ValueNode> = {};
+        for (const [k, v] of Object.entries((value as any).properties || {})) {
+          substitutedProps[k] = this.substituteVariablesInValue(v as ValueNode, lookup);
+        }
+        return {
+          ...value,
+          properties: substitutedProps
         };
       }
       case 'ExpressionList': {
@@ -893,24 +906,35 @@ export class ImportResolver {
       // Check named property on instance body { paramName: val }
       const namedProp = instance.properties?.find(p => p.name === param.name);
 
+      let evaluated: ValueNode | undefined;
       if (namedArg) {
-        const evaluated = this.substituteVariablesInValue(namedArg.value, n => parentVars.get(n));
-        localVars.set(param.name, evaluated);
+        evaluated = this.substituteVariablesInValue(namedArg.value, n => parentVars.get(n));
       } else if (namedProp) {
-        const evaluated = this.substituteVariablesInValue(namedProp.value, n => parentVars.get(n));
-        localVars.set(param.name, evaluated);
+        evaluated = this.substituteVariablesInValue(namedProp.value, n => parentVars.get(n));
       } else if (unnamedIdx < unnamedArgs.length) {
         // Positional arg
-        const evaluated = this.substituteVariablesInValue(unnamedArgs[unnamedIdx++].value, n => parentVars.get(n));
-        localVars.set(param.name, evaluated);
+        evaluated = this.substituteVariablesInValue(unnamedArgs[unnamedIdx++].value, n => parentVars.get(n));
       } else if (param.defaultValue) {
         // Default value evaluated in localVars so it can reference earlier component parameters
-        const evaluated = this.substituteVariablesInValue(param.defaultValue, n => localVars.get(n));
-        localVars.set(param.name, evaluated);
+        evaluated = this.substituteVariablesInValue(param.defaultValue, n => localVars.get(n));
       } else {
         throw new Error(
           `Missing required parameter '${param.name}' for component '${compDecl.name}'`
         );
+      }
+
+      if (evaluated) {
+        const flattenIntoLocalVars = (prefix: string, valNode: ValueNode) => {
+          localVars.set(prefix, valNode);
+          if (valNode.type === 'ObjectLiteral') {
+            const obj = valNode as any;
+            for (const [key, propVal] of Object.entries(obj.properties || {})) {
+              const nestedPrefix = prefix ? `${prefix}.${key}` : key;
+              flattenIntoLocalVars(nestedPrefix, propVal as ValueNode);
+            }
+          }
+        };
+        flattenIntoLocalVars(param.name, evaluated);
       }
     }
 

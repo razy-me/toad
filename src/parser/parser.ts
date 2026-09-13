@@ -196,7 +196,26 @@ export class Parser {
       }
     }
 
-    this.consume(TokenType.SEMICOLON, "Expected ';' after @font directive");
+    if (!this.check(TokenType.SEMICOLON)) {
+      this.reportError("Expected ';' after @font directive", this.peek().loc);
+      while (!this.check(TokenType.SEMICOLON) && !this.isAtEnd()) {
+        const t = this.peek().type;
+        if (
+          t === TokenType.DIRECTIVE_IMPORT ||
+          t === TokenType.DIRECTIVE_FONT ||
+          t === TokenType.KW_CANVAS ||
+          t === TokenType.KW_COMPONENT ||
+          t === TokenType.VARIABLE ||
+          this.isElementStart()
+        ) {
+          break;
+        }
+        this.advance();
+      }
+    }
+    if (this.check(TokenType.SEMICOLON)) {
+      this.advance();
+    }
     return {
       type: 'FontDirective',
       path: pathTok.value,
