@@ -389,14 +389,14 @@ export class Parser {
         id = this.advance().value.replace(/^#/, '');
       } else if (this.check(TokenType.STRING)) {
         const strVal = this.advance().value;
-        if (elemType === 'text' && !textShorthand) {
+        if ((elemType === 'text' || elemType === 'qrcode' || elemType === 'qr' || elemType === 'barcode') && !textShorthand) {
           textShorthand = strVal;
         } else if (!name) {
           name = strVal;
         }
       } else if (this.check(TokenType.VARIABLE)) {
         const varTok = this.advance();
-        if (elemType === 'text' && !textShorthand) {
+        if ((elemType === 'text' || elemType === 'qrcode' || elemType === 'qr' || elemType === 'barcode') && !textShorthand) {
           textShorthand = `>${varTok.value}`;
         } else if (!name) {
           name = `>${varTok.value}`;
@@ -481,6 +481,27 @@ export class Parser {
       case 'arrow':
       case 'cross':
         return { type: 'ShapeElement', shapeType: elemType, ...base };
+      case 'barcode': {
+        const hasContentProp = properties.some(p => p.name === 'value' || p.name === 'content' || p.name === 'data' || p.name === 'text');
+        let effectiveName = name;
+        let effectiveValue = textShorthand;
+        if (hasContentProp && textShorthand && !name) {
+          effectiveName = textShorthand;
+          effectiveValue = undefined;
+        }
+        return { type: 'BarcodeElement', value: effectiveValue, ...base, name: effectiveName };
+      }
+      case 'qrcode':
+      case 'qr': {
+        const hasContentProp = properties.some(p => p.name === 'value' || p.name === 'content' || p.name === 'data' || p.name === 'url' || p.name === 'link' || p.name === 'text');
+        let effectiveName = name;
+        let effectiveValue = textShorthand;
+        if (hasContentProp && textShorthand && !name) {
+          effectiveName = textShorthand;
+          effectiveValue = undefined;
+        }
+        return { type: 'QrCodeElement', value: effectiveValue, ...base, name: effectiveName };
+      }
       case 'slot':
         return { type: 'SlotElement', ...base };
       default:
@@ -1446,7 +1467,10 @@ export class Parser {
       TokenType.KW_TRIANGLE,
       TokenType.KW_ARROW,
       TokenType.KW_CROSS,
-      TokenType.KW_SLOT
+      TokenType.KW_SLOT,
+      TokenType.KW_BARCODE,
+      TokenType.KW_QRCODE,
+      TokenType.KW_QR
     ];
     if (elementKeywords.includes(tok.type)) return true;
 

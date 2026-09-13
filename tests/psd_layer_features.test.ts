@@ -118,7 +118,7 @@ describe('PSD Exporter Layer Properties, Effects & Typography', () => {
     const textLayer = psd.children?.find(l => l.name.includes('Header text'));
 
     expect(textLayer).toBeDefined();
-    expect(textLayer?.text?.style?.fontCaps).toBe(1); // 1 = All Caps
+    expect(textLayer?.text?.style?.fontCaps).toBe(2); // 2 = All Caps (Photoshop spec)
     expect(textLayer?.text?.style?.ligatures).toBe(true);
     expect(textLayer?.text?.paragraphStyle?.spaceAfter).toBe(12);
     expect(textLayer?.text?.paragraphStyle?.firstLineIndent).toBe(24);

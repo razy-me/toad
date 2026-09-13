@@ -632,3 +632,88 @@ export function svgPathToBezierPaths(
 
   return bezierPaths;
 }
+
+/**
+ * Converts polygon vertices with optional corner radius into an SVG path with smooth arcs.
+ */
+export function polygonToRoundedSvgPath(
+  points: Array<{ x: number; y: number }>,
+  radius?: number | number[]
+): string {
+  if (!points || points.length < 3) return '';
+  const n = points.length;
+  const radNum = typeof radius === 'number' ? radius : Array.isArray(radius) && radius.length > 0 ? radius[0]! : 0;
+  if (!radNum || radNum <= 0) {
+    return `M ${points[0]!.x} ${points[0]!.y} ` + points.slice(1).map(p => `L ${p.x} ${p.y}`).join(' ') + ' Z';
+  }
+
+  // Determine overall polygon winding (signed area)
+  let signedArea = 0;
+  for (let i = 0; i < n; i++) {
+    const p1 = points[i]!;
+    const p2 = points[(i + 1) % n]!;
+    signedArea += (p1.x * p2.y - p2.x * p1.y);
+  }
+  const isClockwise = signedArea > 0;
+  const sweep = isClockwise ? 1 : 0;
+
+  const starts: Array<{ x: number; y: number }> = [];
+  const ends: Array<{ x: number; y: number }> = [];
+  const radii: number[] = [];
+
+  for (let i = 0; i < n; i++) {
+    const prev = points[(i - 1 + n) % n]!;
+    const curr = points[i]!;
+    const next = points[(i + 1) % n]!;
+    const r = Array.isArray(radius) && typeof radius[i] === 'number' ? radius[i]! : radNum;
+
+    const v1x = prev.x - curr.x;
+    const v1y = prev.y - curr.y;
+    const v2x = next.x - curr.x;
+    const v2y = next.y - curr.y;
+
+    const len1 = Math.sqrt(v1x * v1x + v1y * v1y);
+    const len2 = Math.sqrt(v2x * v2x + v2y * v2y);
+
+    if (len1 < 1e-4 || len2 < 1e-4 || r <= 0) {
+      starts.push(curr);
+      ends.push(curr);
+      radii.push(0);
+      continue;
+    }
+
+    const u1x = v1x / len1;
+    const u1y = v1y / len1;
+    const u2x = v2x / len2;
+    const u2y = v2y / len2;
+
+    const dot = Math.max(-1, Math.min(1, u1x * u2x + u1y * u2y));
+    const angle = Math.acos(dot);
+    const halfAngle = angle / 2;
+
+    if (Math.sin(halfAngle) < 1e-4) {
+      starts.push(curr);
+      ends.push(curr);
+      radii.push(0);
+      continue;
+    }
+
+    const d = Math.min(r / Math.tan(halfAngle), Math.min(len1 / 2, len2 / 2));
+    const actualR = d * Math.tan(halfAngle);
+
+    starts.push({ x: curr.x + d * u1x, y: curr.y + d * u1y });
+    ends.push({ x: curr.x + d * u2x, y: curr.y + d * u2y });
+    radii.push(actualR);
+  }
+
+  let dStr = `M ${ends[n - 1]!.x} ${ends[n - 1]!.y} `;
+  for (let i = 0; i < n; i++) {
+    dStr += `L ${starts[i]!.x} ${starts[i]!.y} `;
+    if (radii[i]! > 0) {
+      dStr += `A ${radii[i]} ${radii[i]} 0 0 ${sweep} ${ends[i]!.x} ${ends[i]!.y} `;
+    }
+  }
+  dStr += 'Z';
+  return dStr;
+}
+

@@ -11,7 +11,8 @@
   "files": [
     "dist",
     "README.md",
-    "wiki.html"
+    "wiki.html",
+    "scripts"
   ],
   "author": "razy-me <florian8schuster@gmail.com>",
   "repository": {

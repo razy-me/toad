@@ -91,6 +91,6 @@ describe('PSD End-to-End DSL Integration Test', () => {
     const textLayer = psd.children?.find(l => l.name === 'HELLO PHOTOSHOP');
     expect(textLayer).toBeDefined();
     expect(textLayer?.layerColor).toBe('green');
-    expect(textLayer?.text?.style?.fontCaps).toBe(1);
+    expect(textLayer?.text?.style?.fontCaps).toBe(2);
   });
 });

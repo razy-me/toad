@@ -22,41 +22,8 @@ import {
 } from './drawUtils.js';
 import { FontLoader } from './fontLoader.js';
 import { resolveSharedImage, splitUnsafeFilterFns, sanitizeFilterCss } from './imageCache.js';
-import { svgPathToBezierPaths } from './vectorPathParser.js';
+import { svgPathToBezierPaths, polygonToRoundedSvgPath } from './vectorPathParser.js';
 import { resolveHumanLayerName, formatTextLayerName, sanitizeTextSnippet, LayerNamingContext } from '../utils/layerNaming.js';
-
-/**
- * Extracts polygon vertices from a straight-line SVG path (M/L/Z commands
- * only — the format generateShapePath emits). Returns LOCAL coordinates, or
- * null when the path contains curve commands we cannot map to knots.
- */
-function parsePolygonPointsFromPathD(d: string): Array<{ x: number; y: number }> | null {
-  if (!d) return null;
-  const tokens = d.match(/[MLZz]|-?\d*\.?\d+(?:e[-+]?\d+)?/gi);
-  if (!tokens) return null;
-  const pts: Array<{ x: number; y: number }> = [];
-  let i = 0;
-  let cmd = '';
-  while (i < tokens.length) {
-    const t = tokens[i];
-    if (!t) break;
-    if (/^[A-Za-z]$/.test(t)) {
-      cmd = t.toUpperCase();
-      i++;
-      if (cmd === 'Z') continue;
-      continue;
-    }
-    if ((cmd === 'M' || cmd === 'L') && i + 1 < tokens.length) {
-      pts.push({ x: parseFloat(tokens[i]), y: parseFloat(tokens[i + 1]) });
-      i += 2;
-      // Subsequent coordinate pairs after M implicitly become L.
-      if (cmd === 'M') cmd = 'L';
-    } else {
-      return null; // unexpected token: curves or malformed data
-    }
-  }
-  return pts.length >= 3 ? pts : null;
-}
 
 // Initialize ag-psd with @napi-rs/canvas
 let isInitialized = false;
@@ -108,6 +75,7 @@ export function transformPoint(m: Matrix2D, x: number, y: number): { x: number; 
 }
 
 export function getNodeLocalMatrix(node: LayoutNode): Matrix2D | null {
+  if (!node.style) return null;
   const hasTransform = !!(node.style.rotation || node.style.scale !== undefined || node.style.skewX || node.style.skewY);
   if (!hasTransform) return null;
 
@@ -197,19 +165,48 @@ export class PsdExporter {
 
     const psdChildren: Layer[] = [];
 
-    // 1. Background layer if canvas defines background fill
-    if (layout.canvas.background) {
+    const effectiveDpi = options.dpi ?? 72;
+
+    // 1. Background layer if canvas defines background fill or photo
+    if (layout.canvas.background || layout.canvas.photoSrc) {
       const bgCanvas = createCanvas(docWidth, docHeight);
       const bgCtx = bgCanvas.getContext('2d');
       bgCtx.scale(scale, scale);
 
       const box = { x: 0, y: 0, w: layout.canvas.width, h: layout.canvas.height };
-      if (typeof layout.canvas.background === 'string') {
-        bgCtx.fillStyle = layout.canvas.background;
-      } else {
-        bgCtx.fillStyle = createCanvasGradient(bgCtx, layout.canvas.background as any, box);
+      if (layout.canvas.background) {
+        if (typeof layout.canvas.background === 'string') {
+          bgCtx.fillStyle = layout.canvas.background;
+        } else {
+          bgCtx.fillStyle = createCanvasGradient(bgCtx, layout.canvas.background as any, box);
+        }
+        bgCtx.fillRect(0, 0, layout.canvas.width, layout.canvas.height);
       }
-      bgCtx.fillRect(0, 0, layout.canvas.width, layout.canvas.height);
+      if (layout.canvas.photoSrc) {
+        const bgImg = await this.resolveImage(layout.canvas.photoSrc, options.basePath);
+        if (bgImg) {
+          drawImageWithFit(bgCtx, bgImg, 'cover', 0, 0, layout.canvas.width, layout.canvas.height);
+        }
+      }
+
+      let bgVectorData: any = {};
+      if (layout.canvas.background) {
+        const bgNode: LayoutNode = {
+          id: '__canvas_bg__',
+          type: 'rect',
+          name: 'Background',
+          x: 0,
+          y: 0,
+          width: layout.canvas.width,
+          height: layout.canvas.height,
+          style: {
+            color: typeof layout.canvas.background === 'string' ? layout.canvas.background : '#000000',
+            fill: layout.canvas.background
+          },
+          box
+        };
+        bgVectorData = this.buildVectorShape(bgNode, scale, docWidth, docHeight, IDENTITY_MATRIX, effectiveDpi);
+      }
 
       const bgLayer: Layer = {
         name: 'Background',
@@ -219,12 +216,13 @@ export class PsdExporter {
         bottom: docHeight,
         opacity: 1,
         blendMode: 'normal',
-        canvas: bgCanvas as unknown as HTMLCanvasElement
+        canvas: bgCanvas as unknown as HTMLCanvasElement,
+        ...(bgVectorData.vectorMask ? { vectorMask: bgVectorData.vectorMask } : {}),
+        ...(bgVectorData.vectorFill ? { vectorFill: bgVectorData.vectorFill } : {}),
+        ...(bgVectorData.vectorOrigination ? { vectorOrigination: bgVectorData.vectorOrigination } : {}),
       };
       psdChildren.push(bgLayer);
     }
-
-    const effectiveDpi = options.dpi ?? 72;
 
     // 2. Build PSD Layers for Layout Nodes
     const rootNodes = layout.rootNodes || layout.nodes.filter(n => !n.parentId && !n.parent);
@@ -234,8 +232,10 @@ export class PsdExporter {
       rootSiblingCounts.set(n.type, (rootSiblingCounts.get(n.type) || 0) + 1);
     }
 
+    let isCurrentRootMaskActive = false;
     for (let i = 0; i < nodesToRender.length; i++) {
       const node = nodesToRender[i]!;
+      const isMask = node.style?.clip === true || (node as any).clip === true;
       const rootContext: LayerNamingContext = {
         parentName: layout.canvas.name || 'Canvas',
         parentType: 'canvas',
@@ -246,6 +246,14 @@ export class PsdExporter {
       };
       const layer = await this.buildPsdLayer(node, scale, options.basePath, effectiveDpi, IDENTITY_MATRIX, rootContext, options);
       if (layer) {
+        if (isMask) {
+          layer.clipping = false;
+          isCurrentRootMaskActive = true;
+        } else if (node.style?.clip === false || (node as any).clip === false) {
+          isCurrentRootMaskActive = false;
+        } else if (isCurrentRootMaskActive) {
+          layer.clipping = true;
+        }
         psdChildren.push(layer);
       }
     }
@@ -293,20 +301,68 @@ export class PsdExporter {
     const compCtx = compositeCanvas.getContext('2d');
     compCtx.scale(scale, scale);
 
-    if (layout.canvas.background) {
+    if (layout.canvas.background || layout.canvas.photoSrc) {
       compCtx.save();
       const box = { x: 0, y: 0, w: layout.canvas.width, h: layout.canvas.height };
-      if (typeof layout.canvas.background === 'string') {
-        compCtx.fillStyle = layout.canvas.background;
-      } else {
-        compCtx.fillStyle = createCanvasGradient(compCtx, layout.canvas.background as any, box);
+      if (layout.canvas.background) {
+        if (typeof layout.canvas.background === 'string') {
+          compCtx.fillStyle = layout.canvas.background;
+        } else {
+          compCtx.fillStyle = createCanvasGradient(compCtx, layout.canvas.background as any, box);
+        }
+        compCtx.fillRect(0, 0, layout.canvas.width, layout.canvas.height);
       }
-      compCtx.fillRect(0, 0, layout.canvas.width, layout.canvas.height);
+      if (layout.canvas.photoSrc) {
+        const bgImg = await this.resolveImage(layout.canvas.photoSrc, options.basePath);
+        if (bgImg) {
+          drawImageWithFit(compCtx, bgImg, 'cover', 0, 0, layout.canvas.width, layout.canvas.height);
+        }
+      }
       compCtx.restore();
     }
 
-    for (const node of (rootNodes.length > 0 ? rootNodes : layout.nodes)) {
-      await this.renderNodeToContext(compCtx, node, options.basePath);
+    const renderNodes = rootNodes.length > 0 ? rootNodes : layout.nodes;
+    let rIdx = 0;
+    while (rIdx < renderNodes.length) {
+      const rootNode = renderNodes[rIdx]!;
+      const isMask = rootNode.style?.clip === true || (rootNode as any).clip === true;
+
+      if (isMask) {
+        await this.renderNodeToContext(compCtx, rootNode, options.basePath);
+        const maskedSiblings: LayoutNode[] = [];
+        let j = rIdx + 1;
+        while (j < renderNodes.length) {
+          const nextChild = renderNodes[j]!;
+          if (nextChild.style?.clip === true || (nextChild as any).clip === true) break;
+          if (nextChild.style?.clip === false || (nextChild as any).clip === false) break;
+          maskedSiblings.push(nextChild);
+          j++;
+        }
+
+        if (maskedSiblings.length > 0) {
+          compCtx.save();
+          compCtx.beginPath();
+          if (rootNode.type === 'circle') {
+            const cx = rootNode.x + rootNode.width / 2;
+            const cy = rootNode.y + rootNode.height / 2;
+            drawCircle(compCtx, cx, cy, { rx: rootNode.width / 2, ry: rootNode.height / 2 });
+          } else if (rootNode.type === 'polygon' && rootNode.polygonLayout?.canvasPoints) {
+            drawPolygon(compCtx, rootNode.polygonLayout.canvasPoints);
+          } else {
+            drawRect(compCtx, rootNode.x, rootNode.y, rootNode.width, rootNode.height, rootNode.style.borderRadius);
+          }
+          compCtx.clip();
+
+          for (const sibling of maskedSiblings) {
+            await this.renderNodeToContext(compCtx, sibling, options.basePath);
+          }
+          compCtx.restore();
+        }
+        rIdx = j;
+      } else {
+        await this.renderNodeToContext(compCtx, rootNode, options.basePath);
+        rIdx++;
+      }
     }
 
     psd.canvas = compositeCanvas as unknown as HTMLCanvasElement;
@@ -560,12 +616,16 @@ export class PsdExporter {
       height = Math.max(1, bottom - top);
     }
 
+    if (!node.style) {
+      (node as any).style = {};
+    }
+
     const layerName = resolveHumanLayerName(node, {
       ...context,
       humanizeLayerNames: options?.humanizeLayerNames,
     });
     const opacity = node.opacity ?? 1;
-    const blendMode = mapBlendModeToPsd(node.style.blendMode);
+    const blendMode = mapBlendModeToPsd(node.style?.blendMode);
 
     // Photoshop Layer Metadata: layerColor, lock, fillOpacity, knockout
     const mapLayerColorToPsd = (col?: string): 'none' | 'red' | 'orange' | 'yellow' | 'green' | 'blue' | 'violet' | 'gray' | undefined => {
@@ -589,7 +649,16 @@ export class PsdExporter {
       return undefined;
     };
     const layerColor = mapLayerColorToPsd(node.style.layerColor || (node as any).layerColor);
-    const fillOpacity = typeof node.style.fillOpacity === 'number' ? node.style.fillOpacity : (node as any).fillOpacity;
+    let fillOpacity = typeof node.style.fillOpacity === 'number' ? node.style.fillOpacity : (node as any).fillOpacity;
+    if (fillOpacity === undefined) {
+      const fillVal = node.style.fill || node.fill;
+      if (typeof fillVal === 'string') {
+        const rgba = parseColorToRgba(fillVal);
+        if (rgba.a < 1) {
+          fillOpacity = Number(rgba.a.toFixed(3));
+        }
+      }
+    }
     const knockout = node.style.knockout ?? (node as any).knockout;
     const lockVal = node.style.lock || (node as any).lock;
     const protectedFlags = lockVal ? {
@@ -611,7 +680,7 @@ export class PsdExporter {
 
         for (let i = 0; i < node.children.length; i++) {
           const childNode = node.children[i]!;
-          const isMask = childNode.style.clip === true || (childNode as any).clip === true;
+          const isMask = childNode.style?.clip === true || (childNode as any).clip === true;
           const childContext: LayerNamingContext = {
             parentName: layerName,
             parentType: node.type,
@@ -626,6 +695,8 @@ export class PsdExporter {
             if (isMask) {
               childLayer.clipping = false; // Base mask layer
               isCurrentMaskActive = true;
+            } else if (childNode.style?.clip === false || (childNode as any).clip === false) {
+              isCurrentMaskActive = false;
             } else if (isCurrentMaskActive) {
               childLayer.clipping = true;  // Clipped to base mask layer
             }
@@ -648,12 +719,21 @@ export class PsdExporter {
         }
       }
 
+      // If container has borderRadius or clip, assign native Photoshop vectorMask
+      let groupVectorMask: LayerVectorMask | undefined;
+      const groupHasMask = node.style.clip === true || (node as any).clip === true || node.style.borderRadius !== undefined || (node as any).radius !== undefined;
+      if (groupHasMask) {
+        const groupVectorData = this.buildVectorShape(node, scale, width, height, currentMat, dpi);
+        groupVectorMask = groupVectorData.vectorMask;
+      }
+
       const groupLayer: Layer = {
         name: layerName,
         opened: true,
         opacity,
         blendMode,
         children: childLayers,
+        ...(groupVectorMask ? { vectorMask: groupVectorMask } : {}),
         ...(layerColor ? { layerColor: layerColor as any } : {}),
         ...(protectedFlags ? { protected: protectedFlags } : {}),
         ...(knockout !== undefined ? { knockout: !!knockout } : {})
@@ -664,12 +744,13 @@ export class PsdExporter {
 
     // Text Element: Native Editable Photoshop Text Layer + Raster Fallback
     if (node.type === 'text') {
-      const textContent = node.textLayout ? node.textLayout.lines.join('\n') : (node.name || 'Text');
+      const textContent = node.textLayout ? node.textLayout.lines.join('\n') : ((node as any).content || node.name || 'Text');
       const baseFontSize = node.textLayout?.fontSize || 16;
       const fontSizePx = baseFontSize * scale;
       // Photoshop Type Tool font size and leading are measured in points (1 pt = 1/72 inch).
       // Converting through 72 / dpi ensures exact pixel parity when edited in Photoshop or Photopea.
       const fontSizePt = Number(((fontSizePx * 72) / dpi).toFixed(2));
+      const ptFactor = 72 / dpi;
       const fillColorStr = typeof node.fill === 'string' ? node.fill : node.style.fill && typeof node.style.fill === 'string' ? node.style.fill : node.style.color || '#000000';
       const rgba = parseColorToRgba(fillColorStr);
       const fontFamily = node.textLayout?.fontFamily || 'Arial';
@@ -708,6 +789,11 @@ export class PsdExporter {
         top
       );
 
+      const isExplicitLeft =
+        node.style.align === 'left' ||
+        (node as any).alignment === 'left' ||
+        (node.style as any).textAlign === 'left';
+
       const isExplicitCenter =
         node.style.align === 'center' ||
         (node as any).alignment === 'center' ||
@@ -723,12 +809,13 @@ export class PsdExporter {
       );
 
       const isGeometryCenter = Boolean(
+        !isExplicitLeft &&
         parentNode && parentNode.width > 0 &&
         (parentNode.width - node.width) > 8 &&
         Math.abs((node.x + node.width / 2) - (parentNode.x + parentNode.width / 2)) < 3
       );
 
-      const isCentered = isExplicitCenter || isStackCenter || isGeometryCenter;
+      const isCentered = isExplicitCenter || (!isExplicitLeft && (isStackCenter || isGeometryCenter));
 
       const isExplicitRight =
         node.style.align === 'right' ||
@@ -742,7 +829,7 @@ export class PsdExporter {
         )
       );
 
-      const isRight = isExplicitRight || isStackRight;
+      const isRight = isExplicitRight || (!isExplicitLeft && isStackRight);
 
       let justification: any = 'left';
       if (isCentered) justification = 'center';
@@ -805,6 +892,12 @@ export class PsdExporter {
         textLayerName = textContent.slice(0, 30) || layerName;
       }
 
+      const isMultiLine = Boolean((node.textLayout && node.textLayout.lines && node.textLayout.lines.length > 1) || textContent.includes('\n'));
+      const hasWrapWidth = typeof (node.style as any).wrapWidth === 'number' || typeof (node.style as any)['wrap-width'] === 'number';
+      const isBoxText = Boolean((isMultiLine || hasWrapWidth || (node.textLayout && (node.textLayout as any).isWrapped)) && width > 0 && height > 0);
+      const widthPt = Number(((width * 72) / dpi).toFixed(2));
+      const heightPt = Number(((height * 72) / dpi).toFixed(2));
+
       const textLayer: Layer = {
         name: textLayerName,
         top,
@@ -822,6 +915,14 @@ export class PsdExporter {
           left,
           bottom,
           right,
+          antiAlias: 'smooth',
+          ...(isBoxText ? {
+            shapeType: 'box',
+            boxBounds: [0, 0, widthPt, heightPt]
+          } : {
+            shapeType: 'point',
+            pointBase: [0, 0]
+          }),
           style: {
             font: { name: postScriptFontName },
             fontSize: fontSizePt,
@@ -832,9 +933,9 @@ export class PsdExporter {
             ...(tracking !== undefined && tracking !== 0 ? { tracking } : {}),
             ...(fauxBold ? { fauxBold: true } : {}),
             ...(fauxItalic ? { fauxItalic: true } : {}),
-            ...(node.style.textTransform === 'uppercase' ? { fontCaps: 1 } : {}),
-            ...(node.style.textTransform === 'lowercase' ? { fontCaps: 2 } : {}),
-            ...((node.style as any).baselineShift ? { baselineShift: (node.style as any).baselineShift * scale } : {}),
+            ...(node.style.textTransform === 'uppercase' ? { fontCaps: 2 } : {}),
+            ...((node.style.textTransform as string) === 'lowercase' || (node.style.textTransform as string) === 'small-caps' ? { fontCaps: 1 } : {}),
+            ...((node.style as any).baselineShift ? { baselineShift: (node.style as any).baselineShift * scale * ptFactor } : {}),
             ...((node.style as any).strikethrough ? { strikethrough: true } : {}),
             ...((node.style as any).underline ? { underline: true } : {}),
             ...((node.style as any).ligatures !== undefined ? { ligatures: !!(node.style as any).ligatures } : {}),
@@ -842,9 +943,9 @@ export class PsdExporter {
           },
           paragraphStyle: {
             justification,
-            ...((node.style as any).spaceBefore ? { spaceBefore: (node.style as any).spaceBefore * scale } : {}),
-            ...((node.style as any).spaceAfter ? { spaceAfter: (node.style as any).spaceAfter * scale } : {}),
-            ...((node.style as any).firstLineIndent ? { firstLineIndent: (node.style as any).firstLineIndent * scale } : {}),
+            ...((node.style as any).spaceBefore ? { spaceBefore: (node.style as any).spaceBefore * scale * ptFactor } : {}),
+            ...((node.style as any).spaceAfter ? { spaceAfter: (node.style as any).spaceAfter * scale * ptFactor } : {}),
+            ...((node.style as any).firstLineIndent ? { firstLineIndent: (node.style as any).firstLineIndent * scale * ptFactor } : {}),
             ...((node.style as any).autoHyphenate !== undefined ? { autoHyphenate: !!(node.style as any).autoHyphenate } : {})
           }
         },
@@ -855,7 +956,7 @@ export class PsdExporter {
       };
 
       if (node.filters && node.filters.length > 0) {
-        const filterLayers = await this.buildFilterLayers(node.filters, node, scale, width, height, basePath);
+        const filterLayers = await this.buildFilterLayers(node.filters, node, scale, width, height, basePath, currentMat, left, top);
         return {
           name: layerName,
           opened: true,
@@ -885,7 +986,7 @@ export class PsdExporter {
       left,
       top
     );
-    const vectorData = this.buildVectorShape(cleanNode, scale, width, height, currentMat);
+    const vectorData = this.buildVectorShape(cleanNode, scale, width, height, currentMat, dpi);
     const effects = this.buildLayerEffects(cleanNode, scale);
 
     const baseLayer: Layer = {
@@ -910,7 +1011,7 @@ export class PsdExporter {
     };
 
     if (hasFilters) {
-      const filterLayers = await this.buildFilterLayers(node.filters!, cleanNode, scale, width, height, basePath);
+      const filterLayers = await this.buildFilterLayers(node.filters!, cleanNode, scale, width, height, basePath, currentMat, left, top);
       return {
         name: layerName,
         opened: true,
@@ -933,7 +1034,10 @@ export class PsdExporter {
     scale: number,
     widthPx: number,
     heightPx: number,
-    basePath?: string
+    basePath?: string,
+    matrix: Matrix2D = IDENTITY_MATRIX,
+    layerLeftDoc = 0,
+    layerTopDoc = 0
   ): Promise<Layer[]> {
     const layers: Layer[] = [];
 
@@ -943,13 +1047,23 @@ export class PsdExporter {
 
       if (type === 'blur') {
         const radiusPx = typeof rawVal === 'number' ? rawVal : parseFloat(String(rawVal)) || 0;
-        const blurCanvas = await this.renderFilteredCanvasAsync(cleanNode, `blur(${radiusPx * scale}px)`, scale, widthPx, heightPx, basePath);
+        const blurCanvas = await this.renderFilteredCanvasAsync(
+          cleanNode,
+          `blur(${radiusPx * scale}px)`,
+          scale,
+          widthPx,
+          heightPx,
+          basePath,
+          matrix,
+          layerLeftDoc,
+          layerTopDoc
+        );
         layers.push({
           name: `[FX] Blur (${rawVal})`,
-          top: Math.round(cleanNode.y * scale),
-          left: Math.round(cleanNode.x * scale),
-          right: Math.round(cleanNode.x * scale) + widthPx,
-          bottom: Math.round(cleanNode.y * scale) + heightPx,
+          top: layerTopDoc,
+          left: layerLeftDoc,
+          right: layerLeftDoc + widthPx,
+          bottom: layerTopDoc + heightPx,
           clipping: true,
           canvas: blurCanvas as unknown as HTMLCanvasElement
         });
@@ -1050,11 +1164,13 @@ export class PsdExporter {
     scale: number,
     widthPx: number,
     heightPx: number,
-    basePath?: string
+    basePath?: string,
+    matrix: Matrix2D = IDENTITY_MATRIX,
+    layerLeftDoc = 0,
+    layerTopDoc = 0
   ): Promise<any> {
     const canvas = createCanvas(widthPx, heightPx);
     const ctx = canvas.getContext('2d');
-    ctx.scale(scale, scale);
     // Skia aborts on drop-shadow()/opacity() inside ctx.filter — split them
     // out and apply what remains. The extracted shadow is stamped through
     // ctx.shadow* (honored on vector fills) instead of crashing.
@@ -1069,25 +1185,18 @@ export class PsdExporter {
       ctx.shadowOffsetY = split.shadow.offsetY * scale;
     }
     ctx.globalAlpha *= split.opacityFactor;
-    ctx.translate(-node.x, -node.y);
-    await this.renderNodeToContext(ctx, node, basePath);
+
+    if (isMatrixIdentity(matrix)) {
+      ctx.scale(scale, scale);
+      ctx.translate(-node.x, -node.y);
+      await this.renderNodeToContext(ctx, node, basePath);
+    } else {
+      ctx.translate(-layerLeftDoc, -layerTopDoc);
+      ctx.scale(scale, scale);
+      ctx.transform(matrix.a, matrix.b, matrix.c, matrix.d, matrix.tx, matrix.ty);
+      await this.renderNodeToContext(ctx, node, basePath, true);
+    }
     return canvas;
-  }
-
-  private static renderNodeToIsolatedCanvas(
-    node: LayoutNode,
-    scale: number,
-    widthPx: number,
-    heightPx: number,
-    basePath?: string
-  ): HTMLCanvasElement {
-    const canvas = createCanvas(widthPx, heightPx);
-    const ctx = canvas.getContext('2d');
-    ctx.scale(scale, scale);
-    ctx.translate(-node.x, -node.y);
-
-    this.renderNodeDirect(ctx, node, basePath);
-    return canvas as unknown as HTMLCanvasElement;
   }
 
   private static async renderNodeToIsolatedCanvasAsync(
@@ -1125,6 +1234,10 @@ export class PsdExporter {
 
     if (typeof node.opacity === 'number' && node.opacity < 1) {
       ctx.globalAlpha *= node.opacity;
+    }
+
+    if (!node.style) {
+      (node as any).style = {};
     }
 
     // 4. 2D Transforms
@@ -1186,7 +1299,9 @@ export class PsdExporter {
       case 'star':
       case 'triangle':
       case 'arrow':
-      case 'cross': {
+      case 'cross':
+      case 'barcode':
+      case 'qrcode': {
         const d = node.pathLayout?.d;
         if (d) {
           const pathObj = new Path2D(d);
@@ -1195,7 +1310,7 @@ export class PsdExporter {
           if (node.type === 'icon') {
             ctx.scale(node.width / 24, node.height / 24);
           }
-          const fill = node.style.fill || node.fill;
+          const fill = node.style.fill || node.fill || (node.type === 'barcode' || node.type === 'qrcode' ? '#000000' : undefined);
           if (fill) {
             if (typeof fill === 'string') {
               ctx.fillStyle = fill;
@@ -1217,6 +1332,37 @@ export class PsdExporter {
             ctx.stroke(pathObj);
           }
           ctx.restore();
+
+          if (node.type === 'barcode' && node.barcodeLayout?.showText && node.barcodeLayout.text) {
+            ctx.save();
+            const textFill = typeof (node.style.fill || node.fill) === 'string' ? (node.style.fill || node.fill || '#000000') : '#000000';
+            ctx.fillStyle = String(textFill);
+            const fontSize = Math.max(10, Math.min(16, Math.floor(node.height * 0.18)));
+            ctx.font = `${fontSize}px monospace`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText(node.barcodeLayout.text, node.x + node.width / 2, node.y + node.height);
+            ctx.restore();
+          }
+
+          if (node.type === 'qrcode' && node.qrcodeLayout?.logo && node.qrcodeLayout.logoBox) {
+            const { x: lbX, y: lbY, width: lbW, height: lbH } = node.qrcodeLayout.logoBox;
+            const matrixLen = node.qrcodeLayout.matrix.length || 1;
+            const absX = node.x + (lbX / matrixLen) * node.width;
+            const absY = node.y + (lbY / matrixLen) * node.height;
+            const absW = (lbW / matrixLen) * node.width;
+            const absH = (lbH / matrixLen) * node.height;
+
+            ctx.save();
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(absX, absY, absW, absH);
+            ctx.restore();
+
+            const logoImg = await resolveSharedImage(node.qrcodeLayout.logo, basePath);
+            if (logoImg) {
+              drawImageWithFit(ctx, logoImg as any, 'contain', absX, absY, absW, absH);
+            }
+          }
         }
         break;
       }
@@ -1224,9 +1370,10 @@ export class PsdExporter {
         const fontSize = node.textLayout?.fontSize || 16;
         const fontFamily = node.textLayout?.fontFamily || 'sans-serif';
         const lineHeight = node.textLayout?.lineHeight || Math.round(fontSize * 1.25);
+        const fw = node.textLayout?.fontWeight || 'normal';
+        const fs = node.textLayout?.fontStyle || 'normal';
 
-        ctx.font = `${fontSize}px "${fontFamily}"`;
-        ctx.textBaseline = 'top';
+        ctx.font = `${fs === 'italic' || fs === 'oblique' ? 'italic ' : ''}${fw} ${fontSize}px "${fontFamily}"`;
 
         if (node.style.fill || node.fill) {
           const fill = node.style.fill || node.fill;
@@ -1252,9 +1399,19 @@ export class PsdExporter {
         if (align === 'center') anchorX = node.x + node.width / 2;
         if (align === 'right') anchorX = node.x + node.width;
 
+        const opticalOffset = node.textLayout?.opticalCenterOffset ?? 0;
+        const lineCount = node.textLayout?.lines?.length || 1;
+        const isMiddle = node.style.verticalAlign === 'middle';
+
+        ctx.textBaseline = isMiddle ? 'middle' : 'top';
+
+        const baselineY0 = isMiddle
+          ? node.y + node.height / 2 + opticalOffset - ((lineCount - 1) * lineHeight) / 2
+          : node.y + (node.style.verticalAlign === 'bottom' ? Math.max(0, node.height - (node.textLayout?.height ?? 0)) : 0);
+
         if (node.textLayout && node.textLayout.lines) {
           for (let i = 0; i < node.textLayout.lines.length; i++) {
-            ctx.fillText(node.textLayout.lines[i]!, anchorX, node.y + i * lineHeight);
+            ctx.fillText(node.textLayout.lines[i]!, anchorX, baselineY0 + i * lineHeight);
           }
         }
         break;
@@ -1264,7 +1421,15 @@ export class PsdExporter {
         if (imgSrc) {
           const img = await this.resolveImage(imgSrc, basePath);
           if (img) {
-            drawImageWithFit(ctx, img, node.fit || node.imageLayout?.fit || 'fill', node.x, node.y, node.width, node.height);
+            if (node.style.borderRadius) {
+              ctx.save();
+              drawRect(ctx, node.x, node.y, node.width, node.height, node.style.borderRadius);
+              ctx.clip();
+              drawImageWithFit(ctx, img, node.fit || node.imageLayout?.fit || 'fill', node.x, node.y, node.width, node.height);
+              ctx.restore();
+            } else {
+              drawImageWithFit(ctx, img, node.fit || node.imageLayout?.fit || 'fill', node.x, node.y, node.width, node.height);
+            }
           }
         }
         break;
@@ -1333,116 +1498,6 @@ export class PsdExporter {
           ctx.restore();
         }
         break;
-      }
-    }
-
-    ctx.restore();
-  }
-
-  private static renderNodeDirect(
-    ctx: CanvasRenderingContext2D,
-    node: LayoutNode,
-    _basePath?: string
-  ): void {
-    ctx.save();
-    if (typeof node.opacity === 'number' && node.opacity < 1) {
-      ctx.globalAlpha *= node.opacity;
-    }
-
-    if (node.type === 'text') {
-      const fontSize = node.textLayout?.fontSize || 16;
-      const fontFamily = node.textLayout?.fontFamily || 'sans-serif';
-      const lineHeight = node.textLayout?.lineHeight || Math.round(fontSize * 1.25);
-      const fw = node.textLayout?.fontWeight || 'normal';
-      const fs = node.textLayout?.fontStyle || 'normal';
-      ctx.font = `${fs === 'italic' || fs === 'oblique' ? 'italic ' : ''}${fw} ${fontSize}px "${fontFamily}"`;
-
-      if (node.style.fill || node.fill) {
-        const fill = node.style.fill || node.fill;
-        if (typeof fill === 'string') {
-          ctx.fillStyle = fill;
-        } else {
-          ctx.fillStyle = createCanvasGradient(ctx, fill as any, node.box);
-        }
-      } else {
-        ctx.fillStyle = node.style.color || '#000000';
-      }
-
-      const align = node.style.align || 'left';
-      if (align === 'center') {
-        ctx.textAlign = 'center';
-      } else if (align === 'right') {
-        ctx.textAlign = 'right';
-      } else {
-        ctx.textAlign = 'left';
-      }
-
-      let anchorX = node.x;
-      if (align === 'center') anchorX = node.x + node.width / 2;
-      if (align === 'right') anchorX = node.x + node.width;
-
-      const tlHeight = node.textLayout?.height ?? 0;
-      const opticalOffset = node.textLayout?.opticalCenterOffset ?? 0;
-      const lineCount = node.textLayout?.lines?.length || 1;
-      const isMiddle = node.style.verticalAlign === 'middle';
-
-      if (isMiddle) {
-        ctx.textBaseline = 'alphabetic';
-      } else {
-        ctx.textBaseline = 'top';
-      }
-
-      const baselineY0 = isMiddle
-        ? node.y + (node.height - (lineCount - 1) * lineHeight) / 2 + opticalOffset
-        : node.y + (node.style.verticalAlign === 'bottom' ? Math.max(0, node.height - tlHeight) : 0);
-
-      if (node.textLayout && node.textLayout.lines) {
-        for (let i = 0; i < node.textLayout.lines.length; i++) {
-          ctx.fillText(node.textLayout.lines[i]!, anchorX, baselineY0 + i * lineHeight);
-        }
-      }
-    } else if (node.type === 'rect') {
-      drawRect(ctx, node.x, node.y, node.width, node.height, node.style.borderRadius);
-      this.applyFillAndStroke(ctx, node);
-    } else if (node.type === 'circle') {
-      const cx = node.x + node.width / 2;
-      const cy = node.y + node.height / 2;
-      drawCircle(ctx, cx, cy, { rx: node.width / 2, ry: node.height / 2 });
-      this.applyFillAndStroke(ctx, node);
-    } else if (node.type === 'polygon' && node.polygonLayout?.canvasPoints) {
-      drawPolygon(ctx, node.polygonLayout.canvasPoints);
-      this.applyFillAndStroke(ctx, node);
-    } else if (['path', 'shape', 'icon', 'star', 'triangle', 'arrow', 'cross'].includes(node.type)) {
-      if (node.pathLayout?.d) {
-        ctx.save();
-        ctx.translate(node.x, node.y);
-        if (node.type === 'icon') {
-          ctx.scale(node.width / 24, node.height / 24);
-        }
-        const pathObj = new Path2D(node.pathLayout.d);
-        
-        const fill = node.style.fill || node.fill;
-        if (fill) {
-          if (typeof fill === 'string') {
-            ctx.fillStyle = fill;
-          } else {
-            const localBox = { x: 0, y: 0, w: node.width, h: node.height };
-            ctx.fillStyle = createCanvasGradient(ctx, fill as any, localBox);
-          }
-          ctx.fill(pathObj);
-        }
-        
-        const stroke = node.style.stroke || node.stroke;
-        if (stroke) {
-          ctx.strokeStyle = stroke;
-          ctx.lineWidth = node.style.strokeWidth ?? 1;
-          if (node.style.strokeCap) ctx.lineCap = node.style.strokeCap;
-          if (node.style.strokeJoin) ctx.lineJoin = node.style.strokeJoin;
-          if (node.style.strokeStyle === 'dashed') ctx.setLineDash([6, 6]);
-          else if (node.style.strokeStyle === 'dotted') ctx.setLineDash([2, 2]);
-          ctx.stroke(pathObj);
-        }
-        ctx.restore();
       }
     }
 
@@ -1602,15 +1657,16 @@ export class PsdExporter {
     scale: number,
     docW: number,
     docH: number,
-    matrix: Matrix2D = IDENTITY_MATRIX
+    matrix: Matrix2D = IDENTITY_MATRIX,
+    dpi = 72
   ): {
     vectorMask?: LayerVectorMask;
     vectorFill?: VectorContent;
     vectorStroke?: any;
     vectorOrigination?: any;
   } {
-    // Native vector shapes: rect, circle, polygon, path, icon, star, triangle, arrow, cross, shape
-    const VECTOR_TYPES = ['rect', 'circle', 'polygon', 'path', 'icon', 'star', 'triangle', 'arrow', 'cross', 'shape'];
+    // Native vector shapes: rect, circle, polygon, path, icon, star, triangle, arrow, cross, shape, image, group, grid, stack, barcode, qrcode
+    const VECTOR_TYPES = ['rect', 'circle', 'polygon', 'path', 'icon', 'star', 'triangle', 'arrow', 'cross', 'shape', 'image', 'group', 'grid', 'stack', 'barcode', 'qrcode'];
     if (!VECTOR_TYPES.includes(node.type)) {
       return {};
     }
@@ -1627,8 +1683,15 @@ export class PsdExporter {
     let customPaths: BezierPath[] | undefined;
     let origination: any = undefined;
 
-    if (node.type === 'rect') {
+    if (node.type === 'rect' || node.type === 'image' || ['group', 'grid', 'stack'].includes(node.type)) {
       const radiusVal = node.style.borderRadius ?? (node as any).radius;
+      // If it's an image or container without any radius or clip, skip vectorMask generation
+      if (node.type === 'image' && !radiusVal && !node.style.clip && !(node as any).clip) {
+        return {};
+      }
+      if (['group', 'grid', 'stack'].includes(node.type) && !radiusVal && !node.style.clip && !(node as any).clip) {
+        return {};
+      }
       let rTL = 0, rTR = 0, rBR = 0, rBL = 0;
       if (Array.isArray(radiusVal)) {
         rTL = (radiusVal[0] || 0) * scale;
@@ -1671,7 +1734,7 @@ export class PsdExporter {
           keyDescriptorList: [
             {
               keyOriginType: 2, // Rounded Rectangle
-              keyOriginResolution: 72,
+              keyOriginResolution: dpi,
               keyOriginRRectRadii: {
                 topLeft: { units: 'Pixels', value: rTL },
                 topRight: { units: 'Pixels', value: rTR },
@@ -1706,7 +1769,7 @@ export class PsdExporter {
           keyDescriptorList: [
             {
               keyOriginType: 1, // Sharp Rectangle
-              keyOriginResolution: 72,
+              keyOriginResolution: dpi,
               keyOriginShapeBoundingBox: {
                 top: { units: 'Pixels', value: y0 },
                 left: { units: 'Pixels', value: x0 },
@@ -1746,7 +1809,7 @@ export class PsdExporter {
         keyDescriptorList: [
           {
             keyOriginType: 5, // Ellipse (Photoshop specification: 1=rect, 2=round rect, 4=line, 5=ellipse)
-            keyOriginResolution: 72,
+            keyOriginResolution: dpi,
             keyOriginShapeBoundingBox: {
               top: { units: 'Pixels', value: y0 },
               left: { units: 'Pixels', value: x0 },
@@ -1763,12 +1826,24 @@ export class PsdExporter {
         ]
       };
     } else if (node.type === 'polygon' && node.polygonLayout?.canvasPoints) {
-      knots = node.polygonLayout.canvasPoints.map(p => {
-        const px = p.x * scale;
-        const py = p.y * scale;
-        return { linked: false, points: [px, py, px, py, px, py] };
-      });
-    } else if (['star', 'triangle', 'arrow', 'cross', 'shape', 'path', 'icon'].includes(node.type) && node.pathLayout?.d) {
+      const radiusVal = node.style.borderRadius ?? (node as any).radius;
+      if (radiusVal) {
+        const d = polygonToRoundedSvgPath(node.polygonLayout.canvasPoints, radiusVal);
+        const bezierPaths = svgPathToBezierPaths(d, {
+          scale,
+          fillRule: (node.style as any)?.fillRule === 'evenodd' ? 'even-odd' : 'non-zero'
+        });
+        if (bezierPaths.length > 0) {
+          customPaths = bezierPaths;
+        }
+      } else {
+        knots = node.polygonLayout.canvasPoints.map(p => {
+          const px = p.x * scale;
+          const py = p.y * scale;
+          return { linked: false, points: [px, py, px, py, px, py] };
+        });
+      }
+    } else if (['star', 'triangle', 'arrow', 'cross', 'shape', 'path', 'icon', 'barcode', 'qrcode'].includes(node.type) && node.pathLayout?.d) {
       // Use the full SVG-to-Bézier parser to convert curves, arcs, and lines into native knots
       const isIcon = node.type === 'icon';
       const bezierPaths = svgPathToBezierPaths(node.pathLayout.d, {
@@ -1835,7 +1910,7 @@ export class PsdExporter {
 
     // Vector Fill
     let vectorFill: VectorContent | undefined;
-    const fill = node.style.fill || node.fill;
+    const fill = node.style.fill || node.fill || (node.type === 'barcode' || node.type === 'qrcode' ? '#000000' : undefined);
     if (fill) {
       if (typeof fill === 'string') {
         const rgba = parseColorToRgba(fill);
@@ -1845,20 +1920,22 @@ export class PsdExporter {
         };
       } else if (fill.type === 'linear' || fill.type === 'radial') {
         const distributed = distributeGradientStops(fill.stops);
+        // Note: ag-psd internally scales stop location by 4096 and midpoint by 100.
+        // We pass normalized location (0..1) and midpoint (0..1) here.
         const colorStops = distributed.map(s => {
           const c = parseColorToRgba(s.color);
           return {
             color: { r: c.r, g: c.g, b: c.b },
-            location: Math.round(s.offset * 4096),
-            midpoint: 50
+            location: s.offset,
+            midpoint: 0.5
           };
         });
         const opacityStops = distributed.map(s => {
           const c = parseColorToRgba(s.color);
           return {
             opacity: c.a,
-            location: Math.round(s.offset * 4096),
-            midpoint: 50
+            location: s.offset,
+            midpoint: 0.5
           };
         });
         vectorFill = {
@@ -1878,13 +1955,43 @@ export class PsdExporter {
     const stroke = node.style.stroke || node.stroke;
     if (stroke) {
       const strokeColor = parseColorToRgba(stroke);
+      // In Photoshop, shapes with a stroke require vectorFill to emit vscg metadata.
+      // If there is no fill, emit a dummy color with fillEnabled: false.
+      if (!vectorFill) {
+        vectorFill = {
+          type: 'color',
+          color: { r: 0, g: 0, b: 0 }
+        };
+      }
+
+      const strokeStyle = node.style.strokeStyle;
+      let lineDashSet: any[] | undefined;
+      let lineDashOffset: any | undefined;
+      if (strokeStyle === 'dashed') {
+        lineDashSet = [
+          { units: 'Points', value: 6 },
+          { units: 'Points', value: 6 }
+        ];
+        lineDashOffset = { units: 'Points', value: 0 };
+      } else if (strokeStyle === 'dotted') {
+        lineDashSet = [
+          { units: 'Points', value: 2 },
+          { units: 'Points', value: 2 }
+        ];
+        lineDashOffset = { units: 'Points', value: 0 };
+      }
+
+      const rawAlign = node.style.strokeAlign || (node.style as any)['stroke-align'];
+      const lineAlignment = rawAlign === 'inside' ? 'inside' : rawAlign === 'outside' ? 'outside' : 'center';
+
       vectorStroke = {
         strokeEnabled: true,
-        fillEnabled: !!vectorFill,
+        fillEnabled: Boolean(node.style.fill || node.fill),
         lineWidth: { units: 'Pixels', value: (node.style.strokeWidth ?? 1) * scale },
         lineJoinType: node.style.strokeJoin === 'round' ? 'round' : node.style.strokeJoin === 'bevel' ? 'bevel' : 'miter',
-        lineCapType: node.style.strokeCap === 'round' ? 'round' : node.style.strokeCap === 'square' ? 'square' : 'butt',
-        lineAlignment: 'center',
+        lineCapType: node.style.strokeCap === 'round' ? 'round' : node.style.strokeCap === 'square' ? 'square' : (strokeStyle === 'dotted' ? 'round' : 'butt'),
+        lineAlignment,
+        ...(lineDashSet ? { lineDashSet, lineDashOffset } : {}),
         content: {
           type: 'color',
           color: { r: strokeColor.r, g: strokeColor.g, b: strokeColor.b }
@@ -1919,6 +2026,10 @@ export class PsdExporter {
         if (angleDeg < 0) angleDeg += 360;
 
         const shadowColor = parseColorToRgba(s.color || '#000000');
+        const choke = typeof s.spread === 'number' && blur > 0
+          ? Math.max(0, Math.min(100, Math.round((s.spread * scale / blur) * 100)))
+          : undefined;
+
         return {
           enabled: true,
           color: { r: shadowColor.r, g: shadowColor.g, b: shadowColor.b },
@@ -1931,6 +2042,7 @@ export class PsdExporter {
             name: 'Linear',
             curve: [{ x: 0, y: 0 }, { x: 255, y: 255 }]
           },
+          ...(choke !== undefined ? { choke } : {}),
           ...(typeof s.noise === 'number' ? { noise: s.noise } : {})
         };
       });
@@ -2044,16 +2156,16 @@ export class PsdExporter {
         const c = parseColorToRgba(s.color);
         return {
           color: { r: c.r, g: c.g, b: c.b },
-          location: Math.round(s.offset * 4096),
-          midpoint: 50
+          location: s.offset,
+          midpoint: 0.5
         };
       });
       const opacityStops = distributed.map(s => {
         const c = parseColorToRgba(s.color);
         return {
           opacity: c.a,
-          location: Math.round(s.offset * 4096),
-          midpoint: 50
+          location: s.offset,
+          midpoint: 0.5
         };
       });
 
