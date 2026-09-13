@@ -107,7 +107,60 @@ function flattenNodes(nodes: LayoutNode[]): LayoutNode[] {
 }
 
 /**
- * Packs multiple PNG images into a standard Windows ICO container format.
+ * Converts 32-bit RGBA pixel data to Windows ICO DIB (BITMAPINFOHEADER + BGRA + AND mask).
+ */
+export function rgbaToDib(width: number, height: number, rgba: Uint8ClampedArray | Buffer): Buffer {
+  const headerSize = 40;
+  const imageSize = width * height * 4;
+  const andMaskRowBytes = Math.ceil(width / 32) * 4;
+  const andMaskSize = andMaskRowBytes * height;
+  const totalSize = headerSize + imageSize + andMaskSize;
+  const buf = Buffer.alloc(totalSize);
+
+  // BITMAPINFOHEADER (40 bytes)
+  buf.writeUInt32LE(40, 0);                 // biSize
+  buf.writeInt32LE(width, 4);                // biWidth
+  buf.writeInt32LE(height * 2, 8);           // biHeight (doubled for ICO XOR + AND mask)
+  buf.writeUInt16LE(1, 12);                  // biPlanes
+  buf.writeUInt16LE(32, 14);                 // biBitCount (32-bit BGRA)
+  buf.writeUInt32LE(0, 16);                  // biCompression (BI_RGB)
+  buf.writeUInt32LE(imageSize + andMaskSize, 20); // biSizeImage
+  buf.writeInt32LE(0, 24);                   // biXPelsPerMeter
+  buf.writeInt32LE(0, 28);                   // biYPelsPerMeter
+  buf.writeUInt32LE(0, 32);                  // biClrUsed
+  buf.writeUInt32LE(0, 36);                  // biClrImportant
+
+  // XOR mask: 32-bit BGRA bottom-up
+  let dstOffset = headerSize;
+  for (let y = height - 1; y >= 0; y--) {
+    for (let x = 0; x < width; x++) {
+      const srcOffset = (y * width + x) * 4;
+      buf[dstOffset++] = rgba[srcOffset + 2]!; // B
+      buf[dstOffset++] = rgba[srcOffset + 1]!; // G
+      buf[dstOffset++] = rgba[srcOffset]!;     // R
+      buf[dstOffset++] = rgba[srcOffset + 3]!; // A
+    }
+  }
+
+  // AND mask: 1 bit per pixel bottom-up
+  const andMaskStart = headerSize + imageSize;
+  for (let y = height - 1; y >= 0; y--) {
+    const rowStart = andMaskStart + (height - 1 - y) * andMaskRowBytes;
+    for (let x = 0; x < width; x++) {
+      const srcOffset = (y * width + x) * 4;
+      if (rgba[srcOffset + 3] === 0) {
+        const byteIndex = rowStart + Math.floor(x / 8);
+        const bitIndex = 7 - (x % 8);
+        buf[byteIndex] |= (1 << bitIndex);
+      }
+    }
+  }
+
+  return buf;
+}
+
+/**
+ * Packs multiple PNG or DIB images into a standard Windows ICO container format.
  */
 export function createIcoBuffer(images: Array<{ width: number; height: number; buffer: Buffer }>): Buffer {
   const count = images.length;
@@ -222,16 +275,22 @@ export async function bundleAssets(
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
 
+    const scaleFactor = Math.min(asset.width / cropW, asset.height / cropH);
+    const drawW = Math.round(cropW * scaleFactor);
+    const drawH = Math.round(cropH * scaleFactor);
+    const drawX = Math.round((asset.width - drawW) / 2);
+    const drawY = Math.round((asset.height - drawH) / 2);
+
     ctx.drawImage(
       masterCanvas,
       (cropX + margin) * renderScale,
       (cropY + margin) * renderScale,
       cropW * renderScale,
       cropH * renderScale,
-      0,
-      0,
-      asset.width,
-      asset.height
+      drawX,
+      drawY,
+      drawW,
+      drawH
     );
 
     const buf = destCanvas.toBuffer('image/png');
@@ -247,27 +306,40 @@ export async function bundleAssets(
     });
 
     if (asset.width === 16 || asset.width === 32 || asset.width === 48) {
-      icoCandidates.push({ width: asset.width, height: asset.height, buffer: buf });
+      if (asset.width === 16 || asset.width === 32) {
+        const imgData = ctx.getImageData(0, 0, asset.width, asset.height).data;
+        icoCandidates.push({ width: asset.width, height: asset.height, buffer: rgbaToDib(asset.width, asset.height, imgData) });
+      } else {
+        icoCandidates.push({ width: asset.width, height: asset.height, buffer: buf });
+      }
     }
   }
 
   // Generate ICO if requested in preset
   const icoAsset = assetList.find(a => a.format === 'ico');
   if (icoAsset) {
-    // If we don't have 16 and 32 yet, render them for the ICO container
+    // If we don't have 16 and 32 yet, render them for the ICO container using DIB format
     if (!icoCandidates.some(c => c.width === 16)) {
       const c16 = createCanvas(16, 16);
       const ctx16 = c16.getContext('2d');
       ctx16.imageSmoothingEnabled = true;
-      ctx16.drawImage(masterCanvas, cropX * renderScale, cropY * renderScale, cropW * renderScale, cropH * renderScale, 0, 0, 16, 16);
-      icoCandidates.push({ width: 16, height: 16, buffer: c16.toBuffer('image/png') });
+      const s16 = Math.min(16 / cropW, 16 / cropH);
+      const dw16 = Math.round(cropW * s16);
+      const dh16 = Math.round(cropH * s16);
+      ctx16.drawImage(masterCanvas, cropX * renderScale, cropY * renderScale, cropW * renderScale, cropH * renderScale, Math.round((16 - dw16) / 2), Math.round((16 - dh16) / 2), dw16, dh16);
+      const imgData16 = ctx16.getImageData(0, 0, 16, 16).data;
+      icoCandidates.push({ width: 16, height: 16, buffer: rgbaToDib(16, 16, imgData16) });
     }
     if (!icoCandidates.some(c => c.width === 32)) {
       const c32 = createCanvas(32, 32);
       const ctx32 = c32.getContext('2d');
       ctx32.imageSmoothingEnabled = true;
-      ctx32.drawImage(masterCanvas, cropX * renderScale, cropY * renderScale, cropW * renderScale, cropH * renderScale, 0, 0, 32, 32);
-      icoCandidates.push({ width: 32, height: 32, buffer: c32.toBuffer('image/png') });
+      const s32 = Math.min(32 / cropW, 32 / cropH);
+      const dw32 = Math.round(cropW * s32);
+      const dh32 = Math.round(cropH * s32);
+      ctx32.drawImage(masterCanvas, cropX * renderScale, cropY * renderScale, cropW * renderScale, cropH * renderScale, Math.round((32 - dw32) / 2), Math.round((32 - dh32) / 2), dw32, dh32);
+      const imgData32 = ctx32.getImageData(0, 0, 32, 32).data;
+      icoCandidates.push({ width: 32, height: 32, buffer: rgbaToDib(32, 32, imgData32) });
     }
 
     icoCandidates.sort((a, b) => a.width - b.width);
@@ -291,7 +363,7 @@ export async function bundleAssets(
   if (options.manifest !== false && (presetKey === 'favicons' || presetKey === 'all')) {
     const appTitle = options.name || path.basename(buildResult.entryPath, path.extname(buildResult.entryPath));
     const shortTitle = options.shortName || appTitle;
-    const theme = options.themeColor || '#000000';
+    const theme = options.themeColor || (buildResult.canvas as any)?.background || (buildResult.canvas as any)?.fill || '#000000';
 
     const manifestObj = {
       name: appTitle,

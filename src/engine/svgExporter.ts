@@ -517,12 +517,12 @@ export class SvgExporter {
               const cx = node.x + node.width / 2;
               const cy = node.y + node.height / 2;
               return `${indent}<svg x="${node.x}" y="${node.y}" width="${node.width}" height="${node.height}" viewBox="${node.x} ${node.y} ${node.width} ${node.height}" overflow="hidden">\n` +
-                `${indent}  <image x="${cx - iw / 2}" y="${cy - ih / 2}" width="${iw}" height="${ih}" href="${href}" preserveAspectRatio="none" />\n${indent}</svg>`;
+                `${indent}  <image x="${cx - iw / 2}" y="${cy - ih / 2}" width="${iw}" height="${ih}" href="${this.escapeAttr(href)}" preserveAspectRatio="none" />\n${indent}</svg>`;
             }
           } catch { /* fall through to stretched image */ }
         }
         const preserveAspect = fit === 'cover' ? 'xMidYMid slice' : fit === 'contain' ? 'xMidYMid meet' : fit === 'none' ? 'none' : 'none';
-        return `${indent}<image x="${node.x}" y="${node.y}" width="${node.width}" height="${node.height}" href="${href}" preserveAspectRatio="${preserveAspect}" ${attrs.join(' ')} />`.replace(/\s+/g, ' ');
+        return `${indent}<image x="${node.x}" y="${node.y}" width="${node.width}" height="${node.height}" href="${this.escapeAttr(href)}" preserveAspectRatio="${preserveAspect}" ${attrs.join(' ')} />`.replace(/\s+/g, ' ');
       }
 
       case 'path':
@@ -572,7 +572,7 @@ export class SvgExporter {
           }
 
           const logoPlate = `\n${indent}<rect x="${absX.toFixed(2)}" y="${absY.toFixed(2)}" width="${absW.toFixed(2)}" height="${absH.toFixed(2)}" fill="#ffffff" />`;
-          const logoImg = `\n${indent}<image x="${absX.toFixed(2)}" y="${absY.toFixed(2)}" width="${absW.toFixed(2)}" height="${absH.toFixed(2)}" href="${href}" preserveAspectRatio="xMidYMid meet" />`;
+          const logoImg = `\n${indent}<image x="${absX.toFixed(2)}" y="${absY.toFixed(2)}" width="${absW.toFixed(2)}" height="${absH.toFixed(2)}" href="${this.escapeAttr(href)}" preserveAspectRatio="xMidYMid meet" />`;
           qrMarkup += logoPlate + logoImg;
         }
         return qrMarkup;
@@ -1029,7 +1029,8 @@ export class SvgExporter {
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
   }
 }
 

@@ -47,11 +47,17 @@ export async function resolveSharedImage(imgSrc: string, basePath?: string): Pro
     const mtime = stat.mtimeMs;
 
     const cached = imageCache.get(resolvedPath);
-    if (cached && cached.mtime === mtime) {
-      // Refresh LRU order
-      imageCache.delete(resolvedPath);
-      imageCache.set(resolvedPath, cached);
-      return cached.img;
+    if (cached) {
+      if (cached.mtime === mtime) {
+        // Refresh LRU order
+        imageCache.delete(resolvedPath);
+        imageCache.set(resolvedPath, cached);
+        return cached.img;
+      } else {
+        // Stale entry: remove from cache and adjust budget
+        currentCacheBytes -= cached.bytes || 0;
+        imageCache.delete(resolvedPath);
+      }
     }
 
     const buf = fs.readFileSync(resolvedPath);
