@@ -29,10 +29,40 @@ export const lucideIcons: Record<string, string> = {
   'external-link': 'M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6 M15 3h6v6 M10 14L21 3'
 };
 
+const customIcons: Record<string, string> = {};
+
+export function registerIcon(name: string, svgPath: string): void {
+  if (!name || typeof name !== 'string') return;
+  if (!svgPath || typeof svgPath !== 'string') return;
+  customIcons[name] = svgPath;
+}
+
+export function unregisterIcon(name: string): void {
+  delete customIcons[name];
+}
+
+export function clearCustomIcons(): void {
+  for (const k of Object.keys(customIcons)) {
+    delete customIcons[k];
+  }
+}
+
 export function getIconPath(iconName: string): string {
-  return lucideIcons[iconName] || '';
+  if (!iconName) return '';
+  if (Object.prototype.hasOwnProperty.call(customIcons, iconName)) {
+    return customIcons[iconName]!;
+  }
+  if (Object.prototype.hasOwnProperty.call(lucideIcons, iconName)) {
+    return lucideIcons[iconName]!;
+  }
+  return '';
 }
 
 export function hasIcon(iconName: string): boolean {
-  return Boolean(iconName && Object.prototype.hasOwnProperty.call(lucideIcons, iconName));
+  return Boolean(
+    iconName &&
+    (Object.prototype.hasOwnProperty.call(customIcons, iconName) ||
+     Object.prototype.hasOwnProperty.call(lucideIcons, iconName))
+  );
 }
+

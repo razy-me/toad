@@ -335,19 +335,19 @@ export function lintDocument(doc: DocumentNode, filePath?: string): Diagnostic[]
             if (fs.existsSync(resolvedPath)) {
               const content = fs.readFileSync(resolvedPath, 'utf-8');
               const importedAst = parseToad(content, resolvedPath);
-              for (const comp of importedAst.components) {
-                if (!usedComponents.has(comp.name)) {
-                  diagnostics.push({
-                    code: 'LINT-UNUSED-IMPORT',
-                    message: `Imported component '${comp.name}' from '${dir.path}' is never instantiated.`,
-                    severity: 'warning',
-                    loc: dir.loc,
-                    fix: {
-                      title: `Remove unused import '${dir.path}'`,
-                      kind: 'quickfix'
-                    }
-                  });
-                }
+              const hasUsedComponent = importedAst.components.some(comp => usedComponents.has(comp.name));
+              const hasUsedVar = importedAst.variables.some(v => referencedGlobalVars.has(v.name));
+              if (importedAst.components.length > 0 && !hasUsedComponent && !hasUsedVar) {
+                diagnostics.push({
+                  code: 'LINT-UNUSED-IMPORT',
+                  message: `Imported module '${dir.path}' provides components (${importedAst.components.map(c => c.name).join(', ')}), but none are used in this file.`,
+                  severity: 'warning',
+                  loc: dir.loc,
+                  fix: {
+                    title: `Remove unused import '${dir.path}'`,
+                    kind: 'quickfix'
+                  }
+                });
               }
             }
           } catch {

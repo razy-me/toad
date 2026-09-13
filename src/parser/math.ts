@@ -290,6 +290,8 @@ export function computeAspectRatio(width: number, height: number): { ratioX: num
       [21, 9],
       [3, 2],
       [2, 3],
+      [4, 5],
+      [5, 4],
     ];
     for (const [px, py] of presets) {
       if (Math.abs(val - (px / py)) <= 0.005) {
@@ -1019,22 +1021,28 @@ export class LayoutSolver {
     };
     linkMasks(rootNodes);
 
+    // Non-enumerable find property preserves backward compatibility without prototype pollution
     const originalFind = rootNodes.find.bind(rootNodes);
-    rootNodes.find = (predicate: any, thisArg?: any) => {
-      const direct = originalFind(predicate, thisArg);
-      if (direct !== undefined) return direct;
-      const search = (nodes: LayoutNode[]): LayoutNode | undefined => {
-        for (const n of nodes) {
-          if (predicate.call(thisArg, n, 0, rootNodes)) return n;
-          if (n.children) {
-            const found = search(n.children);
-            if (found) return found;
+    Object.defineProperty(rootNodes, 'find', {
+      value: (predicate: any, thisArg?: any) => {
+        const direct = originalFind(predicate, thisArg);
+        if (direct !== undefined) return direct;
+        const search = (nodes: LayoutNode[]): LayoutNode | undefined => {
+          for (const n of nodes) {
+            if (predicate.call(thisArg, n, 0, rootNodes)) return n;
+            if (n.children) {
+              const found = search(n.children);
+              if (found) return found;
+            }
           }
-        }
-        return undefined;
-      };
-      return search(rootNodes);
-    };
+          return undefined;
+        };
+        return search(rootNodes);
+      },
+      enumerable: false,
+      configurable: true,
+      writable: true
+    });
 
     // Canvas background
     let bgStyle: string | GradientStyle | undefined;
@@ -2065,3 +2073,22 @@ export class LayoutSolver {
     };
   }
 }
+
+/**
+ * Clean, safe recursive search helper for finding a LayoutNode in a layout tree.
+ */
+export function findNode(
+  source: LayoutNode[] | LayoutResult,
+  predicate: (node: LayoutNode) => boolean
+): LayoutNode | undefined {
+  const nodes = Array.isArray(source) ? source : (source.nodes || []);
+  for (const n of nodes) {
+    if (predicate(n)) return n;
+    if (n.children && n.children.length > 0) {
+      const found = findNode(n.children, predicate);
+      if (found) return found;
+    }
+  }
+  return undefined;
+}
+

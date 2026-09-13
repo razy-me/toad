@@ -43,9 +43,11 @@ import { applyAlpha, lightenColor, darkenColor } from '../engine/drawUtils.js';
 import { suggestProperty } from '../tools/diagnostics.js';
 
 export class CircularImportError extends Error {
-  constructor(message: string) {
+  public loc?: import('./ast.js').SourceLocation;
+  constructor(message: string, loc?: import('./ast.js').SourceLocation) {
     super(message);
     this.name = 'CircularImportError';
+    this.loc = loc;
   }
 }
 
@@ -122,7 +124,8 @@ export class ImportResolver {
   }
 
   public async resolve(): Promise<ResolvedDocumentNode> {
-    this.loadedDocs.set(this.entryPath, this.entryDoc);
+    const canonEntry = process.platform === 'win32' ? this.entryPath.toLowerCase() : this.entryPath;
+    this.loadedDocs.set(canonEntry, this.entryDoc);
 
     // 1. Traverse and load all imports recursively
     const rawAllDocs = this.loadImportsRecursive(this.entryDoc, this.entryPath, [this.entryPath]);
@@ -270,7 +273,8 @@ export class ImportResolver {
             continue;
           }
           const cycle = [...chain, resolvedPath].map(p => path.basename(p)).join(' -> ');
-          throw new CircularImportError(`Circular import detected: ${cycle}`);
+          const locInfo = dir.loc ? ` at line ${dir.loc.start.line}, col ${dir.loc.start.column}` : '';
+          throw new CircularImportError(`Circular import detected: ${cycle}${locInfo}`, dir.loc);
         }
 
         if (visited.has(canonPath)) {
@@ -278,11 +282,11 @@ export class ImportResolver {
         }
         visited.add(canonPath);
 
-        let importedDoc = this.loadedDocs.get(resolvedPath);
+        let importedDoc = this.loadedDocs.get(canonPath);
         if (!importedDoc) {
           const content = this.fileLoader(resolvedPath);
           importedDoc = parseToad(content, resolvedPath);
-          this.loadedDocs.set(resolvedPath, importedDoc);
+          this.loadedDocs.set(canonPath, importedDoc);
         }
 
         const childDocs = this.loadImportsRecursive(importedDoc, resolvedPath, [...chain, resolvedPath], visited);

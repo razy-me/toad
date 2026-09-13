@@ -368,7 +368,7 @@ export class PdfExporter {
           const text = node.barcodeLayout.text;
           const lineWidth = this.measureLineWidth(text, fontSize, 'Courier');
           const textX = node.x + (node.width - lineWidth) / 2;
-          const textY = node.y + node.height;
+          const textY = node.y + node.height - (fontSize * 0.25);
           const textColor = parsePdfColor(
             typeof (node.style.fill || node.fill) === 'string' ? (node.style.fill || node.fill) as string : '#000000',
             isCmyk

@@ -1707,7 +1707,14 @@ export function formatTerminalReport(
   lines.push(gutter(c.bold(c.cyan('🔤 Typography & Typesetting Metrics'))));
   lines.push(gutter(`   Font Families:     ${c.cyan(fontList)}`));
   if (m?.typeScale && m.typeScale.length > 0) {
-    const scaleStr = m.typeScale.slice(0, 5).map(t => `${t.size}px (${t.count}×)`).join(' ➜ ');
+    const isPrint = (m.canvasDpi && m.canvasDpi >= 200) || Boolean(m.aspectRatio && /^(a[0-9]|b[0-9]|c[0-9]|letter|tabloid|poster)$/i.test(m.aspectRatio));
+    const scaleStr = m.typeScale.slice(0, 5).map(t => {
+      if (isPrint) {
+        const pt = Math.round((t.size / (m.canvasDpi || 300)) * 72 * 10) / 10;
+        return `${pt}pt [${t.size}px] (${t.count}×)`;
+      }
+      return `${t.size}px (${t.count}×)`;
+    }).join(' ➜ ');
     lines.push(gutter(`   Hierarchy Ladder:  ${c.dim(scaleStr)}`));
   }
   const measureStatus = (m?.avgLineLengthChars ?? 0) >= 45 && (m?.avgLineLengthChars ?? 0) <= 75

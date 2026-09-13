@@ -175,7 +175,9 @@ function normalizePropertyStatement(code: string): string {
 
   if (colonIdx !== -1) {
     const key = code.substring(0, colonIdx).trimEnd();
-    const val = code.substring(colonIdx + 1).trimStart().replace(/\s+;$/, ';');
+    let val = code.substring(colonIdx + 1).trimStart().replace(/\s+;$/, ';');
+    // Normalize aspect ratio colons (e.g. 16 : 9 -> 16:9)
+    val = val.replace(/(\b\d+)\s*:\s*(\d+\b)/g, '$1:$2');
     return `${key}: ${val}`;
   }
 

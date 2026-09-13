@@ -81,7 +81,7 @@ export class CanvasRenderer {
       if (img) {
         // Draw photo onto offscreen canvas for per-pixel grading if photoParams specified
         if (layout.canvas.photoParams) {
-          const photoCanvas = createCanvas(Math.round(bgW), Math.round(bgH));
+          const photoCanvas = createCanvas(Math.ceil(bgW), Math.ceil(bgH));
           const pctx = photoCanvas.getContext('2d');
           drawImageWithFit(pctx, img, 'cover', 0, 0, photoCanvas.width, photoCanvas.height);
 
