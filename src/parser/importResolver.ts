@@ -1263,9 +1263,14 @@ export class ImportResolver {
           // normal|bold|bolder|lighter — map descriptive names to numbers so
           // e.g. `semibold` does not silently invalidate the whole shorthand.
           const WEIGHT_WORDS: Record<string, string> = {
-            thin: '100', extralight: '200', ultralight: '200', light: '300',
-            regular: '400', medium: '500', semibold: '600', demibold: '600',
-            extrabold: '800', ultrabold: '800', black: '900', heavy: '900'
+            thin: '100', hairline: '100',
+            extralight: '200', 'extra-light': '200', ultralight: '200', 'ultra-light': '200',
+            light: '300',
+            regular: '400',
+            medium: '500',
+            semibold: '600', 'semi-bold': '600', demibold: '600', 'demi-bold': '600',
+            extrabold: '800', 'extra-bold': '800', ultrabold: '800', 'ultra-bold': '800',
+            black: '900', heavy: '900'
           };
           const lw = rawW.toLowerCase();
           const w = WEIGHT_WORDS[lw] ?? rawW;
@@ -2256,7 +2261,18 @@ export class ImportResolver {
       if ((family.startsWith('"') && family.endsWith('"')) || (family.startsWith("'") && family.endsWith("'"))) {
         family = family.slice(1, -1);
       }
-      const weight = val.weight || 'normal';
+      const WEIGHT_WORDS: Record<string, string> = {
+        thin: '100', hairline: '100',
+        extralight: '200', 'extra-light': '200', ultralight: '200', 'ultra-light': '200',
+        light: '300',
+        regular: '400',
+        medium: '500',
+        semibold: '600', 'semi-bold': '600', demibold: '600', 'demi-bold': '600',
+        extrabold: '800', 'extra-bold': '800', ultrabold: '800', 'ultra-bold': '800',
+        black: '900', heavy: '900'
+      };
+      const rawW = String(val.weight || 'normal').toLowerCase();
+      const weight = WEIGHT_WORDS[rawW] ?? (val.weight ? String(val.weight) : 'normal');
       const style = val.style || 'normal';
       return { family, size, weight, style };
     }

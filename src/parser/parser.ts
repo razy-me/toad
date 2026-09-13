@@ -909,7 +909,13 @@ export class Parser {
       if (['normal', 'italic', 'oblique'].includes(val) && !style) {
         style = val as any;
         this.advance();
-      } else if (['bold', 'bolder', 'lighter', '100', '200', '300', '400', '500', '600', '700', '800', '900'].includes(val) && !weight) {
+      } else if ([
+        'thin', 'hairline', 'extralight', 'extra-light', 'ultralight', 'ultra-light',
+        'light', 'regular', 'normal', 'medium', 'semibold', 'semi-bold', 'demibold', 'demi-bold',
+        'bold', 'bolder', 'extrabold', 'extra-bold', 'ultrabold', 'ultra-bold',
+        'black', 'heavy', 'lighter',
+        '100', '200', '300', '400', '500', '600', '700', '800', '900'
+      ].includes(val) && !weight) {
         weight = isNaN(Number(val)) ? val : Number(val);
         this.advance();
       } else if ((tok.type === TokenType.DIMENSION || tok.type === TokenType.NUMBER || tok.type === TokenType.VARIABLE) && !size) {

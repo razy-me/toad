@@ -638,10 +638,18 @@ export function createCli(): Command {
             const penaltyIssues = audit.findings.filter(f => f.severity === 'error' || f.severity === 'warn');
             const hasPenalties = penaltyIssues.length > 0;
 
+            const safeCopyToClipboard = async (text: string): Promise<boolean> => {
+              try {
+                return await copyToClipboard(text);
+              } catch {
+                return false;
+              }
+            };
+
             const runFixesStep = async () => {
               while (true) {
                 const fixPrompt = hasPenalties
-                  ? `\n  ${c.cyan('➜')}  ${c.bold('Press [Enter]')} to view quick-fixes & actionable recommendations, or ${c.bold('[F]')} to copy report (or [Q] to quit)... `
+                  ? `\n  ${c.cyan('➜')}  ${c.bold('Press [Enter]')} to finish, or ${c.bold('[F]')} to copy report (or [Q] to quit)... `
                   : `\n  ${c.cyan('➜')}  ${c.bold('Press [Enter]')} to view notices & recommendations, or ${c.bold('[F]')} to copy report (or [Q] to quit)... `;
                 process.stdout.write(fixPrompt);
                 const key2 = await waitForUserInputKey();
@@ -651,8 +659,12 @@ export function createCli(): Command {
                   break;
                 }
                 if (isCopy(key2)) {
-                  await copyToClipboard(accumulatedReport);
-                  console.log(`  ${c.green('✔')} ${c.bold('Report copied to clipboard!')}`);
+                  const copied = await safeCopyToClipboard(accumulatedReport);
+                  if (copied) {
+                    console.log(`  ${c.green('✔')} ${c.bold('Report copied to clipboard!')}`);
+                  } else {
+                    console.log(`  ${c.yellow('!')} ${c.dim('Could not copy to clipboard in this environment.')}`);
+                  }
                   continue;
                 }
                 if (isEnter(key2)) {
@@ -666,8 +678,12 @@ export function createCli(): Command {
                   const key3 = await waitForUserInputKey();
                   process.stdout.write('\n');
                   if (isCopy(key3)) {
-                    await copyToClipboard(accumulatedReport);
-                    console.log(`  ${c.green('✔')} ${c.bold('Entire report copied to clipboard!')}\n`);
+                    const copied = await safeCopyToClipboard(accumulatedReport);
+                    if (copied) {
+                      console.log(`  ${c.green('✔')} ${c.bold('Entire report copied to clipboard!')}\n`);
+                    } else {
+                      console.log(`  ${c.yellow('!')} ${c.dim('Could not copy to clipboard in this environment.')}\n`);
+                    }
                   }
                   break;
                 }
@@ -685,8 +701,12 @@ export function createCli(): Command {
                   break;
                 }
                 if (isCopy(key1)) {
-                  await copyToClipboard(accumulatedReport);
-                  console.log(`  ${c.green('✔')} ${c.bold('Report copied to clipboard!')}`);
+                  const copied = await safeCopyToClipboard(accumulatedReport);
+                  if (copied) {
+                    console.log(`  ${c.green('✔')} ${c.bold('Report copied to clipboard!')}`);
+                  } else {
+                    console.log(`  ${c.yellow('!')} ${c.dim('Could not copy to clipboard in this environment.')}`);
+                  }
                   continue;
                 }
                 if (isEnter(key1)) {

@@ -419,7 +419,18 @@ export function createCanvasGradient(
   if (grad.type === 'radial') {
     const cx = box.x + box.w / 2;
     const cy = box.y + box.h / 2;
-    const radius = Math.max(box.w, box.h) / 2 || 1;
+    const rx = (box.w || 1) / 2;
+    const ry = (box.h || 1) / 2;
+    let radius: number;
+    if (grad.shape === 'circle') {
+      // Explicit circle shape: use closest-side radius so circle stays contained in element
+      radius = Math.min(rx, ry) || 1;
+    } else {
+      // Non-square bounds without explicit 'circle' (CSS default ellipse):
+      // use geometric mean sqrt(rx * ry) so gradient area matches ellipse area
+      // without severe over-illumination along the minor axis.
+      radius = Math.sqrt(rx * ry) || Math.max(rx, ry) || 1;
+    }
     const canvasGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
 
     for (const s of distributedStops) {

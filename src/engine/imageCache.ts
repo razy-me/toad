@@ -125,7 +125,7 @@ export function estimateFilterPad(filterStr: string): number {
  * intercept that.)
  */
 export function sanitizeFilterCss(css?: string): string {
-  const s = (css || '').trim();
+  const s = (css || '').replace(/;\s*$/, '').trim();
   if (!s || s === 'none') return 'none';
   const re = /(^|\s)([a-zA-Z][a-zA-Z0-9-]*)\(((?:[^()]|\([^()]*\))*)\)(?=\s|$)/g;
   const KNOWN = new Set(['blur', 'saturate', 'brightness', 'contrast', 'grayscale', 'sepia', 'invert', 'hue-rotate', 'drop-shadow', 'opacity']);
@@ -158,7 +158,8 @@ export interface SplitFilterResult {
  * to be applied by the caller at composite time.
  */
 export function splitUnsafeFilterFns(css?: string): SplitFilterResult {
-  if (!css || css.trim() === '' || css.trim() === 'none') {
+  const cleanedCss = (css || '').replace(/;\s*$/, '').trim();
+  if (!cleanedCss || cleanedCss === 'none') {
     return { safeCss: 'none', opacityFactor: 1 };
   }
   let shadow: SplitFilterResult['shadow'] | undefined;
@@ -166,7 +167,7 @@ export function splitUnsafeFilterFns(css?: string): SplitFilterResult {
 
   const dsRe = /drop-shadow\(\s*((?:[^()]|\([^()]*\))*)\)/gi;
   let mds: RegExpExecArray | null;
-  while ((mds = dsRe.exec(css)) !== null) {
+  while ((mds = dsRe.exec(cleanedCss)) !== null) {
     if (shadow) continue;
     const args = mds[1] || '';
     const numRe = /(-?(?:\d+\.?\d*|\.\d+))(?:px)?/g;
@@ -194,12 +195,12 @@ export function splitUnsafeFilterFns(css?: string): SplitFilterResult {
 
   const opRe = /opacity\(\s*(\d*\.?\d+)\s*%?\s*\)/gi;
   let mop: RegExpExecArray | null;
-  while ((mop = opRe.exec(css)) !== null) {
+  while ((mop = opRe.exec(cleanedCss)) !== null) {
     const v = parseFloat(mop[1]);
     opacityFactor *= v > 1 ? v / 100 : v;
   }
 
-  let safeCss = css
+  let safeCss = cleanedCss
     // Malformed zero-argument functions must never survive into ctx.filter.
     .replace(/\b[a-zA-Z][a-zA-Z0-9-]*\(\s*\)/g, '')
     .replace(dsRe, '').replace(opRe, '').replace(/,\s*,+/g, ', ').replace(/^\s*,\s*|\s*,\s*$/g, '').trim();
@@ -209,7 +210,8 @@ export function splitUnsafeFilterFns(css?: string): SplitFilterResult {
 
 /** Append missing CSS units so unitless resolver output satisfies ctx.filter. */
 export function normalizeFilterCss(filterStr: string): string {
-  return filterStr.replace(/\b(blur|drop-shadow|hue-rotate|brightness|contrast|saturate|grayscale|sepia|invert)\(\s*(-?[0-9.]+)\s*\)/g, (full: string, fn: string, num: string) => {
+  const s = (filterStr || '').replace(/;\s*$/, '').trim();
+  return s.replace(/\b(blur|drop-shadow|hue-rotate|brightness|contrast|saturate|grayscale|sepia|invert)\(\s*(-?[0-9.]+)\s*\)/g, (full: string, fn: string, num: string) => {
     if (!UNIT_FILTERS.has(fn)) return full;
     const unit = fn === 'hue-rotate' ? 'deg' : 'px';
     return fn + '(' + num + unit + ')';

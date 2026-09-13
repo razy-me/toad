@@ -286,15 +286,15 @@ export class CanvasRenderer {
         const p2d = new Path2D(node.maskNode.pathLayout.d);
         
         // Canvas clipping with Path2D respects current transform
+        const prevTransform = (ctx as any).getTransform();
         ctx.translate(node.maskNode.x, node.maskNode.y);
         if (node.maskNode.type === 'icon') {
-          ctx.scale(node.maskNode.width / 24, node.maskNode.height / 24);
+          const sx = node.maskNode.width > 0 ? node.maskNode.width / 24 : 1;
+          const sy = node.maskNode.height > 0 ? node.maskNode.height / 24 : 1;
+          ctx.scale(sx, sy);
         }
         ctx.clip(p2d);
-        if (node.maskNode.type === 'icon') {
-          ctx.scale(24 / node.maskNode.width, 24 / node.maskNode.height);
-        }
-        ctx.translate(-node.maskNode.x, -node.maskNode.y);
+        ctx.setTransform(prevTransform);
         isAlreadyClipped = true;
       } else {
         drawRect(ctx, node.maskNode.x, node.maskNode.y, node.maskNode.width, node.maskNode.height, node.maskNode.style.borderRadius);
@@ -696,15 +696,15 @@ export class CanvasRenderer {
                   drawPolygon(ctx, child.polygonLayout.canvasPoints);
                 } else if ((child.type === 'path' || child.type === 'shape' || child.type === 'icon' || ['star', 'triangle', 'arrow', 'cross'].includes(child.type)) && child.pathLayout) {
                   const p2d = new Path2D(child.pathLayout.d);
+                  const prevTransform = (ctx as any).getTransform();
                   ctx.translate(child.x, child.y);
                   if (child.type === 'icon') {
-                    ctx.scale(child.width / 24, child.height / 24);
+                    const sx = child.width > 0 ? child.width / 24 : 1;
+                    const sy = child.height > 0 ? child.height / 24 : 1;
+                    ctx.scale(sx, sy);
                   }
                   ctx.clip(p2d);
-                  if (child.type === 'icon') {
-                    ctx.scale(24 / child.width, 24 / child.height);
-                  }
-                  ctx.translate(-child.x, -child.y);
+                  ctx.setTransform(prevTransform);
                   isAlreadyClipped = true;
                 } else {
                   drawRect(ctx, child.x, child.y, child.width, child.height, child.style.borderRadius);

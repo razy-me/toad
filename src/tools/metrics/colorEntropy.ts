@@ -68,7 +68,12 @@ export function calculateOklchEntropy(colors: ColorRgba[]): number {
   const voxelCounts = new Map<string, number>();
   let totalWeight = 0;
 
-  for (const rgba of colors) {
+  // Strided sampling for huge color arrays (e.g. 4K/8K raster pixel buffers)
+  // to avoid V8 memory spikes and GC pressure while retaining statistical entropy
+  const stride = colors.length > 2000 ? Math.ceil(colors.length / 2000) : 1;
+
+  for (let i = 0; i < colors.length; i += stride) {
+    const rgba = colors[i]!;
     const alpha = rgba.a !== undefined ? Math.max(0, Math.min(1, rgba.a)) : 1;
     if (alpha <= 0.001) continue;
 
@@ -115,7 +120,13 @@ export function calculateSlopTriadDistance(colors: ColorRgba[]): number {
   const visible = colors.filter(c => (c.a ?? 1) > 0.05);
   if (visible.length === 0) return 1.0;
 
-  const oklchColors = visible.map(sRgbToOklch);
+  const stride = visible.length > 1000 ? Math.ceil(visible.length / 1000) : 1;
+  const sampledColors: ColorRgba[] = [];
+  for (let i = 0; i < visible.length; i += stride) {
+    sampledColors.push(visible[i]!);
+  }
+
+  const oklchColors = sampledColors.map(sRgbToOklch);
 
   let sumMinDist = 0;
   for (const target of SLOP_TROPE_TARGETS) {
@@ -152,7 +163,9 @@ export function analyzeColorTelemetry(
   const slopDist = calculateSlopTriadDistance(colors);
 
   const hueSectors = new Set<number>();
-  for (const c of colors) {
+  const stride = colors.length > 2000 ? Math.ceil(colors.length / 2000) : 1;
+  for (let i = 0; i < colors.length; i += stride) {
+    const c = colors[i]!;
     if ((c.a ?? 1) <= 0.05) continue;
     const oklch = sRgbToOklch(c);
     if (oklch.c > 0.04) {
