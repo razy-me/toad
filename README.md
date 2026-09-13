@@ -11,28 +11,27 @@
 
 ## ⚡ Highlights
 
-- 🤖 **AI to Layered PSD**: Turns declarative code into native Photoshop documents with editable text layers, vector Bézier paths, and real layer styles.
-- 📐 **Vector & Barcode Subsystems**: Built-in 1D barcodes (`code128`, `ean13`, `upc`, `code39`) and 2D QR codes as native vector paths.
-- 🖨️ **Prepress & Print-Ready**: PDF export with bleed margins, crop marks, and CMYK color space support.
-- 🎯 **Design Quality Gate**: Built-in linter, formatter, WCAG/APCA contrast auditing, and 50+ Anti-AI-Slop heuristics.
-- 🔄 **Live Hot Reload**: Instant browser preview via Server-Sent Events (SSE).
+- 🎨 **Code to PSD**: Generates native Photoshop documents with editable text layers, vector paths, and layer styles.
+- 🖨️ **Multi-Format Export**: PNG, JPG, WebP, SVG, and print-ready PDF (bleed margins & crop marks).
+- 📐 **Vector & Barcodes**: 1D barcodes (`code128`, `ean13`, `upc`, `code39`) and 2D QR codes out of the box.
+- 🎯 **Quality Built-In**: Linter, formatter, WCAG/APCA contrast checker, and anti-slop rules.
+- 🔄 **Live Preview**: Instant browser reloads via Server-Sent Events.
 
 ---
 
 ## 🚀 Quickstart
 
 ```bash
-# Install
+# Installation
 git clone https://github.com/razy-me/toad.git
 cd toad && npm install && npm run build && npm link
 
-# Usage
-toad init my-project     # Scaffolds a new starter project
-toad design.toad         # Compiles declared formats
-toad design.toad -w      # Live browser preview with hot reload
-toad design.toad -s 2    # Export at 2x resolution
-toad audit design.toad   # Runs quality, accessibility & anti-slop audit
-toad format design.toad  # Auto-formats source code
+# Basic Commands
+toad init my-project     # New starter project
+toad design.toad         # Compile
+toad design.toad -w      # Live browser preview
+toad audit design.toad   # Quality & accessibility audit
+toad format design.toad  # Auto-format
 ```
 
 ---
@@ -41,12 +40,11 @@ toad format design.toad  # Auto-formats source code
 
 ```toad
 >bg = #0f172a;
->accent = #38bdf8;
 
 canvas "Hero" {
     size: 1200px 630px;
     background: >bg;
-    export: all; // PNG, JPG, WebP, SVG, PDF, PSD
+    export: all;
 }
 
 stack #card {
@@ -75,13 +73,7 @@ stack #card {
 
 ---
 
-## 🧪 Verification
-
-```bash
-npm test    # 1,234 tests across 98 test suites (Vitest)
-```
-
 ## 📄 License
 
-MIT License • Created by [razy-me](https://github.com/razy-me)
+MIT License • [razy-me](https://github.com/razy-me)
 
