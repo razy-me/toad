@@ -118,4 +118,12 @@ Before outputting `.toad` code, execute this mental checklist:
 - [ ] Do all `slot` statements terminate with `;`?
 - [ ] Did I ensure any required fonts are present in the central `c:/toad-designs/fonts/` repository (expanding it if new fonts are needed)?
 
+---
 
+## 🛡️ Multi-Repository Architecture & Push Protocol (DO NOT VIOLATE)
+
+For details, consult `.agents/REPO_STRUCTURE.md`.
+- **`d:\toad`**: Push ONLY to `origin` (`toad-private`). NEVER push to `public` (`razy-me/toad`). The GitHub Action `.github/workflows/sync-public.yml` automatically and safely sanitizes and mirrors changes to public.
+- **`d:\toad-dev`**: Monorepo container with git submodules. NEVER edit code directly here. Only update submodule commits via `git submodule update --remote --merge`.
+- **`d:\toad-designs`**: Public showcase repository.
+- **`d:\toad-designs\private`**: Confidential client projects.
