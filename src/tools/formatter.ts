@@ -86,10 +86,17 @@ export function formatToad(source: string, options: FormatOptions = {}): string 
     // NEVER rewrite text inside block comments — interior prose like
     // " * Design tokens : version 2 ;" is documentation, not a property.
     if (!lineStartsInBlockComment && !inBlockComment &&
-        !line.startsWith('//') && !line.startsWith('/*') &&
-        codePart.endsWith(';')) {
-      const fixedCode = normalizePropertyStatement(codePart);
-      line = commentPart ? `${fixedCode} ${commentPart}` : fixedCode;
+        !line.startsWith('//') && !line.startsWith('/*')) {
+      let formattedCode = codePart;
+      if (formattedCode.endsWith('{') && formattedCode.length > 1 && !/\s$/.test(formattedCode.slice(0, -1))) {
+        formattedCode = formattedCode.slice(0, -1) + ' {';
+      }
+      if (formattedCode.endsWith(';')) {
+        const fixedCode = normalizePropertyStatement(formattedCode);
+        line = commentPart ? `${fixedCode} ${commentPart}` : fixedCode;
+      } else {
+        line = commentPart ? `${formattedCode} ${commentPart}` : formattedCode;
+      }
     }
 
     // Construct the indented line
@@ -168,7 +175,9 @@ function normalizePropertyStatement(code: string): string {
 
   if (colonIdx !== -1) {
     const key = code.substring(0, colonIdx).trimEnd();
-    const val = code.substring(colonIdx + 1).trimStart().replace(/\s+;$/, ';');
+    let val = code.substring(colonIdx + 1).trimStart().replace(/\s+;$/, ';');
+    // Normalize aspect ratio colons (e.g. 16 : 9 -> 16:9)
+    val = val.replace(/(\b\d+)\s*:\s*(\d+\b)/g, '$1:$2');
     return `${key}: ${val}`;
   }
 

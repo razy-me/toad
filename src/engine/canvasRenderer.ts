@@ -81,7 +81,7 @@ export class CanvasRenderer {
       if (img) {
         // Draw photo onto offscreen canvas for per-pixel grading if photoParams specified
         if (layout.canvas.photoParams) {
-          const photoCanvas = createCanvas(Math.round(bgW), Math.round(bgH));
+          const photoCanvas = createCanvas(Math.ceil(bgW), Math.ceil(bgH));
           const pctx = photoCanvas.getContext('2d');
           drawImageWithFit(pctx, img, 'cover', 0, 0, photoCanvas.width, photoCanvas.height);
 
@@ -461,12 +461,34 @@ export class CanvasRenderer {
           ? node.y + (node.height - (lineCount - 1) * lineHeight) / 2 + opticalOffset
           : node.y + (node.style.verticalAlign === 'bottom' ? Math.max(0, node.height - tlHeight) : 0);
 
+        const hasTextStroke = Boolean(node.style?.stroke || node.stroke);
+        if (hasTextStroke) {
+          ctx.save();
+          ctx.strokeStyle = (node.style?.stroke || node.stroke) as string;
+          ctx.lineWidth = Number(node.style?.strokeWidth || (node as any).strokeWidth || 1);
+          if (node.style?.strokeStyle === 'dashed') {
+            ctx.setLineDash([6, 6]);
+          } else if (node.style?.strokeStyle === 'dotted') {
+            ctx.setLineDash([2, 2]);
+          }
+          if (node.textLayout && node.textLayout.lines && node.textLayout.lines.length > 0) {
+            for (let i = 0; i < node.textLayout.lines.length; i++) {
+              const line = node.textLayout.lines[i]!;
+              const lineY = baselineY0 + i * lineHeight;
+              ctx.strokeText(line, anchorX, lineY);
+            }
+          } else if (node.name) {
+            ctx.strokeText(node.name, anchorX, isMiddle ? node.y + node.height / 2 + opticalOffset : node.y);
+          }
+          ctx.restore();
+        }
+
         if (align === 'justify' && node.textLayout && node.textLayout.lines && node.textLayout.lines.length > 0) {
           ctx.textAlign = 'left';
           for (let i = 0; i < node.textLayout.lines.length; i++) {
             const line = node.textLayout.lines[i]!;
             const lineY = baselineY0 + i * lineHeight;
-            const words = line.split(' ');
+            const words = line.trim().split(/\s+/).filter(Boolean);
             if (words.length > 1 && i < node.textLayout.lines.length - 1) {
               const totalWordsW = words.reduce((acc, w) => acc + ctx.measureText(w).width, 0);
               const spaceTotal = Math.max(0, node.width - totalWordsW);
@@ -841,9 +863,25 @@ export class CanvasRenderer {
     // Layer Stroke (Independent Stroke FX)
     if (node.style.layerStroke) {
       ctx.save();
+      const strokeW = node.style.layerStroke.width || 1;
+      const strokePos = node.style.layerStroke.position || 'center';
+      if (node.style.layerStroke.opacity !== undefined) {
+        ctx.globalAlpha *= Math.max(0, Math.min(1, node.style.layerStroke.opacity));
+      }
       ctx.strokeStyle = node.style.layerStroke.color || '#000000';
-      ctx.lineWidth = node.style.layerStroke.width || 1;
-      ctx.stroke();
+      if (strokePos === 'inside') {
+        ctx.save();
+        ctx.clip();
+        ctx.lineWidth = strokeW * 2;
+        ctx.stroke();
+        ctx.restore();
+      } else if (strokePos === 'outside') {
+        ctx.lineWidth = strokeW * 2;
+        ctx.stroke();
+      } else {
+        ctx.lineWidth = strokeW;
+        ctx.stroke();
+      }
       ctx.restore();
     }
   }
@@ -1006,6 +1044,10 @@ export class CanvasRenderer {
         dh = Math.max(1, Math.ceil(Math.max(...ys)) - dy);
       }
     } catch { /* backend without getTransform: legacy scale-only path */ }
+
+    const MAX_OFFSCREEN_DIMENSION = 8192;
+    dw = Math.min(MAX_OFFSCREEN_DIMENSION, Math.max(1, dw));
+    dh = Math.min(MAX_OFFSCREEN_DIMENSION, Math.max(1, dh));
 
     const oc = createCanvas(dw, dh);
     const octx = oc.getContext('2d');

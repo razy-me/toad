@@ -763,13 +763,13 @@ export class PsdExporter {
       const baseLineHeight = node.textLayout?.lineHeight || (node.textLayout?.fontSize || 16) * 1.25;
       const lineHeightPx = baseLineHeight * scale;
       const lineHeightPt = Number(((lineHeightPx * 72) / dpi).toFixed(2));
-      // Photoshop tracking is expressed in 1/1000 em, which is scale-independent.
+      const hasExplicitLs = node.style.letterSpacing !== undefined || (node as any).letterSpacingPx !== undefined;
       const lsRaw = typeof node.style.letterSpacing === 'number'
         ? node.style.letterSpacing
         : typeof (node as any).letterSpacingPx === 'number'
           ? (node as any).letterSpacingPx
           : 0;
-      const tracking = baseFontSize > 0 && typeof lsRaw === 'number' && lsRaw !== 0
+      const tracking = hasExplicitLs && baseFontSize > 0 && typeof lsRaw === 'number'
         ? Math.round((lsRaw / baseFontSize) * 1000)
         : undefined;
       const numericWeight = typeof fontWeight === 'number' ? fontWeight
@@ -932,7 +932,7 @@ export class PsdExporter {
               ? { r: Math.round(rgba.r), g: Math.round(rgba.g), b: Math.round(rgba.b), a: Math.round(rgba.a * 255) }
               : { r: Math.round(rgba.r), g: Math.round(rgba.g), b: Math.round(rgba.b) },
             leading: lineHeightPt,
-            ...(tracking !== undefined && tracking !== 0 ? { tracking } : {}),
+            ...(tracking !== undefined ? { tracking } : {}),
             ...(fauxBold ? { fauxBold: true } : {}),
             ...(fauxItalic ? { fauxItalic: true } : {}),
             ...(node.style.textTransform === 'uppercase' ? { fontCaps: 2 } : {}),
@@ -1946,7 +1946,7 @@ export class PsdExporter {
           smoothness: 1,
           colorStops,
           opacityStops,
-          style: fill.type === 'radial' ? 'radial' : 'linear',
+          style: (fill as any).type === 'radial' ? 'radial' : (fill as any).type === 'conic' ? 'angle' : 'linear',
           angle: cssGradientAngleToPhotoshop(typeof fill.angle === 'number' ? fill.angle : fill.direction)
         } as any;
       }
@@ -2122,17 +2122,48 @@ export class PsdExporter {
     // Stroke Effect
     const strokeFx = node.style.layerStroke;
     if (strokeFx) {
-      const color = parseColorToRgba(strokeFx.color || '#000000');
-      effects.stroke = [
-        {
-          enabled: true,
-          size: { units: 'Pixels', value: (strokeFx.width || 1) * scale },
-          position: strokeFx.position || 'inside',
-          fillType: 'color',
-          color: { r: color.r, g: color.g, b: color.b },
-          opacity: strokeFx.opacity ?? color.a
-        }
-      ];
+      if (strokeFx.gradient && strokeFx.gradient.stops) {
+        const distributed = distributeGradientStops(strokeFx.gradient.stops);
+        const colorStops = distributed.map(s => {
+          const c = parseColorToRgba(s.color);
+          return { color: { r: c.r, g: c.g, b: c.b }, location: s.offset, midpoint: 0.5 };
+        });
+        const opacityStops = distributed.map(s => {
+          const c = parseColorToRgba(s.color);
+          return { opacity: c.a, location: s.offset, midpoint: 0.5 };
+        });
+        const gradType = strokeFx.gradient.type === 'radial' ? 'radial' : strokeFx.gradient.type === 'conic' ? 'angle' : 'linear';
+        effects.stroke = [
+          {
+            enabled: true,
+            size: { units: 'Pixels', value: (strokeFx.width || 1) * scale },
+            position: strokeFx.position || 'inside',
+            fillType: 'gradient',
+            type: gradType,
+            angle: cssGradientAngleToPhotoshop(typeof (strokeFx.gradient as any).angle === 'number' ? (strokeFx.gradient as any).angle : (strokeFx.gradient as any).direction),
+            gradient: {
+              name: 'Gradient Stroke',
+              type: 'solid',
+              smoothness: 1,
+              colorStops,
+              opacityStops
+            },
+            opacity: strokeFx.opacity ?? 1
+          } as any
+        ];
+      } else {
+        const color = parseColorToRgba(strokeFx.color || '#000000');
+        effects.stroke = [
+          {
+            enabled: true,
+            size: { units: 'Pixels', value: (strokeFx.width || 1) * scale },
+            position: strokeFx.position || 'inside',
+            fillType: 'color',
+            color: { r: color.r, g: color.g, b: color.b },
+            opacity: strokeFx.opacity ?? color.a
+          }
+        ];
+      }
       hasAnyEffect = true;
     }
 
@@ -2174,7 +2205,7 @@ export class PsdExporter {
       effects.gradientOverlay = [
         {
           enabled: true,
-          type: gradOverlay.type === 'radial' ? 'radial' : 'linear',
+          type: gradOverlay.type === 'radial' ? 'radial' : gradOverlay.type === 'conic' ? 'angle' : 'linear',
           angle: cssGradientAngleToPhotoshop(typeof gradOverlay.angle === 'number' ? gradOverlay.angle : gradOverlay.direction),
           scale: 1,
           gradient: {
@@ -2184,7 +2215,7 @@ export class PsdExporter {
             colorStops,
             opacityStops
           }
-        }
+        } as any
       ];
       hasAnyEffect = true;
     }

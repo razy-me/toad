@@ -71,9 +71,11 @@ export function lintDocument(doc: DocumentNode, filePath?: string): Diagnostic[]
           const elem = node as ElementNode;
           if (elem.id) {
             if (seenIds.has(elem.id)) {
+              const prevLoc = seenIds.get(elem.id);
+              const origInfo = prevLoc ? ` (first declared at line ${prevLoc.start.line}, column ${prevLoc.start.column})` : '';
               diagnostics.push({
                 code: 'LINT-DUPLICATE-ID',
-                message: `Duplicate element ID '#${elem.id}' found. Element IDs should be unique.`,
+                message: `Duplicate element ID '#${elem.id}' found${origInfo}. Element IDs should be unique.`,
                 severity: 'warning',
                 loc: elem.loc
               });
@@ -130,19 +132,21 @@ export function lintDocument(doc: DocumentNode, filePath?: string): Diagnostic[]
     for (const prop of comp.properties) {
       traverse(prop, visitCompNode);
     }
-    const compSeenIds = new Set<string>();
+    const compSeenIds = new Map<string, any>();
     for (const elem of comp.elements) {
       traverse(elem, (node) => {
         if (node.id) {
           if (compSeenIds.has(node.id)) {
+            const prevLoc = compSeenIds.get(node.id);
+            const origInfo = prevLoc ? ` (first declared at line ${prevLoc.start.line}, column ${prevLoc.start.column})` : '';
             diagnostics.push({
               code: 'LINT-DUPLICATE-ID',
-              message: `Duplicate element ID '#${node.id}' in component '${comp.name}'. Element IDs within a component should be unique.`,
+              message: `Duplicate element ID '#${node.id}' in component '${comp.name}'${origInfo}. Element IDs within a component should be unique.`,
               severity: 'warning',
               loc: node.loc
             });
           } else {
-            compSeenIds.add(node.id);
+            compSeenIds.set(node.id, node.loc);
           }
         }
       });
@@ -169,7 +173,7 @@ export function lintDocument(doc: DocumentNode, filePath?: string): Diagnostic[]
   }
 
   // 2nd pass: Lint top-level canvas & elements
-  for (const elem of doc.elements) {
+  const checkElementTree = (elem: any, isDirectCanvasProp = false) => {
     traverse(elem, (node) => {
       if (node.type === 'VariableReference') {
         const ref = node as VariableReferenceNode;
@@ -181,7 +185,9 @@ export function lintDocument(doc: DocumentNode, filePath?: string): Diagnostic[]
         if (!declaredGlobalVars.has(ref.name) && !declaredGlobalVars.has(rootVarName)) {
           diagnostics.push({
             code: 'LINT-UNDECLARED-VAR',
-            message: `Variable '>${ref.name}' is referenced but never declared.`,
+            message: isDirectCanvasProp
+              ? `Variable '>${ref.name}' is referenced on canvas but never declared.`
+              : `Variable '>${ref.name}' is referenced but never declared.`,
             severity: 'error',
             loc: ref.loc
           });
@@ -244,25 +250,26 @@ export function lintDocument(doc: DocumentNode, filePath?: string): Diagnostic[]
         }
       }
     });
+  };
+
+  for (const elem of doc.elements) {
+    checkElementTree(elem, false);
   }
 
-  // Also check canvas properties for variable references
+  // Also check canvas properties and canvas-nested elements
   for (const c of canvasesToCheck) {
-    traverse(c, (node) => {
-      if (node.type === 'VariableReference') {
-        const ref = node as VariableReferenceNode;
-        referencedGlobalVars.add(ref.name);
-        const rootVarName = ref.name.includes('.') ? ref.name.split('.')[0]! : ref.name;
-        if (!declaredGlobalVars.has(ref.name) && !declaredGlobalVars.has(rootVarName)) {
-          diagnostics.push({
-            code: 'LINT-UNDECLARED-VAR',
-            message: `Variable '>${ref.name}' is referenced on canvas but never declared.`,
-            severity: 'error',
-            loc: ref.loc
-          });
-        }
+    // Check canvas's own properties
+    if (c.properties) {
+      for (const p of c.properties) {
+        checkElementTree(p, true);
       }
-    });
+    }
+    // Check canvas-nested elements
+    if (c.elements) {
+      for (const elem of c.elements) {
+        checkElementTree(elem, false);
+      }
+    }
   }
 
   // Collect all instantiated or referenced components across canvas, elements, and components
@@ -332,19 +339,19 @@ export function lintDocument(doc: DocumentNode, filePath?: string): Diagnostic[]
             if (fs.existsSync(resolvedPath)) {
               const content = fs.readFileSync(resolvedPath, 'utf-8');
               const importedAst = parseToad(content, resolvedPath);
-              for (const comp of importedAst.components) {
-                if (!usedComponents.has(comp.name)) {
-                  diagnostics.push({
-                    code: 'LINT-UNUSED-IMPORT',
-                    message: `Imported component '${comp.name}' from '${dir.path}' is never instantiated.`,
-                    severity: 'warning',
-                    loc: dir.loc,
-                    fix: {
-                      title: `Remove unused import '${dir.path}'`,
-                      kind: 'quickfix'
-                    }
-                  });
-                }
+              const hasUsedComponent = importedAst.components.some(comp => usedComponents.has(comp.name));
+              const hasUsedVar = importedAst.variables.some(v => referencedGlobalVars.has(v.name));
+              if (importedAst.components.length > 0 && !hasUsedComponent && !hasUsedVar) {
+                diagnostics.push({
+                  code: 'LINT-UNUSED-IMPORT',
+                  message: `Imported module '${dir.path}' provides components (${importedAst.components.map(c => c.name).join(', ')}), but none are used in this file.`,
+                  severity: 'warning',
+                  loc: dir.loc,
+                  fix: {
+                    title: `Remove unused import '${dir.path}'`,
+                    kind: 'quickfix'
+                  }
+                });
               }
             }
           } catch {
@@ -358,7 +365,7 @@ export function lintDocument(doc: DocumentNode, filePath?: string): Diagnostic[]
   // Flag dimension values whose unit is not one the language understands.
   // The lexer tolerates arbitrary letter runs so compound suffixes like
   // `4k` / `2x` keep working; this rule surfaces likely typos (`200xp`).
-  const KNOWN_UNITS = new Set(['', 'px', '%', 'deg', 'rad', 'em', 'rem', 'pt', 'vw', 'vh', 'mm', 'cm', 'in', 's', 'ms', 'k', 'x']);
+  const KNOWN_UNITS = new Set(['', 'px', '%', 'deg', 'rad', 'em', 'rem', 'pt', 'vw', 'vh', 'mm', 'cm', 'in', 's', 'ms', 'k', 'x', 'ch', 'ex']);
   traverse(doc, (node) => {
     if ((node as any).type === 'DimensionLiteral') {
       const unit = String((node as any).unit || '');

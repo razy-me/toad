@@ -13,6 +13,7 @@ import { LayoutResult, LayoutNode } from '../parser/math.js';
 import { parseColorToRgba } from './drawUtils.js';
 import { resolveSharedImage } from './imageCache.js';
 import { svgPathToSubpaths } from './vectorPathParser.js';
+import { FontLoader } from './fontLoader.js';
 
 export interface PdfExportOptions {
   colorMode?: 'rgb' | 'cmyk';
@@ -43,8 +44,8 @@ export function parsePdfColor(colorStr?: string, forceCmyk = false): PdfColor {
     return { mode: 'rgb', r: 0, g: 0, b: 0, opacity: 0 };
   }
 
-  // Direct CMYK string detection
-  const cmykMatch = colorStr.match(/cmyk\s*\(\s*(-?[0-9.]+)(%?)[,\s]+(-?[0-9.]+)(%?)[,\s]+(-?[0-9.]+)(%?)[,\s]+(-?[0-9.]+)(%?)(?:[,\s/]+(-?[0-9.]+)(%?))?\s*\)/i);
+  // Direct CMYK string detection (supports cmyk(), device-cmyk(), and CSS slash alpha notation e.g. cmyk(0 0 0 1 / 0.5))
+  const cmykMatch = colorStr.match(/(?:device-)?cmyk\s*\(\s*(-?[0-9.]+)(%?)[,\s]+(-?[0-9.]+)(%?)[,\s]+(-?[0-9.]+)(%?)[,\s]+(-?[0-9.]+)(%?)(?:\s*(?:,\s*|\/\s*)(-?[0-9.]+)(%?))?\s*\)/i);
   if (cmykMatch) {
     const clamp01 = (v: number) => Math.max(0, Math.min(1, Number.isFinite(v) ? v : 0));
     const parseVal = (v: string, isPct: string) => {
@@ -113,6 +114,7 @@ export class PdfExporter {
   private nextObjectId = 1;
   private extGStates = new Map<string, number>(); // opacity -> GS id
   private images = new Map<string, { id: number; name: string; width: number; height: number }>();
+  private customFontMap = new Map<string, string>(); // psName -> tag
   private basePath?: string;
 
   private static measureCtx: any = null;
@@ -129,7 +131,10 @@ export class PdfExporter {
       PdfExporter.measureCtx.font = `${fontSize}px ${fontFamily || 'sans-serif'}`;
       return PdfExporter.measureCtx.measureText(line).width;
     } catch {
-      return line.length * fontSize * 0.52;
+      const fam = (fontFamily || '').toLowerCase();
+      const isMono = fam.includes('courier') || fam.includes('mono') || fam.includes('code') || fam.includes('consolas');
+      const isCondensed = fam.includes('condensed') || fam.includes('narrow') || fam.includes('compressed');
+      return line.length * fontSize * (isMono ? 0.60 : isCondensed ? 0.45 : 0.52);
     }
   }
 
@@ -151,6 +156,7 @@ export class PdfExporter {
     this.nextObjectId = 1;
     this.extGStates.clear();
     this.images.clear();
+    this.customFontMap.clear();
 
     const scale = options.scale && options.scale > 0 ? options.scale : 1;
     const bleed = options.bleed !== undefined ? options.bleed : (layout.canvas.bleed || 0);
@@ -241,9 +247,12 @@ export class PdfExporter {
     const catalogObjId = this.allocId();
     const pagesObjId = this.allocId();
 
-    const fontEntries = Object.entries(STANDARD_PDF_FONTS)
-      .map(([tag, name]) => `/${tag} << /Type /Font /Subtype /Type1 /BaseFont /${name} /Encoding /WinAnsiEncoding >>`)
-      .join(' ');
+    const fontEntries = [
+      ...Object.entries(STANDARD_PDF_FONTS)
+        .map(([tag, name]) => `/${tag} << /Type /Font /Subtype /Type1 /BaseFont /${name} /Encoding /WinAnsiEncoding >>`),
+      ...Array.from(this.customFontMap.entries())
+        .map(([psName, tag]) => `${tag} << /Type /Font /Subtype /TrueType /BaseFont /${psName} /Encoding /WinAnsiEncoding >>`)
+    ].join(' ');
 
     const xObjectEntries: string[] = [];
     for (const imgData of this.images.values()) {
@@ -360,7 +369,7 @@ export class PdfExporter {
           const text = node.barcodeLayout.text;
           const lineWidth = this.measureLineWidth(text, fontSize, 'Courier');
           const textX = node.x + (node.width - lineWidth) / 2;
-          const textY = node.y + node.height;
+          const textY = node.y + node.height - (fontSize * 0.25);
           const textColor = parsePdfColor(
             typeof (node.style.fill || node.fill) === 'string' ? (node.style.fill || node.fill) as string : '#000000',
             isCmyk
@@ -519,6 +528,18 @@ export class PdfExporter {
   }
 
   private resolveFontTag(fontFamily?: string, fontWeight?: string | number, fontStyle?: string): string {
+    if (fontFamily) {
+      const psName = FontLoader.resolvePostScriptName(fontFamily, fontWeight, fontStyle);
+      if (psName && !['Helvetica', 'Times-Roman', 'Courier'].some(std => psName.startsWith(std))) {
+        let tag = this.customFontMap.get(psName);
+        if (!tag) {
+          tag = `/CF${this.customFontMap.size + 1}`;
+          this.customFontMap.set(psName, tag);
+        }
+        return tag;
+      }
+    }
+
     const fam = (fontFamily || '').toLowerCase();
     const isBold = fontWeight === 'bold' || fontWeight === 'semibold' || fontWeight === 'extrabold' ||
       (typeof fontWeight === 'number' ? fontWeight >= 600 : parseInt(String(fontWeight), 10) >= 600);

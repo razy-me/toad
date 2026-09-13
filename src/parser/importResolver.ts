@@ -43,9 +43,11 @@ import { applyAlpha, lightenColor, darkenColor } from '../engine/drawUtils.js';
 import { suggestProperty } from '../tools/diagnostics.js';
 
 export class CircularImportError extends Error {
-  constructor(message: string) {
+  public loc?: import('./ast.js').SourceLocation;
+  constructor(message: string, loc?: import('./ast.js').SourceLocation) {
     super(message);
     this.name = 'CircularImportError';
+    this.loc = loc;
   }
 }
 
@@ -112,6 +114,7 @@ export class ImportResolver {
   private activeImportStack = new Set<string>();
   private instanceCounter = 0;
   private defaultFontFamily?: string;
+  private currentVariables = new Map<string, ValueNode>();
   public warnings: string[] = [];
 
   constructor(entryDoc: DocumentNode, entryPath: string, options: ImportResolverOptions = {}) {
@@ -122,7 +125,8 @@ export class ImportResolver {
   }
 
   public async resolve(): Promise<ResolvedDocumentNode> {
-    this.loadedDocs.set(this.entryPath, this.entryDoc);
+    const canonEntry = process.platform === 'win32' ? this.entryPath.toLowerCase() : this.entryPath;
+    this.loadedDocs.set(canonEntry, this.entryDoc);
 
     // 1. Traverse and load all imports recursively
     const rawAllDocs = this.loadImportsRecursive(this.entryDoc, this.entryPath, [this.entryPath]);
@@ -186,6 +190,7 @@ export class ImportResolver {
 
     // 5. Resolve variable values (substitute nested variable references)
     const resolvedVariables = this.resolveAllVariables(rawVariables);
+    this.currentVariables = resolvedVariables;
 
     // 5b. Determine document default font-family from canvas or @font directives
     let canvasFontFamily: string | undefined;
@@ -270,7 +275,8 @@ export class ImportResolver {
             continue;
           }
           const cycle = [...chain, resolvedPath].map(p => path.basename(p)).join(' -> ');
-          throw new CircularImportError(`Circular import detected: ${cycle}`);
+          const locInfo = dir.loc ? ` at line ${dir.loc.start.line}, col ${dir.loc.start.column}` : '';
+          throw new CircularImportError(`Circular import detected: ${cycle}${locInfo}`, dir.loc);
         }
 
         if (visited.has(canonPath)) {
@@ -278,11 +284,11 @@ export class ImportResolver {
         }
         visited.add(canonPath);
 
-        let importedDoc = this.loadedDocs.get(resolvedPath);
+        let importedDoc = this.loadedDocs.get(canonPath);
         if (!importedDoc) {
           const content = this.fileLoader(resolvedPath);
           importedDoc = parseToad(content, resolvedPath);
-          this.loadedDocs.set(resolvedPath, importedDoc);
+          this.loadedDocs.set(canonPath, importedDoc);
         }
 
         const childDocs = this.loadImportsRecursive(importedDoc, resolvedPath, [...chain, resolvedPath], visited);
@@ -339,6 +345,22 @@ export class ImportResolver {
         const resolved = lookup(value.name);
         if (resolved) {
           return this.substituteVariablesInValue(resolved, lookup);
+        }
+        return value;
+      }
+      case 'ColorLiteral': {
+        if (typeof value.value === 'string' && value.value.includes('>')) {
+          let str = value.value;
+          str = str.replace(/>([a-zA-Z_][a-zA-Z0-9_-]*)/g, (match, varName) => {
+            const resolved = lookup(varName);
+            if (resolved) {
+              if (resolved.type === 'NumberLiteral') return String(resolved.value);
+              if (resolved.type === 'DimensionLiteral') return String(resolved.value) + (resolved.unit || '');
+              if (resolved.type === 'ColorLiteral' || resolved.type === 'StringLiteral') return String(resolved.value);
+            }
+            return match;
+          });
+          return { ...value, value: str };
         }
         return value;
       }
@@ -1600,11 +1622,13 @@ export class ImportResolver {
           break;
         }
         case 'mask': {
-          let maskId = this.extractString(val);
-          if (!maskId && val.type === 'ColorLiteral' && typeof val.value === 'string' && val.value.startsWith('#')) {
-            // Hex-like ids (e.g. #cafe) lex as colors; in reference position
-            // they unambiguously mean an element id.
+          let maskId: string | undefined;
+          if (val.type === 'ElementReference') {
+            maskId = val.targetId.startsWith('#') ? val.targetId : `#${val.targetId}`;
+          } else if (val.type === 'ColorLiteral' && typeof val.value === 'string' && val.value.startsWith('#')) {
             maskId = val.value;
+          } else {
+            maskId = this.extractString(val);
           }
           target.mask = maskId;
           break;
@@ -1876,6 +1900,9 @@ export class ImportResolver {
 
   private extractNumber(val: ValueNode, dpi = 96): number | undefined {
     if (!val) return undefined;
+    if (val.type === 'VariableReference' && this.currentVariables.has(val.name)) {
+      return this.extractNumber(this.currentVariables.get(val.name)!, dpi);
+    }
     if (val.type === 'NumberLiteral') {
       return val.value;
     }
@@ -2067,6 +2094,7 @@ export class ImportResolver {
     if (val.type === 'StringLiteral') return val.value;
     if (val.type === 'Identifier') return val.name;
     if (val.type === 'ElementReference') return val.targetId;
+    if (val.type === 'ColorLiteral' && typeof val.value === 'string' && val.value.startsWith('#')) return val.value;
     return undefined;
   }
 
@@ -2079,6 +2107,9 @@ export class ImportResolver {
 
   private extractColorString(val: ValueNode): string | undefined {
     if (!val) return undefined;
+    if (val.type === 'VariableReference' && this.currentVariables.has(val.name)) {
+      return this.extractColorString(this.currentVariables.get(val.name)!);
+    }
     if (val.type === 'ColorLiteral') return val.value;
     if (val.type === 'StringLiteral') return val.value;
     if (val.type === 'Identifier') return val.name;
@@ -2094,6 +2125,9 @@ export class ImportResolver {
 
   private extractColorOrGradient(val: ValueNode): string | ResolvedGradient | undefined {
     if (!val) return undefined;
+    if (val.type === 'VariableReference' && this.currentVariables.has(val.name)) {
+      return this.extractColorOrGradient(this.currentVariables.get(val.name)!);
+    }
     if (val.type === 'ColorLiteral') return val.value;
     if (val.type === 'StringLiteral') return val.value;
     if (val.type === 'Identifier') return val.name;

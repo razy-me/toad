@@ -443,11 +443,13 @@ export async function compileToad(
     }
 
     if (formatsToRender.includes('pdf')) {
+      const pdfScale = options.scale && options.scale > 0 ? options.scale : (options.vectorScale && options.vectorScale > 0 ? options.vectorScale : 1);
       const pdfBuf = await exportToPdfBuffer(pageLayout, {
         basePath: resolvedEntry,
         bleed: pageLayout.canvas.bleed,
         cropMarks: pageLayout.canvas.cropMarks,
-        colorMode: (pageLayout.canvas as any).colorMode
+        colorMode: (pageLayout.canvas as any).colorMode,
+        scale: pdfScale
       });
       const pdfPath = path.join(outDir, `${fileBase}.pdf`);
       fs.mkdirSync(path.dirname(pdfPath), { recursive: true });
@@ -871,6 +873,14 @@ const TOAD_PROPERTIES = [
   { name: 'clip', detail: 'Clipping Mask', snippet: 'clip: true;', doc: 'Use element as clipping mask for following layers' }
 ];
 
+const TOAD_ELEMENTS = [
+  { name: 'stack', detail: 'Stack Container (Auto-Layout)', snippet: 'stack #\${1:nav} {\\n\\tdirection: \${2|horizontal,vertical|};\\n\\talign: \${3|center,start,end|};\\n\\tgap: \${4:16px};\\n\\t\$0\\n}', doc: 'Auto-layout flex stack container' },
+  { name: 'rect', detail: 'Rectangle Element', snippet: 'rect #\${1:box} {\\n\\tat: (\${2:40px}, \${3:40px});\\n\\tsize: \${4:200px} \${5:100px};\\n\\tfill: \${6:#38bdf8};\\n\\tradius: \${7:16px};\\n\\t\$0\\n}', doc: 'Styled rectangle element' },
+  { name: 'circle', detail: 'Circle Element', snippet: 'circle #\${1:dot} {\\n\\tat: (\${2:50px}, \${3:50px});\\n\\tradius: \${4:40px};\\n\\tfill: \${5:#38bdf8};\\n\\t\$0\\n}', doc: 'Circle shape' },
+  { name: 'text', detail: 'Text Element', snippet: 'text #\${1:headline} {\\n\\tat: (\${2:40px}, \${3:40px});\\n\\tcontent: "\${4:Title}";\\n\\tfont-size: \${5:24px};\\n\\tfill: \${6:#ffffff};\\n\\t\$0\\n}', doc: 'Typography text element' },
+  { name: 'grid', detail: 'Grid Container', snippet: 'grid #\${1:grid} {\\n\\tat: (\${2:40px}, \${3:40px});\\n\\tcolumns: \${4:2};\\n\\tgap: \${5:16px};\\n\\t\$0\\n}', doc: 'CSS grid container' }
+];
+
 function activate(context) {
   const cliPath = path.resolve(__dirname, '..', 'toad', 'dist', 'cli.js');
   const parserPath = path.resolve(__dirname, '..', 'toad', 'dist', 'parser', 'parser.js');
@@ -918,7 +928,7 @@ function activate(context) {
   vscode.workspace.onDidSaveTextDocument(validateDocument, null, context.subscriptions);
   vscode.workspace.onDidCloseTextDocument(doc => diagnosticCollection.delete(doc.uri), null, context.subscriptions);
 
-  // 1. Completion Item Provider for toad properties
+  // 1. Completion Item Provider for toad properties and elements
   const completionProvider = vscode.languages.registerCompletionItemProvider(
     'toad',
     {
@@ -930,15 +940,26 @@ function activate(context) {
           return undefined;
         }
 
-        return TOAD_PROPERTIES.map((p, idx) => {
+        const propItems = TOAD_PROPERTIES.map((p, idx) => {
           const item = new vscode.CompletionItem(p.name, vscode.CompletionItemKind.Property);
           item.detail = p.detail;
           item.documentation = new vscode.MarkdownString(p.doc);
           item.insertText = new vscode.SnippetString(p.snippet);
-          item.sortText = '00' + String(idx).padStart(2, '0');
+          item.sortText = '10' + String(idx).padStart(2, '0');
           item.preselect = idx === 0;
           return item;
         });
+
+        const elemItems = TOAD_ELEMENTS.map((e, idx) => {
+          const item = new vscode.CompletionItem(e.name, vscode.CompletionItemKind.Class);
+          item.detail = e.detail;
+          item.documentation = new vscode.MarkdownString(e.doc);
+          item.insertText = new vscode.SnippetString(e.snippet);
+          item.sortText = '00' + String(idx).padStart(2, '0');
+          return item;
+        });
+
+        return [...elemItems, ...propItems];
       }
     },
     ' ' // Trigger after whitespace or typing

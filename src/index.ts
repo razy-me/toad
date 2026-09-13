@@ -34,6 +34,7 @@ export {
 export {
   LayoutSolver,
   solveLayout,
+  findNode,
   layoutText,
   computeGcd,
   computeAspectRatio,
@@ -80,6 +81,16 @@ export {
   distributeGradientStops,
   drawImageWithFit
 } from './engine/drawUtils.js';
+
+// 8b. Icon Registry
+export {
+  lucideIcons,
+  getIconPath,
+  hasIcon,
+  registerIcon,
+  unregisterIcon,
+  clearCustomIcons
+} from './engine/iconRegistry.js';
 
 // 9. Raster Canvas Renderer
 export {

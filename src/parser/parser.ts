@@ -558,6 +558,25 @@ export class Parser {
     if (propName === 'at') {
       return this.parseAtValue();
     }
+    if (propName === 'mask' || propName === 'clip-path' || propName === 'clipPath' || propName === 'clip') {
+      const startLoc = this.peek().loc.start;
+      if (this.check(TokenType.HEX_COLOR)) {
+        const tok = this.advance();
+        return {
+          type: 'ElementReference',
+          targetId: tok.value.replace(/^#/, ''),
+          loc: { start: startLoc, end: this.previous().loc.end, file: this.filename }
+        };
+      }
+      if (this.check(TokenType.ELEMENT_ID)) {
+        const tok = this.advance();
+        return {
+          type: 'ElementReference',
+          targetId: tok.value,
+          loc: { start: startLoc, end: this.previous().loc.end, file: this.filename }
+        };
+      }
+    }
     if (propName === 'points') {
       return this.parsePointsValue();
     }
@@ -849,7 +868,7 @@ export class Parser {
       'blur', 'saturate', 'brightness', 'contrast', 'grayscale', 'sepia', 'invert', 'hue-rotate', 'drop-shadow', 'opacity'
     ]);
 
-    while (!this.check(TokenType.SEMICOLON) && !this.isAtEnd()) {
+    while (!this.check(TokenType.SEMICOLON) && !this.check(TokenType.RBRACE) && !this.isAtEnd()) {
       const tok = this.peek();
       if (filterNames.has(tok.value) || this.isFilterFunctionToken(tok.type)) {
         const fnStart = this.advance().loc.start;
@@ -1393,20 +1412,28 @@ export class Parser {
 
   private parseColorFunction(): ColorLiteralNode {
     const startLoc = this.peek().loc.start;
-    const fnName = this.advance().value.toLowerCase() as 'rgb' | 'rgba' | 'hsl' | 'hsla' | 'cmyk';
+    const fnName = this.advance().value.toLowerCase() as 'rgb' | 'rgba' | 'hsl' | 'hsla' | 'cmyk' | 'device-cmyk';
     this.consume(TokenType.LPAREN, `Expected '(' after ${fnName}`);
     const rawArgs: string[] = [];
     const args: number[] = [];
 
     while (!this.check(TokenType.RPAREN) && !this.isAtEnd()) {
-      const argTok = this.advance();
-      rawArgs.push(argTok.value);
-      let num = parseFloat(argTok.value);
-      if (argTok.value.endsWith('%')) {
-        num = parseFloat(argTok.value.slice(0, -1)) / 100;
-      }
-      if (!isNaN(num)) {
-        args.push(num);
+      let argVal = '';
+      if (this.check(TokenType.VARIABLE)) {
+        const varTok = this.advance();
+        argVal = `>${varTok.value}`;
+        rawArgs.push(argVal);
+      } else {
+        const argTok = this.advance();
+        argVal = argTok.value;
+        rawArgs.push(argVal);
+        let num = parseFloat(argVal);
+        if (argVal.endsWith('%')) {
+          num = parseFloat(argVal.slice(0, -1)) / 100;
+        }
+        if (!isNaN(num)) {
+          args.push(num);
+        }
       }
       this.match(TokenType.COMMA);
     }
@@ -1414,7 +1441,7 @@ export class Parser {
     this.consume(TokenType.RPAREN, `Expected ')' after ${fnName} arguments`);
     const rawVal = `${fnName}(${rawArgs.join(', ')})`;
 
-    if (fnName === 'cmyk') {
+    if (fnName === 'cmyk' || fnName === 'device-cmyk') {
       const c = Math.max(0, Math.min(1, args[0] ?? 0));
       const m = Math.max(0, Math.min(1, args[1] ?? 0));
       const y = Math.max(0, Math.min(1, args[2] ?? 0));
@@ -1547,7 +1574,7 @@ export class Parser {
   private isColorFunction(tok: Token): boolean {
     if (tok.type !== TokenType.IDENTIFIER) return false;
     const val = tok.value.toLowerCase();
-    return (val === 'rgb' || val === 'rgba' || val === 'hsl' || val === 'hsla' || val === 'cmyk') && this.peek(1).type === TokenType.LPAREN;
+    return (val === 'rgb' || val === 'rgba' || val === 'hsl' || val === 'hsla' || val === 'cmyk' || val === 'device-cmyk') && this.peek(1).type === TokenType.LPAREN;
   }
 
   private isColorTransformFunction(tok: Token): boolean {

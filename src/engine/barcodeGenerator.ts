@@ -16,6 +16,7 @@ export interface BarcodeOptions {
   format?: BarcodeFormat;
   showText?: boolean;
   quietZone?: number;
+  sanitize?: boolean;
 }
 
 export interface BarcodeResult {
@@ -64,6 +65,28 @@ const CODE128_PATTERNS: number[][] = [
 ];
 
 const CODE128_STOP = [2, 3, 3, 1, 1, 1, 2]; // 106: Stop (13 modules)
+
+/**
+ * Sanitizes input text for Code 128 Set B by stripping accents,
+ * mapping common Unicode typographic characters to ASCII,
+ * and replacing unsupported characters with '?'.
+ */
+export function sanitizeCode128(text: string): string {
+  if (!text) return '';
+  let s = text.normalize('NFKD').replace(/[\u0300-\u036f]/g, '');
+  s = s
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/[\u2013\u2014]/g, '-')
+    .replace(/\t/g, ' ')
+    .replace(/[\r\n]+/g, ' ');
+  let out = '';
+  for (let i = 0; i < s.length; i++) {
+    const code = s.charCodeAt(i);
+    out += (code >= 32 && code <= 126) ? s[i] : '?';
+  }
+  return out;
+}
 
 function generateCode128(text: string, quietZoneModules?: number): { bars: BarcodeBar[]; totalModules: number } {
   // Use Code Set B (standard ASCII 32 to 126)
@@ -320,7 +343,9 @@ export function generateBarcode(value: string, options: BarcodeOptions = {}): Ba
     }
     case 'code128':
     default: {
-      const res = generateCode128(value, options.quietZone);
+      const codeVal = options.sanitize ? sanitizeCode128(value) : value;
+      text = codeVal;
+      const res = generateCode128(codeVal, options.quietZone);
       bars = res.bars;
       totalModules = res.totalModules;
       break;

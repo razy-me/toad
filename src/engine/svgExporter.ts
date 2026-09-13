@@ -176,7 +176,7 @@ export class SvgExporter {
 
     const rawSvg = [
       `<?xml version="1.0" encoding="UTF-8"?>`,
-      `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="0 0 ${width} ${height}" width="${scaledW}" height="${scaledH}">`,
+      `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xml:space="preserve" viewBox="0 0 ${width} ${height}" width="${scaledW}" height="${scaledH}">`,
       defsBlock + elementsMarkup.join('\n'),
       `</svg>`
     ].filter(Boolean).join('\n');
@@ -205,7 +205,7 @@ export class SvgExporter {
             const dataNameAttr = dataNameMatch ? ` data-name="${dataNameMatch[1]}"` : '';
             const labelAttr = labelMatch ? ` inkscape:label="${labelMatch[1]}"` : '';
 
-            const miniSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">${match}</svg>`;
+            const miniSvg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">${match}</svg>`;
             const convertedMini = convertSVGTextToPath(Buffer.from(miniSvg)).toString('utf-8');
 
             const paths = convertedMini.match(/<path[^>]+>/g);
@@ -489,9 +489,6 @@ export class SvgExporter {
         }
 
         const tspans = lines.map((l, i) => {
-          if (i === 0) {
-            return `<tspan>${this.escapeXml(l)}</tspan>`;
-          }
           const lineY = baselineY + i * lineHeight;
           return `<tspan x="${anchorX}" y="${lineY}">${this.escapeXml(l)}</tspan>`;
         }).join('');
@@ -813,15 +810,16 @@ export class SvgExporter {
 
     if (typeof fill === 'object' && fill.type === 'conic') {
       // SVG has no native conic gradient: approximate with a wedge pattern
-      // sampled around the box center (6-degree segments, lerped stop colors).
+      // sampled around the box center (2-degree segments, lerped stop colors).
       const patId = `conic_grad_${++this.gradientCounter}`;
       const stops = distributeGradientStops(fill.stops || []);
       const rgbaStops = stops.map(s => ({ pos: s.position, c: parseColorToRgba(s.color) }));
-      const ccx = box.x + box.w / 2;
-      const ccy = box.y + box.h / 2;
+      const b = box || { x: 0, y: 0, w: 100, h: 100 };
+      const ccx = b.x + b.w / 2;
+      const ccy = b.y + b.h / 2;
       const radius = Math.sqrt(
-        Math.pow(Math.max(ccx - box.x, box.x + box.w - ccx), 2) +
-        Math.pow(Math.max(ccy - box.y, box.y + box.h - ccy), 2)
+        Math.pow(Math.max(ccx - b.x, b.x + b.w - ccx), 2) +
+        Math.pow(Math.max(ccy - b.y, b.y + b.h - ccy), 2)
       ) * 1.05 + 2;
       let startDeg = typeof fill.angle === 'number' ? fill.angle : 0;
       if (startDeg === 0 && typeof fill.direction === 'string' && fill.direction.trim() !== '') {
@@ -830,7 +828,7 @@ export class SvgExporter {
         else if (dir === 'to bottom') startDeg = 180;
         else if (dir === 'to left') startDeg = 270;
       }
-      const SEG = 6;
+      const SEG = 2;
       const colAt = (t: number): string => {
         if (rgbaStops.length === 0) return '#000000';
         const firstStop = rgbaStops[0];

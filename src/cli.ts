@@ -88,80 +88,93 @@ export async function startWatcher(
 
   let isBuilding = false;
   let hasPendingChange = false;
+  let buildPromise: Promise<BuildResult | null> | null = null;
   let previewServer: PreviewServerInstance | null = null;
 
   const triggerBuild = async (): Promise<BuildResult | null> => {
     if (isBuilding) {
       hasPendingChange = true;
-      return null;
+      return buildPromise;
     }
 
     isBuilding = true;
-    try {
-      console.log(`[toad] Compiling ${path.basename(resolvedEntry)}...`);
-      const result = await compileToad(resolvedEntry, buildOptions);
+    buildPromise = (async () => {
+      let lastResult: BuildResult | null = null;
+      try {
+        while (true) {
+          hasPendingChange = false;
+          try {
+            console.log(`[toad] Compiling ${path.basename(resolvedEntry)}...`);
+            const result = await compileToad(resolvedEntry, buildOptions);
+            lastResult = result;
 
-      console.log(`[toad] Build succeeded in ${result.durationMs}ms`);
-      for (const f of result.outputFiles) {
-        let sizeStr = '';
-        try {
-          const stat = fs.statSync(f);
-          const sizeKb = (stat.size / 1024).toFixed(1);
-          sizeStr = stat.size > 1024 * 1024 ? `${(stat.size / 1024 / 1024).toFixed(2)} MB` : `${sizeKb} KB`;
-        } catch { }
-        
-        let dimStr = '';
-        if (f.endsWith('.psd') || f.endsWith('.png') || f.endsWith('.jpg') || f.endsWith('.jpeg') || f.endsWith('.webp')) {
-           dimStr = `(${result.canvas.width}x${result.canvas.height})`;
+            console.log(`[toad] Build succeeded in ${result.durationMs}ms`);
+            const maxNameLen = Math.max(20, ...result.outputFiles.map(f => path.basename(f).length));
+            for (const f of result.outputFiles) {
+              let sizeStr = '';
+              try {
+                const stat = fs.statSync(f);
+                const sizeKb = (stat.size / 1024).toFixed(1);
+                sizeStr = stat.size > 1024 * 1024 ? `${(stat.size / 1024 / 1024).toFixed(2)} MB` : `${sizeKb} KB`;
+              } catch { }
+              
+              let dimStr = '';
+              if (f.endsWith('.psd') || f.endsWith('.png') || f.endsWith('.jpg') || f.endsWith('.jpeg') || f.endsWith('.webp')) {
+                 dimStr = `(${result.canvas.width}x${result.canvas.height})`;
+              }
+              
+              console.log(`  -> ${path.basename(f).padEnd(maxNameLen)} ${sizeStr.padStart(8)}  ${dimStr}`);
+            }
+
+            if (result.warnings.length > 0) {
+              for (const w of result.warnings) {
+                console.warn(`  [warning] ${w}`);
+              }
+            }
+
+            // Update watched dependencies
+            const newDeps = new Set(result.dependencies.map(d => path.resolve(d)));
+            newDeps.add(resolvedEntry);
+
+            for (const dep of newDeps) {
+              if (!watchedFiles.has(dep)) {
+                watcher.add(dep);
+                watchedFiles.add(dep);
+              }
+            }
+
+            for (const watched of watchedFiles) {
+              if (!newDeps.has(watched) && watched !== resolvedEntry) {
+                watcher.unwatch(watched);
+                watchedFiles.delete(watched);
+              }
+            }
+
+            // Broadcast update to live preview browser
+            if (previewServer) {
+              previewServer.broadcastUpdate(result);
+            }
+          } catch (err: any) {
+            const formatted = formatCompilerError(err, resolvedEntry);
+            console.error(formatted);
+            if (previewServer) {
+              previewServer.broadcastError(formatted);
+            }
+            lastResult = null;
+          }
+
+          if (!hasPendingChange) {
+            break;
+          }
         }
-        
-        console.log(`  -> ${path.basename(f).padEnd(20)} ${sizeStr.padStart(8)}  ${dimStr}`);
+      } finally {
+        isBuilding = false;
+        buildPromise = null;
       }
+      return lastResult;
+    })();
 
-      if (result.warnings.length > 0) {
-        for (const w of result.warnings) {
-          console.warn(`  [warning] ${w}`);
-        }
-      }
-
-      // Update watched dependencies
-      const newDeps = new Set(result.dependencies.map(d => path.resolve(d)));
-      newDeps.add(resolvedEntry);
-
-      for (const dep of newDeps) {
-        if (!watchedFiles.has(dep)) {
-          watcher.add(dep);
-          watchedFiles.add(dep);
-        }
-      }
-
-      for (const watched of watchedFiles) {
-        if (!newDeps.has(watched) && watched !== resolvedEntry) {
-          watcher.unwatch(watched);
-          watchedFiles.delete(watched);
-        }
-      }
-
-      // Broadcast update to live preview browser
-      if (previewServer) {
-        previewServer.broadcastUpdate(result);
-      }
-
-      return result;
-    } catch (err: any) {
-      const formatted = formatCompilerError(err, resolvedEntry);
-      console.error(formatted);
-      if (previewServer) {
-        previewServer.broadcastError(formatted);
-      }
-      return null;
-    } finally {
-      isBuilding = false;
-      if (hasPendingChange) {
-        hasPendingChange = false;
-        await triggerBuild();
-      }
-    }
+    return buildPromise;
   };
 
   const watcher = chokidar.watch(Array.from(watchedFiles), {
@@ -172,9 +185,13 @@ export async function startWatcher(
     }
   });
 
-  watcher.on('all', async (event, changedPath) => {
+  let debounceTimer: NodeJS.Timeout | null = null;
+  watcher.on('all', (event, changedPath) => {
     console.log(`[toad] File ${event}: ${path.basename(changedPath)}`);
-    await triggerBuild();
+    if (debounceTimer) clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      triggerBuild();
+    }, 50);
   });
 
   // Initial build
@@ -258,6 +275,7 @@ export function createCli(): Command {
 
     const formatOutput = (result: BuildResult) => {
       console.log(`\n${c.bgGreen(' SUCCESS ')} ${c.bold(c.green(`Build completed in ${result.durationMs}ms`))}`);
+      const maxBaseLen = Math.max(24, ...result.outputFiles.map(f => path.basename(f).length));
       for (const f of result.outputFiles) {
         let sizeStr = '';
         try {
@@ -279,7 +297,7 @@ export function createCli(): Command {
           dimStr = c.dim(`(${Math.round(result.canvas.width)}x${Math.round(result.canvas.height)} pt)`);
         }
         
-        console.log(`  ${c.cyan('➜')} ${c.bold(path.basename(f)).padEnd(24)} ${c.yellow(sizeStr.padStart(8))}  ${dimStr}`);
+        console.log(`  ${c.cyan('➜')} ${c.bold(path.basename(f)).padEnd(maxBaseLen)} ${c.yellow(sizeStr.padStart(8))}  ${dimStr}`);
       }
       if (result.warnings.length > 0) {
         console.log('');
@@ -310,7 +328,7 @@ export function createCli(): Command {
     .option('-f, --format <formats...>', 'Output format(s): png | jpg | webp | psd | svg | pdf | image | all (comma or space separated)')
     .option('-o, --out <dir>', 'Output directory (defaults to entry directory)')
     .option('--fonts <dir>', 'Directory containing custom font files to register')
-    .option('-w, --watch', 'Watch entry file and all transitive imports for changes')
+    .option('-w, --watch', 'Watch entry file and all transitive imports for changes (Press Ctrl+C to stop)')
     .option('-q, --quality <number>', 'JPEG/WebP compression quality (1-100 or 0.0-1.0, default: 92)')
     .option('--dpi <number>', 'Target output resolution in DPI (e.g. 300, 150, 96)')
     .option('--bleed <dimension>', 'Print bleed margin override (e.g. 3mm, 0.125in, 10px)')
@@ -320,7 +338,7 @@ export function createCli(): Command {
 
   program
     .command('dev [entry]')
-    .description('Start live preview server with hot reload and watch mode')
+    .description('Start live preview server with hot reload and watch mode on local port (default: 3000, Press Ctrl+C to stop)')
     .option('-s, --scale <number>', 'Scale factor multiplier for raster rendering (e.g. 1, 2, 4)')
     .option('-f, --format <formats...>', 'Output format(s): png | jpg | webp | psd | svg | pdf | image | all (comma or space separated)')
     .option('-o, --out <dir>', 'Output directory (defaults to entry directory)')

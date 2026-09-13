@@ -171,15 +171,20 @@ function checkPurpleHaze(ctx: SlopContext): SlopRuleResult[] {
  */
 function checkBentoOverkill(ctx: SlopContext): SlopRuleResult[] {
   const findings: SlopRuleResult[] = [];
+  const dpiScale = (ctx.layout.canvas?.dpi || 96) / 96;
+  const minW = 120 * dpiScale;
+  const minH = 60 * dpiScale;
+  const minRadius = 12 * dpiScale;
+
   const cardNodes = ctx.allNodes.filter(
-    n => n.type === 'rect' && n.width > 120 && n.height > 60 && n.width < ctx.canvasWidth * 0.9
+    n => n.type === 'rect' && n.width > minW && n.height > minH && n.width < ctx.canvasWidth * 0.9
   );
 
   if (cardNodes.length >= 5) {
     const glassCards = cardNodes.filter(n => {
       const fillStr = typeof n.fill === 'string' ? n.fill.toLowerCase() : '';
       const hasBorder = Boolean(n.style?.stroke || n.style?.strokeWidth || (n.style as any)?.border);
-      const hasRadius = Number(n.style?.borderRadius || 0) >= 12;
+      const hasRadius = Number(n.style?.borderRadius || 0) >= minRadius;
       return hasRadius && (fillStr.includes('alpha') || fillStr.includes('rgba') || hasBorder);
     });
 
@@ -191,14 +196,32 @@ function checkBentoOverkill(ctx: SlopContext): SlopRuleResult[] {
         return findings;
       }
 
-      // Check content shallowness: cards with very few characters
+      // Check content shallowness: cards with very few characters and no dense graphics/metrics
       let shallowCount = 0;
       for (const card of glassCards) {
         const textsInside = ctx.textNodes.filter(
           t => t.x >= card.x && t.x + t.width <= card.x + card.width && t.y >= card.y && t.y + t.height <= card.y + card.height
         );
-        const totalChars = textsInside.reduce((acc, t) => acc + getNodeContent(t).length, 0);
-        if (totalChars < 40) shallowCount++;
+        const textContent = textsInside.map(t => getNodeContent(t)).join(' ');
+        const totalChars = textContent.length;
+
+        // Check if card contains rich non-text elements (sparkline paths, icons, photos, charts)
+        const richElementsInside = ctx.allNodes.filter(
+          n => n !== card &&
+               n.type !== 'text' &&
+               n.x >= card.x &&
+               n.x + n.width <= card.x + card.width &&
+               n.y >= card.y &&
+               n.y + n.height <= card.y + card.height &&
+               ['icon', 'image', 'path', 'polygon', 'barcode', 'qrcode'].includes(n.type)
+        );
+
+        // Check if text indicates a dense telemetry / KPI metric
+        const isTelemetryMetric = /[\d]+(\.[\d]+)?\s*(%|k|M|B|ms|s|fps|rpm|req|users|\$|€|£|¥)|\+[\d]+%|#\d+/i.test(textContent);
+
+        if (totalChars < 40 && richElementsInside.length === 0 && !isTelemetryMetric) {
+          shallowCount++;
+        }
       }
 
       findings.push({
@@ -1526,7 +1549,12 @@ function checkFauxBrutalistBarcodeAbuse(ctx: SlopContext): SlopRuleResult[] {
   const findings: SlopRuleResult[] = [];
   for (const node of ctx.allNodes) {
     const idStr = (node.id || node.name || '').toLowerCase();
-    if (idStr.includes('barcode') || idStr.includes('qrcode') || idStr.includes('qr_code')) {
+    // Exclude legitimate container cards, wrappers, and panels holding barcodes/QRs
+    const isContainer = (node.children && node.children.length > 0) ||
+      ['container', 'card', 'wrapper', 'wrap', 'box', 'panel', 'frame', 'bg', 'badge', 'holder'].some(k => idStr.includes(k));
+    if (isContainer) continue;
+
+    if (node.type === 'barcode' || node.type === 'qrcode' || idStr.includes('barcode') || idStr.includes('qrcode') || idStr.includes('qr_code')) {
       const radius = Number(node.style?.borderRadius || 0);
       if (radius > 0) {
         findings.push({

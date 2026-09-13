@@ -248,13 +248,14 @@ export function calculateTac(rgba: ColorRgba): { c: number; m: number; y: number
   const yNorm = 1 - rgba.b / 255;
   const kNorm = Math.min(cNorm, Math.min(mNorm, yNorm));
 
-  if (kNorm >= 1) {
+  if (kNorm >= 0.999) {
     return { c: 0, m: 0, y: 0, k: 100, tac: 100 };
   }
 
-  const c = Math.round(((cNorm - kNorm) / (1 - kNorm)) * 100);
-  const m = Math.round(((mNorm - kNorm) / (1 - kNorm)) * 100);
-  const y = Math.round(((yNorm - kNorm) / (1 - kNorm)) * 100);
+  const denom = Math.max(0.001, 1 - kNorm);
+  const c = Math.min(100, Math.max(0, Math.round(((cNorm - kNorm) / denom) * 100)));
+  const m = Math.min(100, Math.max(0, Math.round(((mNorm - kNorm) / denom) * 100)));
+  const y = Math.min(100, Math.max(0, Math.round(((yNorm - kNorm) / denom) * 100)));
   const k = Math.round(kNorm * 100);
   return { c, m, y, k, tac: c + m + y + k };
 }
@@ -640,21 +641,59 @@ export function auditDesign(
           other.x + other.width >= node.x + node.width &&
           other.y + other.height >= node.y + node.height
         );
-        if (containsText && typeof other.fill === 'string') {
-          const shapeCol = parseColorToRgba(other.fill);
-          if (shapeCol.a >= 0.95) {
-            effectiveBg = shapeCol;
-          } else if (shapeCol.a > 0) {
-            // Composite alpha over current effective background
-            effectiveBg = {
-              r: Math.round(shapeCol.r * shapeCol.a + effectiveBg.r * (1 - shapeCol.a)),
-              g: Math.round(shapeCol.g * shapeCol.a + effectiveBg.g * (1 - shapeCol.a)),
-              b: Math.round(shapeCol.b * shapeCol.a + effectiveBg.b * (1 - shapeCol.a)),
-              a: 1
-            };
+        if (containsText) {
+          if (typeof other.fill === 'string') {
+            const shapeCol = parseColorToRgba(other.fill);
+            if (shapeCol.a >= 0.95) {
+              effectiveBg = shapeCol;
+            } else if (shapeCol.a > 0) {
+              // Composite alpha over current effective background
+              effectiveBg = {
+                r: Math.round(shapeCol.r * shapeCol.a + effectiveBg.r * (1 - shapeCol.a)),
+                g: Math.round(shapeCol.g * shapeCol.a + effectiveBg.g * (1 - shapeCol.a)),
+                b: Math.round(shapeCol.b * shapeCol.a + effectiveBg.b * (1 - shapeCol.a)),
+                a: 1
+              };
+            }
+          } else if (typeof other.fill === 'object' && other.fill && Array.isArray((other.fill as any).stops) && (other.fill as any).stops.length > 0) {
+            // Gradient fill on containing shape: find worst-case stop against text foreground
+            const stops = (other.fill as any).stops;
+            let worstBg = effectiveBg;
+            let minC = Infinity;
+            for (const s of stops) {
+              const stopCol = parseColorToRgba(s.color || '#000000');
+              const blended = stopCol.a >= 0.95 ? stopCol : {
+                r: Math.round(stopCol.r * stopCol.a + effectiveBg.r * (1 - stopCol.a)),
+                g: Math.round(stopCol.g * stopCol.a + effectiveBg.g * (1 - stopCol.a)),
+                b: Math.round(stopCol.b * stopCol.a + effectiveBg.b * (1 - stopCol.a)),
+                a: 1
+              };
+              const c = calculateContrastRatio(fgRgba, blended);
+              if (c < minC) {
+                minC = c;
+                worstBg = blended;
+              }
+            }
+            effectiveBg = worstBg;
           }
         }
       }
+    }
+
+    // If canvas background is a gradient and effective background equals initial bg
+    const bgFill = layout.canvas.background ?? (layout.canvas as any).fill;
+    if (typeof bgFill === 'object' && bgFill && Array.isArray((bgFill as any).stops) && (bgFill as any).stops.length > 0) {
+      let worstBg = effectiveBg;
+      let minC = calculateContrastRatio(fgRgba, effectiveBg);
+      for (const s of (bgFill as any).stops) {
+        const stopCol = parseColorToRgba(s.color || '#ffffff');
+        const c = calculateContrastRatio(fgRgba, stopCol);
+        if (c < minC) {
+          minC = c;
+          worstBg = stopCol;
+        }
+      }
+      effectiveBg = worstBg;
     }
 
     const effectiveAlpha = (fgRgba.a ?? 1) * (typeof node.style.opacity === 'number' ? node.style.opacity : 1);
@@ -679,12 +718,13 @@ export function auditDesign(
     const rawId = node.id || node.name || 'text';
     const idLabel = node.id ? `#${node.id}` : (node.name || 'text');
 
+    const contrastFormatted = contrast.toFixed(2);
     contrastPairs.push({
       nodeId: idLabel,
       textSnippet: String(node.content || (node as any).textLayout?.text || idLabel).slice(0, 32),
       fgHex: fgStr,
       bgHex: `rgb(${effectiveBg.r}, ${effectiveBg.g}, ${effectiveBg.b})`,
-      wcagRatio: Math.round(contrast * 100) / 100,
+      wcagRatio: Number(contrastFormatted),
       apcaLc: Math.round(apca),
       passesWcag: contrast >= minContrast,
       passesApca: absApca >= minApca
@@ -698,7 +738,7 @@ export function auditDesign(
         type: 'error',
         nodeId: idLabel,
         elementId: rawId,
-        message: `${idLabel}: Low contrast ratio ${contrast}:1 (minimum required: ${minContrast}:1, APCA Lc: ${apca}).`,
+        message: `${idLabel}: Low contrast ratio ${contrastFormatted}:1 (minimum required: ${minContrast}:1, APCA Lc: ${apca}).`,
         details: `Foreground ${fgStr} on background rgb(${effectiveBg.r}, ${effectiveBg.g}, ${effectiveBg.b}).`,
         help: `Increase contrast between text and background to at least ${minContrast}:1 to comply with WCAG 2.2 AA.`,
         recommendation: `Increase contrast to at least ${minContrast}:1.`
@@ -711,7 +751,7 @@ export function auditDesign(
         type: 'warning',
         nodeId: idLabel,
         elementId: rawId,
-        message: `${idLabel}: Passes WCAG ratio (${contrast}:1), but APCA Lc rating is low (|Lc| = ${absApca}, target: ${minApca}).`,
+        message: `${idLabel}: Passes WCAG ratio (${contrastFormatted}:1), but APCA Lc rating is low (|Lc| = ${absApca}, target: ${minApca}).`,
         help: 'APCA models human perception across polarities. Consider adjusting lightness difference for effortless readability.'
       });
     } else if (contrast < 7.0 && !isLargeText) {
@@ -722,8 +762,8 @@ export function auditDesign(
         type: 'pass',
         nodeId: idLabel,
         elementId: rawId,
-        message: `${idLabel}: Passes AA (${contrast}:1, APCA Lc ${apca}), but below AAA standard (7.0:1).`,
-        details: `Contrast: ${contrast}:1.`
+        message: `${idLabel}: Passes AA (${contrastFormatted}:1, APCA Lc ${apca}), but below AAA standard (7.0:1).`,
+        details: `Contrast: ${contrastFormatted}:1.`
       });
     } else {
       findings.push({
@@ -733,7 +773,7 @@ export function auditDesign(
         type: 'pass',
         nodeId: idLabel,
         elementId: rawId,
-        message: `${idLabel}: Excellent contrast (${contrast}:1, APCA Lc ${apca}).`
+        message: `${idLabel}: Excellent contrast (${contrastFormatted}:1, APCA Lc ${apca}).`
       });
     }
 
@@ -1366,10 +1406,13 @@ export interface FormatReportOptions {
   slopOnly?: boolean;
   compact?: boolean;
   showFixes?: boolean;
+  noColor?: boolean;
 }
 
-function getAuditorColors() {
-  const useColor = !process.env.NO_COLOR && (process.stdout?.isTTY || process.env.FORCE_COLOR !== '0');
+function getAuditorColors(forceNoColor?: boolean) {
+  const isForceColor = Boolean(process.env.FORCE_COLOR && process.env.FORCE_COLOR !== '0');
+  const isTty = Boolean(process.stdout && (process.stdout as any).isTTY);
+  const useColor = !forceNoColor && !process.env.NO_COLOR && (isForceColor || (isTty && process.env.FORCE_COLOR !== '0'));
   return {
     bold: (s: string) => useColor ? `\x1b[1m${s}\x1b[22m` : s,
     dim: (s: string) => useColor ? `\x1b[2m${s}\x1b[22m` : s,
@@ -1388,8 +1431,8 @@ function getAuditorColors() {
   };
 }
 
-export function formatWarningsSection(report: AuditReport, options?: { standalone?: boolean }): string {
-  const c = getAuditorColors();
+export function formatWarningsSection(report: AuditReport, options?: { standalone?: boolean; noColor?: boolean }): string {
+  const c = getAuditorColors(options?.noColor);
 
   const stripAnsi = (str: string) => str.replace(/\x1b\[[0-9;]*m/g, '');
   const RULE_W = 74;
@@ -1568,7 +1611,7 @@ export function formatTerminalReport(
   report: AuditReport,
   options?: FormatReportOptions
 ): string {
-  const c = getAuditorColors();
+  const c = getAuditorColors(options?.noColor);
 
   const stripAnsi = (str: string) => str.replace(/\x1b\[[0-9;]*m/g, '');
 
@@ -1707,7 +1750,14 @@ export function formatTerminalReport(
   lines.push(gutter(c.bold(c.cyan('🔤 Typography & Typesetting Metrics'))));
   lines.push(gutter(`   Font Families:     ${c.cyan(fontList)}`));
   if (m?.typeScale && m.typeScale.length > 0) {
-    const scaleStr = m.typeScale.slice(0, 5).map(t => `${t.size}px (${t.count}×)`).join(' ➜ ');
+    const isPrint = (m.canvasDpi && m.canvasDpi >= 200) || Boolean(m.aspectRatio && /^(a[0-9]|b[0-9]|c[0-9]|letter|tabloid|poster)$/i.test(m.aspectRatio));
+    const scaleStr = m.typeScale.slice(0, 5).map(t => {
+      if (isPrint) {
+        const pt = Math.round((t.size / (m.canvasDpi || 300)) * 72 * 10) / 10;
+        return `${pt}pt [${t.size}px] (${t.count}×)`;
+      }
+      return `${t.size}px (${t.count}×)`;
+    }).join(' ➜ ');
     lines.push(gutter(`   Hierarchy Ladder:  ${c.dim(scaleStr)}`));
   }
   const measureStatus = (m?.avgLineLengthChars ?? 0) >= 45 && (m?.avgLineLengthChars ?? 0) <= 75
@@ -1728,7 +1778,7 @@ export function formatTerminalReport(
     lines.push(gutter(c.dim('   Contrast Samples:')));
     for (const cp of m.contrastPairs.slice(0, 3)) {
       const apcaBadge = cp.passesApca ? c.green(`|Lc|=${Math.abs(cp.apcaLc)}`) : c.yellow(`|Lc|=${Math.abs(cp.apcaLc)} (Notice)`);
-      const wcagBadge = cp.passesWcag ? c.green(`${cp.wcagRatio}:1`) : c.red(`${cp.wcagRatio}:1 (Fail)`);
+      const wcagBadge = cp.passesWcag ? c.green(`${cp.wcagRatio.toFixed(2)}:1`) : c.red(`${cp.wcagRatio.toFixed(2)}:1 (Fail)`);
       lines.push(gutter(`    • ${c.bold(cp.nodeId)}: WCAG ${wcagBadge} | APCA ${apcaBadge} | ${c.dim(cp.fgHex)} on ${c.dim(cp.bgHex)}`));
     }
   }
