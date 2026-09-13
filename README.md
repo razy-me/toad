@@ -6,7 +6,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20.0.0-339933.svg?style=flat-square&logo=nodedotjs&logoColor=white)](https://nodejs.org)
-[![Tests](https://img.shields.io/badge/Tests-1092%20Passing-10b981.svg?style=flat-square&logo=vitest&logoColor=white)](./tests)
+[![Tests](https://img.shields.io/badge/Tests-1234%20Passing-10b981.svg?style=flat-square&logo=vitest&logoColor=white)](./tests)
 [![Formats](https://img.shields.io/badge/Export-PNG%20%7C%20SVG%20%7C%20PSD%20%7C%20PDF%20%7C%20WebP%20%7C%20JPG-38bdf8.svg?style=flat-square)](https://github.com/razy-me/toad)
 
 <p align="center">
@@ -23,6 +23,8 @@
 
 - 🤖 **Gateway to AI-Generated .PSD Files**: LLMs can write code, but can't generate binary Photoshop files. TOAD bridges that gap: an AI writes simple `.toad` code, and TOAD compiles it into a **native Photoshop document with editable text layers, vector Bézier paths, and real layer styles**.
 - ✍️ **Code-First Design**: Version-control your designs, use variables, and automate graphics generation without heavy GUI tools.
+- 📐 **Vector & Barcode Subsystems**: Built-in 1D Barcodes (`code128`, `ean13`, `upc`, `code39`) and ISO/IEC 18004 2D QR codes rendered as crisp vector paths across SVG, PSD, PDF, and Canvas.
+- 🎯 **Automated Design Auditor & Anti-Slop Guardrails**: Built-in accessibility auditing (WCAG 2.2 AA/AAA & APCA), typographic scale analysis, prepress TAC flightcheck, and 50+ Anti-AI-Slop design heuristics.
 - ⚡ **Blazing Fast**: Native 2D raster engine (@napi-rs/canvas) with zero browser overhead.
 - 🔄 **Live Hot Reload**: Run `toad <FILENAME.toad> -w` for instant browser preview with live reload on save.
 
@@ -116,7 +118,7 @@ stack #content {
 | `toad dev <name>` / `-w` | Live preview server with Hot Reload (SSE) and browser sync |
 | `toad lint <name>` | Validates syntax, types, geometry, and undefined variables |
 | `toad format <name>` | Formats code layout, indentation, and syntax (`alias: fmt`) |
-| `toad audit <name>` | Runs deep visual quality and anti-slop design checks |
+| `toad audit <name>` | Runs deep visual quality, accessibility (WCAG/APCA), and anti-slop checks |
 | `toad bundle <name>` | Generates favicons, app icons, and web manifest assets |
 | `toad workspace` | Manages preferred design directories and search workspaces |
 | `-f, --format <formats>` | Choose formats: `png`, `jpg`, `webp`, `svg`, `psd`, `pdf`, `all` |
@@ -137,7 +139,7 @@ stack #content {
 ## 🧪 Testing
 
 ```bash
-npm test    # Runs 1,092 tests across 82 test suites (Vitest)
+npm test    # Runs 1,234 tests across 98 test suites (Vitest)
 ```
 
 ## 📄 License
