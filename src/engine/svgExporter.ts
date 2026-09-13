@@ -176,7 +176,7 @@ export class SvgExporter {
 
     const rawSvg = [
       `<?xml version="1.0" encoding="UTF-8"?>`,
-      `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="0 0 ${width} ${height}" width="${scaledW}" height="${scaledH}">`,
+      `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xml:space="preserve" viewBox="0 0 ${width} ${height}" width="${scaledW}" height="${scaledH}">`,
       defsBlock + elementsMarkup.join('\n'),
       `</svg>`
     ].filter(Boolean).join('\n');
@@ -489,9 +489,6 @@ export class SvgExporter {
         }
 
         const tspans = lines.map((l, i) => {
-          if (i === 0) {
-            return `<tspan>${this.escapeXml(l)}</tspan>`;
-          }
           const lineY = baselineY + i * lineHeight;
           return `<tspan x="${anchorX}" y="${lineY}">${this.escapeXml(l)}</tspan>`;
         }).join('');

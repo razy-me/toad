@@ -718,12 +718,13 @@ export function auditDesign(
     const rawId = node.id || node.name || 'text';
     const idLabel = node.id ? `#${node.id}` : (node.name || 'text');
 
+    const contrastFormatted = contrast.toFixed(2);
     contrastPairs.push({
       nodeId: idLabel,
       textSnippet: String(node.content || (node as any).textLayout?.text || idLabel).slice(0, 32),
       fgHex: fgStr,
       bgHex: `rgb(${effectiveBg.r}, ${effectiveBg.g}, ${effectiveBg.b})`,
-      wcagRatio: Math.round(contrast * 100) / 100,
+      wcagRatio: Number(contrastFormatted),
       apcaLc: Math.round(apca),
       passesWcag: contrast >= minContrast,
       passesApca: absApca >= minApca
@@ -737,7 +738,7 @@ export function auditDesign(
         type: 'error',
         nodeId: idLabel,
         elementId: rawId,
-        message: `${idLabel}: Low contrast ratio ${contrast}:1 (minimum required: ${minContrast}:1, APCA Lc: ${apca}).`,
+        message: `${idLabel}: Low contrast ratio ${contrastFormatted}:1 (minimum required: ${minContrast}:1, APCA Lc: ${apca}).`,
         details: `Foreground ${fgStr} on background rgb(${effectiveBg.r}, ${effectiveBg.g}, ${effectiveBg.b}).`,
         help: `Increase contrast between text and background to at least ${minContrast}:1 to comply with WCAG 2.2 AA.`,
         recommendation: `Increase contrast to at least ${minContrast}:1.`
@@ -750,7 +751,7 @@ export function auditDesign(
         type: 'warning',
         nodeId: idLabel,
         elementId: rawId,
-        message: `${idLabel}: Passes WCAG ratio (${contrast}:1), but APCA Lc rating is low (|Lc| = ${absApca}, target: ${minApca}).`,
+        message: `${idLabel}: Passes WCAG ratio (${contrastFormatted}:1), but APCA Lc rating is low (|Lc| = ${absApca}, target: ${minApca}).`,
         help: 'APCA models human perception across polarities. Consider adjusting lightness difference for effortless readability.'
       });
     } else if (contrast < 7.0 && !isLargeText) {
@@ -761,8 +762,8 @@ export function auditDesign(
         type: 'pass',
         nodeId: idLabel,
         elementId: rawId,
-        message: `${idLabel}: Passes AA (${contrast}:1, APCA Lc ${apca}), but below AAA standard (7.0:1).`,
-        details: `Contrast: ${contrast}:1.`
+        message: `${idLabel}: Passes AA (${contrastFormatted}:1, APCA Lc ${apca}), but below AAA standard (7.0:1).`,
+        details: `Contrast: ${contrastFormatted}:1.`
       });
     } else {
       findings.push({
@@ -772,7 +773,7 @@ export function auditDesign(
         type: 'pass',
         nodeId: idLabel,
         elementId: rawId,
-        message: `${idLabel}: Excellent contrast (${contrast}:1, APCA Lc ${apca}).`
+        message: `${idLabel}: Excellent contrast (${contrastFormatted}:1, APCA Lc ${apca}).`
       });
     }
 
@@ -1405,10 +1406,13 @@ export interface FormatReportOptions {
   slopOnly?: boolean;
   compact?: boolean;
   showFixes?: boolean;
+  noColor?: boolean;
 }
 
-function getAuditorColors() {
-  const useColor = !process.env.NO_COLOR && (process.stdout?.isTTY || process.env.FORCE_COLOR !== '0');
+function getAuditorColors(forceNoColor?: boolean) {
+  const isForceColor = Boolean(process.env.FORCE_COLOR && process.env.FORCE_COLOR !== '0');
+  const isTty = Boolean(process.stdout && (process.stdout as any).isTTY);
+  const useColor = !forceNoColor && !process.env.NO_COLOR && (isForceColor || (isTty && process.env.FORCE_COLOR !== '0'));
   return {
     bold: (s: string) => useColor ? `\x1b[1m${s}\x1b[22m` : s,
     dim: (s: string) => useColor ? `\x1b[2m${s}\x1b[22m` : s,
@@ -1427,8 +1431,8 @@ function getAuditorColors() {
   };
 }
 
-export function formatWarningsSection(report: AuditReport, options?: { standalone?: boolean }): string {
-  const c = getAuditorColors();
+export function formatWarningsSection(report: AuditReport, options?: { standalone?: boolean; noColor?: boolean }): string {
+  const c = getAuditorColors(options?.noColor);
 
   const stripAnsi = (str: string) => str.replace(/\x1b\[[0-9;]*m/g, '');
   const RULE_W = 74;
@@ -1607,7 +1611,7 @@ export function formatTerminalReport(
   report: AuditReport,
   options?: FormatReportOptions
 ): string {
-  const c = getAuditorColors();
+  const c = getAuditorColors(options?.noColor);
 
   const stripAnsi = (str: string) => str.replace(/\x1b\[[0-9;]*m/g, '');
 
@@ -1774,7 +1778,7 @@ export function formatTerminalReport(
     lines.push(gutter(c.dim('   Contrast Samples:')));
     for (const cp of m.contrastPairs.slice(0, 3)) {
       const apcaBadge = cp.passesApca ? c.green(`|Lc|=${Math.abs(cp.apcaLc)}`) : c.yellow(`|Lc|=${Math.abs(cp.apcaLc)} (Notice)`);
-      const wcagBadge = cp.passesWcag ? c.green(`${cp.wcagRatio}:1`) : c.red(`${cp.wcagRatio}:1 (Fail)`);
+      const wcagBadge = cp.passesWcag ? c.green(`${cp.wcagRatio.toFixed(2)}:1`) : c.red(`${cp.wcagRatio.toFixed(2)}:1 (Fail)`);
       lines.push(gutter(`    • ${c.bold(cp.nodeId)}: WCAG ${wcagBadge} | APCA ${apcaBadge} | ${c.dim(cp.fgHex)} on ${c.dim(cp.bgHex)}`));
     }
   }

@@ -88,81 +88,93 @@ export async function startWatcher(
 
   let isBuilding = false;
   let hasPendingChange = false;
+  let buildPromise: Promise<BuildResult | null> | null = null;
   let previewServer: PreviewServerInstance | null = null;
 
   const triggerBuild = async (): Promise<BuildResult | null> => {
     if (isBuilding) {
       hasPendingChange = true;
-      return null;
+      return buildPromise;
     }
 
     isBuilding = true;
-    try {
-      console.log(`[toad] Compiling ${path.basename(resolvedEntry)}...`);
-      const result = await compileToad(resolvedEntry, buildOptions);
+    buildPromise = (async () => {
+      let lastResult: BuildResult | null = null;
+      try {
+        while (true) {
+          hasPendingChange = false;
+          try {
+            console.log(`[toad] Compiling ${path.basename(resolvedEntry)}...`);
+            const result = await compileToad(resolvedEntry, buildOptions);
+            lastResult = result;
 
-      console.log(`[toad] Build succeeded in ${result.durationMs}ms`);
-      const maxNameLen = Math.max(20, ...result.outputFiles.map(f => path.basename(f).length));
-      for (const f of result.outputFiles) {
-        let sizeStr = '';
-        try {
-          const stat = fs.statSync(f);
-          const sizeKb = (stat.size / 1024).toFixed(1);
-          sizeStr = stat.size > 1024 * 1024 ? `${(stat.size / 1024 / 1024).toFixed(2)} MB` : `${sizeKb} KB`;
-        } catch { }
-        
-        let dimStr = '';
-        if (f.endsWith('.psd') || f.endsWith('.png') || f.endsWith('.jpg') || f.endsWith('.jpeg') || f.endsWith('.webp')) {
-           dimStr = `(${result.canvas.width}x${result.canvas.height})`;
+            console.log(`[toad] Build succeeded in ${result.durationMs}ms`);
+            const maxNameLen = Math.max(20, ...result.outputFiles.map(f => path.basename(f).length));
+            for (const f of result.outputFiles) {
+              let sizeStr = '';
+              try {
+                const stat = fs.statSync(f);
+                const sizeKb = (stat.size / 1024).toFixed(1);
+                sizeStr = stat.size > 1024 * 1024 ? `${(stat.size / 1024 / 1024).toFixed(2)} MB` : `${sizeKb} KB`;
+              } catch { }
+              
+              let dimStr = '';
+              if (f.endsWith('.psd') || f.endsWith('.png') || f.endsWith('.jpg') || f.endsWith('.jpeg') || f.endsWith('.webp')) {
+                 dimStr = `(${result.canvas.width}x${result.canvas.height})`;
+              }
+              
+              console.log(`  -> ${path.basename(f).padEnd(maxNameLen)} ${sizeStr.padStart(8)}  ${dimStr}`);
+            }
+
+            if (result.warnings.length > 0) {
+              for (const w of result.warnings) {
+                console.warn(`  [warning] ${w}`);
+              }
+            }
+
+            // Update watched dependencies
+            const newDeps = new Set(result.dependencies.map(d => path.resolve(d)));
+            newDeps.add(resolvedEntry);
+
+            for (const dep of newDeps) {
+              if (!watchedFiles.has(dep)) {
+                watcher.add(dep);
+                watchedFiles.add(dep);
+              }
+            }
+
+            for (const watched of watchedFiles) {
+              if (!newDeps.has(watched) && watched !== resolvedEntry) {
+                watcher.unwatch(watched);
+                watchedFiles.delete(watched);
+              }
+            }
+
+            // Broadcast update to live preview browser
+            if (previewServer) {
+              previewServer.broadcastUpdate(result);
+            }
+          } catch (err: any) {
+            const formatted = formatCompilerError(err, resolvedEntry);
+            console.error(formatted);
+            if (previewServer) {
+              previewServer.broadcastError(formatted);
+            }
+            lastResult = null;
+          }
+
+          if (!hasPendingChange) {
+            break;
+          }
         }
-        
-        console.log(`  -> ${path.basename(f).padEnd(maxNameLen)} ${sizeStr.padStart(8)}  ${dimStr}`);
+      } finally {
+        isBuilding = false;
+        buildPromise = null;
       }
+      return lastResult;
+    })();
 
-      if (result.warnings.length > 0) {
-        for (const w of result.warnings) {
-          console.warn(`  [warning] ${w}`);
-        }
-      }
-
-      // Update watched dependencies
-      const newDeps = new Set(result.dependencies.map(d => path.resolve(d)));
-      newDeps.add(resolvedEntry);
-
-      for (const dep of newDeps) {
-        if (!watchedFiles.has(dep)) {
-          watcher.add(dep);
-          watchedFiles.add(dep);
-        }
-      }
-
-      for (const watched of watchedFiles) {
-        if (!newDeps.has(watched) && watched !== resolvedEntry) {
-          watcher.unwatch(watched);
-          watchedFiles.delete(watched);
-        }
-      }
-
-      // Broadcast update to live preview browser
-      if (previewServer) {
-        previewServer.broadcastUpdate(result);
-      }
-
-      return result;
-    } catch (err: any) {
-      const formatted = formatCompilerError(err, resolvedEntry);
-      console.error(formatted);
-      if (previewServer) {
-        previewServer.broadcastError(formatted);
-      }
-      return null;
-    } finally {
-      isBuilding = false;
-      if (hasPendingChange) {
-        hasPendingChange = false;
-        await triggerBuild();
-      }
-    }
+    return buildPromise;
   };
 
   const watcher = chokidar.watch(Array.from(watchedFiles), {
@@ -173,9 +185,13 @@ export async function startWatcher(
     }
   });
 
-  watcher.on('all', async (event, changedPath) => {
+  let debounceTimer: NodeJS.Timeout | null = null;
+  watcher.on('all', (event, changedPath) => {
     console.log(`[toad] File ${event}: ${path.basename(changedPath)}`);
-    await triggerBuild();
+    if (debounceTimer) clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      triggerBuild();
+    }, 50);
   });
 
   // Initial build

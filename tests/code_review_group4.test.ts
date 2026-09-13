@@ -181,7 +181,7 @@ describe('Code Review Gruppe 4 Verification (F-04, F-10, F-15, F-22, F-28, F-33,
     const layout = await solveLayout(resolved);
 
     const svg = await exportToSvg(layout);
-    expect(svg).toContain('<tspan>Line One</tspan>');
+    expect(svg).toMatch(/<tspan( x="40" y="[\d.]+")?>Line One<\/tspan>/);
     expect(svg).toMatch(/<tspan x="40" y="[\d.]+">Line Two<\/tspan>/);
   });
 

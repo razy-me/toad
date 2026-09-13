@@ -1549,7 +1549,12 @@ function checkFauxBrutalistBarcodeAbuse(ctx: SlopContext): SlopRuleResult[] {
   const findings: SlopRuleResult[] = [];
   for (const node of ctx.allNodes) {
     const idStr = (node.id || node.name || '').toLowerCase();
-    if (idStr.includes('barcode') || idStr.includes('qrcode') || idStr.includes('qr_code')) {
+    // Exclude legitimate container cards, wrappers, and panels holding barcodes/QRs
+    const isContainer = (node.children && node.children.length > 0) ||
+      ['container', 'card', 'wrapper', 'wrap', 'box', 'panel', 'frame', 'bg', 'badge', 'holder'].some(k => idStr.includes(k));
+    if (isContainer) continue;
+
+    if (node.type === 'barcode' || node.type === 'qrcode' || idStr.includes('barcode') || idStr.includes('qrcode') || idStr.includes('qr_code')) {
       const radius = Number(node.style?.borderRadius || 0);
       if (radius > 0) {
         findings.push({

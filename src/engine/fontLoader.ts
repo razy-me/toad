@@ -279,6 +279,9 @@ export class FontLoader {
   private static registeredFaces: FontFaceMeta[] = [];
   private static metricsCache = new Map<string, FontHeaderMetrics>();
   private static systemFontsIndexed = false;
+  private static systemFontFiles: string[] = [];
+  private static parsedFontFiles = new Set<string>();
+  private static unresolvableFamilies = new Set<string>();
 
   public static getFontMetrics(family: string, weight?: string | number, style?: string): FontHeaderMetrics | null {
     if (!family) return null;
@@ -417,7 +420,45 @@ export class FontLoader {
   }
 
   /**
+   * Registers metadata for a single font file.
+   */
+  private static registerFontMetadata(fullPath: string): void {
+    if (this.parsedFontFiles.has(fullPath)) return;
+    this.parsedFontFiles.add(fullPath);
+    try {
+      const names = parseOpenTypeFontNames(fullPath);
+      if (names?.family && names?.postScript) {
+        const familyKey = names.family.toLowerCase();
+        const sub = (names.subfamily || '').toLowerCase();
+        const numericWeight = sub.includes('bold') ? 700
+          : sub.includes('black') || sub.includes('heavy') ? 900
+          : sub.includes('extralight') || sub.includes('extra-light') ? 200
+          : sub.includes('light') ? 300
+          : sub.includes('medium') ? 500
+          : sub.includes('semibold') || sub.includes('semi-bold') ? 600
+          : 400;
+        const style = sub.includes('italic') || sub.includes('oblique') ? 'italic' : 'normal';
+
+        const exists = this.registeredFaces.some(
+          face => face.family === familyKey && face.postScriptName === names.postScript
+        );
+        if (!exists) {
+          this.registeredFaces.push({
+            family: familyKey,
+            originalFamily: names.family,
+            numericWeight,
+            style,
+            postScriptName: names.postScript,
+            filePath: fullPath
+          });
+        }
+      }
+    } catch {}
+  }
+
+  /**
    * Indexes OS system font directories lazily to discover installed PostScript font names.
+   * Uses shallow directory scans to avoid blocking the event loop.
    */
   public static indexSystemFontsLazily(): void {
     if (this.systemFontsIndexed) return;
@@ -444,7 +485,7 @@ export class FontLoader {
       }
 
       const collectFontFiles = (dir: string, depth = 0): string[] => {
-        if (depth > 4 || !fs.existsSync(dir)) return [];
+        if (depth > 1 || !fs.existsSync(dir)) return [];
         const results: string[] = [];
         try {
           const entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -468,35 +509,12 @@ export class FontLoader {
       for (const sDir of sysDirs) {
         if (!fs.existsSync(sDir)) continue;
         const fontFiles = collectFontFiles(sDir);
+        this.systemFontFiles.push(...fontFiles);
 
-        for (const fullPath of fontFiles) {
-          const names = parseOpenTypeFontNames(fullPath);
-          if (names?.family && names?.postScript) {
-            const familyKey = names.family.toLowerCase();
-            const sub = (names.subfamily || '').toLowerCase();
-            const numericWeight = sub.includes('bold') ? 700
-              : sub.includes('black') || sub.includes('heavy') ? 900
-              : sub.includes('extralight') || sub.includes('extra-light') ? 200
-              : sub.includes('light') ? 300
-              : sub.includes('medium') ? 500
-              : sub.includes('semibold') || sub.includes('semi-bold') ? 600
-              : 400;
-            const style = sub.includes('italic') || sub.includes('oblique') ? 'italic' : 'normal';
-
-            const exists = this.registeredFaces.some(
-              face => face.family === familyKey && face.postScriptName === names.postScript
-            );
-            if (!exists) {
-              this.registeredFaces.push({
-                family: familyKey,
-                originalFamily: names.family,
-                numericWeight,
-                style,
-                postScriptName: names.postScript,
-                filePath: fullPath
-              });
-            }
-          }
+        // Pre-parse a small initial batch (up to 20 files) for immediate availability
+        const batchLimit = Math.min(20, fontFiles.length);
+        for (let i = 0; i < batchLimit; i++) {
+          this.registerFontMetadata(fontFiles[i]!);
         }
       }
     } catch {
@@ -516,6 +534,8 @@ export class FontLoader {
   ): string | null {
     if (!family) return null;
     const targetFamily = family.toLowerCase().trim();
+    if (this.unresolvableFamilies.has(targetFamily)) return null;
+
     const targetWeight = normalizeFontWeightToNumber(weight);
     const isTargetItalic = style === 'italic' || style === 'oblique';
 
@@ -549,9 +569,26 @@ export class FontLoader {
     const directMatch = findBestFace();
     if (directMatch) return directMatch;
 
-    // 2. Lazily index system fonts and try again
+    // 2. Lazily index system fonts
     this.indexSystemFontsLazily();
-    return findBestFace();
+
+    // 3. Targeted inspection of candidate files that match targetFamily
+    const cleanFamily = targetFamily.replace(/[^a-z0-9]/g, '');
+    if (cleanFamily.length > 0) {
+      const candidates = this.systemFontFiles.filter(f => {
+        const base = path.basename(f).toLowerCase().replace(/[^a-z0-9]/g, '');
+        return base.includes(cleanFamily);
+      });
+      for (const cand of candidates) {
+        this.registerFontMetadata(cand);
+      }
+    }
+
+    const matched = findBestFace();
+    if (!matched) {
+      this.unresolvableFamilies.add(targetFamily);
+    }
+    return matched;
   }
 
   /**

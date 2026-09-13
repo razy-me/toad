@@ -1045,6 +1045,10 @@ export class CanvasRenderer {
       }
     } catch { /* backend without getTransform: legacy scale-only path */ }
 
+    const MAX_OFFSCREEN_DIMENSION = 8192;
+    dw = Math.min(MAX_OFFSCREEN_DIMENSION, Math.max(1, dw));
+    dh = Math.min(MAX_OFFSCREEN_DIMENSION, Math.max(1, dh));
+
     const oc = createCanvas(dw, dh);
     const octx = oc.getContext('2d');
     if (mat) {
