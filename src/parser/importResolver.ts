@@ -346,6 +346,22 @@ export class ImportResolver {
         }
         return value;
       }
+      case 'ColorLiteral': {
+        if (typeof value.value === 'string' && value.value.includes('>')) {
+          let str = value.value;
+          str = str.replace(/>([a-zA-Z_][a-zA-Z0-9_-]*)/g, (match, varName) => {
+            const resolved = lookup(varName);
+            if (resolved) {
+              if (resolved.type === 'NumberLiteral') return String(resolved.value);
+              if (resolved.type === 'DimensionLiteral') return String(resolved.value) + (resolved.unit || '');
+              if (resolved.type === 'ColorLiteral' || resolved.type === 'StringLiteral') return String(resolved.value);
+            }
+            return match;
+          });
+          return { ...value, value: str };
+        }
+        return value;
+      }
       case 'CoordinateValue': {
         return {
           ...value,

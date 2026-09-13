@@ -171,15 +171,20 @@ function checkPurpleHaze(ctx: SlopContext): SlopRuleResult[] {
  */
 function checkBentoOverkill(ctx: SlopContext): SlopRuleResult[] {
   const findings: SlopRuleResult[] = [];
+  const dpiScale = (ctx.layout.canvas?.dpi || 96) / 96;
+  const minW = 120 * dpiScale;
+  const minH = 60 * dpiScale;
+  const minRadius = 12 * dpiScale;
+
   const cardNodes = ctx.allNodes.filter(
-    n => n.type === 'rect' && n.width > 120 && n.height > 60 && n.width < ctx.canvasWidth * 0.9
+    n => n.type === 'rect' && n.width > minW && n.height > minH && n.width < ctx.canvasWidth * 0.9
   );
 
   if (cardNodes.length >= 5) {
     const glassCards = cardNodes.filter(n => {
       const fillStr = typeof n.fill === 'string' ? n.fill.toLowerCase() : '';
       const hasBorder = Boolean(n.style?.stroke || n.style?.strokeWidth || (n.style as any)?.border);
-      const hasRadius = Number(n.style?.borderRadius || 0) >= 12;
+      const hasRadius = Number(n.style?.borderRadius || 0) >= minRadius;
       return hasRadius && (fillStr.includes('alpha') || fillStr.includes('rgba') || hasBorder);
     });
 

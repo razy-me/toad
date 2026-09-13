@@ -386,6 +386,9 @@ export class Lexer {
       return { type: TokenType.EQUALS, value: '=', loc: { start, end: this.currentPosition(), file: this.filename } };
     }
     if (char === '+') {
+      if (this.isDigit(this.peek(1)) || (this.peek(1) === '.' && this.isDigit(this.peek(2)))) {
+        return this.scanNumberOrDimension(start);
+      }
       this.advance();
       return { type: TokenType.PLUS, value: '+', loc: { start, end: this.currentPosition(), file: this.filename } };
     }
@@ -490,13 +493,20 @@ export class Lexer {
       if (char === '\\') {
         this.advance();
         if (this.offset >= this.source.length) break;
-        const esc = this.advance();
+        let esc = this.advance();
+        if (esc === '\r' && this.peek() === '\n') {
+          this.advance();
+          esc = '\n';
+        }
         if (esc === 'n') str += '\n';
         else if (esc === 'r') str += '\r';
         else if (esc === 't') str += '\t';
         else if (esc === '\\') str += '\\';
         else if (esc === '"') str += '"';
         else if (esc === "'") str += "'";
+        else if (esc === '\n') {
+          // Escaped newline: line continuation, do not append to str
+        }
         else if (esc === 'u') {
           if (this.peek() === '{') {
             this.advance(); // consume '{'
@@ -545,7 +555,7 @@ export class Lexer {
 
   private scanNumberOrDimension(start: Position): Token {
     let raw = '';
-    if (this.peek() === '-') {
+    if (this.peek() === '-' || this.peek() === '+') {
       raw += this.advance();
     }
 
@@ -557,6 +567,22 @@ export class Lexer {
       raw += this.advance(); // '.'
       while (this.offset < this.source.length && this.isDigit(this.peek())) {
         raw += this.advance();
+      }
+    }
+
+    // Scientific notation: 1e5, 1.2e-3, 3E+2
+    const expChar = this.peek();
+    if (expChar === 'e' || expChar === 'E') {
+      const nextChar = this.peek(1);
+      const nextNextChar = this.peek(2);
+      if (this.isDigit(nextChar) || ((nextChar === '+' || nextChar === '-') && this.isDigit(nextNextChar))) {
+        raw += this.advance(); // 'e' or 'E'
+        if (this.peek() === '+' || this.peek() === '-') {
+          raw += this.advance();
+        }
+        while (this.offset < this.source.length && this.isDigit(this.peek())) {
+          raw += this.advance();
+        }
       }
     }
 

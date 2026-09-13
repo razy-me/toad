@@ -312,7 +312,7 @@ export function createCli(): Command {
     .option('-f, --format <formats...>', 'Output format(s): png | jpg | webp | psd | svg | pdf | image | all (comma or space separated)')
     .option('-o, --out <dir>', 'Output directory (defaults to entry directory)')
     .option('--fonts <dir>', 'Directory containing custom font files to register')
-    .option('-w, --watch', 'Watch entry file and all transitive imports for changes')
+    .option('-w, --watch', 'Watch entry file and all transitive imports for changes (Press Ctrl+C to stop)')
     .option('-q, --quality <number>', 'JPEG/WebP compression quality (1-100 or 0.0-1.0, default: 92)')
     .option('--dpi <number>', 'Target output resolution in DPI (e.g. 300, 150, 96)')
     .option('--bleed <dimension>', 'Print bleed margin override (e.g. 3mm, 0.125in, 10px)')
@@ -322,7 +322,7 @@ export function createCli(): Command {
 
   program
     .command('dev [entry]')
-    .description('Start live preview server with hot reload and watch mode')
+    .description('Start live preview server with hot reload and watch mode on local port (default: 3000, Press Ctrl+C to stop)')
     .option('-s, --scale <number>', 'Scale factor multiplier for raster rendering (e.g. 1, 2, 4)')
     .option('-f, --format <formats...>', 'Output format(s): png | jpg | webp | psd | svg | pdf | image | all (comma or space separated)')
     .option('-o, --out <dir>', 'Output directory (defaults to entry directory)')

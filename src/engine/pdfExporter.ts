@@ -133,7 +133,8 @@ export class PdfExporter {
     } catch {
       const fam = (fontFamily || '').toLowerCase();
       const isMono = fam.includes('courier') || fam.includes('mono') || fam.includes('code') || fam.includes('consolas');
-      return line.length * fontSize * (isMono ? 0.60 : 0.52);
+      const isCondensed = fam.includes('condensed') || fam.includes('narrow') || fam.includes('compressed');
+      return line.length * fontSize * (isMono ? 0.60 : isCondensed ? 0.45 : 0.52);
     }
   }
 

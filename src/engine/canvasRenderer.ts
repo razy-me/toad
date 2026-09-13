@@ -488,7 +488,7 @@ export class CanvasRenderer {
           for (let i = 0; i < node.textLayout.lines.length; i++) {
             const line = node.textLayout.lines[i]!;
             const lineY = baselineY0 + i * lineHeight;
-            const words = line.split(' ');
+            const words = line.trim().split(/\s+/).filter(Boolean);
             if (words.length > 1 && i < node.textLayout.lines.length - 1) {
               const totalWordsW = words.reduce((acc, w) => acc + ctx.measureText(w).width, 0);
               const spaceTotal = Math.max(0, node.width - totalWordsW);

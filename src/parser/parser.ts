@@ -849,7 +849,7 @@ export class Parser {
       'blur', 'saturate', 'brightness', 'contrast', 'grayscale', 'sepia', 'invert', 'hue-rotate', 'drop-shadow', 'opacity'
     ]);
 
-    while (!this.check(TokenType.SEMICOLON) && !this.isAtEnd()) {
+    while (!this.check(TokenType.SEMICOLON) && !this.check(TokenType.RBRACE) && !this.isAtEnd()) {
       const tok = this.peek();
       if (filterNames.has(tok.value) || this.isFilterFunctionToken(tok.type)) {
         const fnStart = this.advance().loc.start;
@@ -1399,14 +1399,22 @@ export class Parser {
     const args: number[] = [];
 
     while (!this.check(TokenType.RPAREN) && !this.isAtEnd()) {
-      const argTok = this.advance();
-      rawArgs.push(argTok.value);
-      let num = parseFloat(argTok.value);
-      if (argTok.value.endsWith('%')) {
-        num = parseFloat(argTok.value.slice(0, -1)) / 100;
-      }
-      if (!isNaN(num)) {
-        args.push(num);
+      let argVal = '';
+      if (this.check(TokenType.VARIABLE)) {
+        const varTok = this.advance();
+        argVal = `>${varTok.value}`;
+        rawArgs.push(argVal);
+      } else {
+        const argTok = this.advance();
+        argVal = argTok.value;
+        rawArgs.push(argVal);
+        let num = parseFloat(argVal);
+        if (argVal.endsWith('%')) {
+          num = parseFloat(argVal.slice(0, -1)) / 100;
+        }
+        if (!isNaN(num)) {
+          args.push(num);
+        }
       }
       this.match(TokenType.COMMA);
     }
