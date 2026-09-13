@@ -92,6 +92,16 @@ export function runInit(targetName?: string): void {
   fs.writeFileSync(path.join(projectDir, 'main.toad'), defaultMainToad.trim() + '\n', 'utf-8');
   fs.writeFileSync(path.join(projectDir, 'package.json'), getPackageJson(projectName), 'utf-8');
   
+  const gitignorePath = path.join(projectDir, '.gitignore');
+  if (fs.existsSync(gitignorePath)) {
+    const existing = fs.readFileSync(gitignorePath, 'utf-8');
+    if (!existing.includes('dist/')) {
+      fs.appendFileSync(gitignorePath, '\n# toad output\ndist/\n.toad/\n', 'utf-8');
+    }
+  } else {
+    fs.writeFileSync(gitignorePath, 'node_modules/\ndist/\n.toad/\n', 'utf-8');
+  }
+  
   console.log(`\x1b[32mSUCCESS!\x1b[0m Scaffolded new toad project in \x1b[1m${projectName}\x1b[0m`);
   console.log(`\nTo get started:\n`);
   console.log(`  cd ${projectName}`);

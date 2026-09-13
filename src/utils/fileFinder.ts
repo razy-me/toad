@@ -201,7 +201,20 @@ function searchDir(
         continue;
       }
 
-      if (entry.isFile()) {
+      let isFile = entry.isFile();
+      let isDir = entry.isDirectory();
+
+      if (entry.isSymbolicLink()) {
+        try {
+          const stat = fs.statSync(fullPath);
+          isFile = stat.isFile();
+          isDir = stat.isDirectory();
+        } catch {
+          continue;
+        }
+      }
+
+      if (isFile) {
         const lowerNoExt = lower.endsWith('.toad') ? lower.slice(0, -5) : lower;
         const targetNoExt = targetFileName.endsWith('.toad') ? targetFileName.slice(0, -5) : targetFileName;
 
@@ -223,19 +236,12 @@ function searchDir(
             results.push(resolved);
           }
         }
-      } else if (entry.isDirectory() || entry.isSymbolicLink()) {
+      } else if (isDir) {
         if (!IGNORED_FOLDERS.has(lower)) {
           try {
-            let isDir = entry.isDirectory();
-            if (!isDir && entry.isSymbolicLink()) {
-              const stat = fs.statSync(fullPath);
-              isDir = stat.isDirectory();
-            }
-            if (isDir) {
-              const realSub = fs.realpathSync(fullPath).toLowerCase();
-              if (!seenDirs.has(realSub)) {
-                subdirs.push(fullPath);
-              }
+            const realSub = fs.realpathSync(fullPath).toLowerCase();
+            if (!seenDirs.has(realSub)) {
+              subdirs.push(fullPath);
             }
           } catch {
             // Ignore broken symlinks or unreadable paths
@@ -477,7 +483,20 @@ function collectToadFiles(
         continue;
       }
 
-      if (entry.isFile()) {
+      let isFile = entry.isFile();
+      let isDir = entry.isDirectory();
+
+      if (entry.isSymbolicLink()) {
+        try {
+          const stat = fs.statSync(fullPath);
+          isFile = stat.isFile();
+          isDir = stat.isDirectory();
+        } catch {
+          continue;
+        }
+      }
+
+      if (isFile) {
         if (lower.endsWith('.toad')) {
           const resolved = path.resolve(fullPath);
           const key = resolved.toLowerCase();
@@ -500,9 +519,16 @@ function collectToadFiles(
             }
           }
         }
-      } else if (entry.isDirectory()) {
+      } else if (isDir) {
         if (!isIgnoredPath(fullPath) && !isIgnoredPath(lower)) {
-          subdirs.push(fullPath);
+          try {
+            const realSub = fs.realpathSync(fullPath).toLowerCase();
+            if (!seenDirs.has(realSub)) {
+              subdirs.push(fullPath);
+            }
+          } catch {
+            subdirs.push(fullPath);
+          }
         }
       }
     }

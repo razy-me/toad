@@ -44,39 +44,43 @@ export function parsePdfColor(colorStr?: string, forceCmyk = false): PdfColor {
   }
 
   // Direct CMYK string detection
-  const cmykMatch = colorStr.match(/cmyk\s*\(\s*([0-9.]+)(%?)[,\s]+([0-9.]+)(%?)[,\s]+([0-9.]+)(%?)[,\s]+([0-9.]+)(%?)(?:[,\s/]+([0-9.]+)(%?))?\s*\)/i);
+  const cmykMatch = colorStr.match(/cmyk\s*\(\s*(-?[0-9.]+)(%?)[,\s]+(-?[0-9.]+)(%?)[,\s]+(-?[0-9.]+)(%?)[,\s]+(-?[0-9.]+)(%?)(?:[,\s/]+(-?[0-9.]+)(%?))?\s*\)/i);
   if (cmykMatch) {
+    const clamp01 = (v: number) => Math.max(0, Math.min(1, Number.isFinite(v) ? v : 0));
     const parseVal = (v: string, isPct: string) => {
       const num = parseFloat(v);
-      return isPct ? num / 100 : (num > 1 ? num / 100 : num);
+      if (!Number.isFinite(num)) return 0;
+      const val = isPct ? num / 100 : (num > 1 ? num / 100 : num);
+      return clamp01(val);
     };
-    const c = Math.max(0, Math.min(1, parseVal(cmykMatch[1]!, cmykMatch[2]!)));
-    const m = Math.max(0, Math.min(1, parseVal(cmykMatch[3]!, cmykMatch[4]!)));
-    const y = Math.max(0, Math.min(1, parseVal(cmykMatch[5]!, cmykMatch[6]!)));
-    const k = Math.max(0, Math.min(1, parseVal(cmykMatch[7]!, cmykMatch[8]!)));
+    const c = parseVal(cmykMatch[1]!, cmykMatch[2]!);
+    const m = parseVal(cmykMatch[3]!, cmykMatch[4]!);
+    const y = parseVal(cmykMatch[5]!, cmykMatch[6]!);
+    const k = parseVal(cmykMatch[7]!, cmykMatch[8]!);
     const opacity = cmykMatch[9] !== undefined ? parseVal(cmykMatch[9]!, cmykMatch[10] || '') : 1;
     return { mode: 'cmyk', c, m, y, k, opacity };
   }
 
   const rgba = parseColorToRgba(colorStr);
   if (forceCmyk) {
-    const rNorm = rgba.r / 255;
-    const gNorm = rgba.g / 255;
-    const bNorm = rgba.b / 255;
+    const clamp01 = (v: number) => Math.max(0, Math.min(1, Number.isFinite(v) ? v : 0));
+    const rNorm = clamp01(rgba.r / 255);
+    const gNorm = clamp01(rgba.g / 255);
+    const bNorm = clamp01(rgba.b / 255);
     const k = 1 - Math.max(rNorm, gNorm, bNorm);
     if (k >= 1) {
-      return { mode: 'cmyk', c: 0, m: 0, y: 0, k: 1, opacity: rgba.a };
+      return { mode: 'cmyk', c: 0, m: 0, y: 0, k: 1, opacity: clamp01(rgba.a) };
     }
-    const c = (1 - rNorm - k) / (1 - k);
-    const m = (1 - gNorm - k) / (1 - k);
-    const y = (1 - bNorm - k) / (1 - k);
+    const c = clamp01((1 - rNorm - k) / (1 - k));
+    const m = clamp01((1 - gNorm - k) / (1 - k));
+    const y = clamp01((1 - bNorm - k) / (1 - k));
     return {
       mode: 'cmyk',
       c: Number(c.toFixed(4)),
       m: Number(m.toFixed(4)),
       y: Number(y.toFixed(4)),
-      k: Number(k.toFixed(4)),
-      opacity: rgba.a
+      k: Number(clamp01(k).toFixed(4)),
+      opacity: clamp01(rgba.a)
     };
   }
 
@@ -89,11 +93,26 @@ export function parsePdfColor(colorStr?: string, forceCmyk = false): PdfColor {
   };
 }
 
+export const STANDARD_PDF_FONTS: Record<string, string> = {
+  F1: 'Helvetica',
+  F2: 'Helvetica-Bold',
+  F3: 'Helvetica-Oblique',
+  F4: 'Helvetica-BoldOblique',
+  F5: 'Times-Roman',
+  F6: 'Times-Bold',
+  F7: 'Times-Italic',
+  F8: 'Times-BoldItalic',
+  F9: 'Courier',
+  F10: 'Courier-Bold',
+  F11: 'Courier-Oblique',
+  F12: 'Courier-BoldOblique'
+};
+
 export class PdfExporter {
   private objects: Array<{ id: number; content: string | Buffer }> = [];
   private nextObjectId = 1;
   private extGStates = new Map<string, number>(); // opacity -> GS id
-  private images = new Map<string, { id: number; width: number; height: number }>();
+  private images = new Map<string, { id: number; name: string; width: number; height: number }>();
   private basePath?: string;
 
   private static measureCtx: any = null;
@@ -222,11 +241,21 @@ export class PdfExporter {
     const catalogObjId = this.allocId();
     const pagesObjId = this.allocId();
 
+    const fontEntries = Object.entries(STANDARD_PDF_FONTS)
+      .map(([tag, name]) => `/${tag} << /Type /Font /Subtype /Type1 /BaseFont /${name} /Encoding /WinAnsiEncoding >>`)
+      .join(' ');
+
+    const xObjectEntries: string[] = [];
+    for (const imgData of this.images.values()) {
+      xObjectEntries.push(`/${imgData.name} ${imgData.id} 0 R`);
+    }
+
     const resourceDict = [
       '<<',
       '/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]',
       gstateEntries.length > 0 ? `/ExtGState << ${gstateEntries.join(' ')} >>` : '',
-      '/Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >>',
+      `/Font << ${fontEntries} >>`,
+      xObjectEntries.length > 0 ? `/XObject << ${xObjectEntries.join(' ')} >>` : '',
       '>>'
     ].filter(Boolean).join(' ');
 
@@ -310,6 +339,44 @@ export class PdfExporter {
         if (d) {
           this.renderPath(node, ops, isCmyk, d);
         }
+        break;
+      }
+      case 'qrcode': {
+        const d = node.pathLayout?.d;
+        if (d) {
+          const effectiveFill = node.fill || node.style.fill || '#000000';
+          this.renderPath({ ...node, fill: effectiveFill }, ops, isCmyk, d);
+        }
+        break;
+      }
+      case 'barcode': {
+        const d = node.pathLayout?.d;
+        if (d) {
+          const effectiveFill = node.fill || node.style.fill || '#000000';
+          this.renderPath({ ...node, fill: effectiveFill }, ops, isCmyk, d);
+        }
+        if (node.barcodeLayout?.showText && node.barcodeLayout.text) {
+          const fontSize = Math.max(10, Math.min(16, Math.floor(node.height * 0.18)));
+          const text = node.barcodeLayout.text;
+          const lineWidth = this.measureLineWidth(text, fontSize, 'Courier');
+          const textX = node.x + (node.width - lineWidth) / 2;
+          const textY = node.y + node.height;
+          const textColor = parsePdfColor(
+            typeof (node.style.fill || node.fill) === 'string' ? (node.style.fill || node.fill) as string : '#000000',
+            isCmyk
+          );
+          this.emitFillColor(ops, textColor);
+          ops.push('BT');
+          ops.push(`/F9 ${fontSize.toFixed(2)} Tf`);
+          const escaped = this.encodePdfString(text);
+          ops.push(`1 0 0 -1 ${textX.toFixed(2)} ${textY.toFixed(2)} Tm`);
+          ops.push(`(${escaped}) Tj`);
+          ops.push('ET');
+        }
+        break;
+      }
+      case 'image': {
+        await this.renderImage(node, ops);
         break;
       }
       case 'group':
@@ -422,8 +489,9 @@ export class PdfExporter {
       ? node.y + (node.height - (tLayout.lines.length - 1) * lineHeight) / 2 + capOffset
       : node.y + fontSize * 0.85;
 
+    const fontTag = this.resolveFontTag(tLayout.fontFamily || (node.style as any).fontFamily, (node.style as any).fontWeight, (node.style as any).fontStyle);
     ops.push('BT');
-    ops.push(`/F1 ${fontSize.toFixed(2)} Tf`);
+    ops.push(`${fontTag} ${fontSize.toFixed(2)} Tf`);
 
     const align = node.style.align || (node.style as any).textAlign || 'left';
 
@@ -450,27 +518,165 @@ export class PdfExporter {
     ops.push('ET');
   }
 
+  private resolveFontTag(fontFamily?: string, fontWeight?: string | number, fontStyle?: string): string {
+    const fam = (fontFamily || '').toLowerCase();
+    const isBold = fontWeight === 'bold' || fontWeight === 'semibold' || fontWeight === 'extrabold' ||
+      (typeof fontWeight === 'number' ? fontWeight >= 600 : parseInt(String(fontWeight), 10) >= 600);
+    const isItalic = fontStyle === 'italic' || fontStyle === 'oblique';
+
+    if (fam.includes('courier') || fam.includes('mono') || fam.includes('code') || fam.includes('consolas')) {
+      if (isBold && isItalic) return '/F12';
+      if (isItalic) return '/F11';
+      if (isBold) return '/F10';
+      return '/F9';
+    }
+    if (fam.includes('times') || fam.includes('serif')) {
+      if (isBold && isItalic) return '/F8';
+      if (isItalic) return '/F7';
+      if (isBold) return '/F6';
+      return '/F5';
+    }
+    if (isBold && isItalic) return '/F4';
+    if (isItalic) return '/F3';
+    if (isBold) return '/F2';
+    return '/F1';
+  }
+
+  private async renderImage(node: LayoutNode, ops: string[]): Promise<void> {
+    const imgSrc = node.imageLayout?.src;
+    if (!imgSrc) return;
+
+    let img: any = null;
+    try {
+      img = await resolveSharedImage(imgSrc, this.basePath);
+    } catch {
+      img = null;
+    }
+
+    if (!img) {
+      // Draw placeholder rectangle if image not found
+      ops.push('q');
+      ops.push('0.886 0.910 0.941 rg'); // #e2e8f0
+      ops.push('0.580 0.639 0.722 RG'); // #94a3b8
+      ops.push('1 w');
+      ops.push(`${node.x.toFixed(2)} ${node.y.toFixed(2)} ${node.width.toFixed(2)} ${node.height.toFixed(2)} re B`);
+      ops.push('Q');
+      return;
+    }
+
+    const imgKey = imgSrc;
+    let imgInfo = this.images.get(imgKey);
+    if (!imgInfo) {
+      const imgW = img.width;
+      const imgH = img.height;
+      const imgCanvas = createCanvas(imgW, imgH);
+      const ictx = imgCanvas.getContext('2d');
+      ictx.drawImage(img, 0, 0);
+      const imgData = ictx.getImageData(0, 0, imgW, imgH).data;
+
+      const rgbBuf = Buffer.alloc(imgW * imgH * 3);
+      for (let i = 0, j = 0; i < imgData.length; i += 4, j += 3) {
+        rgbBuf[j] = imgData[i]!;
+        rgbBuf[j + 1] = imgData[i + 1]!;
+        rgbBuf[j + 2] = imgData[i + 2]!;
+      }
+      const compressed = zlib.deflateSync(rgbBuf);
+      const imgObjId = this.allocId();
+      this.objects.push({
+        id: imgObjId,
+        content: Buffer.concat([
+          Buffer.from(
+            `<< /Type /XObject /Subtype /Image /Width ${imgW} /Height ${imgH} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Length ${compressed.length} /Filter /FlateDecode >>\nstream\n`,
+            'ascii'
+          ),
+          compressed,
+          Buffer.from('\nendstream', 'ascii')
+        ])
+      });
+      const imgName = `Im${this.images.size + 1}`;
+      imgInfo = { id: imgObjId, name: imgName, width: imgW, height: imgH };
+      this.images.set(imgKey, imgInfo);
+    }
+
+    const { x, y, width: w, height: h } = node;
+    ops.push('q');
+    ops.push(`${w.toFixed(2)} 0 0 ${(-h).toFixed(2)} ${x.toFixed(2)} ${(y + h).toFixed(2)} cm`);
+    ops.push(`/${imgInfo.name} Do`);
+    ops.push('Q');
+  }
+
   private encodePdfString(text: string): string {
-    let out = '';
+    const SYMBOL_TRANSLITERATIONS: Record<string, string> = {
+      '→': '->',
+      '←': '<-',
+      '↔': '<->',
+      '⇒': '=>',
+      '⇐': '<=',
+      '≤': '<=',
+      '≥': '>=',
+      '≠': '!=',
+      '≈': '~=',
+      '✓': '[v]',
+      '✔': '[v]',
+      '✗': '[x]',
+      '✘': '[x]',
+      '★': '*',
+      '☆': '*',
+      '♥': '<3',
+      'ł': 'l',
+      'Ł': 'L',
+      'đ': 'd',
+      'Đ': 'D'
+    };
+
     const WIN_ANSI_MAP: Record<string, number> = {
       '€': 128, '‚': 130, 'ƒ': 131, '„': 132, '…': 133, '†': 134, '‡': 135,
       'ˆ': 136, '‰': 137, 'Š': 138, '‹': 139, 'Œ': 140, 'Ž': 142,
       '‘': 145, '’': 146, '“': 147, '”': 148, '•': 149, '–': 150, '—': 151,
       '˜': 152, '™': 153, 'š': 154, '›': 155, 'œ': 156, 'ž': 158, 'Ÿ': 159
     };
+
+    let out = '';
     for (let i = 0; i < text.length; i++) {
-      const ch = text[i]!;
-      const code = ch.charCodeAt(0);
-      if (ch === '\\') out += '\\\\';
-      else if (ch === '(') out += '\\(';
-      else if (ch === ')') out += '\\)';
-      else if (code >= 32 && code <= 126) out += ch;
-      else if (code >= 160 && code <= 255) {
-        out += '\\' + code.toString(8).padStart(3, '0');
-      } else if (WIN_ANSI_MAP[ch]) {
-        out += '\\' + WIN_ANSI_MAP[ch]!.toString(8).padStart(3, '0');
-      } else {
-        out += ch;
+      let ch = text[i]!;
+      if (SYMBOL_TRANSLITERATIONS[ch]) {
+        ch = SYMBOL_TRANSLITERATIONS[ch]!;
+      }
+
+      for (let j = 0; j < ch.length; j++) {
+        const subCh = ch[j]!;
+        const code = subCh.charCodeAt(0);
+
+        if (subCh === '\\') {
+          out += '\\\\';
+        } else if (subCh === '(') {
+          out += '\\(';
+        } else if (subCh === ')') {
+          out += '\\)';
+        } else if (code >= 32 && code <= 126) {
+          out += subCh;
+        } else if (code >= 160 && code <= 255) {
+          out += '\\' + code.toString(8).padStart(3, '0');
+        } else if (WIN_ANSI_MAP[subCh]) {
+          out += '\\' + WIN_ANSI_MAP[subCh]!.toString(8).padStart(3, '0');
+        } else {
+          // Decompose accented characters outside WinAnsi
+          const decomposed = subCh.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+          let handled = false;
+          if (decomposed && decomposed !== subCh) {
+            const decCode = decomposed.charCodeAt(0);
+            if (decCode >= 32 && decCode <= 126) {
+              out += decomposed;
+              handled = true;
+            } else if (decCode >= 160 && decCode <= 255) {
+              out += '\\' + decCode.toString(8).padStart(3, '0');
+              handled = true;
+            }
+          }
+          if (!handled) {
+            out += '?';
+          }
+        }
       }
     }
     return out;

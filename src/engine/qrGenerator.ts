@@ -113,10 +113,60 @@ const ECC_TABLE: number[][][] = [
   // Version 14 (73x73)
   [[461, 30, 3, 1, 116], [365, 24, 4, 5, 41], [261, 20, 11, 5, 17], [197, 24, 11, 5, 13]],
   // Version 15 (77x77)
-  [[523, 22, 5, 1, 88], [415, 24, 5, 5, 42], [295, 30, 5, 7, 25], [223, 24, 11, 7, 13]]
+  [[523, 22, 5, 1, 88], [415, 24, 5, 5, 42], [295, 30, 5, 7, 25], [223, 24, 11, 7, 13]],
+  // Version 16 (81x81)
+  [[589, 24, 5, 1, 99], [461, 28, 7, 3, 47], [331, 24, 15, 2, 21], [255, 30, 3, 13, 15]],
+  // Version 17 (85x85)
+  [[647, 28, 1, 5, 109], [511, 28, 10, 1, 47], [365, 28, 1, 15, 23], [281, 28, 2, 17, 15]],
+  // Version 18 (89x89)
+  [[721, 30, 5, 1, 121], [569, 26, 9, 4, 44], [405, 28, 17, 1, 23], [305, 28, 2, 19, 15]],
+  // Version 19 (93x93)
+  [[795, 28, 3, 4, 114], [627, 26, 3, 11, 45], [447, 26, 17, 4, 22], [347, 26, 9, 16, 14]],
+  // Version 20 (97x97)
+  [[861, 28, 3, 5, 108], [693, 26, 3, 13, 44], [489, 30, 15, 5, 25], [371, 28, 15, 10, 15]],
+  // Version 21 (101x101)
+  [[932, 28, 4, 4, 117], [746, 26, 17, 0, 0], [538, 28, 17, 6, 24], [416, 30, 19, 6, 16]],
+  // Version 22 (105x105)
+  [[1006, 28, 2, 7, 112], [816, 28, 17, 0, 0], [596, 30, 7, 16, 25], [442, 24, 34, 0, 0]],
+  // Version 23 (109x109)
+  [[1094, 30, 4, 5, 122], [876, 28, 4, 14, 49], [656, 30, 11, 14, 25], [488, 30, 16, 14, 16]],
+  // Version 24 (113x113)
+  [[1174, 30, 6, 4, 118], [948, 28, 6, 14, 48], [704, 30, 11, 16, 25], [532, 30, 30, 2, 17]],
+  // Version 25 (117x117)
+  [[1276, 26, 8, 4, 107], [1020, 28, 8, 13, 49], [772, 30, 7, 22, 25], [580, 30, 22, 13, 16]],
+  // Version 26 (121x121)
+  [[1370, 28, 10, 2, 115], [1098, 28, 19, 4, 48], [842, 28, 28, 6, 25], [628, 30, 33, 4, 17]],
+  // Version 27 (125x125)
+  [[1468, 30, 8, 4, 123], [1182, 28, 22, 3, 48], [898, 30, 8, 26, 25], [668, 30, 12, 28, 16]],
+  // Version 28 (129x129)
+  [[1531, 30, 3, 10, 118], [1251, 28, 3, 23, 46], [979, 30, 4, 31, 25], [731, 30, 11, 31, 16]],
+  // Version 29 (133x133)
+  [[1631, 30, 7, 7, 117], [1335, 28, 21, 7, 48], [1041, 30, 1, 37, 24], [785, 30, 19, 26, 16]],
+  // Version 30 (137x137)
+  [[1735, 30, 5, 10, 116], [1443, 28, 19, 10, 48], [1131, 30, 15, 25, 25], [845, 30, 23, 25, 16]],
+  // Version 31 (141x141)
+  [[1843, 30, 13, 3, 116], [1527, 28, 2, 29, 47], [1221, 30, 42, 1, 29], [905, 30, 23, 28, 16]],
+  // Version 32 (145x145)
+  [[1955, 30, 17, 0, 0], [1623, 28, 10, 23, 47], [1299, 30, 10, 35, 25], [971, 30, 19, 35, 16]],
+  // Version 33 (149x149)
+  [[2071, 30, 17, 1, 116], [1725, 28, 14, 21, 47], [1383, 30, 29, 19, 25], [1037, 30, 11, 46, 16]],
+  // Version 34 (153x153)
+  [[2191, 30, 13, 6, 116], [1815, 28, 14, 23, 47], [1473, 30, 44, 7, 25], [1109, 30, 59, 1, 17]],
+  // Version 35 (157x157)
+  [[2306, 30, 12, 7, 122], [1926, 28, 12, 26, 48], [1569, 30, 39, 14, 25], [1169, 30, 22, 41, 16]],
+  // Version 36 (161x161)
+  [[2434, 30, 6, 14, 122], [2034, 28, 6, 34, 48], [1665, 30, 46, 10, 25], [1235, 30, 2, 64, 16]],
+  // Version 37 (165x165)
+  [[2566, 30, 17, 4, 123], [2148, 28, 29, 14, 47], [1767, 30, 49, 10, 25], [1307, 30, 24, 46, 16]],
+  // Version 38 (169x169)
+  [[2702, 30, 4, 18, 123], [2268, 28, 13, 32, 47], [1875, 30, 48, 14, 25], [1385, 30, 42, 32, 16]],
+  // Version 39 (173x173)
+  [[2812, 30, 20, 4, 118], [2394, 28, 40, 7, 48], [1983, 30, 43, 22, 25], [1469, 30, 10, 67, 16]],
+  // Version 40 (177x177)
+  [[2956, 30, 19, 6, 119], [2502, 28, 18, 31, 48], [2097, 30, 34, 34, 25], [1535, 30, 20, 61, 16]]
 ];
 
-// Center coordinates for alignment patterns
+// Center coordinates for alignment patterns (ISO/IEC 18004 Table E.1, Versions 1-40)
 const ALIGNMENT_PATTERN_POSITIONS: number[][] = [
   [], // V1
   [6, 18], // V2
@@ -132,7 +182,32 @@ const ALIGNMENT_PATTERN_POSITIONS: number[][] = [
   [6, 32, 58], // V12
   [6, 34, 62], // V13
   [6, 26, 46, 66], // V14
-  [6, 26, 48, 70]  // V15
+  [6, 26, 48, 70], // V15
+  [6, 30, 54, 78], // V16
+  [6, 30, 56, 82], // V17
+  [6, 30, 58, 86], // V18
+  [6, 34, 62, 90], // V19
+  [6, 28, 50, 72, 94], // V20
+  [6, 26, 50, 74, 98], // V21
+  [6, 30, 54, 78, 102], // V22
+  [6, 28, 54, 80, 106], // V23
+  [6, 32, 58, 84, 110], // V24
+  [6, 30, 58, 86, 114], // V25
+  [6, 34, 62, 90, 118], // V26
+  [6, 26, 50, 74, 98, 122], // V27
+  [6, 30, 54, 78, 102, 126], // V28
+  [6, 26, 52, 78, 104, 130], // V29
+  [6, 30, 56, 82, 108, 134], // V30
+  [6, 34, 60, 86, 112, 138], // V31
+  [6, 30, 58, 86, 114, 142], // V32
+  [6, 34, 62, 90, 118, 146], // V33
+  [6, 30, 54, 78, 102, 126, 150], // V34
+  [6, 24, 50, 76, 102, 128, 154], // V35
+  [6, 28, 54, 80, 106, 132, 158], // V36
+  [6, 32, 58, 84, 110, 136, 162], // V37
+  [6, 26, 54, 82, 110, 138, 166], // V38
+  [6, 30, 58, 86, 114, 142, 170], // V39
+  [6, 34, 62, 90, 118, 146, 174]  // V40
 ];
 
 function eclToNumeric(ecl: QrErrorCorrectionLevel): number {
@@ -183,7 +258,11 @@ function selectVersion(dataLen: number, ecl: QrErrorCorrectionLevel): number {
       return v;
     }
   }
-  return ECC_TABLE.length; // Fallback to max version
+  const maxTableEntry = ECC_TABLE[ECC_TABLE.length - 1]![eclIdx]!;
+  const maxCapacity = Math.floor((maxTableEntry[0]! * 8 - (4 + 16)) / 8);
+  throw new Error(
+    `QR payload of ${dataLen} bytes exceeds maximum capacity of ${maxCapacity} bytes (version ${ECC_TABLE.length}, ECL ${ecl}).`
+  );
 }
 
 /**
@@ -194,6 +273,13 @@ function encodeData(text: string, version: number, ecl: QrErrorCorrectionLevel):
   const bytes = encoder.encode(text);
   const eclIdx = eclToNumeric(ecl);
   const totalDataCodewords = ECC_TABLE[version - 1]![eclIdx]![0]!;
+  const headerBits = 4 + (version >= 10 ? 16 : 8);
+  const maxCapacity = Math.floor((totalDataCodewords * 8 - headerBits) / 8);
+  if (bytes.length > maxCapacity) {
+    throw new Error(
+      `QR payload of ${bytes.length} bytes exceeds maximum capacity of ${maxCapacity} bytes for version ${version} (ECL ${ecl}).`
+    );
+  }
 
   const bits: number[] = [];
   const pushBits = (val: number, len: number) => {
@@ -350,6 +436,81 @@ function evaluatePenalty(matrix: boolean[][], size: number): number {
       const val = matrix[r]![c]!;
       if (val === matrix[r + 1]![c] && val === matrix[r]![c + 1] && val === matrix[r + 1]![c + 1]) {
         penalty += 3;
+      }
+    }
+  }
+
+  // Rule 3: 1:1:3:1:1 finder-like patterns with 4 light modules (10111010000 or 00001011101)
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c <= size - 11; c++) {
+      // Pattern 1: 10111010000
+      if (
+        matrix[r]![c] &&
+        !matrix[r]![c + 1] &&
+        matrix[r]![c + 2] &&
+        matrix[r]![c + 3] &&
+        matrix[r]![c + 4] &&
+        !matrix[r]![c + 5] &&
+        matrix[r]![c + 6] &&
+        !matrix[r]![c + 7] &&
+        !matrix[r]![c + 8] &&
+        !matrix[r]![c + 9] &&
+        !matrix[r]![c + 10]
+      ) {
+        penalty += 40;
+      }
+      // Pattern 2: 00001011101
+      if (
+        !matrix[r]![c] &&
+        !matrix[r]![c + 1] &&
+        !matrix[r]![c + 2] &&
+        !matrix[r]![c + 3] &&
+        matrix[r]![c + 4] &&
+        !matrix[r]![c + 5] &&
+        matrix[r]![c + 6] &&
+        matrix[r]![c + 7] &&
+        matrix[r]![c + 8] &&
+        !matrix[r]![c + 9] &&
+        matrix[r]![c + 10]
+      ) {
+        penalty += 40;
+      }
+    }
+  }
+
+  for (let c = 0; c < size; c++) {
+    for (let r = 0; r <= size - 11; r++) {
+      // Pattern 1: 10111010000
+      if (
+        matrix[r]![c] &&
+        !matrix[r + 1]![c] &&
+        matrix[r + 2]![c] &&
+        matrix[r + 3]![c] &&
+        matrix[r + 4]![c] &&
+        !matrix[r + 5]![c] &&
+        matrix[r + 6]![c] &&
+        !matrix[r + 7]![c] &&
+        !matrix[r + 8]![c] &&
+        !matrix[r + 9]![c] &&
+        !matrix[r + 10]![c]
+      ) {
+        penalty += 40;
+      }
+      // Pattern 2: 00001011101
+      if (
+        !matrix[r]![c] &&
+        !matrix[r + 1]![c] &&
+        !matrix[r + 2]![c] &&
+        !matrix[r + 3]![c] &&
+        matrix[r + 4]![c] &&
+        !matrix[r + 5]![c] &&
+        matrix[r + 6]![c] &&
+        matrix[r + 7]![c] &&
+        matrix[r + 8]![c] &&
+        !matrix[r + 9]![c] &&
+        matrix[r + 10]![c]
+      ) {
+        penalty += 40;
       }
     }
   }

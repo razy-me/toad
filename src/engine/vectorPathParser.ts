@@ -691,15 +691,23 @@ export function polygonToRoundedSvgPath(
     const angle = Math.acos(dot);
     const halfAngle = angle / 2;
 
-    if (Math.sin(halfAngle) < 1e-4) {
+    const tanHalf = Math.tan(halfAngle);
+    if (Math.sin(halfAngle) < 1e-4 || Math.abs(tanHalf) < 1e-4 || !Number.isFinite(tanHalf)) {
       starts.push(curr);
       ends.push(curr);
       radii.push(0);
       continue;
     }
 
-    const d = Math.min(r / Math.tan(halfAngle), Math.min(len1 / 2, len2 / 2));
-    const actualR = d * Math.tan(halfAngle);
+    const d = Math.min(r / tanHalf, Math.min(len1 / 2, len2 / 2));
+    const actualR = d * tanHalf;
+
+    if (!Number.isFinite(d) || !Number.isFinite(actualR) || isNaN(d) || isNaN(actualR) || actualR <= 0) {
+      starts.push(curr);
+      ends.push(curr);
+      radii.push(0);
+      continue;
+    }
 
     starts.push({ x: curr.x + d * u1x, y: curr.y + d * u1y });
     ends.push({ x: curr.x + d * u2x, y: curr.y + d * u2y });

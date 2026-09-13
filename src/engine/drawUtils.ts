@@ -105,17 +105,22 @@ function hslToRgb(h: number, s: number, l: number): { r: number; g: number; b: n
 }
 
 export function cmykToRgb(c: number, m: number, y: number, k: number, a = 1): ColorRgba {
-  c = Math.max(0, Math.min(1, c > 1 ? c / 100 : c));
-  m = Math.max(0, Math.min(1, m > 1 ? m / 100 : m));
-  y = Math.max(0, Math.min(1, y > 1 ? y / 100 : y));
-  k = Math.max(0, Math.min(1, k > 1 ? k / 100 : k));
-  a = Math.max(0, Math.min(1, a > 1 ? a / 100 : a));
+  const norm = (v: number) => {
+    if (!Number.isFinite(v)) return 0;
+    const val = v > 1 ? v / 100 : v;
+    return Math.max(0, Math.min(1, val));
+  };
+  const nc = norm(c);
+  const nm = norm(m);
+  const ny = norm(y);
+  const nk = norm(k);
+  const na = Math.max(0, Math.min(1, Number.isFinite(a) ? (a > 1 ? a / 100 : a) : 1));
 
-  const r = Math.round(255 * (1 - c) * (1 - k));
-  const g = Math.round(255 * (1 - m) * (1 - k));
-  const b = Math.round(255 * (1 - y) * (1 - k));
+  const r = Math.round(255 * (1 - nc) * (1 - nk));
+  const g = Math.round(255 * (1 - nm) * (1 - nk));
+  const b = Math.round(255 * (1 - ny) * (1 - nk));
 
-  return { r, g, b, a };
+  return { r, g, b, a: na };
 }
 
 export function parseColorToRgba(colorStr?: string): ColorRgba {
@@ -191,12 +196,13 @@ export function parseColorToRgba(colorStr?: string): ColorRgba {
   }
 
   // CMYK format: cmyk(c, m, y, k) or cmyk(c%, m%, y%, k%) or cmyk(c, m, y, k, a)
-  const cmykMatch = str.match(/cmyk\s*\(\s*([0-9.]+)(%?)[,\s]+([0-9.]+)(%?)[,\s]+([0-9.]+)(%?)[,\s]+([0-9.]+)(%?)(?:[,\s/]+([0-9.]+)(%?))?\s*\)/i);
+  const cmykMatch = str.match(/cmyk\s*\(\s*(-?[0-9.]+)(%?)[,\s]+(-?[0-9.]+)(%?)[,\s]+(-?[0-9.]+)(%?)[,\s]+(-?[0-9.]+)(%?)(?:[,\s/]+(-?[0-9.]+)(%?))?\s*\)/i);
   if (cmykMatch) {
     const parseCmykVal = (val: string, hasPct: string) => {
       const n = parseFloat(val);
-      if (hasPct === '%') return n / 100;
-      return n > 1 ? n / 100 : n;
+      if (!Number.isFinite(n)) return 0;
+      const v = hasPct === '%' ? n / 100 : (n > 1 ? n / 100 : n);
+      return Math.max(0, Math.min(1, v));
     };
     const c = parseCmykVal(cmykMatch[1]!, cmykMatch[2]!);
     const m = parseCmykVal(cmykMatch[3]!, cmykMatch[4]!);
@@ -419,7 +425,18 @@ export function createCanvasGradient(
   if (grad.type === 'radial') {
     const cx = box.x + box.w / 2;
     const cy = box.y + box.h / 2;
-    const radius = Math.max(box.w, box.h) / 2 || 1;
+    const rx = (box.w || 1) / 2;
+    const ry = (box.h || 1) / 2;
+    let radius: number;
+    if (grad.shape === 'circle') {
+      // Explicit circle shape: use closest-side radius so circle stays contained in element
+      radius = Math.min(rx, ry) || 1;
+    } else {
+      // Non-square bounds without explicit 'circle' (CSS default ellipse):
+      // use geometric mean sqrt(rx * ry) so gradient area matches ellipse area
+      // without severe over-illumination along the minor axis.
+      radius = Math.sqrt(rx * ry) || Math.max(rx, ry) || 1;
+    }
     const canvasGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
 
     for (const s of distributedStops) {

@@ -52,6 +52,22 @@ export function normalizeFontWeightToNumber(weight?: string | number): number {
 const fontNameCache = new Map<string, { postScript?: string; family?: string; subfamily?: string } | null>();
 
 /**
+ * Reads a slice of a file into a Buffer using a file descriptor to avoid loading
+ * multi-megabyte font files entirely into the V8 heap.
+ */
+function readExactSync(fd: number, length: number, position: number): Buffer | null {
+  const buf = Buffer.alloc(length);
+  let totalRead = 0;
+  while (totalRead < length) {
+    const bytesRead = fs.readSync(fd, buf, totalRead, length - totalRead, position + totalRead);
+    if (bytesRead === 0) break;
+    totalRead += bytesRead;
+  }
+  if (totalRead < length) return null;
+  return buf;
+}
+
+/**
  * Extracts PostScript name (nameId 6), Family (nameId 1), and Subfamily (nameId 2)
  * directly from an OpenType / TrueType font binary table without external dependencies.
  */
@@ -59,35 +75,58 @@ export function parseOpenTypeFontNames(filePath: string): { postScript?: string;
   if (fontNameCache.has(filePath)) {
     return fontNameCache.get(filePath)!;
   }
+  let fd: number | null = null;
   try {
-    const buf = fs.readFileSync(filePath);
-    if (buf.length < 12) {
+    fd = fs.openSync(filePath, 'r');
+    const headerBuf = readExactSync(fd, 12, 0);
+    if (!headerBuf) {
       fontNameCache.set(filePath, null);
       return null;
     }
-    const numTables = buf.readUInt16BE(4);
+    const numTables = headerBuf.readUInt16BE(4);
+    if (numTables === 0 || numTables > 256) {
+      fontNameCache.set(filePath, null);
+      return null;
+    }
+
+    const tableDirSize = numTables * 16;
+    const tableDirBuf = readExactSync(fd, tableDirSize, 12);
+    if (!tableDirBuf) {
+      fontNameCache.set(filePath, null);
+      return null;
+    }
+
     let nameTableOffset = 0;
+    let nameTableLength = 0;
     for (let i = 0; i < numTables; i++) {
-      const pos = 12 + i * 16;
-      if (pos + 16 > buf.length) break;
-      const tag = buf.toString('ascii', pos, pos + 4);
+      const pos = i * 16;
+      const tag = tableDirBuf.toString('ascii', pos, pos + 4);
       if (tag === 'name') {
-        nameTableOffset = buf.readUInt32BE(pos + 8);
+        nameTableOffset = tableDirBuf.readUInt32BE(pos + 8);
+        nameTableLength = tableDirBuf.readUInt32BE(pos + 12);
         break;
       }
     }
-    if (!nameTableOffset || nameTableOffset + 6 > buf.length) {
+
+    if (!nameTableOffset || nameTableLength < 6 || nameTableLength > 4 * 1024 * 1024) {
       fontNameCache.set(filePath, null);
       return null;
     }
-    const count = buf.readUInt16BE(nameTableOffset + 2);
-    const stringStorageOffset = nameTableOffset + buf.readUInt16BE(nameTableOffset + 4);
+
+    const buf = readExactSync(fd, nameTableLength, nameTableOffset);
+    if (!buf) {
+      fontNameCache.set(filePath, null);
+      return null;
+    }
+
+    const count = buf.readUInt16BE(2);
+    const stringStorageOffset = buf.readUInt16BE(4);
     let postScript: string | undefined = undefined;
     let family: string | undefined = undefined;
     let subfamily: string | undefined = undefined;
 
     for (let i = 0; i < count; i++) {
-      const rec = nameTableOffset + 6 + i * 12;
+      const rec = 6 + i * 12;
       if (rec + 12 > buf.length) break;
       const platformId = buf.readUInt16BE(rec);
       const encodingId = buf.readUInt16BE(rec + 2);
@@ -116,6 +155,10 @@ export function parseOpenTypeFontNames(filePath: string): { postScript?: string;
   } catch {
     fontNameCache.set(filePath, null);
     return null;
+  } finally {
+    if (fd !== null) {
+      try { fs.closeSync(fd); } catch {}
+    }
   }
 }
 
@@ -133,26 +176,46 @@ export interface FontHeaderMetrics {
 }
 
 export function parseOpenTypeMetrics(filePath: string): FontHeaderMetrics | null {
+  let fd: number | null = null;
   try {
-    const buf = fs.readFileSync(filePath);
-    if (buf.length < 12) return null;
-    const numTables = buf.readUInt16BE(4);
+    fd = fs.openSync(filePath, 'r');
+    const headerBuf = readExactSync(fd, 12, 0);
+    if (!headerBuf) return null;
+    const numTables = headerBuf.readUInt16BE(4);
+    if (numTables === 0 || numTables > 256) return null;
+
+    const tableDirSize = numTables * 16;
+    const tableDirBuf = readExactSync(fd, tableDirSize, 12);
+    if (!tableDirBuf) return null;
+
     let headOffset = 0;
+    let headLength = 0;
     let os2Offset = 0;
+    let os2Length = 0;
     let hheaOffset = 0;
+    let hheaLength = 0;
 
     for (let i = 0; i < numTables; i++) {
-      const pos = 12 + i * 16;
-      if (pos + 16 > buf.length) break;
-      const tag = buf.toString('ascii', pos, pos + 4);
-      if (tag === 'head') headOffset = buf.readUInt32BE(pos + 8);
-      else if (tag === 'OS/2') os2Offset = buf.readUInt32BE(pos + 8);
-      else if (tag === 'hhea') hheaOffset = buf.readUInt32BE(pos + 8);
+      const pos = i * 16;
+      const tag = tableDirBuf.toString('ascii', pos, pos + 4);
+      if (tag === 'head') {
+        headOffset = tableDirBuf.readUInt32BE(pos + 8);
+        headLength = tableDirBuf.readUInt32BE(pos + 12);
+      } else if (tag === 'OS/2') {
+        os2Offset = tableDirBuf.readUInt32BE(pos + 8);
+        os2Length = tableDirBuf.readUInt32BE(pos + 12);
+      } else if (tag === 'hhea') {
+        hheaOffset = tableDirBuf.readUInt32BE(pos + 8);
+        hheaLength = tableDirBuf.readUInt32BE(pos + 12);
+      }
     }
 
     let unitsPerEm = 1000;
-    if (headOffset > 0 && headOffset + 20 <= buf.length) {
-      unitsPerEm = buf.readUInt16BE(headOffset + 18) || 1000;
+    if (headOffset > 0 && headLength >= 20) {
+      const headBuf = readExactSync(fd, Math.min(headLength, 64), headOffset);
+      if (headBuf && headBuf.length >= 20) {
+        unitsPerEm = headBuf.readUInt16BE(18) || 1000;
+      }
     }
 
     let ascender = Math.round(unitsPerEm * 0.8);
@@ -160,22 +223,28 @@ export function parseOpenTypeMetrics(filePath: string): FontHeaderMetrics | null
     let capHeight = Math.round(unitsPerEm * 0.7);
     let xHeight: number | undefined = undefined;
 
-    if (hheaOffset > 0 && hheaOffset + 8 <= buf.length) {
-      ascender = buf.readInt16BE(hheaOffset + 4);
-      descender = buf.readInt16BE(hheaOffset + 6);
+    if (hheaOffset > 0 && hheaLength >= 8) {
+      const hheaBuf = readExactSync(fd, Math.min(hheaLength, 36), hheaOffset);
+      if (hheaBuf && hheaBuf.length >= 8) {
+        ascender = hheaBuf.readInt16BE(4);
+        descender = hheaBuf.readInt16BE(6);
+      }
     }
 
-    if (os2Offset > 0 && os2Offset + 72 <= buf.length) {
-      const typoAscender = buf.readInt16BE(os2Offset + 68);
-      const typoDescender = buf.readInt16BE(os2Offset + 70);
-      if (typoAscender !== 0) ascender = typoAscender;
-      if (typoDescender !== 0) descender = typoDescender;
+    if (os2Offset > 0 && os2Length >= 72) {
+      const os2Buf = readExactSync(fd, Math.min(os2Length, 128), os2Offset);
+      if (os2Buf && os2Buf.length >= 72) {
+        const typoAscender = os2Buf.readInt16BE(68);
+        const typoDescender = os2Buf.readInt16BE(70);
+        if (typoAscender !== 0) ascender = typoAscender;
+        if (typoDescender !== 0) descender = typoDescender;
 
-      if (os2Offset + 90 <= buf.length) {
-        const sxH = buf.readInt16BE(os2Offset + 86);
-        const sCapH = buf.readInt16BE(os2Offset + 88);
-        if (sCapH > 0) capHeight = sCapH;
-        if (sxH > 0) xHeight = sxH;
+        if (os2Buf.length >= 90) {
+          const sxH = os2Buf.readInt16BE(86);
+          const sCapH = os2Buf.readInt16BE(88);
+          if (sCapH > 0) capHeight = sCapH;
+          if (sxH > 0) xHeight = sxH;
+        }
       }
     }
 
@@ -198,6 +267,10 @@ export function parseOpenTypeMetrics(filePath: string): FontHeaderMetrics | null
     };
   } catch {
     return null;
+  } finally {
+    if (fd !== null) {
+      try { fs.closeSync(fd); } catch {}
+    }
   }
 }
 

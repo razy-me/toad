@@ -72,7 +72,12 @@ export class CanvasRenderer {
       const bgW = baseW + 2 * bleed;
       const bgH = baseH + 2 * bleed;
 
-      const img = await this.resolveImage(layout.canvas.photoSrc, options.basePath);
+      let img: any = null;
+      try {
+        img = await this.resolveImage(layout.canvas.photoSrc, options.basePath);
+      } catch {
+        img = null;
+      }
       if (img) {
         // Draw photo onto offscreen canvas for per-pixel grading if photoParams specified
         if (layout.canvas.photoParams) {
@@ -286,15 +291,15 @@ export class CanvasRenderer {
         const p2d = new Path2D(node.maskNode.pathLayout.d);
         
         // Canvas clipping with Path2D respects current transform
+        const prevTransform = (ctx as any).getTransform();
         ctx.translate(node.maskNode.x, node.maskNode.y);
         if (node.maskNode.type === 'icon') {
-          ctx.scale(node.maskNode.width / 24, node.maskNode.height / 24);
+          const sx = node.maskNode.width > 0 ? node.maskNode.width / 24 : 1;
+          const sy = node.maskNode.height > 0 ? node.maskNode.height / 24 : 1;
+          ctx.scale(sx, sy);
         }
         ctx.clip(p2d);
-        if (node.maskNode.type === 'icon') {
-          ctx.scale(24 / node.maskNode.width, 24 / node.maskNode.height);
-        }
-        ctx.translate(-node.maskNode.x, -node.maskNode.y);
+        ctx.setTransform(prevTransform);
         isAlreadyClipped = true;
       } else {
         drawRect(ctx, node.maskNode.x, node.maskNode.y, node.maskNode.width, node.maskNode.height, node.maskNode.style.borderRadius);
@@ -490,7 +495,12 @@ export class CanvasRenderer {
       case 'image': {
         const imgSrc = node.imageLayout?.src;
         if (imgSrc) {
-          const img = await this.resolveImage(imgSrc, basePath);
+          let img: any = null;
+          try {
+            img = await this.resolveImage(imgSrc, basePath);
+          } catch {
+            img = null;
+          }
           if (img) {
             drawImageWithFit(ctx, img, node.fit || node.imageLayout?.fit || 'fill', node.x, node.y, node.width, node.height);
           } else {
@@ -536,7 +546,12 @@ export class CanvasRenderer {
           ctx.fillRect(absX, absY, absW, absH);
           ctx.restore();
 
-          const logoImg = await this.resolveImage(node.qrcodeLayout.logo, basePath);
+          let logoImg: any = null;
+          try {
+            logoImg = await this.resolveImage(node.qrcodeLayout.logo, basePath);
+          } catch {
+            logoImg = null;
+          }
           if (logoImg) {
             drawImageWithFit(ctx, logoImg, 'contain', absX, absY, absW, absH);
           }
@@ -576,7 +591,12 @@ export class CanvasRenderer {
 
       case 'adjust': {
         if (node.adjustLayout && layoutCanvas?.photoSrc) {
-          const img = await this.resolveImage(layoutCanvas.photoSrc, basePath);
+          let img: any = null;
+          try {
+            img = await this.resolveImage(layoutCanvas.photoSrc, basePath);
+          } catch {
+            img = null;
+          }
           if (img) {
             const rad = node.adjustLayout.radius;
             const feather = Math.max(1, node.adjustLayout.feather);
@@ -696,15 +716,15 @@ export class CanvasRenderer {
                   drawPolygon(ctx, child.polygonLayout.canvasPoints);
                 } else if ((child.type === 'path' || child.type === 'shape' || child.type === 'icon' || ['star', 'triangle', 'arrow', 'cross'].includes(child.type)) && child.pathLayout) {
                   const p2d = new Path2D(child.pathLayout.d);
+                  const prevTransform = (ctx as any).getTransform();
                   ctx.translate(child.x, child.y);
                   if (child.type === 'icon') {
-                    ctx.scale(child.width / 24, child.height / 24);
+                    const sx = child.width > 0 ? child.width / 24 : 1;
+                    const sy = child.height > 0 ? child.height / 24 : 1;
+                    ctx.scale(sx, sy);
                   }
                   ctx.clip(p2d);
-                  if (child.type === 'icon') {
-                    ctx.scale(24 / child.width, 24 / child.height);
-                  }
-                  ctx.translate(-child.x, -child.y);
+                  ctx.setTransform(prevTransform);
                   isAlreadyClipped = true;
                 } else {
                   drawRect(ctx, child.x, child.y, child.width, child.height, child.style.borderRadius);
@@ -829,7 +849,11 @@ export class CanvasRenderer {
   }
 
   private static async resolveImage(imgSrc: string, basePath?: string): Promise<Image | null> {
-    return resolveSharedImage(imgSrc, basePath);
+    try {
+      return await resolveSharedImage(imgSrc, basePath);
+    } catch {
+      return null;
+    }
   }
 
   private static filterSupportProbe: boolean | null = null;

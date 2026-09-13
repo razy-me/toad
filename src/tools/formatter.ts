@@ -102,10 +102,20 @@ export function formatToad(source: string, options: FormatOptions = {}): string 
     indentLevel = Math.max(0, indentLevel + openBraces - remainingCloses);
   }
 
+  // Strip leading empty lines
+  while (formattedLines.length > 0 && formattedLines[0] === '') {
+    formattedLines.shift();
+  }
+
   // Ensure file ends with matching newline format
   const isCrlf = source.includes('\r\n');
   const eol = isCrlf ? '\r\n' : '\n';
   let result = formattedLines.join(eol);
+
+  // Strip leading newlines and collapse 3+ consecutive newlines to at most 1 empty line
+  result = result.replace(/^(\r?\n)+/, '');
+  result = result.replace(/(\r?\n){3,}/g, '$1$1');
+
   if (!result.endsWith(eol)) {
     result += eol;
   }
@@ -121,11 +131,21 @@ function normalizePropertyStatement(code: string): string {
 
   let inDouble = false;
   let inSingle = false;
+  let inBlockComment = false;
   let colonIdx = -1;
 
   let escapeRun = 0;
   for (let i = 0; i < code.length; i++) {
     const ch = code[i];
+
+    if (inBlockComment) {
+      if (ch === '*' && i + 1 < code.length && code[i + 1] === '/') {
+        inBlockComment = false;
+        i++;
+      }
+      continue;
+    }
+
     if (ch === '\\') {
       escapeRun++;
       continue;
@@ -137,6 +157,9 @@ function normalizePropertyStatement(code: string): string {
       inDouble = !inDouble;
     } else if (ch === "'" && !inDouble && !escaped) {
       inSingle = !inSingle;
+    } else if (!inDouble && !inSingle && ch === '/' && i + 1 < code.length && code[i + 1] === '*') {
+      inBlockComment = true;
+      i++;
     } else if (!inDouble && !inSingle && ch === ':') {
       colonIdx = i;
       break;

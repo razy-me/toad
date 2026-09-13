@@ -70,12 +70,14 @@ export function humanizeIdentifier(rawId: string): string {
 export function sanitizeTextSnippet(text: string, maxLen = 30): string {
   if (!text || typeof text !== 'string') return '';
   const clean = text.replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim();
-  if (clean.length <= maxLen) return clean;
+  const chars = Array.from(clean);
+  if (chars.length <= maxLen) return clean;
 
   const targetCut = maxLen - 3;
-  const lastSpace = clean.lastIndexOf(' ', targetCut);
+  const subChars = chars.slice(0, targetCut);
+  const lastSpace = subChars.lastIndexOf(' ');
   const cutIndex = lastSpace > Math.floor(maxLen * 0.4) ? lastSpace : targetCut;
-  return clean.slice(0, cutIndex).trim() + '...';
+  return chars.slice(0, cutIndex).join('').trim() + '...';
 }
 
 /**

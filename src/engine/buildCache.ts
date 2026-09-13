@@ -16,6 +16,16 @@ export interface CacheStats {
 }
 
 /**
+ * Normalizes file paths for deterministic cache keys across platforms.
+ * Replaces backslashes with forward slashes and standardizes Windows drive letters to uppercase.
+ */
+export function normalizeCachePath(filePath: string): string {
+  if (!filePath) return filePath;
+  const forward = filePath.replace(/\\/g, '/');
+  return forward.replace(/^([a-zA-Z]):\//, (_, drive) => `${drive.toUpperCase()}:/`);
+}
+
+/**
  * Caches expensive Skia canvas text measurement runs and word wrap computations.
  */
 export class TextMeasurementCache {
@@ -46,6 +56,9 @@ export class TextMeasurementCache {
     const res = this.cache.get(key);
     if (res) {
       this.hits++;
+      // True LRU: refresh entry order on access
+      this.cache.delete(key);
+      this.cache.set(key, res);
       return { ...res, lines: [...res.lines] };
     }
     this.misses++;
@@ -53,11 +66,16 @@ export class TextMeasurementCache {
   }
 
   public set(key: string, value: TextLayoutResult): void {
-    if (this.cache.size >= this.maxEntries) {
+    if (this.cache.has(key)) {
+      this.cache.delete(key);
+    } else if (this.cache.size >= this.maxEntries) {
       // Evict oldest 20%
-      const keysToDelete = Array.from(this.cache.keys()).slice(0, Math.floor(this.maxEntries * 0.2));
-      for (const k of keysToDelete) {
-        this.cache.delete(k);
+      const evictCount = Math.max(1, Math.floor(this.maxEntries * 0.2));
+      const iter = this.cache.keys();
+      for (let i = 0; i < evictCount; i++) {
+        const next = iter.next();
+        if (next.done) break;
+        this.cache.delete(next.value);
       }
     }
     this.cache.set(key, { ...value, lines: [...value.lines] });
@@ -113,14 +131,15 @@ export class AstCache {
   }
 
   public get(filePath: string, currentMtimeMs?: number): DocumentNode | null {
-    const entry = this.cache.get(filePath);
+    const key = normalizeCachePath(filePath);
+    const entry = this.cache.get(key);
     if (!entry) {
       this.misses++;
       return null;
     }
 
     if (currentMtimeMs !== undefined && entry.mtimeMs !== currentMtimeMs) {
-      this.cache.delete(filePath);
+      this.cache.delete(key);
       this.misses++;
       return null;
     }
@@ -130,19 +149,19 @@ export class AstCache {
         try {
           if (!fs.existsSync(dep)) {
             // A declared dependency was removed from disk -> invalidate
-            this.cache.delete(filePath);
+            this.cache.delete(key);
             this.misses++;
             return null;
           }
           const depMtime = fs.statSync(dep).mtimeMs;
           const recordedMtime = entry.dependencyMtimes?.[dep];
           if (recordedMtime !== undefined ? depMtime > recordedMtime : depMtime > entry.mtimeMs) {
-            this.cache.delete(filePath);
+            this.cache.delete(key);
             this.misses++;
             return null;
           }
         } catch {
-          this.cache.delete(filePath);
+          this.cache.delete(key);
           this.misses++;
           return null;
         }
@@ -151,16 +170,18 @@ export class AstCache {
 
     this.hits++;
     // LRU: re-insert to position at end of Map (most recently used)
-    this.cache.delete(filePath);
-    this.cache.set(filePath, entry);
+    this.cache.delete(key);
+    this.cache.set(key, entry);
     return entry.ast;
   }
 
   public set(filePath: string, mtimeMs: number, ast: DocumentNode, content?: string, dependencies?: string[]): void {
+    const key = normalizeCachePath(filePath);
     const hash = content ? crypto.createHash('sha256').update(content).digest('hex') : '';
+    const normalizedDeps = dependencies?.map(normalizeCachePath);
     const dependencyMtimes: Record<string, number> = {};
-    if (dependencies && dependencies.length > 0) {
-      for (const dep of dependencies) {
+    if (normalizedDeps && normalizedDeps.length > 0) {
+      for (const dep of normalizedDeps) {
         try {
           if (fs.existsSync(dep)) {
             dependencyMtimes[dep] = fs.statSync(dep).mtimeMs;
@@ -168,23 +189,25 @@ export class AstCache {
         } catch {}
       }
     }
-    if (this.cache.has(filePath)) {
-      this.cache.delete(filePath);
+    if (this.cache.has(key)) {
+      this.cache.delete(key);
     } else if (this.cache.size >= this.maxEntries) {
       const oldestKey = this.cache.keys().next().value;
       if (oldestKey !== undefined) {
         this.cache.delete(oldestKey);
       }
     }
-    this.cache.set(filePath, { mtimeMs, hash, ast, dependencies, dependencyMtimes });
+    this.cache.set(key, { mtimeMs, hash, ast, dependencies: normalizedDeps, dependencyMtimes });
   }
 
   public setDependencies(filePath: string, dependencies: string[]): void {
-    const entry = this.cache.get(filePath);
+    const key = normalizeCachePath(filePath);
+    const entry = this.cache.get(key);
     if (entry) {
-      entry.dependencies = dependencies;
+      const normalizedDeps = dependencies.map(normalizeCachePath);
+      entry.dependencies = normalizedDeps;
       entry.dependencyMtimes = {};
-      for (const dep of dependencies) {
+      for (const dep of normalizedDeps) {
         try {
           if (fs.existsSync(dep)) {
             entry.dependencyMtimes[dep] = fs.statSync(dep).mtimeMs;
@@ -195,7 +218,8 @@ export class AstCache {
   }
 
   public invalidate(filePath: string): void {
-    this.cache.delete(filePath);
+    const key = normalizeCachePath(filePath);
+    this.cache.delete(key);
   }
 
   public clear(): void {

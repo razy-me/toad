@@ -474,7 +474,9 @@ export class PsdExporter {
         const aliBlock = Buffer.alloc(totalBlockLen);
         aliSig.copy(aliBlock, 0);
         aliKey.copy(aliBlock, 4);
-        aliBlock.writeUInt32BE(alignedLen, 8); // Write aligned length to header
+        // Both Photopea (which aligns to 4-byte boundaries) and ag-psd (which reads 2-byte aligned
+        // lengths) require alignedLen in the header so neither reader desynchronizes signatures.
+        aliBlock.writeUInt32BE(alignedLen, 8);
         aliData.copy(aliBlock, 12);
         // remaining pad bytes are initialized to 0 by Buffer.alloc
 
@@ -1565,13 +1567,13 @@ export class PsdExporter {
       else weightName = 'Black';
     } else {
       const fwLower = String(fontWeight).toLowerCase().trim();
-      if (fwLower === 'thin') weightName = 'Thin';
-      else if (fwLower === 'extralight') weightName = 'ExtraLight';
+      if (fwLower === 'thin' || fwLower === 'hairline') weightName = 'Thin';
+      else if (fwLower === 'extralight' || fwLower === 'extra-light' || fwLower === 'ultralight' || fwLower === 'ultra-light') weightName = 'ExtraLight';
       else if (fwLower === 'light') weightName = 'Light';
       else if (fwLower === 'medium') weightName = 'Medium';
-      else if (fwLower === 'semibold') weightName = 'SemiBold';
+      else if (fwLower === 'semibold' || fwLower === 'semi-bold' || fwLower === 'demibold' || fwLower === 'demi-bold') weightName = 'SemiBold';
       else if (fwLower === 'bold' || fwLower === 'bolder') weightName = 'Bold';
-      else if (fwLower === 'extrabold') weightName = 'ExtraBold';
+      else if (fwLower === 'extrabold' || fwLower === 'extra-bold' || fwLower === 'ultrabold' || fwLower === 'ultra-bold') weightName = 'ExtraBold';
       else if (fwLower === 'black' || fwLower === 'heavy') weightName = 'Black';
       else weightName = 'Regular';
     }

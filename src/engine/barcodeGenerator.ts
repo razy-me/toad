@@ -15,6 +15,7 @@ export interface BarcodeBar {
 export interface BarcodeOptions {
   format?: BarcodeFormat;
   showText?: boolean;
+  quietZone?: number;
 }
 
 export interface BarcodeResult {
@@ -64,14 +65,19 @@ const CODE128_PATTERNS: number[][] = [
 
 const CODE128_STOP = [2, 3, 3, 1, 1, 1, 2]; // 106: Stop (13 modules)
 
-function generateCode128(text: string): { bars: BarcodeBar[]; totalModules: number } {
+function generateCode128(text: string, quietZoneModules?: number): { bars: BarcodeBar[]; totalModules: number } {
   // Use Code Set B (standard ASCII 32 to 126)
   const codes: number[] = [104]; // Start B
   let checksum = 104;
 
   for (let i = 0; i < text.length; i++) {
     const ascii = text.charCodeAt(i);
-    const code = ascii >= 32 && ascii <= 126 ? ascii - 32 : 0;
+    if (ascii < 32 || ascii > 126) {
+      throw new Error(
+        `Code 128 character at index ${i} ('${text[i]}', ASCII ${ascii}) is outside valid ASCII range (32-126).`
+      );
+    }
+    const code = ascii - 32;
     codes.push(code);
     checksum += code * (i + 1);
   }
@@ -79,7 +85,7 @@ function generateCode128(text: string): { bars: BarcodeBar[]; totalModules: numb
   codes.push(checksum % 103);
 
   const bars: BarcodeBar[] = [];
-  const quietZone = 10; // 10 modules margin
+  const quietZone = typeof quietZoneModules === 'number' ? Math.max(0, quietZoneModules) : 10;
   let curX = quietZone;
 
   for (const c of codes) {
@@ -143,17 +149,26 @@ function calculateEan13Checksum(digits12: string): number {
   return (10 - (sum % 10)) % 10;
 }
 
-function generateEan13(rawDigits: string): { bars: BarcodeBar[]; totalModules: number; formattedText: string } {
+function generateEan13(rawDigits: string, quietZoneModules?: number): { bars: BarcodeBar[]; totalModules: number; formattedText: string } {
   // Strip non-digit characters
-  let digits = rawDigits.replace(/[^0-9]/g, '');
-  if (digits.length < 12) {
-    digits = digits.padEnd(12, '0');
-  } else if (digits.length > 13) {
-    digits = digits.slice(0, 13);
+  const digitsOnly = rawDigits.replace(/[^0-9]/g, '');
+  if (digitsOnly.length < 12) {
+    throw new Error(
+      `EAN-13 requires at least 12 digits, received ${digitsOnly.length} digits ('${rawDigits}').`
+    );
   }
 
-  if (digits.length === 12) {
-    digits += calculateEan13Checksum(digits);
+  let digits = digitsOnly.slice(0, 13);
+  const expectedChecksum = calculateEan13Checksum(digits.slice(0, 12));
+  if (digits.length === 13) {
+    const providedChecksum = parseInt(digits[12]!, 10);
+    if (providedChecksum !== expectedChecksum) {
+      throw new Error(
+        `Invalid EAN-13 checksum: expected ${expectedChecksum} for '${digits.slice(0, 12)}', but received ${providedChecksum} in '${digits}'.`
+      );
+    }
+  } else {
+    digits += expectedChecksum;
   }
 
   const firstDigit = parseInt(digits[0]!, 10);
@@ -161,7 +176,8 @@ function generateEan13(rawDigits: string): { bars: BarcodeBar[]; totalModules: n
   let bitString = '';
 
   // Left quiet zone
-  const quietZone = '000000000'; // 9 modules
+  const qzCount = typeof quietZoneModules === 'number' ? Math.max(0, quietZoneModules) : 9;
+  const quietZone = '0'.repeat(qzCount);
   bitString += quietZone;
 
   // Start guard (101)
@@ -227,12 +243,12 @@ const CODE39_PATTERNS: string[] = [
   '010100010', '010001010', '000101010', '010010100'               // $, /, +, %, *
 ];
 
-function generateCode39(text: string): { bars: BarcodeBar[]; totalModules: number } {
+function generateCode39(text: string, quietZoneModules?: number): { bars: BarcodeBar[]; totalModules: number } {
   const clean = `*${text.toUpperCase().replace(/[^0-9A-Z-. $/+%]/g, '')}*`;
   const narrowW = 1;
   const wideW = 3;
   const interGap = 1;
-  const quietZone = 10;
+  const quietZone = typeof quietZoneModules === 'number' ? Math.max(0, quietZoneModules) : 10;
 
   const bars: BarcodeBar[] = [];
   let curX = quietZone;
@@ -254,7 +270,7 @@ function generateCode39(text: string): { bars: BarcodeBar[]; totalModules: numbe
     curX += interGap;
   }
 
-  curX += quietZone - interGap;
+  curX += quietZone > 0 ? (quietZone - interGap) : 0;
   return { bars, totalModules: curX };
 }
 
@@ -271,7 +287,7 @@ export function generateBarcode(value: string, options: BarcodeOptions = {}): Ba
 
   switch (format) {
     case 'ean13': {
-      const res = generateEan13(value);
+      const res = generateEan13(value, options.quietZone);
       bars = res.bars;
       totalModules = res.totalModules;
       text = res.formattedText;
@@ -279,22 +295,32 @@ export function generateBarcode(value: string, options: BarcodeOptions = {}): Ba
     }
     case 'upc': {
       // UPC-A is EAN-13 with leading zero
-      const upcVal = value.length === 11 || value.length === 12 ? `0${value}` : value;
-      const res = generateEan13(upcVal);
+      const upcDigits = value.replace(/[^0-9]/g, '');
+      if (upcDigits.length < 11) {
+        throw new Error(`UPC requires at least 11 digits, received ${upcDigits.length} digits ('${value}').`);
+      }
+      let upcVal = upcDigits;
+      if (upcVal.length === 11) {
+        const check = calculateEan13Checksum(`0${upcVal}`);
+        upcVal = `0${upcVal}${check}`;
+      } else {
+        upcVal = `0${upcVal.slice(0, 12)}`;
+      }
+      const res = generateEan13(upcVal, options.quietZone);
       bars = res.bars;
       totalModules = res.totalModules;
       text = res.formattedText;
       break;
     }
     case 'code39': {
-      const res = generateCode39(value);
+      const res = generateCode39(value, options.quietZone);
       bars = res.bars;
       totalModules = res.totalModules;
       break;
     }
     case 'code128':
     default: {
-      const res = generateCode128(value);
+      const res = generateCode128(value, options.quietZone);
       bars = res.bars;
       totalModules = res.totalModules;
       break;

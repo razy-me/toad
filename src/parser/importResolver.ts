@@ -77,12 +77,15 @@ import { computeGcd } from './math.js';
 export { computeGcd };
 
 export function computeAspectRatio(width: number, height: number): { w: number; h: number; gcd: number; str: string } {
-  if (!width || !height || width <= 0 || height <= 0) {
+  if (!width || !height || width <= 0 || height <= 0 || !Number.isFinite(width) || !Number.isFinite(height)) {
     return { w: 1, h: 1, gcd: 1, str: '1:1' };
   }
   const gcd = computeGcd(width, height);
   const w = Math.round(width) / gcd;
   const h = Math.round(height) / gcd;
+  if (!w || !h || w <= 0 || h <= 0 || !Number.isFinite(w) || !Number.isFinite(h)) {
+    return { w: 1, h: 1, gcd: 1, str: '1:1' };
+  }
   return { w, h, gcd, str: `${w}:${h}` };
 }
 
@@ -442,6 +445,16 @@ export class ImportResolver {
         return {
           ...value,
           elements: value.elements.map(e => this.substituteVariablesInValue(e, lookup))
+        };
+      }
+      case 'ObjectLiteral': {
+        const substitutedProps: Record<string, ValueNode> = {};
+        for (const [k, v] of Object.entries((value as any).properties || {})) {
+          substitutedProps[k] = this.substituteVariablesInValue(v as ValueNode, lookup);
+        }
+        return {
+          ...value,
+          properties: substitutedProps
         };
       }
       case 'ExpressionList': {
@@ -893,24 +906,35 @@ export class ImportResolver {
       // Check named property on instance body { paramName: val }
       const namedProp = instance.properties?.find(p => p.name === param.name);
 
+      let evaluated: ValueNode | undefined;
       if (namedArg) {
-        const evaluated = this.substituteVariablesInValue(namedArg.value, n => parentVars.get(n));
-        localVars.set(param.name, evaluated);
+        evaluated = this.substituteVariablesInValue(namedArg.value, n => parentVars.get(n));
       } else if (namedProp) {
-        const evaluated = this.substituteVariablesInValue(namedProp.value, n => parentVars.get(n));
-        localVars.set(param.name, evaluated);
+        evaluated = this.substituteVariablesInValue(namedProp.value, n => parentVars.get(n));
       } else if (unnamedIdx < unnamedArgs.length) {
         // Positional arg
-        const evaluated = this.substituteVariablesInValue(unnamedArgs[unnamedIdx++].value, n => parentVars.get(n));
-        localVars.set(param.name, evaluated);
+        evaluated = this.substituteVariablesInValue(unnamedArgs[unnamedIdx++].value, n => parentVars.get(n));
       } else if (param.defaultValue) {
         // Default value evaluated in localVars so it can reference earlier component parameters
-        const evaluated = this.substituteVariablesInValue(param.defaultValue, n => localVars.get(n));
-        localVars.set(param.name, evaluated);
+        evaluated = this.substituteVariablesInValue(param.defaultValue, n => localVars.get(n));
       } else {
         throw new Error(
           `Missing required parameter '${param.name}' for component '${compDecl.name}'`
         );
+      }
+
+      if (evaluated) {
+        const flattenIntoLocalVars = (prefix: string, valNode: ValueNode) => {
+          localVars.set(prefix, valNode);
+          if (valNode.type === 'ObjectLiteral') {
+            const obj = valNode as any;
+            for (const [key, propVal] of Object.entries(obj.properties || {})) {
+              const nestedPrefix = prefix ? `${prefix}.${key}` : key;
+              flattenIntoLocalVars(nestedPrefix, propVal as ValueNode);
+            }
+          }
+        };
+        flattenIntoLocalVars(param.name, evaluated);
       }
     }
 
@@ -1239,9 +1263,14 @@ export class ImportResolver {
           // normal|bold|bolder|lighter — map descriptive names to numbers so
           // e.g. `semibold` does not silently invalidate the whole shorthand.
           const WEIGHT_WORDS: Record<string, string> = {
-            thin: '100', extralight: '200', ultralight: '200', light: '300',
-            regular: '400', medium: '500', semibold: '600', demibold: '600',
-            extrabold: '800', ultrabold: '800', black: '900', heavy: '900'
+            thin: '100', hairline: '100',
+            extralight: '200', 'extra-light': '200', ultralight: '200', 'ultra-light': '200',
+            light: '300',
+            regular: '400',
+            medium: '500',
+            semibold: '600', 'semi-bold': '600', demibold: '600', 'demi-bold': '600',
+            extrabold: '800', 'extra-bold': '800', ultrabold: '800', 'ultra-bold': '800',
+            black: '900', heavy: '900'
           };
           const lw = rawW.toLowerCase();
           const w = WEIGHT_WORDS[lw] ?? rawW;
@@ -2232,7 +2261,18 @@ export class ImportResolver {
       if ((family.startsWith('"') && family.endsWith('"')) || (family.startsWith("'") && family.endsWith("'"))) {
         family = family.slice(1, -1);
       }
-      const weight = val.weight || 'normal';
+      const WEIGHT_WORDS: Record<string, string> = {
+        thin: '100', hairline: '100',
+        extralight: '200', 'extra-light': '200', ultralight: '200', 'ultra-light': '200',
+        light: '300',
+        regular: '400',
+        medium: '500',
+        semibold: '600', 'semi-bold': '600', demibold: '600', 'demi-bold': '600',
+        extrabold: '800', 'extra-bold': '800', ultrabold: '800', 'ultra-bold': '800',
+        black: '900', heavy: '900'
+      };
+      const rawW = String(val.weight || 'normal').toLowerCase();
+      const weight = WEIGHT_WORDS[rawW] ?? (val.weight ? String(val.weight) : 'normal');
       const style = val.style || 'normal';
       return { family, size, weight, style };
     }

@@ -377,6 +377,8 @@ export function safeEvaluateMath(expr: string, warnings?: string[]): number {
   let pos = 0;
   const str = expr.replace(/\s+/g, '');
   let errorEmitted = false;
+  let depth = 0;
+  const MAX_RECURSION_DEPTH = 64;
 
   function reportError(msg: string) {
     if (!errorEmitted) {
@@ -407,13 +409,23 @@ export function safeEvaluateMath(expr: string, warnings?: string[]): number {
   }
 
   function parseFactor(): number {
+    if (depth > MAX_RECURSION_DEPTH) {
+      reportError(`Recursion depth limit (${MAX_RECURSION_DEPTH}) exceeded in math expression '${expr}'`);
+      return 0;
+    }
     if (pos >= str.length) {
       reportError(`Syntax error in math expression '${expr}': unexpected end of expression`);
       return 0;
     }
     if (str[pos] === '(') {
       pos++; // consume '('
-      const val = parseExpr();
+      depth++;
+      let val = 0;
+      try {
+        val = parseExpr();
+      } finally {
+        depth--;
+      }
       if (pos < str.length && str[pos] === ')') {
         pos++; // consume ')'
       } else {
@@ -478,7 +490,10 @@ export function safeEvaluateMath(expr: string, warnings?: string[]): number {
     reportError(`Syntax error in math expression '${expr}': unexpected trailing characters '${str.slice(pos)}' at position ${pos}`);
   }
 
-  return Number.isFinite(result) ? result : 0;
+  if (!Number.isFinite(result) || Object.is(result, -0) || result === 0) {
+    return 0;
+  }
+  return result;
 }
 
 export function evaluateCalc(

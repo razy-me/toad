@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import {
   DocumentNode,
   Diagnostic,
@@ -7,6 +9,7 @@ import {
   ElementNode,
   CalcValueNode
 } from '../parser/ast.js';
+import { parseToad } from '../parser/parser.js';
 
 /**
  * Traverses an AST node and all its children.
@@ -31,7 +34,7 @@ function traverse(node: any, visitor: (n: any, parent?: any) => void, parent?: a
   }
 }
 
-export function lintDocument(doc: DocumentNode): Diagnostic[] {
+export function lintDocument(doc: DocumentNode, filePath?: string): Diagnostic[] {
   const diagnostics: Diagnostic[] = [];
 
   const declaredGlobalVars = new Map<string, VariableDeclarationNode>();
@@ -97,20 +100,27 @@ export function lintDocument(doc: DocumentNode): Diagnostic[] {
     const visitCompNode = (node: any) => {
       if (node.type === 'VariableReference') {
         const refName = (node as VariableReferenceNode).name;
+        const rootName = refName.split('.')[0]!;
         if (params.has(refName)) {
           used.add(refName);
+        } else if (params.has(rootName)) {
+          used.add(rootName);
         } else {
           referencedGlobalVars.add(refName);
         }
       } else if (node.type === 'CalcValue') {
         const expr = (node as CalcValueNode).expression;
-        const matches = expr.matchAll(/>([a-zA-Z_][a-zA-Z0-9_-]*)/g);
+        const matches = expr.matchAll(/>([a-zA-Z_][a-zA-Z0-9_.-]*)/g);
         for (const m of matches) {
           if (m[1]) {
-            if (params.has(m[1])) {
-              used.add(m[1]);
+            const refName = m[1];
+            const rootName = refName.split('.')[0]!;
+            if (params.has(refName)) {
+              used.add(refName);
+            } else if (params.has(rootName)) {
+              used.add(rootName);
             } else {
-              referencedGlobalVars.add(m[1]);
+              referencedGlobalVars.add(refName);
             }
           }
         }
@@ -255,8 +265,31 @@ export function lintDocument(doc: DocumentNode): Diagnostic[] {
     });
   }
 
-  // Check for unused top-level variables. Suppress for standalone library/tokens files
-  // that do not declare a canvas (as their declared variables are intended for @import).
+  // Collect all instantiated or referenced components across canvas, elements, and components
+  const usedComponents = new Set<string>();
+  const collectUsedComponents = (root: any) => {
+    traverse(root, (node) => {
+      if (node.type === 'ComponentInstance' && typeof node.componentName === 'string') {
+        usedComponents.add(node.componentName);
+      } else if (node.type === 'Identifier' && typeof node.name === 'string') {
+        usedComponents.add(node.name);
+      } else if (node.componentName && typeof node.componentName === 'string') {
+        usedComponents.add(node.componentName);
+      }
+    });
+  };
+
+  collectUsedComponents(doc.elements);
+  for (const c of canvasesToCheck) {
+    collectUsedComponents(c);
+  }
+  for (const comp of doc.components) {
+    collectUsedComponents(comp.elements);
+    collectUsedComponents(comp.properties);
+  }
+
+  // Check for unused top-level variables and components. Suppress for standalone library/tokens files
+  // that do not declare a canvas (as their declared variables/components are intended for @import).
   const hasCanvas = Boolean(doc.canvas || (doc.canvases && doc.canvases.length > 0));
   if (hasCanvas) {
     for (const [name, decl] of declaredGlobalVars.entries()) {
@@ -267,6 +300,57 @@ export function lintDocument(doc: DocumentNode): Diagnostic[] {
           severity: 'warning',
           loc: decl.loc
         });
+      }
+    }
+
+    // Check for unused locally declared components
+    for (const comp of doc.components) {
+      if (!usedComponents.has(comp.name)) {
+        diagnostics.push({
+          code: 'LINT-UNUSED-COMPONENT',
+          message: `Component '${comp.name}' is declared but never instantiated.`,
+          severity: 'warning',
+          loc: comp.loc,
+          fix: {
+            title: `Remove unused component '${comp.name}'`,
+            kind: 'quickfix'
+          }
+        });
+      }
+    }
+
+    // Check for unused components imported via @import
+    const effectiveFile = filePath || doc.loc?.file;
+    if (effectiveFile) {
+      const docDir = path.dirname(effectiveFile);
+      for (const dir of doc.directives) {
+        if (dir.type === 'ImportDirective') {
+          try {
+            let importPath = dir.path;
+            if (!path.extname(importPath)) importPath += '.toad';
+            const resolvedPath = path.isAbsolute(importPath) ? importPath : path.resolve(docDir, importPath);
+            if (fs.existsSync(resolvedPath)) {
+              const content = fs.readFileSync(resolvedPath, 'utf-8');
+              const importedAst = parseToad(content, resolvedPath);
+              for (const comp of importedAst.components) {
+                if (!usedComponents.has(comp.name)) {
+                  diagnostics.push({
+                    code: 'LINT-UNUSED-IMPORT',
+                    message: `Imported component '${comp.name}' from '${dir.path}' is never instantiated.`,
+                    severity: 'warning',
+                    loc: dir.loc,
+                    fix: {
+                      title: `Remove unused import '${dir.path}'`,
+                      kind: 'quickfix'
+                    }
+                  });
+                }
+              }
+            }
+          } catch {
+            // Ignore parse or file errors in linter
+          }
+        }
       }
     }
   }

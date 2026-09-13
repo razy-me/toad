@@ -184,6 +184,13 @@ function checkBentoOverkill(ctx: SlopContext): SlopRuleResult[] {
     });
 
     if (glassCards.length >= 5) {
+      // Bento grids are 2D multi-column layouts. A single-column vertical stack or list
+      // (where all cards align along the same horizontal column) is not a bento grid.
+      const xBuckets = new Set(glassCards.map(c => Math.round(c.x / 24)));
+      if (xBuckets.size < 2) {
+        return findings;
+      }
+
       // Check content shallowness: cards with very few characters
       let shallowCount = 0;
       for (const card of glassCards) {

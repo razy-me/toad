@@ -32,19 +32,20 @@ export interface CliOptions {
   textToPath?: boolean;
 }
 
-const useColor = !process.env.NO_COLOR && (process.stdout.isTTY || process.env.FORCE_COLOR !== '0');
+const isColorEnabled = () => !process.env.NO_COLOR && (process.stdout?.isTTY || process.env.FORCE_COLOR !== '0');
 
 export const c = {
-  reset: (s: string) => useColor ? `\x1b[0m${s}\x1b[0m` : s,
-  bold: (s: string) => useColor ? `\x1b[1m${s}\x1b[22m` : s,
-  dim: (s: string) => useColor ? `\x1b[2m${s}\x1b[22m` : s,
-  red: (s: string) => useColor ? `\x1b[31m${s}\x1b[39m` : s,
-  green: (s: string) => useColor ? `\x1b[32m${s}\x1b[39m` : s,
-  yellow: (s: string) => useColor ? `\x1b[33m${s}\x1b[39m` : s,
-  cyan: (s: string) => useColor ? `\x1b[36m${s}\x1b[39m` : s,
-  white: (s: string) => useColor ? `\x1b[37m${s}\x1b[39m` : s,
-  bgRed: (s: string) => useColor ? `\x1b[41m\x1b[37m\x1b[1m${s}\x1b[0m` : s,
-  bgGreen: (s: string) => useColor ? `\x1b[42m\x1b[30m\x1b[1m${s}\x1b[0m` : s,
+  reset: (s: string) => isColorEnabled() ? `\x1b[0m${s}\x1b[0m` : s,
+  bold: (s: string) => isColorEnabled() ? `\x1b[1m${s}\x1b[22m` : s,
+  dim: (s: string) => isColorEnabled() ? `\x1b[2m${s}\x1b[22m` : s,
+  red: (s: string) => isColorEnabled() ? `\x1b[31m${s}\x1b[39m` : s,
+  green: (s: string) => isColorEnabled() ? `\x1b[32m${s}\x1b[39m` : s,
+  yellow: (s: string) => isColorEnabled() ? `\x1b[33m${s}\x1b[39m` : s,
+  cyan: (s: string) => isColorEnabled() ? `\x1b[36m${s}\x1b[39m` : s,
+  white: (s: string) => isColorEnabled() ? `\x1b[37m${s}\x1b[39m` : s,
+  bgRed: (s: string) => isColorEnabled() ? `\x1b[41m\x1b[37m\x1b[1m${s}\x1b[0m` : s,
+  bgGreen: (s: string) => isColorEnabled() ? `\x1b[42m\x1b[30m\x1b[1m${s}\x1b[0m` : s,
+  bgYellow: (s: string) => isColorEnabled() ? `\x1b[43m\x1b[30m\x1b[1m${s}\x1b[0m` : s,
 };
 
 /**
@@ -267,7 +268,7 @@ export function createCli(): Command {
         
         let dimStr = '';
         if (f.endsWith('.psd')) {
-          const effectiveScale = buildOptions.scale && buildOptions.scale > 0 ? buildOptions.scale : 2.5;
+          const effectiveScale = buildOptions.vectorScale && buildOptions.vectorScale > 0 ? buildOptions.vectorScale : 2.5;
           dimStr = c.dim(`(${Math.round(result.canvas.width * effectiveScale)}x${Math.round(result.canvas.height * effectiveScale)})`);
         } else if (f.endsWith('.png') || f.endsWith('.jpg') || f.endsWith('.jpeg') || f.endsWith('.webp')) {
           const effectiveScale = buildOptions.scale && buildOptions.scale > 0 ? buildOptions.scale : 1;
@@ -562,6 +563,8 @@ export function createCli(): Command {
         return;
       }
 
+      files.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }) || a.path.localeCompare(b.path));
+
       files.forEach((f, idx) => {
         let sizeStr = '';
         const sizeKb = (f.size / 1024).toFixed(1);
@@ -638,10 +641,18 @@ export function createCli(): Command {
             const penaltyIssues = audit.findings.filter(f => f.severity === 'error' || f.severity === 'warn');
             const hasPenalties = penaltyIssues.length > 0;
 
+            const safeCopyToClipboard = async (text: string): Promise<boolean> => {
+              try {
+                return await copyToClipboard(text);
+              } catch {
+                return false;
+              }
+            };
+
             const runFixesStep = async () => {
               while (true) {
                 const fixPrompt = hasPenalties
-                  ? `\n  ${c.cyan('➜')}  ${c.bold('Press [Enter]')} to view quick-fixes & actionable recommendations, or ${c.bold('[F]')} to copy report (or [Q] to quit)... `
+                  ? `\n  ${c.cyan('➜')}  ${c.bold('Press [Enter]')} to finish, or ${c.bold('[F]')} to copy report (or [Q] to quit)... `
                   : `\n  ${c.cyan('➜')}  ${c.bold('Press [Enter]')} to view notices & recommendations, or ${c.bold('[F]')} to copy report (or [Q] to quit)... `;
                 process.stdout.write(fixPrompt);
                 const key2 = await waitForUserInputKey();
@@ -651,8 +662,12 @@ export function createCli(): Command {
                   break;
                 }
                 if (isCopy(key2)) {
-                  await copyToClipboard(accumulatedReport);
-                  console.log(`  ${c.green('✔')} ${c.bold('Report copied to clipboard!')}`);
+                  const copied = await safeCopyToClipboard(accumulatedReport);
+                  if (copied) {
+                    console.log(`  ${c.green('✔')} ${c.bold('Report copied to clipboard!')}`);
+                  } else {
+                    console.log(`  ${c.yellow('!')} ${c.dim('Could not copy to clipboard in this environment.')}`);
+                  }
                   continue;
                 }
                 if (isEnter(key2)) {
@@ -666,8 +681,12 @@ export function createCli(): Command {
                   const key3 = await waitForUserInputKey();
                   process.stdout.write('\n');
                   if (isCopy(key3)) {
-                    await copyToClipboard(accumulatedReport);
-                    console.log(`  ${c.green('✔')} ${c.bold('Entire report copied to clipboard!')}\n`);
+                    const copied = await safeCopyToClipboard(accumulatedReport);
+                    if (copied) {
+                      console.log(`  ${c.green('✔')} ${c.bold('Entire report copied to clipboard!')}\n`);
+                    } else {
+                      console.log(`  ${c.yellow('!')} ${c.dim('Could not copy to clipboard in this environment.')}\n`);
+                    }
                   }
                   break;
                 }
@@ -685,8 +704,12 @@ export function createCli(): Command {
                   break;
                 }
                 if (isCopy(key1)) {
-                  await copyToClipboard(accumulatedReport);
-                  console.log(`  ${c.green('✔')} ${c.bold('Report copied to clipboard!')}`);
+                  const copied = await safeCopyToClipboard(accumulatedReport);
+                  if (copied) {
+                    console.log(`  ${c.green('✔')} ${c.bold('Report copied to clipboard!')}`);
+                  } else {
+                    console.log(`  ${c.yellow('!')} ${c.dim('Could not copy to clipboard in this environment.')}`);
+                  }
                   continue;
                 }
                 if (isEnter(key1)) {

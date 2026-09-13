@@ -95,7 +95,20 @@ export function inferErrorCode(message: string, sourceLine?: string): string {
   const m = (message || '').toLowerCase();
   const s = (sourceLine || '').toLowerCase();
 
-  if (s.includes('offset:') || (s.trim().startsWith('>') && s.includes(':')) || m.includes('syntax') || m.includes('unexpected token') || m.includes('expected')) {
+  if (
+    s.includes('offset:') ||
+    (s.trim().startsWith('>') && s.includes(':')) ||
+    m.includes('syntax') ||
+    m.includes('unexpected token') ||
+    m.includes('unexpected') ||
+    m.includes('expected') ||
+    m.includes('token') ||
+    m.includes('semicolon') ||
+    m.includes('unclosed') ||
+    m.includes('unmatched') ||
+    m.includes('unterminated') ||
+    s.includes('slot')
+  ) {
     return 'TOAD-E001';
   }
   if (m.includes('cycle') || m.includes('circular') || m.includes('anchor') || m.includes('cannot find') || m.includes('not found')) {
@@ -141,6 +154,11 @@ export function generateHelpSuggestion(sourceLine: string, message: string): str
   // Rule 8: Unquoted font fallback list: >font = "Inter", sans-serif;
   if (/^>\w+\s*=\s*("[^"]*"\s*,\s*[^;"]+)/.test(line) || /(font|font-family)\s*:\s*("[^"]*"\s*,\s*[^;"]+)/.test(line)) {
     return `Wrap font fallback chains in a single string literal: \`>font = "Inter, -apple-system, sans-serif";\``;
+  }
+
+  // Missing semicolon after slot
+  if (/\bslot\b(?!\s*;)/i.test(line)) {
+    return `Content projection slot statements must terminate with a semicolon: \`slot;\`.`;
   }
 
   // Missing semicolon
@@ -197,7 +215,10 @@ export function formatRustDiagnostic(opts: DiagnosticOptions): string {
     }
   }
 
-  const code = opts.code || inferErrorCode(opts.message, targetLineContent);
+  let code = opts.code;
+  if (!code || code === 'TOAD-E999') {
+    code = inferErrorCode(opts.message, targetLineContent);
+  }
   const helpText = opts.help || generateHelpSuggestion(targetLineContent, opts.message);
 
   let out = `\n${c.bold(c.red(`error[${code}]:`))} ${c.bold(opts.message)}\n`;
