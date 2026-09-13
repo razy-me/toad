@@ -1,11 +1,19 @@
+<div align="center">
+
 # toad
 
-> Declarative design language and compiler that compiles code into **PNG, JPG, WebP, SVG, PDF**, and fully layered, editable Photoshop **PSD** files.
+### Design graphics at the speed of code.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20.0.0-339933.svg?style=flat-square&logo=nodedotjs&logoColor=white)](https://nodejs.org)
 [![Tests](https://img.shields.io/badge/Tests-1234%20Passing-10b981.svg?style=flat-square&logo=vitest&logoColor=white)](./tests)
 [![Formats](https://img.shields.io/badge/Export-PNG%20%7C%20SVG%20%7C%20PSD%20%7C%20PDF%20%7C%20WebP%20%7C%20JPG-38bdf8.svg?style=flat-square)](https://github.com/razy-me/toad)
+
+<p align="center">
+  A declarative design language and compiler that turns code into crisp images (<b>PNG, JPG, WebP</b>), scalable vectors (<b>SVG</b>), print documents (<b>PDF</b>), and fully layered, editable Photoshop documents (<b>PSD</b>).
+</p>
+
+</div>
 
 ---
 
