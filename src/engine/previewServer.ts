@@ -75,12 +75,25 @@ export function createPreviewServer(
 
       // 1. SSE Stream
       if (url.pathname === '/events') {
-        res.writeHead(200, {
+        const origin = req.headers.origin;
+        let allowedOrigin = '';
+        if (origin) {
+          try {
+            const parsedOrigin = new URL(origin);
+            if (['localhost', '127.0.0.1', '::1', '[::1]'].includes(parsedOrigin.hostname.toLowerCase())) {
+              allowedOrigin = origin;
+            }
+          } catch {}
+        }
+        const sseHeaders: Record<string, string> = {
           'Content-Type': 'text/event-stream',
           'Cache-Control': 'no-cache, no-transform',
-          'Connection': 'keep-alive',
-          'Access-Control-Allow-Origin': '*'
-        });
+          'Connection': 'keep-alive'
+        };
+        if (allowedOrigin) {
+          sseHeaders['Access-Control-Allow-Origin'] = allowedOrigin;
+        }
+        res.writeHead(200, sseHeaders);
         res.write('\n');
         sseClients.add(res);
 
@@ -144,17 +157,24 @@ export function createPreviewServer(
       }
 
       // 3. Open Folder API Endpoint
-      // Hardening: only same-origin POST requests may trigger OS actions.
-      // Without this, any website could CSRF a GET against localhost, and
-      // LAN peers could reach the endpoint when bound beyond loopback.
+      // Hardening: only same-origin loopback POST requests may trigger OS actions.
       if (url.pathname === '/api/open-folder' || url.pathname === '/open-folder') {
         const origin = req.headers.origin;
-        const host = req.headers.host;
+        const reqHost = req.headers.host || '';
         let originOk = true;
+
+        // Verify Host header cannot be rebound to external domain
+        const hostHostname = reqHost.split(':')[0]!.toLowerCase();
+        const isLoopbackHost = ['localhost', '127.0.0.1', '::1', '[::1]', host.toLowerCase()].includes(hostHostname);
+        if (!isLoopbackHost) {
+          originOk = false;
+        }
+
         if (origin) {
           try {
             const parsedOrigin = new URL(origin);
-            originOk = Boolean(host && parsedOrigin.host.toLowerCase() === host.toLowerCase());
+            const isLoopbackOrigin = ['localhost', '127.0.0.1', '::1', '[::1]', host.toLowerCase()].includes(parsedOrigin.hostname.toLowerCase());
+            originOk = originOk && isLoopbackOrigin && Boolean(parsedOrigin.host.toLowerCase() === reqHost.toLowerCase());
           } catch {
             originOk = false;
           }
@@ -164,7 +184,10 @@ export function createPreviewServer(
           originOk = false;
         }
         if (req.method !== 'POST' || !originOk) {
-          res.writeHead(405, { 'Content-Type': 'application/json' });
+          res.writeHead(405, {
+            'Content-Type': 'application/json',
+            'Allow': 'POST'
+          });
           res.end(JSON.stringify({ status: 'error', message: 'Method Not Allowed. Use POST from the preview page.' }));
           return;
         }
@@ -288,13 +311,22 @@ export function openBrowser(url: string): void {
   }
 
   try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return;
+    }
+    // Prevent command injection: reject shell metacharacters
+    if (/[\`\"\|\^\<\>\r\n\$\&\%]/.test(url)) {
+      return;
+    }
+
     let child;
     if (process.platform === 'win32') {
-      child = spawn('cmd.exe', ['/c', 'start', '""', url], { detached: true, stdio: 'ignore' });
+      child = spawn('cmd.exe', ['/c', 'start', '""', parsed.href], { detached: true, stdio: 'ignore' });
     } else if (process.platform === 'darwin') {
-      child = spawn('open', [url], { detached: true, stdio: 'ignore' });
+      child = spawn('open', [parsed.href], { detached: true, stdio: 'ignore' });
     } else {
-      child = spawn('xdg-open', [url], { detached: true, stdio: 'ignore' });
+      child = spawn('xdg-open', [parsed.href], { detached: true, stdio: 'ignore' });
     }
     child?.unref?.();
   } catch {}

@@ -97,20 +97,27 @@ export function lintDocument(doc: DocumentNode): Diagnostic[] {
     const visitCompNode = (node: any) => {
       if (node.type === 'VariableReference') {
         const refName = (node as VariableReferenceNode).name;
+        const rootName = refName.split('.')[0]!;
         if (params.has(refName)) {
           used.add(refName);
+        } else if (params.has(rootName)) {
+          used.add(rootName);
         } else {
           referencedGlobalVars.add(refName);
         }
       } else if (node.type === 'CalcValue') {
         const expr = (node as CalcValueNode).expression;
-        const matches = expr.matchAll(/>([a-zA-Z_][a-zA-Z0-9_-]*)/g);
+        const matches = expr.matchAll(/>([a-zA-Z_][a-zA-Z0-9_.-]*)/g);
         for (const m of matches) {
           if (m[1]) {
-            if (params.has(m[1])) {
-              used.add(m[1]);
+            const refName = m[1];
+            const rootName = refName.split('.')[0]!;
+            if (params.has(refName)) {
+              used.add(refName);
+            } else if (params.has(rootName)) {
+              used.add(rootName);
             } else {
-              referencedGlobalVars.add(m[1]);
+              referencedGlobalVars.add(refName);
             }
           }
         }

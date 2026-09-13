@@ -121,7 +121,7 @@ export async function compileToad(
   }
 
   // 4. Resolve imports, variables, and components
-  const resolved = await resolveImportsAndComponents(ast, resolvedEntry);
+  const resolved = await resolveImportsAndComponents(structuredClone(ast), resolvedEntry);
   AstCache.getInstance().setDependencies(resolvedEntry, resolved.dependencies || []);
 
   // Register inline @font directives if present
@@ -275,6 +275,8 @@ export async function compileToad(
     for (const token of rawTokens) {
       if (token === 'all') {
         resolved.push('png', 'jpg', 'webp', 'psd', 'svg');
+      } else if (token === 'everything' || token === 'all+pdf' || token === 'full') {
+        resolved.push('png', 'jpg', 'webp', 'psd', 'svg', 'pdf');
       } else if (token === 'print' || token === 'prepress') {
         resolved.push('pdf');
       } else if (token === 'image' || token === 'images' || token === 'web') {
@@ -286,7 +288,7 @@ export async function compileToad(
       } else {
         // Unknown format tokens previously passed through and produced a
         // silent SUCCESS with zero written files.
-        console.warn(`[warning] Unknown output format '${token}' ignored. Supported: png, jpg, webp, psd, svg, pdf, image, all.`);
+        console.warn(`[warning] Unknown output format '${token}' ignored. Supported: png, jpg, webp, psd, svg, pdf, print, image, all.`);
       }
     }
     return resolved;
@@ -304,7 +306,7 @@ export async function compileToad(
   }
 
   if (formatsToRender.length === 0) {
-    throw new Error(`No valid output formats specified (received: '${options.format}'). Supported formats: png, jpg, webp, psd, svg, image, all.`);
+    throw new Error(`No valid output formats specified (received: '${options.format}'). Supported formats: png, jpg, webp, psd, svg, pdf, print, image, all.`);
   }
 
   // Determine scales to export: CLI option overrides file-declared canvas.scales
@@ -325,6 +327,7 @@ export async function compileToad(
       const c = layout.canvases[idx]!;
       let rawSlug = c.canvas.name ? c.canvas.name.toLowerCase().replace(/[^a-z0-9_-]+/g, '-') : `${idx + 1}`;
       if (!rawSlug || rawSlug === '-') rawSlug = `${idx + 1}`;
+      if (rawSlug.length > 48) rawSlug = rawSlug.slice(0, 48).replace(/-+$/, '') || `${idx + 1}`;
 
       let candidate = `-${rawSlug}`;
       let counter = 1;
