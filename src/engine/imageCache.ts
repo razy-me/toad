@@ -62,7 +62,7 @@ export async function resolveSharedImage(imgSrc: string, basePath?: string): Pro
 
     const buf = fs.readFileSync(resolvedPath);
     const img = await loadImage(buf);
-    const estimatedBytes = (img.width || 1) * (img.height || 1) * 4;
+    const estimatedBytes = Math.max(buf.length, (img.width || 1) * (img.height || 1) * 4);
 
     while (imageCache.size >= MAX_CACHE_ENTRIES || (currentCacheBytes + estimatedBytes > MAX_CACHE_BYTES && imageCache.size > 0)) {
       const firstEntry = imageCache.entries().next().value;

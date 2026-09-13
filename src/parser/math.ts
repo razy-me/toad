@@ -369,6 +369,22 @@ export function readImageDimensions(filePath: string): { width: number; height: 
         if (width > 0 && height > 0) return { width, height };
       }
     }
+    // GIF: GIF87a / GIF89a (width at offset 6, height at offset 8, 16-bit LE)
+    if (buf.length >= 10 && buf.toString('ascii', 0, 3) === 'GIF') {
+      const width = buf.readUInt16LE(6);
+      const height = buf.readUInt16LE(8);
+      if (width > 0 && height > 0) return { width, height };
+    }
+
+    // AVIF: ISOBMFF with ftypavif/ftypavis containing ispe box
+    if (buf.length >= 16 && buf.toString('ascii', 4, 8) === 'ftyp') {
+      const ispeIdx = buf.indexOf('ispe');
+      if (ispeIdx > 0 && ispeIdx + 12 <= buf.length) {
+        const width = buf.readUInt32BE(ispeIdx + 8);
+        const height = buf.readUInt32BE(ispeIdx + 12);
+        if (width > 0 && height > 0) return { width, height };
+      }
+    }
   } catch {}
   return null;
 }
@@ -461,7 +477,12 @@ export function safeEvaluateMath(expr: string, warnings?: string[]): number {
       if (op === '*') {
         left *= right;
       } else {
-        left = right !== 0 ? left / right : 0;
+        if (right === 0) {
+          reportError(`Division by zero in math expression '${expr}'`);
+          left = 0;
+        } else {
+          left = left / right;
+        }
       }
     }
     return left;
@@ -823,6 +844,16 @@ export function layoutText(
         line = line.slice(0, -1).trimEnd();
       }
       outLines[lastIdx] = line + '\u2026';
+    }
+  } else if (style.overflow === 'ellipsis' && maxW > 0 && Number.isFinite(maxW)) {
+    for (let i = 0; i < outLines.length; i++) {
+      let line = outLines[i] || '';
+      if (measure(line) > maxW) {
+        while (line.length > 0 && measure(line + '\u2026') > maxW) {
+          line = line.slice(0, -1).trimEnd();
+        }
+        outLines[i] = line + '\u2026';
+      }
     }
   }
 
@@ -1627,7 +1658,10 @@ export class LayoutSolver {
         if (isMainFill) {
           fillCount++;
           if (isCircularMainHug) {
-            const fallbackDim = dir === 'horizontal' ? (cSize.w > 0 ? cSize.w : 32) : (cSize.h > 0 ? cSize.h : 32);
+            const childSubSize = (cSize.w === 0 && cSize.h === 0 && child.children && child.children.length > 0)
+              ? this.computeIntrinsicSize(child, canvasW, canvasH)
+              : cSize;
+            const fallbackDim = dir === 'horizontal' ? Math.max(0, childSubSize.w) : Math.max(0, childSubSize.h);
             if (dir === 'horizontal') cw = fallbackDim;
             else ch = fallbackDim;
             mainTotal += fallbackDim;

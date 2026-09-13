@@ -1393,7 +1393,7 @@ export class Parser {
 
   private parseColorFunction(): ColorLiteralNode {
     const startLoc = this.peek().loc.start;
-    const fnName = this.advance().value.toLowerCase() as 'rgb' | 'rgba' | 'hsl' | 'hsla' | 'cmyk';
+    const fnName = this.advance().value.toLowerCase() as 'rgb' | 'rgba' | 'hsl' | 'hsla' | 'cmyk' | 'device-cmyk';
     this.consume(TokenType.LPAREN, `Expected '(' after ${fnName}`);
     const rawArgs: string[] = [];
     const args: number[] = [];
@@ -1414,7 +1414,7 @@ export class Parser {
     this.consume(TokenType.RPAREN, `Expected ')' after ${fnName} arguments`);
     const rawVal = `${fnName}(${rawArgs.join(', ')})`;
 
-    if (fnName === 'cmyk') {
+    if (fnName === 'cmyk' || fnName === 'device-cmyk') {
       const c = Math.max(0, Math.min(1, args[0] ?? 0));
       const m = Math.max(0, Math.min(1, args[1] ?? 0));
       const y = Math.max(0, Math.min(1, args[2] ?? 0));
@@ -1547,7 +1547,7 @@ export class Parser {
   private isColorFunction(tok: Token): boolean {
     if (tok.type !== TokenType.IDENTIFIER) return false;
     const val = tok.value.toLowerCase();
-    return (val === 'rgb' || val === 'rgba' || val === 'hsl' || val === 'hsla' || val === 'cmyk') && this.peek(1).type === TokenType.LPAREN;
+    return (val === 'rgb' || val === 'rgba' || val === 'hsl' || val === 'hsla' || val === 'cmyk' || val === 'device-cmyk') && this.peek(1).type === TokenType.LPAREN;
   }
 
   private isColorTransformFunction(tok: Token): boolean {

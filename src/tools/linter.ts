@@ -361,7 +361,7 @@ export function lintDocument(doc: DocumentNode, filePath?: string): Diagnostic[]
   // Flag dimension values whose unit is not one the language understands.
   // The lexer tolerates arbitrary letter runs so compound suffixes like
   // `4k` / `2x` keep working; this rule surfaces likely typos (`200xp`).
-  const KNOWN_UNITS = new Set(['', 'px', '%', 'deg', 'rad', 'em', 'rem', 'pt', 'vw', 'vh', 'mm', 'cm', 'in', 's', 'ms', 'k', 'x']);
+  const KNOWN_UNITS = new Set(['', 'px', '%', 'deg', 'rad', 'em', 'rem', 'pt', 'vw', 'vh', 'mm', 'cm', 'in', 's', 'ms', 'k', 'x', 'ch', 'ex']);
   traverse(doc, (node) => {
     if ((node as any).type === 'DimensionLiteral') {
       const unit = String((node as any).unit || '');

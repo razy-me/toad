@@ -443,11 +443,13 @@ export async function compileToad(
     }
 
     if (formatsToRender.includes('pdf')) {
+      const pdfScale = options.scale && options.scale > 0 ? options.scale : (options.vectorScale && options.vectorScale > 0 ? options.vectorScale : 1);
       const pdfBuf = await exportToPdfBuffer(pageLayout, {
         basePath: resolvedEntry,
         bleed: pageLayout.canvas.bleed,
         cropMarks: pageLayout.canvas.cropMarks,
-        colorMode: (pageLayout.canvas as any).colorMode
+        colorMode: (pageLayout.canvas as any).colorMode,
+        scale: pdfScale
       });
       const pdfPath = path.join(outDir, `${fileBase}.pdf`);
       fs.mkdirSync(path.dirname(pdfPath), { recursive: true });
