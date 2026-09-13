@@ -32,19 +32,20 @@ export interface CliOptions {
   textToPath?: boolean;
 }
 
-const useColor = !process.env.NO_COLOR && (process.stdout.isTTY || process.env.FORCE_COLOR !== '0');
+const isColorEnabled = () => !process.env.NO_COLOR && (process.stdout?.isTTY || process.env.FORCE_COLOR !== '0');
 
 export const c = {
-  reset: (s: string) => useColor ? `\x1b[0m${s}\x1b[0m` : s,
-  bold: (s: string) => useColor ? `\x1b[1m${s}\x1b[22m` : s,
-  dim: (s: string) => useColor ? `\x1b[2m${s}\x1b[22m` : s,
-  red: (s: string) => useColor ? `\x1b[31m${s}\x1b[39m` : s,
-  green: (s: string) => useColor ? `\x1b[32m${s}\x1b[39m` : s,
-  yellow: (s: string) => useColor ? `\x1b[33m${s}\x1b[39m` : s,
-  cyan: (s: string) => useColor ? `\x1b[36m${s}\x1b[39m` : s,
-  white: (s: string) => useColor ? `\x1b[37m${s}\x1b[39m` : s,
-  bgRed: (s: string) => useColor ? `\x1b[41m\x1b[37m\x1b[1m${s}\x1b[0m` : s,
-  bgGreen: (s: string) => useColor ? `\x1b[42m\x1b[30m\x1b[1m${s}\x1b[0m` : s,
+  reset: (s: string) => isColorEnabled() ? `\x1b[0m${s}\x1b[0m` : s,
+  bold: (s: string) => isColorEnabled() ? `\x1b[1m${s}\x1b[22m` : s,
+  dim: (s: string) => isColorEnabled() ? `\x1b[2m${s}\x1b[22m` : s,
+  red: (s: string) => isColorEnabled() ? `\x1b[31m${s}\x1b[39m` : s,
+  green: (s: string) => isColorEnabled() ? `\x1b[32m${s}\x1b[39m` : s,
+  yellow: (s: string) => isColorEnabled() ? `\x1b[33m${s}\x1b[39m` : s,
+  cyan: (s: string) => isColorEnabled() ? `\x1b[36m${s}\x1b[39m` : s,
+  white: (s: string) => isColorEnabled() ? `\x1b[37m${s}\x1b[39m` : s,
+  bgRed: (s: string) => isColorEnabled() ? `\x1b[41m\x1b[37m\x1b[1m${s}\x1b[0m` : s,
+  bgGreen: (s: string) => isColorEnabled() ? `\x1b[42m\x1b[30m\x1b[1m${s}\x1b[0m` : s,
+  bgYellow: (s: string) => isColorEnabled() ? `\x1b[43m\x1b[30m\x1b[1m${s}\x1b[0m` : s,
 };
 
 /**
@@ -561,6 +562,8 @@ export function createCli(): Command {
         console.log(`  ${c.yellow('No .toad files found on system.')}\n`);
         return;
       }
+
+      files.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }) || a.path.localeCompare(b.path));
 
       files.forEach((f, idx) => {
         let sizeStr = '';

@@ -78,15 +78,17 @@ export function calculateModularScaleFidelity(textNodes: LayoutNode[]): ModularS
     // Test candidate bases from lower half of sizes
     const candidates = distinctSizes.slice(0, Math.min(3, distinctSizes.length));
     for (const base of candidates) {
+      if (base <= 0 || !Number.isFinite(base)) continue;
       let ssRes = 0;
       const outliers: number[] = [];
 
       for (const s of distinctSizes) {
+        if (s <= 0 || !Number.isFinite(s)) continue;
         // Step k = round(log_r(s / base))
         const k = Math.round(Math.log(s / base) / Math.log(r));
         const expected = base * Math.pow(r, k);
         const diff = Math.abs(s - expected);
-        const relDiff = diff / s;
+        const relDiff = s > 0 ? diff / s : 0;
 
         if (relDiff > 0.12) {
           outliers.push(s);
@@ -137,12 +139,14 @@ export function analyzeTypographicTelemetry(textNodes: LayoutNode[]): Typographi
   let multiLineProseCount = 0;
 
   for (const node of textNodes) {
-    const fs = node.textLayout?.fontSize || 14;
-    const lh = node.textLayout?.lineHeight || (fs * 1.2);
+    const rawFs = node.textLayout?.fontSize ?? (node.style as any)?.fontSize;
+    const fs = typeof rawFs === 'number' && Number.isFinite(rawFs) && rawFs > 0 ? rawFs : 14;
+    const rawLh = node.textLayout?.lineHeight ?? (node.style as any)?.lineHeight;
+    const lh = typeof rawLh === 'number' && Number.isFinite(rawLh) && rawLh > 0 ? rawLh : (fs * 1.2);
     const lines = node.textLayout?.lines || [];
 
     // Leading collision check: lineHeight / fontSize < 1.08 on headings or < 1.3 on body
-    const ratio = lh / fs;
+    const ratio = fs > 0 ? lh / fs : 1.2;
     if ((fs >= 28 && ratio < 1.08 && lines.length >= 2) || (fs < 28 && ratio < 1.25 && lines.length >= 3)) {
       leadingCollisionsCount++;
     }

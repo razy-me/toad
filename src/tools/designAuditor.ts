@@ -1368,19 +1368,28 @@ export interface FormatReportOptions {
   showFixes?: boolean;
 }
 
-export function formatWarningsSection(report: AuditReport, options?: { standalone?: boolean }): string {
-  const c = {
-    bold: (s: string) => `\x1b[1m${s}\x1b[22m`,
-    dim: (s: string) => `\x1b[2m${s}\x1b[22m`,
-    green: (s: string) => `\x1b[32m${s}\x1b[39m`,
-    yellow: (s: string) => `\x1b[33m${s}\x1b[39m`,
-    red: (s: string) => `\x1b[31m${s}\x1b[39m`,
-    cyan: (s: string) => `\x1b[36m${s}\x1b[39m`,
-    blue: (s: string) => `\x1b[34m${s}\x1b[39m`,
-    bgRed: (s: string) => `\x1b[41m\x1b[37m\x1b[1m${s}\x1b[0m`,
-    bgYellow: (s: string) => `\x1b[43m\x1b[30m\x1b[1m${s}\x1b[0m`,
-    bgBlue: (s: string) => `\x1b[44m\x1b[37m\x1b[1m${s}\x1b[0m`
+function getAuditorColors() {
+  const useColor = !process.env.NO_COLOR && (process.stdout?.isTTY || process.env.FORCE_COLOR !== '0');
+  return {
+    bold: (s: string) => useColor ? `\x1b[1m${s}\x1b[22m` : s,
+    dim: (s: string) => useColor ? `\x1b[2m${s}\x1b[22m` : s,
+    green: (s: string) => useColor ? `\x1b[32m${s}\x1b[39m` : s,
+    yellow: (s: string) => useColor ? `\x1b[33m${s}\x1b[39m` : s,
+    red: (s: string) => useColor ? `\x1b[31m${s}\x1b[39m` : s,
+    cyan: (s: string) => useColor ? `\x1b[36m${s}\x1b[39m` : s,
+    magenta: (s: string) => useColor ? `\x1b[35m${s}\x1b[39m` : s,
+    blue: (s: string) => useColor ? `\x1b[34m${s}\x1b[39m` : s,
+    white: (s: string) => useColor ? `\x1b[37m${s}\x1b[39m` : s,
+    bgGreen: (s: string) => useColor ? `\x1b[42m\x1b[30m\x1b[1m${s}\x1b[0m` : s,
+    bgYellow: (s: string) => useColor ? `\x1b[43m\x1b[30m\x1b[1m${s}\x1b[0m` : s,
+    bgRed: (s: string) => useColor ? `\x1b[41m\x1b[37m\x1b[1m${s}\x1b[0m` : s,
+    bgCyan: (s: string) => useColor ? `\x1b[46m\x1b[30m\x1b[1m${s}\x1b[0m` : s,
+    bgBlue: (s: string) => useColor ? `\x1b[44m\x1b[37m\x1b[1m${s}\x1b[0m` : s
   };
+}
+
+export function formatWarningsSection(report: AuditReport, options?: { standalone?: boolean }): string {
+  const c = getAuditorColors();
 
   const stripAnsi = (str: string) => str.replace(/\x1b\[[0-9;]*m/g, '');
   const RULE_W = 74;
@@ -1481,18 +1490,7 @@ export function formatWarningsSection(report: AuditReport, options?: { standalon
 }
 
 export function formatFixesSection(report: AuditReport, options?: { standalone?: boolean }): string {
-  const c = {
-    bold: (s: string) => `\x1b[1m${s}\x1b[22m`,
-    dim: (s: string) => `\x1b[2m${s}\x1b[22m`,
-    green: (s: string) => `\x1b[32m${s}\x1b[39m`,
-    yellow: (s: string) => `\x1b[33m${s}\x1b[39m`,
-    red: (s: string) => `\x1b[31m${s}\x1b[39m`,
-    cyan: (s: string) => `\x1b[36m${s}\x1b[39m`,
-    blue: (s: string) => `\x1b[34m${s}\x1b[39m`,
-    bgRed: (s: string) => `\x1b[41m\x1b[37m\x1b[1m${s}\x1b[0m`,
-    bgYellow: (s: string) => `\x1b[43m\x1b[30m\x1b[1m${s}\x1b[0m`,
-    bgBlue: (s: string) => `\x1b[44m\x1b[37m\x1b[1m${s}\x1b[0m`
-  };
+  const c = getAuditorColors();
 
   const stripAnsi = (str: string) => str.replace(/\x1b\[[0-9;]*m/g, '');
   const RULE_W = 74;
@@ -1570,22 +1568,7 @@ export function formatTerminalReport(
   report: AuditReport,
   options?: FormatReportOptions
 ): string {
-  const c = {
-    bold: (s: string) => `\x1b[1m${s}\x1b[22m`,
-    dim: (s: string) => `\x1b[2m${s}\x1b[22m`,
-    green: (s: string) => `\x1b[32m${s}\x1b[39m`,
-    yellow: (s: string) => `\x1b[33m${s}\x1b[39m`,
-    red: (s: string) => `\x1b[31m${s}\x1b[39m`,
-    cyan: (s: string) => `\x1b[36m${s}\x1b[39m`,
-    magenta: (s: string) => `\x1b[35m${s}\x1b[39m`,
-    blue: (s: string) => `\x1b[34m${s}\x1b[39m`,
-    white: (s: string) => `\x1b[37m${s}\x1b[39m`,
-    bgGreen: (s: string) => `\x1b[42m\x1b[30m\x1b[1m${s}\x1b[0m`,
-    bgYellow: (s: string) => `\x1b[43m\x1b[30m\x1b[1m${s}\x1b[0m`,
-    bgRed: (s: string) => `\x1b[41m\x1b[37m\x1b[1m${s}\x1b[0m`,
-    bgCyan: (s: string) => `\x1b[46m\x1b[30m\x1b[1m${s}\x1b[0m`,
-    bgBlue: (s: string) => `\x1b[44m\x1b[37m\x1b[1m${s}\x1b[0m`
-  };
+  const c = getAuditorColors();
 
   const stripAnsi = (str: string) => str.replace(/\x1b\[[0-9;]*m/g, '');
 
@@ -1852,7 +1835,7 @@ export function formatTerminalReport(
     const cat = report.categories[entry.key];
     if (!cat) continue;
 
-    const nameStr = cat.name.padEnd(36);
+    const nameStr = (cat.name || entry.key).padEnd(36);
     const scoreStr = (String(cat.score) + '%').padStart(5) + ' ';
     const barStr = makeBar(cat.score, 14) + ' ';
     const weightStr = `${entry.weight}%`.padStart(7) + ' ';

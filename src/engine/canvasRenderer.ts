@@ -72,7 +72,12 @@ export class CanvasRenderer {
       const bgW = baseW + 2 * bleed;
       const bgH = baseH + 2 * bleed;
 
-      const img = await this.resolveImage(layout.canvas.photoSrc, options.basePath);
+      let img: any = null;
+      try {
+        img = await this.resolveImage(layout.canvas.photoSrc, options.basePath);
+      } catch {
+        img = null;
+      }
       if (img) {
         // Draw photo onto offscreen canvas for per-pixel grading if photoParams specified
         if (layout.canvas.photoParams) {
@@ -490,7 +495,12 @@ export class CanvasRenderer {
       case 'image': {
         const imgSrc = node.imageLayout?.src;
         if (imgSrc) {
-          const img = await this.resolveImage(imgSrc, basePath);
+          let img: any = null;
+          try {
+            img = await this.resolveImage(imgSrc, basePath);
+          } catch {
+            img = null;
+          }
           if (img) {
             drawImageWithFit(ctx, img, node.fit || node.imageLayout?.fit || 'fill', node.x, node.y, node.width, node.height);
           } else {
@@ -536,7 +546,12 @@ export class CanvasRenderer {
           ctx.fillRect(absX, absY, absW, absH);
           ctx.restore();
 
-          const logoImg = await this.resolveImage(node.qrcodeLayout.logo, basePath);
+          let logoImg: any = null;
+          try {
+            logoImg = await this.resolveImage(node.qrcodeLayout.logo, basePath);
+          } catch {
+            logoImg = null;
+          }
           if (logoImg) {
             drawImageWithFit(ctx, logoImg, 'contain', absX, absY, absW, absH);
           }
@@ -576,7 +591,12 @@ export class CanvasRenderer {
 
       case 'adjust': {
         if (node.adjustLayout && layoutCanvas?.photoSrc) {
-          const img = await this.resolveImage(layoutCanvas.photoSrc, basePath);
+          let img: any = null;
+          try {
+            img = await this.resolveImage(layoutCanvas.photoSrc, basePath);
+          } catch {
+            img = null;
+          }
           if (img) {
             const rad = node.adjustLayout.radius;
             const feather = Math.max(1, node.adjustLayout.feather);
@@ -829,7 +849,11 @@ export class CanvasRenderer {
   }
 
   private static async resolveImage(imgSrc: string, basePath?: string): Promise<Image | null> {
-    return resolveSharedImage(imgSrc, basePath);
+    try {
+      return await resolveSharedImage(imgSrc, basePath);
+    } catch {
+      return null;
+    }
   }
 
   private static filterSupportProbe: boolean | null = null;
