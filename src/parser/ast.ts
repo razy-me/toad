@@ -612,9 +612,9 @@ export interface ResolvedElementNode {
   strokeCap?: 'round' | 'square' | 'butt';
   strokeJoin?: 'miter' | 'round' | 'bevel';
   strokeAlign?: 'inside' | 'center' | 'outside';
-  shadow?: { offsetX: number; offsetY: number; blur: number; spread?: number; color: string; useGlobalLight?: boolean; noise?: number };
-  shadows?: Array<{ offsetX: number; offsetY: number; blur: number; spread?: number; color: string; useGlobalLight?: boolean; noise?: number }>;
-  innerShadow?: { offsetX: number; offsetY: number; blur: number; spread?: number; color: string; useGlobalLight?: boolean; noise?: number };
+  shadow?: { offsetX: number; offsetY: number; blur: number; color: string; useGlobalLight?: boolean; noise?: number };
+  shadows?: Array<{ offsetX: number; offsetY: number; blur: number; color: string; useGlobalLight?: boolean; noise?: number }>;
+  innerShadow?: { offsetX: number; offsetY: number; blur: number; color: string };
   outerGlow?: GlowStyle;
   innerGlow?: GlowStyle;
   bevel?: BevelStyle;

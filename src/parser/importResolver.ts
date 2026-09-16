@@ -2253,13 +2253,12 @@ export class ImportResolver {
     return undefined;
   }
 
-  private extractShadow(val: ValueNode): { offsetX: number; offsetY: number; blur: number; spread?: number; color: string } | undefined {
+  private extractShadow(val: ValueNode): { offsetX: number; offsetY: number; blur: number; color: string } | undefined {
     if (!val) return undefined;
     if (val.type === 'ExpressionList') {
       let offsetX = 0;
       let offsetY = 0;
       let blur = 0;
-      let spread = 0;
       let color = '#000000';
       const numValues: number[] = [];
 
@@ -2276,17 +2275,8 @@ export class ImportResolver {
       if (numValues.length >= 1) offsetX = numValues[0];
       if (numValues.length >= 2) offsetY = numValues[1];
       if (numValues.length >= 3) blur = numValues[2];
-      const res: { offsetX: number; offsetY: number; blur: number; spread?: number; color: string } = {
-        offsetX,
-        offsetY,
-        blur,
-        color
-      };
-      if (numValues.length >= 4) {
-        res.spread = numValues[3];
-      }
 
-      return res;
+      return { offsetX, offsetY, blur, color };
     }
 
     if (val.type === 'DimensionLiteral' || val.type === 'NumberLiteral') {

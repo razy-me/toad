@@ -124,7 +124,7 @@ describe('Commander CLI Tool (toad)', () => {
       const { stdout: stdoutList } = await execAsync('node ./dist/cli.js list');
       expect(stdoutList).toContain('Scanning system for .toad files');
       expect(stdoutList).toContain('.toad file(s) in');
-      expect(stdoutList).toMatch(/\.toad/);
+      expect(stdoutList).toContain('toad_brand_sheet.toad');
 
       const { stdout: stdoutLs } = await execAsync('node ./dist/cli.js ls');
       expect(stdoutLs).toContain('Scanning system for .toad files');

@@ -51,7 +51,6 @@ export interface ShadowStyle {
   blur: number;
   offsetX: number;
   offsetY: number;
-  spread?: number;
 }
 
 export interface GradientStop {
