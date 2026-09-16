@@ -2028,25 +2028,26 @@ export class PsdExporter {
         if (angleDeg < 0) angleDeg += 360;
 
         const shadowColor = parseColorToRgba(s.color || '#000000');
-        const choke = typeof s.spread === 'number' && blur > 0
-          ? Math.max(0, Math.min(100, Math.round((s.spread * scale / blur) * 100)))
-          : undefined;
+        const chokePx = typeof s.spread === 'number' ? s.spread * scale : 0;
 
         return {
           enabled: true,
+          blendMode: s.blendMode || 'multiply',
           color: { r: shadowColor.r, g: shadowColor.g, b: shadowColor.b },
           opacity: shadowColor.a,
           distance: { units: 'Pixels', value: dist },
           size: { units: 'Pixels', value: blur },
+          choke: { units: 'Pixels', value: chokePx },
           angle: angleDeg,
           useGlobalLight: s.useGlobalLight ?? false,
           contour: {
             name: 'Linear',
             curve: [{ x: 0, y: 0 }, { x: 255, y: 255 }]
           },
-          ...(choke !== undefined ? { choke } : {}),
-          ...(typeof s.noise === 'number' ? { noise: s.noise } : {})
-        };
+          noise: typeof s.noise === 'number' ? s.noise : 0,
+          layerConceals: true,
+          antialiased: false
+        } as any;
       });
       hasAnyEffect = true;
     }
@@ -2066,17 +2067,21 @@ export class PsdExporter {
       effects.innerShadow = [
         {
           enabled: true,
+          blendMode: innerShadow.blendMode || 'multiply',
           color: { r: color.r, g: color.g, b: color.b },
           opacity: color.a,
           distance: { units: 'Pixels', value: dist },
           size: { units: 'Pixels', value: blur },
+          choke: { units: 'Pixels', value: typeof innerShadow.spread === 'number' ? innerShadow.spread * scale : 0 },
           angle: angleDeg,
-          useGlobalLight: false,
+          useGlobalLight: innerShadow.useGlobalLight ?? false,
           contour: {
             name: 'Linear',
             curve: [{ x: 0, y: 0 }, { x: 255, y: 255 }]
-          }
-        }
+          },
+          noise: typeof innerShadow.noise === 'number' ? innerShadow.noise : 0,
+          antialiased: false
+        } as any
       ];
       hasAnyEffect = true;
     }
@@ -2087,10 +2092,22 @@ export class PsdExporter {
       const color = parseColorToRgba(outerGlow.color || '#ffffff');
       effects.outerGlow = {
         enabled: true,
+        blendMode: (outerGlow as any).blendMode || 'screen',
         color: { r: color.r, g: color.g, b: color.b },
         opacity: outerGlow.opacity ?? color.a,
-        size: { units: 'Pixels', value: (outerGlow.size || 10) * scale }
-      };
+        size: { units: 'Pixels', value: (outerGlow.size || 10) * scale },
+        choke: { units: 'Pixels', value: typeof (outerGlow as any).spread === 'number' ? (outerGlow as any).spread * scale : 0 },
+        technique: 'softer',
+        source: 'edge',
+        noise: typeof (outerGlow as any).noise === 'number' ? (outerGlow as any).noise : 0,
+        range: 50,
+        jitter: 0,
+        antialiased: false,
+        contour: {
+          name: 'Linear',
+          curve: [{ x: 0, y: 0 }, { x: 255, y: 255 }]
+        }
+      } as any;
       hasAnyEffect = true;
     }
 
@@ -2100,9 +2117,21 @@ export class PsdExporter {
       const color = parseColorToRgba(innerGlow.color || '#ffffff');
       effects.innerGlow = {
         enabled: true,
+        blendMode: (innerGlow as any).blendMode || 'screen',
         color: { r: color.r, g: color.g, b: color.b },
         opacity: innerGlow.opacity ?? color.a,
-        size: { units: 'Pixels', value: (innerGlow.size || 8) * scale }
+        size: { units: 'Pixels', value: (innerGlow.size || 8) * scale },
+        choke: { units: 'Pixels', value: typeof (innerGlow as any).spread === 'number' ? (innerGlow as any).spread * scale : 0 },
+        technique: 'softer',
+        source: (innerGlow as any).source === 'center' ? 'center' : 'edge',
+        noise: typeof (innerGlow as any).noise === 'number' ? (innerGlow as any).noise : 0,
+        range: 50,
+        jitter: 0,
+        antialiased: false,
+        contour: {
+          name: 'Linear',
+          curve: [{ x: 0, y: 0 }, { x: 255, y: 255 }]
+        }
       };
       hasAnyEffect = true;
     }
@@ -2110,11 +2139,37 @@ export class PsdExporter {
     // Bevel and Emboss
     const bevel = node.style.bevel;
     if (bevel) {
+      const bevelTypeMap: Record<string, 'inner bevel' | 'outer bevel' | 'emboss' | 'pillow emboss' | 'stroke emboss'> = {
+        'inner-bevel': 'inner bevel',
+        'outer-bevel': 'outer bevel',
+        'emboss': 'emboss',
+        'pillow-emboss': 'pillow emboss',
+        'stroke-emboss': 'stroke emboss'
+      };
+      const bevelStyle = (bevel as any).style || bevelTypeMap[bevel.type] || 'inner bevel';
+      const bevelTech = bevel.type === 'chisel-hard' ? 'chisel hard' : bevel.type === 'chisel-soft' ? 'chisel soft' : 'smooth';
+
       effects.bevel = {
         enabled: true,
         size: { units: 'Pixels', value: (bevel.size || 4) * scale },
         soften: { units: 'Pixels', value: (bevel.soften || 0) * scale },
-        direction: bevel.direction === 'down' ? 'down' : 'up'
+        direction: bevel.direction === 'down' ? 'down' : 'up',
+        style: bevelStyle,
+        technique: bevelTech,
+        strength: bevel.depth ?? 100,
+        altitude: bevel.altitude ?? 30,
+        angle: bevel.angle ?? 90,
+        highlightBlendMode: 'screen',
+        shadowBlendMode: 'multiply',
+        highlightColor: { r: 255, g: 255, b: 255 },
+        shadowColor: { r: 0, g: 0, b: 0 },
+        highlightOpacity: 0.75,
+        shadowOpacity: 0.75,
+        useGlobalLight: false,
+        contour: {
+          name: 'Linear',
+          curve: [{ x: 0, y: 0 }, { x: 255, y: 255 }]
+        }
       };
       hasAnyEffect = true;
     }
@@ -2139,16 +2194,17 @@ export class PsdExporter {
             size: { units: 'Pixels', value: (strokeFx.width || 1) * scale },
             position: strokeFx.position || 'inside',
             fillType: 'gradient',
-            type: gradType,
-            angle: cssGradientAngleToPhotoshop(typeof (strokeFx.gradient as any).angle === 'number' ? (strokeFx.gradient as any).angle : (strokeFx.gradient as any).direction),
+            blendMode: (strokeFx as any).blendMode || 'normal',
+            opacity: strokeFx.opacity ?? 1,
             gradient: {
+              style: gradType,
+              angle: cssGradientAngleToPhotoshop(typeof (strokeFx.gradient as any).angle === 'number' ? (strokeFx.gradient as any).angle : (strokeFx.gradient as any).direction),
               name: 'Gradient Stroke',
               type: 'solid',
               smoothness: 1,
               colorStops,
               opacityStops
-            },
-            opacity: strokeFx.opacity ?? 1
+            }
           } as any
         ];
       } else {
@@ -2159,6 +2215,7 @@ export class PsdExporter {
             size: { units: 'Pixels', value: (strokeFx.width || 1) * scale },
             position: strokeFx.position || 'inside',
             fillType: 'color',
+            blendMode: (strokeFx as any).blendMode || 'normal',
             color: { r: color.r, g: color.g, b: color.b },
             opacity: strokeFx.opacity ?? color.a
           }
@@ -2205,6 +2262,8 @@ export class PsdExporter {
       effects.gradientOverlay = [
         {
           enabled: true,
+          blendMode: (gradOverlay as any).blendMode || 'normal',
+          opacity: gradOverlay.opacity ?? 1,
           type: gradOverlay.type === 'radial' ? 'radial' : gradOverlay.type === 'conic' ? 'angle' : 'linear',
           angle: cssGradientAngleToPhotoshop(typeof gradOverlay.angle === 'number' ? gradOverlay.angle : gradOverlay.direction),
           scale: 1,
