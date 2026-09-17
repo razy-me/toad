@@ -165,3 +165,15 @@ export {
   suggestProperty,
   DiagnosticOptions
 } from './tools/diagnostics.js';
+
+// 16. Importers & Transpilers
+export {
+  importPsd,
+  parsePostScriptFont,
+  psdColorToToad,
+  bezierPathToSvgD,
+  PsdImportOptions,
+  PsdImportResult,
+  ExtractedAsset
+} from './importers/psdImporter.js';
+

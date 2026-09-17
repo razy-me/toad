@@ -28,11 +28,11 @@
     <g id="ctaGroup">
       <g id="primaryBtn">
  <rect x="120" y="1768" width="180" height="52" rx="8" ry="8" fill="#3b82f6" />
-        <text x="172.5" y="1798.5" font-family="sans-serif" font-size="16" font-weight="600" font-style="normal" text-anchor="start" xml:space="preserve" style="font-weight: 600; font-style: normal;" fill="#ffffff">Start Building</text>
+        <text x="172.5" y="1800" font-family="sans-serif" font-size="16" font-weight="600" font-style="normal" text-anchor="start" xml:space="preserve" style="font-weight: 600; font-style: normal;" fill="#ffffff">Start Building</text>
       </g>
       <g id="secondaryBtn">
  <rect x="316" y="1768" width="160" height="52" rx="8" ry="8" fill="#334155" />
-        <text x="360.5" y="1798.5" font-family="sans-serif" font-size="16" font-weight="600" font-style="normal" text-anchor="start" xml:space="preserve" style="font-weight: 600; font-style: normal;" fill="#ffffff">Explore Docs</text>
+        <text x="360.5" y="1800" font-family="sans-serif" font-size="16" font-weight="600" font-style="normal" text-anchor="start" xml:space="preserve" style="font-weight: 600; font-style: normal;" fill="#ffffff">Explore Docs</text>
       </g>
  <polygon points="520,1768 544,1792 528,1792 528,1816 512,1816 512,1792 496,1792" fill="#94a3b8" id="nextArrow" />
     </g>

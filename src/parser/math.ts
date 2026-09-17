@@ -766,10 +766,10 @@ export function layoutText(
 
     if (fontMetrics && fontMetrics.capHeightRatio > 0) {
       capHeight = Math.round(fontSize * fontMetrics.capHeightRatio);
-      opticalCenterOffset = (fontSize * (fontMetrics.ascentRatio - fontMetrics.capHeightRatio)) / 2;
+      opticalCenterOffset = capHeight / 2;
     } else {
       capHeight = maxActualAscent || Math.round(fontSize * 0.7);
-      opticalCenterOffset = (maxActualAscent - maxActualDescent) / 2;
+      opticalCenterOffset = capHeight / 2;
     }
 
     let computedHeight: number;
@@ -871,10 +871,10 @@ export function layoutText(
 
   if (fontMetrics && fontMetrics.capHeightRatio > 0) {
     capHeight = Math.round(fontSize * fontMetrics.capHeightRatio);
-    opticalCenterOffset = (fontSize * (fontMetrics.ascentRatio - fontMetrics.capHeightRatio)) / 2;
+    opticalCenterOffset = capHeight / 2;
   } else {
     capHeight = maxActualAscent || Math.round(fontSize * 0.7);
-    opticalCenterOffset = (maxActualAscent - maxActualDescent) / 2;
+    opticalCenterOffset = capHeight / 2;
   }
 
   let computedHeight: number;

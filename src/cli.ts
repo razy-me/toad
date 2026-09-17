@@ -17,6 +17,8 @@ import { auditDesign, formatTerminalReport, formatFixesSection, formatWarningsSe
 import { copyToClipboard } from './utils/clipboard.js';
 import { bundleAssets } from './tools/assetBundler.js';
 import { formatRustDiagnostic, generateHelpSuggestion } from './tools/diagnostics.js';
+import { compileMotion } from './motion/index.js';
+
 
 export interface CliOptions {
   scale?: string;
@@ -408,6 +410,62 @@ export function createCli(): Command {
         }
       } catch (err: any) {
         console.error(`\x1b[31mError formatting file:\x1b[0m ${err.message}`);
+        process.exit(1);
+      }
+    });
+
+  program
+    .command('import <file>')
+    .alias('psd2toad')
+    .description('[Beta] Convert an Adobe Photoshop .psd file into native TOAD DSL code and extract raster assets (Early Preview).')
+    .option('-o, --out <path>', 'Output .toad file path (default: <filename>.toad)')
+    .option('--assets <dir>', 'Directory for extracted raster image assets (default: ./assets)')
+    .option('--no-extract-images', 'Do not extract raster image layers as PNG files')
+    .option('--include-hidden', 'Include hidden Photoshop layers in generated TOAD code')
+    .option('--no-format', 'Do not format generated TOAD code')
+    .option('--dpi <number>', 'Resolution in DPI for font size and unit conversion (default: 72)')
+    .action(async (file, opts) => {
+      const startTime = Date.now();
+      try {
+        const { importPsd } = await import('./importers/psdImporter.js');
+        const resolvedPath = path.resolve(process.cwd(), file);
+        if (!fs.existsSync(resolvedPath)) {
+          console.error(`${c.red('Error:')} File not found: ${resolvedPath}`);
+          process.exit(1);
+        }
+
+        console.log(`\n  ${c.cyan('➜')}  Importing PSD: ${c.bold(path.basename(resolvedPath))}...`);
+
+        const result = await importPsd(resolvedPath, {
+          outPath: opts.out,
+          assetsDir: opts.assets,
+          extractImages: opts.extractImages,
+          includeHidden: opts.includeHidden,
+          formatCode: opts.format,
+          dpi: opts.dpi ? parseFloat(opts.dpi) : undefined
+        });
+
+        const duration = Date.now() - startTime;
+        console.log(`\n${c.bgGreen(' SUCCESS ')} ${c.bold(c.green(`PSD imported in ${duration}ms`))}\n`);
+
+        if (result.outputFile) {
+          console.log(`  ${c.cyan('➜')} ${c.bold('Output:')}   ${c.green(result.outputFile)}`);
+        }
+        console.log(`  ${c.dim('➜')} ${c.dim('Layers:')}   ${result.stats.layersCount} total (${result.stats.textCount} text, ${result.stats.vectorCount} vector, ${result.stats.imageCount} image, ${result.stats.groupCount} group)`);
+
+        if (result.assets.length > 0) {
+          console.log(`  ${c.dim('➜')} ${c.dim('Assets:')}   Extracted ${result.assets.length} image asset(s) to ${opts.assets || './assets'}`);
+        }
+
+        if (result.warnings.length > 0) {
+          console.log('');
+          for (const w of result.warnings) {
+            console.warn(`  ${c.yellow('⚠')} ${c.yellow(`[warning] ${w}`)}`);
+          }
+        }
+        console.log('');
+      } catch (err: any) {
+        console.error(`\n${c.bgRed(' ERROR ')} ${c.bold(c.red(`Failed to import PSD:`))} ${err.message}\n`);
         process.exit(1);
       }
     });
@@ -811,8 +869,50 @@ export function createCli(): Command {
       }
     });
 
+  // Command: motion <file>
+  program
+    .command('motion <file>')
+    .description('[Beta] Compile and render a TOAD Motion animation (.toadm) to video or frames (Early Preview).')
+    .option('-o, --out <path>', 'Output video or frames path')
+    .option('-f, --format <format>', 'Export format: mp4, webm, frames', 'mp4')
+    .option('--fps <fps>', 'Frames per second override (e.g. 30 or 60)')
+    .option('--ffmpeg-path <path>', 'Path to custom FFmpeg binary')
+    .action(async (file: string, options: any) => {
+      try {
+        const resolvedPath = path.resolve(file);
+        if (!fs.existsSync(resolvedPath)) {
+          console.error(`${c.red('✖')} File not found: ${c.bold(file)}`);
+          process.exit(1);
+        }
+
+        console.log(`${c.bold('🎬 Rendering TOAD Motion:')} ${c.cyan(resolvedPath)}`);
+        const fps = options.fps ? parseInt(options.fps, 10) : undefined;
+
+        let lastPercent = -1;
+        const outResult = await compileMotion(resolvedPath, {
+          outputPath: options.out,
+          format: options.format as any,
+          fps,
+          ffmpegPath: options.ffmpegPath,
+          onProgress: (frame: number, total: number) => {
+            const percent = Math.floor((frame / total) * 100);
+            if (percent !== lastPercent && percent % 10 === 0) {
+              lastPercent = percent;
+              process.stdout.write(`   ${c.dim('•')} Rendering: ${c.yellow(String(percent) + '%')} (${frame}/${total} frames)\r`);
+            }
+          }
+        });
+
+        console.log(`\n${c.green('✔')} Motion export finished successfully: ${c.bold(c.cyan(outResult))}\n`);
+      } catch (err: any) {
+        console.error(`\n${c.red('✖')} Motion compilation error: ${err.message || String(err)}\n`);
+        process.exit(1);
+      }
+    });
+
   return program;
 }
+
 
 export const program = createCli();
 

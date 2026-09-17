@@ -1,0 +1,42 @@
+// tests/fixtures/showcase_motion.toadm
+@import "./hero_banner.toad" as hero;
+
+motion "Hero Showcase" {
+  scene: hero;
+  duration: 1.5s;
+  fps: 30;
+  dimensions: 1600px 900px;
+  background: #020617;
+
+  timeline {
+    #heroBadge {
+      0.0s: { opacity: 0; translateY: -30px; scale: 0.8; }
+      0.8s: { opacity: 1; translateY: 0px; scale: 1.0; ease: spring(stiffness: 140, damping: 12); }
+    }
+
+    #heroTitle {
+      0.3s: { opacity: 0; translateY: 40px; }
+      1.2s: { opacity: 1; translateY: 0px; ease: cubic-bezier(0.16, 1, 0.3, 1); }
+    }
+
+    #bgHexagon1 {
+      0.0s: { rotate: 0deg; }
+      1.5s: { rotate: 90deg; ease: linear; }
+    }
+
+    #nextArrow {
+      0.0s: {
+        along: border of #heroContent;
+        progress: 0%;
+        offset: 8px;
+      }
+      1.5s: {
+        along: border of #heroContent;
+        progress: 100%;
+        offset: 8px;
+        auto-rotate: true;
+        ease: ease-in-out;
+      }
+    }
+  }
+}

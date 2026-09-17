@@ -651,13 +651,21 @@ export class PsdExporter {
       return undefined;
     };
     const layerColor = mapLayerColorToPsd(node.style.layerColor || (node as any).layerColor);
+    const hasRealFill = Boolean(node.style.fill || node.fill) &&
+      node.style.fill !== 'transparent' && node.fill !== 'transparent' &&
+      node.style.fill !== 'none' && node.fill !== 'none';
+    const hasStroke = Boolean(node.style.stroke || node.stroke);
+
     let fillOpacity = typeof node.style.fillOpacity === 'number' ? node.style.fillOpacity : (node as any).fillOpacity;
     if (fillOpacity === undefined) {
       const fillVal = node.style.fill || node.fill;
       if (typeof fillVal === 'string') {
         const rgba = parseColorToRgba(fillVal);
         if (rgba.a < 1) {
-          fillOpacity = Number(rgba.a.toFixed(3));
+          // If shape has stroke but transparent fill, don't set fillOpacity to 0 to prevent hiding stroke
+          if (!(hasStroke && rgba.a === 0)) {
+            fillOpacity = Number(rgba.a.toFixed(3));
+          }
         }
       }
     }
@@ -1912,16 +1920,20 @@ export class PsdExporter {
 
     // Vector Fill
     let vectorFill: VectorContent | undefined;
-    const fill = node.style.fill || node.fill || (node.type === 'barcode' || node.type === 'qrcode' ? '#000000' : undefined);
-    if (fill) {
-      if (typeof fill === 'string') {
-        const rgba = parseColorToRgba(fill);
+    const rawFill = node.style.fill || node.fill || (node.type === 'barcode' || node.type === 'qrcode' ? '#000000' : undefined);
+    const hasRealFill = Boolean(rawFill) &&
+      rawFill !== 'transparent' && rawFill !== 'none' &&
+      (typeof rawFill !== 'string' || parseColorToRgba(rawFill).a > 0);
+
+    if (hasRealFill && rawFill) {
+      if (typeof rawFill === 'string') {
+        const rgba = parseColorToRgba(rawFill);
         vectorFill = {
           type: 'color',
           color: { r: rgba.r, g: rgba.g, b: rgba.b }
         };
-      } else if (fill.type === 'linear' || fill.type === 'radial') {
-        const distributed = distributeGradientStops(fill.stops);
+      } else if (typeof rawFill === 'object' && (rawFill.type === 'linear' || rawFill.type === 'radial' || rawFill.type === 'conic')) {
+        const distributed = distributeGradientStops(rawFill.stops);
         // Note: ag-psd internally scales stop location by 4096 and midpoint by 100.
         // We pass normalized location (0..1) and midpoint (0..1) here.
         const colorStops = distributed.map(s => {
@@ -1946,8 +1958,8 @@ export class PsdExporter {
           smoothness: 1,
           colorStops,
           opacityStops,
-          style: (fill as any).type === 'radial' ? 'radial' : (fill as any).type === 'conic' ? 'angle' : 'linear',
-          angle: cssGradientAngleToPhotoshop(typeof fill.angle === 'number' ? fill.angle : fill.direction)
+          style: (rawFill as any).type === 'radial' ? 'radial' : (rawFill as any).type === 'conic' ? 'angle' : 'linear',
+          angle: cssGradientAngleToPhotoshop(typeof rawFill.angle === 'number' ? rawFill.angle : rawFill.direction)
         } as any;
       }
     }
@@ -1958,7 +1970,7 @@ export class PsdExporter {
     if (stroke) {
       const strokeColor = parseColorToRgba(stroke);
       // In Photoshop, shapes with a stroke require vectorFill to emit vscg metadata.
-      // If there is no fill, emit a dummy color with fillEnabled: false.
+      // If there is no real fill, emit a dummy color with fillEnabled: false.
       if (!vectorFill) {
         vectorFill = {
           type: 'color',
@@ -1988,7 +2000,7 @@ export class PsdExporter {
 
       vectorStroke = {
         strokeEnabled: true,
-        fillEnabled: Boolean(node.style.fill || node.fill),
+        fillEnabled: hasRealFill,
         lineWidth: { units: 'Pixels', value: (node.style.strokeWidth ?? 1) * scale },
         lineJoinType: node.style.strokeJoin === 'round' ? 'round' : node.style.strokeJoin === 'bevel' ? 'bevel' : 'miter',
         lineCapType: node.style.strokeCap === 'round' ? 'round' : node.style.strokeCap === 'square' ? 'square' : (strokeStyle === 'dotted' ? 'round' : 'butt'),

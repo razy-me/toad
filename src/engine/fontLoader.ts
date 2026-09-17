@@ -49,7 +49,20 @@ export function normalizeFontWeightToNumber(weight?: string | number): number {
   return 400;
 }
 
-const fontNameCache = new Map<string, { postScript?: string; family?: string; subfamily?: string } | null>();
+export interface FontNamedInstance {
+  subfamily: string;
+  weight: number;
+  postScriptName?: string;
+}
+
+export interface OpenTypeFontNames {
+  postScript?: string;
+  family?: string;
+  subfamily?: string;
+  instances?: FontNamedInstance[];
+}
+
+const fontNameCache = new Map<string, OpenTypeFontNames | null>();
 
 /**
  * Reads a slice of a file into a Buffer using a file descriptor to avoid loading
@@ -68,10 +81,10 @@ function readExactSync(fd: number, length: number, position: number): Buffer | n
 }
 
 /**
- * Extracts PostScript name (nameId 6), Family (nameId 1), and Subfamily (nameId 2)
- * directly from an OpenType / TrueType font binary table without external dependencies.
+ * Extracts PostScript name (nameId 6), Family (nameId 16 or 1), and Subfamily (nameId 17 or 2),
+ * as well as any named variable font instances (fvar table) directly from an OpenType / TrueType font binary table.
  */
-export function parseOpenTypeFontNames(filePath: string): { postScript?: string; family?: string; subfamily?: string } | null {
+export function parseOpenTypeFontNames(filePath: string): OpenTypeFontNames | null {
   if (fontNameCache.has(filePath)) {
     return fontNameCache.get(filePath)!;
   }
@@ -98,13 +111,17 @@ export function parseOpenTypeFontNames(filePath: string): { postScript?: string;
 
     let nameTableOffset = 0;
     let nameTableLength = 0;
+    let fvarTableOffset = 0;
+    let fvarTableLength = 0;
     for (let i = 0; i < numTables; i++) {
       const pos = i * 16;
       const tag = tableDirBuf.toString('ascii', pos, pos + 4);
       if (tag === 'name') {
         nameTableOffset = tableDirBuf.readUInt32BE(pos + 8);
         nameTableLength = tableDirBuf.readUInt32BE(pos + 12);
-        break;
+      } else if (tag === 'fvar') {
+        fvarTableOffset = tableDirBuf.readUInt32BE(pos + 8);
+        fvarTableLength = tableDirBuf.readUInt32BE(pos + 12);
       }
     }
 
@@ -121,9 +138,7 @@ export function parseOpenTypeFontNames(filePath: string): { postScript?: string;
 
     const count = buf.readUInt16BE(2);
     const stringStorageOffset = buf.readUInt16BE(4);
-    let postScript: string | undefined = undefined;
-    let family: string | undefined = undefined;
-    let subfamily: string | undefined = undefined;
+    const nameMap = new Map<number, string>();
 
     for (let i = 0; i < count; i++) {
       const rec = 6 + i * 12;
@@ -144,12 +159,55 @@ export function parseOpenTypeFontNames(filePath: string): { postScript?: string;
         val = buf.toString('latin1', strOffset, strOffset + length);
       }
       val = val.trim();
-
-      if (nameId === 6 && !postScript && val) postScript = val;
-      if (nameId === 1 && !family && val) family = val;
-      if (nameId === 2 && !subfamily && val) subfamily = val;
+      if (val && !nameMap.has(nameId)) {
+        nameMap.set(nameId, val);
+      }
     }
-    const result = { postScript, family, subfamily };
+
+    const postScript = nameMap.get(6);
+    // nameId 16 = Typographic Family, nameId 1 = Font Family
+    const family = nameMap.get(16) || nameMap.get(1);
+    // nameId 17 = Typographic Subfamily, nameId 2 = Font Subfamily
+    const subfamily = nameMap.get(17) || nameMap.get(2);
+
+    // Variable Font named instances from fvar table
+    const instances: FontNamedInstance[] = [];
+    if (fvarTableOffset > 0 && fvarTableLength >= 16) {
+      const fvarBuf = readExactSync(fd, fvarTableLength, fvarTableOffset);
+      if (fvarBuf && fvarBuf.length >= 16) {
+        const axesArrayOffset = fvarBuf.readUInt16BE(4);
+        const axisCount = fvarBuf.readUInt16BE(8);
+        const axisSize = fvarBuf.readUInt16BE(10);
+        const instanceCount = fvarBuf.readUInt16BE(12);
+        const instanceSize = fvarBuf.readUInt16BE(14);
+        const instArrayOffset = axesArrayOffset + axisCount * axisSize;
+
+        for (let i = 0; i < instanceCount; i++) {
+          const rec = instArrayOffset + i * instanceSize;
+          if (rec + instanceSize > fvarBuf.length) break;
+          const subFamilyNameID = fvarBuf.readUInt16BE(rec);
+          // First axis (usually 'wght') is 16.16 32-bit signed fixed point
+          const weightVal = Math.round(fvarBuf.readInt32BE(rec + 4) / 65536);
+          const postScriptNameID = instanceSize >= axisCount * 4 + 6 ? fvarBuf.readUInt16BE(rec + 4 + axisCount * 4) : 0;
+          const instSub = nameMap.get(subFamilyNameID);
+          const instPs = nameMap.get(postScriptNameID);
+          if (instSub) {
+            instances.push({
+              subfamily: instSub,
+              weight: weightVal,
+              postScriptName: instPs
+            });
+          }
+        }
+      }
+    }
+
+    const result: OpenTypeFontNames = {
+      postScript,
+      family,
+      subfamily,
+      ...(instances.length > 0 ? { instances } : {})
+    };
     fontNameCache.set(filePath, result);
     return result;
   } catch {
@@ -344,6 +402,27 @@ export class FontLoader {
           });
         }
 
+        // Register any variable font named instances from fvar table
+        if (names.instances && names.instances.length > 0) {
+          for (const inst of names.instances) {
+            if (inst.postScriptName) {
+              const instExists = this.registeredFaces.some(
+                f => f.family === familyName.toLowerCase() && f.postScriptName === inst.postScriptName
+              );
+              if (!instExists) {
+                this.registeredFaces.push({
+                  family: familyName.toLowerCase(),
+                  originalFamily: familyName,
+                  numericWeight: inst.weight,
+                  style: detectedStyle,
+                  postScriptName: inst.postScriptName,
+                  filePath: resolvedPath
+                });
+              }
+            }
+          }
+        }
+
         // Store parsed font header metrics in cache
         const metrics = parseOpenTypeMetrics(resolvedPath);
         if (metrics) {
@@ -451,6 +530,27 @@ export class FontLoader {
             postScriptName: names.postScript,
             filePath: fullPath
           });
+        }
+
+        // Register any variable font named instances from fvar table
+        if (names.instances && names.instances.length > 0) {
+          for (const inst of names.instances) {
+            if (inst.postScriptName) {
+              const instExists = this.registeredFaces.some(
+                f => f.family === familyKey && f.postScriptName === inst.postScriptName
+              );
+              if (!instExists) {
+                this.registeredFaces.push({
+                  family: familyKey,
+                  originalFamily: names.family,
+                  numericWeight: inst.weight,
+                  style,
+                  postScriptName: inst.postScriptName,
+                  filePath: fullPath
+                });
+              }
+            }
+          }
         }
       }
     } catch {}
