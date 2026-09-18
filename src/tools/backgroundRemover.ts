@@ -205,9 +205,13 @@ export function detectBestDevice(modelArg?: string): 'dml' | 'cpu' {
   return 'dml';
 }
 
+// In-flight initialization mutex map to prevent parallel duplicate model downloads (F-12)
+const inFlightPipelinePromises = new Map<string, Promise<any>>();
+
 /**
  * Loads or returns cached image segmentation pipeline.
  * Caches by composite key (modelName + device) so device switches trigger fresh loading.
+ * Supports hardware fallback chain: DirectML -> WebGPU -> CPU (F-45).
  */
 export async function getSegmentationPipeline(
   modelArg?: string,
@@ -223,30 +227,52 @@ export async function getSegmentationPipeline(
     return cachedPipeline;
   }
 
-  // Robust retry with exponential backoff on network downloads (F-44)
-  let attempts = 0;
-  const maxAttempts = 3;
-  let lastError: any = null;
-
-  while (attempts < maxAttempts) {
-    try {
-      cachedPipeline = await pipeline('image-segmentation', modelName, {
-        device,
-        progress_callback: onProgress
-      });
-      currentCacheKey = cacheKey;
-      return cachedPipeline;
-    } catch (err: any) {
-      attempts++;
-      lastError = err;
-      if (attempts < maxAttempts) {
-        const delayMs = Math.pow(2, attempts) * 500;
-        await new Promise((r) => setTimeout(r, delayMs));
-      }
-    }
+  if (inFlightPipelinePromises.has(cacheKey)) {
+    return await inFlightPipelinePromises.get(cacheKey)!;
   }
 
-  throw lastError;
+  const loadPromise = (async () => {
+    // Hardware provider fallback chain: requested device -> CPU
+    const devicesToTry: ('dml' | 'webgpu' | 'cpu')[] = [device];
+    if (device !== 'cpu') {
+      devicesToTry.push('cpu');
+    }
+
+    let lastError: any = null;
+
+    for (const dev of devicesToTry) {
+      let attempts = 0;
+      const maxAttempts = 2;
+
+      while (attempts < maxAttempts) {
+        try {
+          const pipe = await pipeline('image-segmentation', modelName, {
+            device: dev,
+            progress_callback: onProgress
+          });
+          cachedPipeline = pipe;
+          currentCacheKey = `${modelName}::${dev}`;
+          return pipe;
+        } catch (err: any) {
+          attempts++;
+          lastError = err;
+          if (attempts < maxAttempts) {
+            const delayMs = Math.pow(2, attempts) * 500;
+            await new Promise((r) => setTimeout(r, delayMs));
+          }
+        }
+      }
+    }
+
+    throw lastError;
+  })();
+
+  inFlightPipelinePromises.set(cacheKey, loadPromise);
+  try {
+    return await loadPromise;
+  } finally {
+    inFlightPipelinePromises.delete(cacheKey);
+  }
 }
 
 /**
@@ -342,28 +368,34 @@ export function defringeImage(image: any, radius = 3): any {
       const idx = (rowOffset + x) * channels;
       const alpha = cleanData[idx + 3];
       if (alpha > 0 && alpha < 235) {
-        let sumR = 0, sumG = 0, sumB = 0, count = 0;
+        let sumR = 0, sumG = 0, sumB = 0, totalWeight = 0;
         const yMin = Math.max(0, y - r);
         const yMax = Math.min(height - 1, y + r);
         const xMin = Math.max(0, x - r);
         const xMax = Math.min(width - 1, x + r);
 
         for (let ny = yMin; ny <= yMax; ny++) {
+          const dy = ny - y;
           const nRowOffset = ny * width;
           for (let nx = xMin; nx <= xMax; nx++) {
+            const dx = nx - x;
             const nidx = (nRowOffset + nx) * channels;
-            if (cleanData[nidx + 3] >= 235) {
-              sumR += data[nidx];
-              sumG += data[nidx + 1];
-              sumB += data[nidx + 2];
-              count++;
+            const nAlpha = cleanData[nidx + 3];
+            if (nAlpha >= 235) {
+              // Distance-weighted kernel: closer opaque pixels have exponentially higher contribution (F-11)
+              const distSq = dx * dx + dy * dy;
+              const weight = 1 / (1 + distSq);
+              sumR += data[nidx] * weight;
+              sumG += data[nidx + 1] * weight;
+              sumB += data[nidx + 2] * weight;
+              totalWeight += weight;
             }
           }
         }
-        if (count > 0) {
-          cleanData[idx] = Math.round(sumR / count);
-          cleanData[idx + 1] = Math.round(sumG / count);
-          cleanData[idx + 2] = Math.round(sumB / count);
+        if (totalWeight > 0) {
+          cleanData[idx] = Math.round(sumR / totalWeight);
+          cleanData[idx + 1] = Math.round(sumG / totalWeight);
+          cleanData[idx + 2] = Math.round(sumB / totalWeight);
         }
       }
     }
@@ -445,6 +477,11 @@ export async function removeBackgroundFromFile(
   const stat = fs.statSync(resolvedSource);
   if (stat.isDirectory()) {
     throw new Error(`Source path is a directory, not a file: ${resolvedSource}. Use removeBackgroundFromDirectory instead.`);
+  }
+
+  const ext = path.extname(resolvedSource).toLowerCase();
+  if (ext === '.gif') {
+    throw new Error(`Animated GIF formats are not supported for single-image background removal. Please extract individual frames.`);
   }
 
   const startTime = Date.now();
@@ -543,17 +580,28 @@ export async function removeBackgroundFromFile(
 
 /**
  * Finds all image files in a directory.
+ * Includes circular symlink detection to prevent infinite recursion (F-26).
  */
-export function findImagesInDir(dirPath: string, recursive = false): string[] {
+export function findImagesInDir(dirPath: string, recursive = false, visited = new Set<string>()): string[] {
   const results: string[] = [];
   if (!fs.existsSync(dirPath)) return results;
+
+  let realDir = dirPath;
+  try {
+    realDir = fs.realpathSync(dirPath);
+  } catch {}
+
+  if (visited.has(realDir)) {
+    return results; // Cycle detected, terminate recursion branch
+  }
+  visited.add(realDir);
 
   const entries = fs.readdirSync(dirPath, { withFileTypes: true });
   for (const entry of entries) {
     const full = path.join(dirPath, entry.name);
     if (entry.isDirectory()) {
       if (recursive) {
-        results.push(...findImagesInDir(full, true));
+        results.push(...findImagesInDir(full, true, visited));
       }
     } else if (entry.isFile()) {
       const ext = path.extname(entry.name).toLowerCase();
@@ -684,10 +732,13 @@ export async function removeBackground(
     const targetIsExplicitDir = target.endsWith('/') || target.endsWith('\\');
     const targetExistsAsDir = fs.existsSync(resolvedTarget) && fs.statSync(resolvedTarget).isDirectory();
 
-    if (targetIsExplicitDir || targetExistsAsDir || !path.extname(target)) {
+    if (targetIsExplicitDir || targetExistsAsDir || (!path.extname(target) && !fs.existsSync(resolvedTarget))) {
       const parsed = path.parse(resolvedSource);
       const outExt = (options.format === 'webp') ? '.webp' : '.png';
       resolvedTarget = path.join(resolvedTarget, `${parsed.name}${outExt}`);
+    } else if (options.format === 'webp' && path.extname(resolvedTarget).toLowerCase() === '.png') {
+      // Auto-update extension if explicit file target was specified with mismatched extension (F-47)
+      resolvedTarget = resolvedTarget.slice(0, -4) + '.webp';
     }
 
     return removeBackgroundFromFile(resolvedSource, resolvedTarget, options);
