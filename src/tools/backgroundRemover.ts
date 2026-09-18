@@ -17,10 +17,15 @@ const require = createRequire(import.meta.url);
 export interface BgRemovalOptions {
   /**
    * AI model identifier or alias.
-   * - 'ormbg' (default): Ultra-fast, sharp edge boundaries (~1-2s).
-   * - 'birefnet': BiRefNet Lite for maximum detail on hair, glass, fine fur.
+   * - 'ormbg' (default): Ultra-fast, GPU/NPU accelerated (DirectML ~500ms).
+   * - 'birefnet' / 'dyb': Do-Your-Best ultra-quality model (CPU).
    */
   model?: 'ormbg' | 'birefnet' | string;
+
+  /**
+   * Do-Your-Best mode: switch to the slower, ultra-high quality BiRefNet model (CPU).
+   */
+  dyb?: boolean;
 
   /**
    * Automatically crop excess transparent boundaries around the isolated subject.
@@ -116,6 +121,8 @@ export const SUPPORTED_BG_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp'
 
 export const MODEL_MAP: Record<string, string> = {
   ormbg: 'onnx-community/ormbg-ONNX',
+  fast: 'onnx-community/ormbg-ONNX',
+  gpu: 'onnx-community/ormbg-ONNX',
   birefnet: 'onnx-community/BiRefNet-ONNX',
   dyb: 'onnx-community/BiRefNet-ONNX',
   'birefnet-hr': 'onnx-community/BiRefNet-ONNX',
@@ -143,8 +150,7 @@ export function ensureEnvironmentConfigured(): string {
 
 /**
  * Resolves the model name from user alias or full identifier.
- * Defaults to 'ormbg' which delivers state-of-the-art segmentation with full GPU / NPU (DirectML) acceleration.
- * When deep portrait mode (--dyb) is requested, resolves to BiRefNet (high quality, CPU only).
+ * Defaults to the best GPU/NPU-compatible model (ormbg) unless DYB / BiRefNet is requested.
  */
 export function resolveModelName(modelArg?: string): string {
   if (!modelArg) return MODEL_MAP.ormbg;
@@ -390,8 +396,8 @@ export async function removeBackgroundFromFile(
   // Load input image
   const rawImage = await RawImage.read(resolvedSource);
 
-  // Always default to the highest-quality state-of-the-art model (BiRefNet)
-  const modelToUse = options.model || 'birefnet';
+  // Select model: if dyb is enabled, use birefnet; otherwise options.model or default (ormbg)
+  const modelToUse = options.dyb ? 'birefnet' : (options.model || 'ormbg');
 
   // Run neural background segmentation
   const segmenter = await getSegmentationPipeline(modelToUse, options.device);

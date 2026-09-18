@@ -28,7 +28,8 @@ describe('TOAD Background Remover Module', () => {
     it('resolves model aliases correctly', () => {
       expect(resolveModelName('ormbg')).toBe(MODEL_MAP.ormbg);
       expect(resolveModelName('birefnet')).toBe(MODEL_MAP.birefnet);
-      expect(resolveModelName(undefined)).toBe(MODEL_MAP.birefnet);
+      expect(resolveModelName('dyb')).toBe(MODEL_MAP.birefnet);
+      expect(resolveModelName(undefined)).toBe(MODEL_MAP.ormbg);
       expect(resolveModelName('custom/model')).toBe('custom/model');
     });
 

@@ -935,10 +935,8 @@ export function createCli(): Command {
   program
     .command('remove-bg <source> <target>')
     .alias('rembg')
-    .alias('bg-remove')
-    .alias('cutout')
-    .option('-m, --model <model>', 'AI model override (default: ormbg with GPU/NPU acceleration)')
-    .option('--dyb', 'Deep portrait model: uses BiRefNet (ultra-fine hair segmentation, CPU-only)')
+    .option('-m, --model <model>', 'AI model override (ormbg, birefnet)')
+    .option('--dyb', 'Do-Your-Best preset: use slower, ultra-detail model (birefnet CPU)')
     .option('--fast', 'Speed preset: use lightweight fast model (ormbg)')
     .option('-f, --format <format>', 'Output format: png or webp', 'png')
     .option('--trim', 'Auto-crop transparent margins around isolated subject')
@@ -960,22 +958,24 @@ export function createCli(): Command {
         const useMotion = Boolean(options.motion);
         const useHairPreset = Boolean(options.hair);
         const useDyb = Boolean(options.dyb);
-        const selectedModel = options.model || (useDyb ? 'birefnet' : 'ormbg');
+        const selectedModel = options.model ? options.model : (useDyb ? 'birefnet' : 'ormbg');
         const shouldDefringe = options.defringe !== false;
         const gpuDetected = isGpuAvailable();
 
         console.log(`\n${c.bold('✂️   TOAD Local Background Remover')}`);
         console.log(`  ${c.green('🔒 [Local AI]')} ${c.dim('100% on-device processing. No images uploaded.')}`);
         let modeTag = '';
-        if (useDyb) modeTag = c.yellow(' (Deep BiRefNet Mode, CPU)');
-        else if (useMotion) modeTag = c.green(' (Motion Blur & Sports Mode)');
-        else if (useHairPreset) modeTag = c.green(' (Hair Portrait Mode)');
-        else modeTag = c.green(' (Hardware-Accelerated)');
+        if (useDyb) modeTag = c.yellow(' [DYB: Do Your Best / Ultra-Detail]');
+        else if (gpuDetected) modeTag = c.green(' [GPU / NPU Accelerated]');
+        if (useMotion) modeTag += c.green(' (Motion Blur & Sports Mode)');
+        else if (useHairPreset) modeTag += c.green(' (Hair Portrait Mode)');
         console.log(`  ${c.dim('Model:')}    ${c.cyan(selectedModel)}${modeTag}`);
-        if (gpuDetected && !selectedModel.toLowerCase().includes('birefnet') && selectedModel.toLowerCase() !== 'dyb') {
-          console.log(`  ${c.dim('Hardware:')} ${c.green('⚡ Intel Arc GPU / AI Boost NPU Detected (Auto-Accelerated)')}`);
-        } else if (selectedModel.toLowerCase().includes('birefnet') || selectedModel.toLowerCase() === 'dyb') {
-          console.log(`  ${c.dim('Hardware:')} ${c.yellow('⚙️  High-Precision Multi-Scale CPU Engine')}`);
+        if (gpuDetected) {
+          if (selectedModel.toLowerCase().includes('birefnet') || useDyb) {
+            console.log(`  ${c.dim('Hardware:')} ${c.yellow('Intel Arc GPU / AI Boost NPU Detected (CPU execution used for DYB high-precision ops)')}`);
+          } else {
+            console.log(`  ${c.dim('Hardware:')} ${c.green('⚡ Intel Arc GPU / AI Boost NPU DirectML Hardware Acceleration Active')}`);
+          }
         }
         if (shouldDefringe) console.log(`  ${c.dim('Filter:')}   ${c.yellow('Smart De-Fringe & Edge Decontamination (Active)')}`);
         if (useMotion) console.log(`  ${c.dim('Matting:')}  ${c.yellow('Soft Motion Trail & Thin-Object Protection')}`);
@@ -990,6 +990,7 @@ export function createCli(): Command {
 
         const result = await removeBackground(resolvedSource, target, {
           model: selectedModel,
+          dyb: useDyb,
           format: options.format,
           trim: options.trim,
           padding: paddingNum,
