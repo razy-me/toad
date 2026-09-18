@@ -1307,8 +1307,8 @@ export function shouldAutoRun(argv1?: string): boolean {
 
 if (shouldAutoRun(process.argv[1])) {
   const args = process.argv.slice(2);
-  // If invoked with completely 0 arguments in an interactive terminal, launch TOAD Studio Web-GUI with update check & delay
-  if (args.length === 0 && process.stdin.isTTY && !process.env.VITEST && !process.env.CI) {
+  // If invoked with completely 0 arguments, launch TOAD Studio Web-GUI with update check & delay
+  if (args.length === 0 && !process.env.VITEST && !process.env.CI) {
     program.parse([process.argv[0]!, process.argv[1]!, 'studio', '--delay-browser']);
   } else {
     program.parse(process.argv);
