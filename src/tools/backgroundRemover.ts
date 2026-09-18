@@ -259,15 +259,13 @@ export function isGpuAvailable(): boolean {
 
 /**
  * Automatically chooses the best execution provider for the selected model.
+ * BiRefNet architectures (and ensemble DYB) allocate massive DirectX 12 descriptor
+ * and staging buffers that exceed GPU/iGPU VRAM and cause DML memory faults (8007000E).
+ * Multi-threaded CPU with memory arena pooling disabled guarantees rock-solid stability and low RAM.
  */
 export function detectBestDevice(modelArg?: string): 'dml' | 'cpu' {
-  if (!isGpuAvailable()) return 'cpu';
-  const resolved = resolveModelName(modelArg);
-  // BiRefNet uses atrous deformable convolutions which exceed DML memory on iGPUs, so use CPU
-  if (resolved.includes('BiRefNet')) {
-    return 'cpu';
-  }
-  return 'dml';
+  // Always default to CPU for BiRefNet models and DYB pipelines to guarantee zero GPU memory crashes
+  return 'cpu';
 }
 
 /**
