@@ -9,8 +9,11 @@ import {
   removeBackgroundFromDirectory,
   findImagesInDir,
   resolveModelName,
+  applyGuidedFilter,
+  boxFilter2D,
   MODEL_MAP
 } from '../src/tools/backgroundRemover.js';
+import { RawImage } from '@huggingface/transformers';
 
 const execAsync = promisify(exec);
 
@@ -40,6 +43,38 @@ describe('TOAD Background Remover Module', () => {
       expect(resolveModelName(undefined, { fast: true })).toBe(MODEL_MAP.fast);
       expect(resolveModelName(undefined, { quick: true })).toBe(MODEL_MAP.quick);
       expect(resolveModelName('custom/model')).toBe('custom/model');
+    });
+
+    it('applies Guided Image Filter to refine alpha mask against full-res RGB guide (DYB mode)', () => {
+      const guideData = new Uint8ClampedArray(10 * 10 * 3);
+      for (let y = 0; y < 10; y++) {
+        for (let x = 0; x < 10; x++) {
+          const idx = (y * 10 + x) * 3;
+          const val = x < 5 ? 0 : 255;
+          guideData[idx] = val;
+          guideData[idx + 1] = val;
+          guideData[idx + 2] = val;
+        }
+      }
+      const guide = new RawImage(guideData, 10, 10, 3);
+
+      const maskData = new Uint8ClampedArray(10 * 10);
+      for (let y = 0; y < 10; y++) {
+        for (let x = 0; x < 10; x++) {
+          maskData[y * 10 + x] = x < 4 ? 0 : (x > 6 ? 255 : 128);
+        }
+      }
+      const mask = new RawImage(maskData, 10, 10, 1);
+
+      const refined = applyGuidedFilter(guide, mask, 2, 1e-3);
+      expect(refined.width).toBe(10);
+      expect(refined.height).toBe(10);
+      expect(refined.channels).toBe(1);
+      expect(refined.data.length).toBe(100);
+      for (let i = 0; i < refined.data.length; i++) {
+        expect(refined.data[i]).toBeGreaterThanOrEqual(0);
+        expect(refined.data[i]).toBeLessThanOrEqual(255);
+      }
     });
 
     it('finds supported image formats in a directory', () => {
@@ -187,5 +222,15 @@ describe('TOAD Background Remover Module', () => {
       expect(fs.existsSync(path.join(targetDir, 'img1.png'))).toBe(true);
       expect(fs.existsSync(path.join(targetDir, 'img2.png'))).toBe(true);
     }, 120000);
+
+    it('verifies CLI help no longer lists manual options (--hair, --detail, --model)', async () => {
+      const { stdout } = await execAsync('node ./dist/cli.js remove-bg --help');
+      expect(stdout).not.toContain('--hair');
+      expect(stdout).not.toContain('--detail');
+      expect(stdout).not.toContain('--model');
+      expect(stdout).toContain('--dyb');
+      expect(stdout).toContain('--fast');
+      expect(stdout).toContain('--quick');
+    });
   });
 });

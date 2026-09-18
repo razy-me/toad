@@ -935,8 +935,7 @@ export function createCli(): Command {
   program
     .command('remove-bg <source> <target>')
     .alias('rembg')
-    .option('-m, --model <model>', 'AI model override (ormbg, birefnet)')
-    .option('--dyb', 'Do-Your-Best preset: use slower, ultra-detail model (birefnet CPU)')
+    .option('--dyb', 'Do-Your-Best preset: multi-model neural ensemble + native Guided Filtering for peak visual detail')
     .option('--fast', 'Speed preset: use lightweight fast model (BiRefNet Lite, MIT License)')
     .option('--quick', 'Speed preset: alias for --fast (BiRefNet Lite, MIT License)')
     .option('-f, --format <format>', 'Output format: png or webp', 'png')
@@ -944,8 +943,6 @@ export function createCli(): Command {
     .option('--trim', 'Auto-crop transparent margins around isolated subject')
     .option('--padding <px>', 'Padding in pixels when trimming', '0')
     .option('--threshold <cutoff>', 'Hard alpha threshold cutoff between 0.0 and 1.0')
-    .option('--hair', 'Optimize specifically for portraits and fine hair (BiRefNet Portrait)')
-    .option('--detail', 'Optimize specifically for jewelry, lace, and fine geometric details (BiRefNet DIS5K)')
     .option('--motion', 'Optimize for fast motion, sports gear (golf clubs, hockey sticks), and motion blur')
     .option('--defringe', 'Enable edge de-fringing and color decontamination (enabled by default)')
     .option('--no-defringe', 'Disable automatic edge de-fringing and color decontamination')
@@ -996,11 +993,9 @@ export function createCli(): Command {
         const isJson = Boolean(options.json);
         const isQuiet = Boolean(options.quiet) || isJson;
         const useMotion = Boolean(options.motion);
-        const useHairPreset = Boolean(options.hair);
-        const useDetailPreset = Boolean(options.detail);
         const useFast = Boolean(options.fast || options.quick);
         const useDyb = Boolean(options.dyb);
-        const selectedModel = options.model ? options.model : (useFast ? 'fast' : (useHairPreset ? 'hair' : (useDetailPreset ? 'detail' : 'default')));
+        const selectedModel = useDyb ? 'dyb (ensemble + guided filter)' : (useFast ? 'fast (BiRefNet Lite)' : 'auto (adaptive routing)');
         const shouldDefringe = useFast ? options.defringe === true : options.defringe !== false;
         const gpuDetected = isGpuAvailable();
 
@@ -1008,12 +1003,10 @@ export function createCli(): Command {
           console.log(`\n${c.bold('✂️   TOAD Local Background Remover')}`);
           console.log(`  ${c.green('🔒 [Local AI]')} ${c.dim('100% on-device processing. No images uploaded.')}`);
           let modeTag = '';
-          if (useDyb) modeTag = c.yellow(' [DYB: Do Your Best / Ultra-Detail]');
+          if (useDyb) modeTag = c.yellow(' [DYB: Multi-Model Ensemble + Native Guided Filter]');
           else if (useFast) modeTag = c.cyan(' [Fast / Quick Mode: BiRefNet Lite 4x Fast-Path]');
           else if (gpuDetected) modeTag = c.green(' [GPU / NPU Accelerated]');
           if (useMotion) modeTag += c.green(' (Motion Blur & Sports Mode)');
-          else if (useHairPreset) modeTag += c.green(' (Hair Portrait Mode)');
-          else if (useDetailPreset) modeTag += c.green(' (High Detail Mode)');
           console.log(`  ${c.dim('Model:')}    ${c.cyan(selectedModel)}${modeTag}`);
           if (gpuDetected) {
             console.log(`  ${c.dim('Hardware:')} ${c.green('⚡ Intel Arc GPU / AI Boost NPU DirectML Hardware Acceleration Active')}`);
@@ -1043,12 +1036,9 @@ export function createCli(): Command {
         let processedCount = 0;
 
         const result = await removeBackground(resolvedSource, target, {
-          model: selectedModel,
           dyb: useDyb,
           fast: useFast,
           quick: useFast,
-          hair: useHairPreset,
-          detail: useDetailPreset,
           format: options.format,
           quality: qualityNum,
           trim: options.trim,

@@ -191,6 +191,8 @@ export {
   detectBestDevice,
   detectSubjectType,
   resolveModelName,
+  applyGuidedFilter,
+  boxFilter2D,
   MODEL_MAP,
   BgRemovalOptions,
   BgProgressInfo,

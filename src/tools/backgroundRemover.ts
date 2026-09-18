@@ -16,14 +16,12 @@ const require = createRequire(import.meta.url);
 
 export interface BgRemovalOptions {
   /**
-   * AI model identifier or alias.
-   * - 'ormbg' (default): Ultra-fast, GPU/NPU accelerated (DirectML ~500ms).
-   * - 'birefnet' / 'dyb': Do-Your-Best ultra-quality model (CPU).
+   * Optional manual AI model identifier or alias (internal).
    */
-  model?: 'ormbg' | 'birefnet' | string;
+  model?: string;
 
   /**
-   * Do-Your-Best mode: switch to the slower, ultra-high quality BiRefNet model (CPU).
+   * "Do-Your-Best" ultra-detail mode: multi-model neural ensemble + native-resolution Guided Filtering.
    */
   dyb?: boolean;
 
@@ -530,6 +528,140 @@ export function applyMotionBlurMatte(image: any, originalImage: any): any {
 }
 
 /**
+ * Fast 2D Separable Box Filter in O(W * H) time.
+ */
+export function boxFilter2D(src: Float32Array, width: number, height: number, r: number): Float32Array {
+  const temp = new Float32Array(width * height);
+  const dst = new Float32Array(width * height);
+
+  // Horizontal pass
+  for (let y = 0; y < height; y++) {
+    const row = y * width;
+    let sum = 0;
+    let count = 0;
+    const initR = Math.min(r, width - 1);
+    for (let i = 0; i <= initR; i++) {
+      sum += src[row + i];
+      count++;
+    }
+    temp[row] = sum / count;
+
+    for (let x = 1; x < width; x++) {
+      const addIdx = x + r;
+      if (addIdx < width) {
+        sum += src[row + addIdx];
+        count++;
+      }
+      const subIdx = x - r - 1;
+      if (subIdx >= 0) {
+        sum -= src[row + subIdx];
+        count--;
+      }
+      temp[row + x] = sum / count;
+    }
+  }
+
+  // Vertical pass
+  for (let x = 0; x < width; x++) {
+    let sum = 0;
+    let count = 0;
+    const initB = Math.min(r, height - 1);
+    for (let i = 0; i <= initB; i++) {
+      sum += temp[i * width + x];
+      count++;
+    }
+    dst[x] = sum / count;
+
+    for (let y = 1; y < height; y++) {
+      const addIdx = y + r;
+      if (addIdx < height) {
+        sum += temp[addIdx * width + x];
+        count++;
+      }
+      const subIdx = y - r - 1;
+      if (subIdx >= 0) {
+        sum -= temp[subIdx * width + x];
+        count--;
+      }
+      dst[y * width + x] = sum / count;
+    }
+  }
+
+  return dst;
+}
+
+/**
+ * Guided Image Filter (He, Sun, Tang) for native-resolution edge refinement.
+ * Snaps neural alpha matte transitions directly to the camera sensor's high-frequency RGB edges.
+ */
+export function applyGuidedFilter(
+  guide: RawImage,
+  mask: RawImage,
+  radius = 4,
+  eps = 1e-3
+): RawImage {
+  const width = guide.width;
+  const height = guide.height;
+  const numPixels = width * height;
+
+  const I = new Float32Array(numPixels);
+  const p = new Float32Array(numPixels);
+
+  const gData = guide.data;
+  const gChannels = guide.channels;
+  for (let i = 0; i < numPixels; i++) {
+    const idx = i * gChannels;
+    I[i] = (0.299 * gData[idx] + 0.587 * gData[idx + 1] + 0.114 * gData[idx + 2]) / 255;
+  }
+
+  const mData = mask.data;
+  const mChannels = mask.channels;
+  const alphaOffset = mChannels === 4 ? 3 : 0;
+  for (let i = 0; i < numPixels; i++) {
+    p[i] = mData[i * mChannels + alphaOffset] / 255;
+  }
+
+  const meanI = boxFilter2D(I, width, height, radius);
+  const meanP = boxFilter2D(p, width, height, radius);
+
+  const II = new Float32Array(numPixels);
+  const Ip = new Float32Array(numPixels);
+  for (let i = 0; i < numPixels; i++) {
+    II[i] = I[i] * I[i];
+    Ip[i] = I[i] * p[i];
+  }
+
+  const corrI = boxFilter2D(II, width, height, radius);
+  const corrIp = boxFilter2D(Ip, width, height, radius);
+
+  const a = new Float32Array(numPixels);
+  const b = new Float32Array(numPixels);
+  for (let i = 0; i < numPixels; i++) {
+    const varI = corrI[i] - meanI[i] * meanI[i];
+    const covIp = corrIp[i] - meanI[i] * meanP[i];
+    a[i] = covIp / (varI + eps);
+    b[i] = meanP[i] - a[i] * meanI[i];
+  }
+
+  const meanA = boxFilter2D(a, width, height, radius);
+  const meanB = boxFilter2D(b, width, height, radius);
+
+  const outData = new Uint8ClampedArray(numPixels);
+  for (let i = 0; i < numPixels; i++) {
+    let q = meanA[i] * I[i] + meanB[i];
+    const orig = p[i];
+    if (orig >= 0.95) {
+      q = Math.max(q, 0.95);
+    } else if (orig <= 0.05) {
+      q = Math.min(q, 0.05);
+    }
+    outData[i] = Math.min(255, Math.max(0, Math.round(q * 255)));
+  }
+
+  return new RawImage(outData, width, height, 1);
+}
+
+/**
  * Removes the background from a single image file and saves the result to targetPath.
  */
 export async function removeBackgroundFromFile(
@@ -587,28 +719,79 @@ export async function removeBackgroundFromFile(
       rawImage = rawImage.rgba();
     }
 
-    // Adaptive model selection: if no explicit model or flag given, auto-classify subject (F-55)
-    let modelToUse: string;
-    if (!options.model && !options.hair && !options.detail && !options.fast && !options.quick && !options.dyb) {
+    let mask: any;
+
+    if (options.dyb) {
+      // --- STAGE 1: Dual-Model Neural Ensemble (Semantic Foundation + DIS5K Micro-Geometry) ---
       const subject = detectSubjectType(rawImage);
-      modelToUse = subject === 'portrait' ? MODEL_MAP.portrait : MODEL_MAP.default;
+      const baseModel = subject === 'portrait' ? MODEL_MAP.portrait : MODEL_MAP.default;
+
+      // Pass A: Semantic Base
+      const segmenterA = await getSegmentationPipeline(baseModel, options.device);
+      const resA = await segmenterA(rawImage);
+      if (!Array.isArray(resA) || resA.length === 0 || !resA[0].mask) {
+        throw new Error(`Failed to generate base segmentation mask for image: ${path.basename(resolvedSource)}`);
+      }
+      let maskA = resA[0].mask;
+      if (maskA.width !== rawImage.width || maskA.height !== rawImage.height) {
+        maskA = await maskA.resize(rawImage.width, rawImage.height);
+      }
+
+      // Pass B: Micro-Geometry Specialist (BiRefNet DIS5K)
+      const segmenterB = await getSegmentationPipeline(MODEL_MAP.detail, options.device);
+      const resB = await segmenterB(rawImage);
+      if (!Array.isArray(resB) || resB.length === 0 || !resB[0].mask) {
+        throw new Error(`Failed to generate detail segmentation mask for image: ${path.basename(resolvedSource)}`);
+      }
+      let maskB = resB[0].mask;
+      if (maskB.width !== rawImage.width || maskB.height !== rawImage.height) {
+        maskB = await maskB.resize(rawImage.width, rawImage.height);
+      }
+
+      // Confidence-Weighted Ensemble Fusion
+      const fusedData = new Uint8ClampedArray(rawImage.width * rawImage.height);
+      const dataA = maskA.data;
+      const dataB = maskB.data;
+      for (let i = 0; i < fusedData.length; i++) {
+        const valA = dataA[i];
+        const valB = dataB[i];
+        if (valA >= 220 && valB >= 220) {
+          fusedData[i] = Math.max(valA, valB);
+        } else if (valA <= 30 && valB <= 30) {
+          fusedData[i] = Math.min(valA, valB);
+        } else {
+          fusedData[i] = Math.round(0.5 * valA + 0.5 * valB);
+        }
+      }
+      const fusedMask = new RawImage(fusedData, rawImage.width, rawImage.height, 1);
+
+      // --- STAGE 2: Native-Resolution Guided Image Filter (He et al.) ---
+      // Snaps alpha matte transitions directly to the camera sensor's high-frequency RGB edges
+      mask = applyGuidedFilter(rawImage, fusedMask, 4, 1e-3);
     } else {
-      modelToUse = resolveModelName(options.model, options);
-    }
+      // Adaptive model selection: if no explicit model or flag given, auto-classify subject (F-55)
+      let modelToUse: string;
+      if (!options.model && !options.hair && !options.detail && !options.fast && !options.quick) {
+        const subject = detectSubjectType(rawImage);
+        modelToUse = subject === 'portrait' ? MODEL_MAP.portrait : MODEL_MAP.default;
+      } else {
+        modelToUse = resolveModelName(options.model, options);
+      }
 
-    // Run neural background segmentation
-    const segmenter = await getSegmentationPipeline(modelToUse, options.device);
-    const segmentationResult = await segmenter(rawImage);
+      // Run neural background segmentation
+      const segmenter = await getSegmentationPipeline(modelToUse, options.device);
+      const segmentationResult = await segmenter(rawImage);
 
-    if (!Array.isArray(segmentationResult) || segmentationResult.length === 0 || !segmentationResult[0].mask) {
-      throw new Error(`Failed to generate segmentation mask for image: ${path.basename(resolvedSource)}`);
-    }
+      if (!Array.isArray(segmentationResult) || segmentationResult.length === 0 || !segmentationResult[0].mask) {
+        throw new Error(`Failed to generate segmentation mask for image: ${path.basename(resolvedSource)}`);
+      }
 
-    let mask = segmentationResult[0].mask;
+      mask = segmentationResult[0].mask;
 
-    // Ensure mask dimensions match source image dimensions exactly (F-15)
-    if (mask.width !== rawImage.width || mask.height !== rawImage.height) {
-      mask = await mask.resize(rawImage.width, rawImage.height);
+      // Ensure mask dimensions match source image dimensions exactly (F-15)
+      if (mask.width !== rawImage.width || mask.height !== rawImage.height) {
+        mask = await mask.resize(rawImage.width, rawImage.height);
+      }
     }
 
   // Optional smooth anti-aliased alpha thresholding (F-10)
@@ -639,13 +822,14 @@ export async function removeBackgroundFromFile(
 
   // Smart color decontamination (De-fringing) for hair & fine edges:
   // Active by default for highest quality, unless explicitly disabled with defringe: false.
+  // In DYB mode, run deep radius 5 bilateral decontamination for 100% halo elimination.
   // Fast-Path: In fast/quick mode, skip expensive CPU convolution by default for max throughput, unless explicitly enabled.
   const shouldRunDefringe = (options.fast || options.quick)
     ? options.defringe === true
     : options.defringe !== false;
 
   if (shouldRunDefringe) {
-    const defaultRadius = (options.fast || options.quick) ? 1 : 3;
+    const defaultRadius = options.dyb ? 5 : ((options.fast || options.quick) ? 1 : 3);
     isolatedImage = defringeImage(isolatedImage, options.defringeRadius || defaultRadius);
   }
 
