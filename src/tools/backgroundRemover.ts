@@ -84,6 +84,11 @@ export interface BgRemovalOptions {
   fast?: boolean;
 
   /**
+   * Alias for fast speed preset (uses BiRefNet Lite).
+   */
+  quick?: boolean;
+
+  /**
    * Optimize specifically for fine geometric details, jewelry, lace, and fine wireframes.
    */
   detail?: boolean;
@@ -159,6 +164,7 @@ export const MODEL_MAP: Record<string, string> = {
   detail: 'onnx-community/BiRefNet-DIS5K-ONNX',
   dis: 'onnx-community/BiRefNet-DIS5K-ONNX',
   fast: 'onnx-community/BiRefNet_lite-ONNX',
+  quick: 'onnx-community/BiRefNet_lite-ONNX',
   lite: 'onnx-community/BiRefNet_lite-ONNX',
   'birefnet-lite': 'onnx-community/BiRefNet_lite-ONNX',
   'birefnet-portrait': 'onnx-community/BiRefNet-portrait-ONNX',
@@ -200,7 +206,7 @@ export function ensureEnvironmentConfigured(): string {
 export function resolveModelName(modelArg?: string, options?: BgRemovalOptions): string {
   if (options?.hair) return MODEL_MAP.hair;
   if (options?.detail) return MODEL_MAP.detail;
-  if (options?.fast) return MODEL_MAP.fast;
+  if (options?.fast || options?.quick) return MODEL_MAP.fast;
   if (!modelArg) return MODEL_MAP.default;
   const lower = modelArg.toLowerCase().trim();
   if (MODEL_MAP[lower]) return MODEL_MAP[lower];
@@ -583,7 +589,7 @@ export async function removeBackgroundFromFile(
 
     // Adaptive model selection: if no explicit model or flag given, auto-classify subject (F-55)
     let modelToUse: string;
-    if (!options.model && !options.hair && !options.detail && !options.fast && !options.dyb) {
+    if (!options.model && !options.hair && !options.detail && !options.fast && !options.quick && !options.dyb) {
       const subject = detectSubjectType(rawImage);
       modelToUse = subject === 'portrait' ? MODEL_MAP.portrait : MODEL_MAP.default;
     } else {
@@ -632,9 +638,11 @@ export async function removeBackgroundFromFile(
   }
 
   // Smart color decontamination (De-fringing) for hair & fine edges:
-  // Active by default for highest quality, unless explicitly disabled with defringe: false
+  // Active by default for highest quality, unless explicitly disabled with defringe: false.
+  // In fast/quick mode, use a lightweight radius (1) for maximum throughput while preserving clean edges.
   if (options.defringe !== false) {
-    isolatedImage = defringeImage(isolatedImage, options.defringeRadius || 3);
+    const defaultRadius = (options.fast || options.quick) ? 1 : 3;
+    isolatedImage = defringeImage(isolatedImage, options.defringeRadius || defaultRadius);
   }
 
   // Optional smart auto-trim

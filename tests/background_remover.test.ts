@@ -33,9 +33,12 @@ describe('TOAD Background Remover Module', () => {
       expect(resolveModelName('portrait')).toBe(MODEL_MAP.portrait);
       expect(resolveModelName('detail')).toBe(MODEL_MAP.detail);
       expect(resolveModelName('fast')).toBe(MODEL_MAP.fast);
+      expect(resolveModelName('quick')).toBe(MODEL_MAP.quick);
       expect(resolveModelName(undefined)).toBe(MODEL_MAP.default);
       expect(resolveModelName(undefined, { hair: true })).toBe(MODEL_MAP.hair);
       expect(resolveModelName(undefined, { detail: true })).toBe(MODEL_MAP.detail);
+      expect(resolveModelName(undefined, { fast: true })).toBe(MODEL_MAP.fast);
+      expect(resolveModelName(undefined, { quick: true })).toBe(MODEL_MAP.quick);
       expect(resolveModelName('custom/model')).toBe('custom/model');
     });
 

@@ -937,7 +937,8 @@ export function createCli(): Command {
     .alias('rembg')
     .option('-m, --model <model>', 'AI model override (ormbg, birefnet)')
     .option('--dyb', 'Do-Your-Best preset: use slower, ultra-detail model (birefnet CPU)')
-    .option('--fast', 'Speed preset: use lightweight fast model (BiRefNet Lite)')
+    .option('--fast', 'Speed preset: use lightweight fast model (BiRefNet Lite, MIT License)')
+    .option('--quick', 'Speed preset: alias for --fast (BiRefNet Lite, MIT License)')
     .option('-f, --format <format>', 'Output format: png or webp', 'png')
     .option('--quality <1-100>', 'WebP compression quality (1-100)', '95')
     .option('--trim', 'Auto-crop transparent margins around isolated subject')
@@ -996,7 +997,7 @@ export function createCli(): Command {
         const useMotion = Boolean(options.motion);
         const useHairPreset = Boolean(options.hair);
         const useDetailPreset = Boolean(options.detail);
-        const useFast = Boolean(options.fast);
+        const useFast = Boolean(options.fast || options.quick);
         const useDyb = Boolean(options.dyb);
         const selectedModel = options.model ? options.model : (useFast ? 'fast' : (useHairPreset ? 'hair' : (useDetailPreset ? 'detail' : 'default')));
         const shouldDefringe = options.defringe !== false;
@@ -1007,6 +1008,7 @@ export function createCli(): Command {
           console.log(`  ${c.green('🔒 [Local AI]')} ${c.dim('100% on-device processing. No images uploaded.')}`);
           let modeTag = '';
           if (useDyb) modeTag = c.yellow(' [DYB: Do Your Best / Ultra-Detail]');
+          else if (useFast) modeTag = c.cyan(' [Fast / Quick Mode: BiRefNet Lite]');
           else if (gpuDetected) modeTag = c.green(' [GPU / NPU Accelerated]');
           if (useMotion) modeTag += c.green(' (Motion Blur & Sports Mode)');
           else if (useHairPreset) modeTag += c.green(' (Hair Portrait Mode)');
@@ -1037,6 +1039,7 @@ export function createCli(): Command {
           model: selectedModel,
           dyb: useDyb,
           fast: useFast,
+          quick: useFast,
           hair: useHairPreset,
           detail: useDetailPreset,
           format: options.format,
