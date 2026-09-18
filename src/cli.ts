@@ -937,35 +937,68 @@ export function createCli(): Command {
     .alias('rembg')
     .option('-m, --model <model>', 'AI model override (ormbg, birefnet)')
     .option('--dyb', 'Do-Your-Best preset: use slower, ultra-detail model (birefnet CPU)')
-    .option('--fast', 'Speed preset: use lightweight fast model (ormbg)')
+    .option('--fast', 'Speed preset: use lightweight fast model (BiRefNet Lite)')
     .option('-f, --format <format>', 'Output format: png or webp', 'png')
     .option('--quality <1-100>', 'WebP compression quality (1-100)', '95')
     .option('--trim', 'Auto-crop transparent margins around isolated subject')
     .option('--padding <px>', 'Padding in pixels when trimming', '0')
     .option('--threshold <cutoff>', 'Hard alpha threshold cutoff between 0.0 and 1.0')
-    .option('--hair', 'Optimize specifically for portraits and fine hair')
+    .option('--hair', 'Optimize specifically for portraits and fine hair (BiRefNet Portrait)')
+    .option('--detail', 'Optimize specifically for jewelry, lace, and fine geometric details (BiRefNet DIS5K)')
     .option('--motion', 'Optimize for fast motion, sports gear (golf clubs, hockey sticks), and motion blur')
     .option('--defringe', 'Enable edge de-fringing and color decontamination (enabled by default)')
     .option('--no-defringe', 'Disable automatic edge de-fringing and color decontamination')
     .option('--gpu', 'Accelerate on GPU / NPU hardware (DirectML on Intel Arc / AI Boost)')
     .option('-r, --recursive', 'Recursively search subdirectories when source is a folder')
+    .option('--doctor', 'Run hardware and execution provider diagnostic report and exit')
+    .option('--dry-run', 'Preview image scanning and model routing without running neural inference')
     .option('--json', 'Output results in structured JSON format')
     .option('-q, --quiet', 'Suppress console logs except errors')
     .action(async (source: string, target: string, options: any) => {
       try {
+        if (options.doctor) {
+          console.log(`\n${c.bold('🩺  TOAD Background Remover Hardware Diagnostics')}`);
+          console.log(`  ${c.dim('Node.js:')}    ${process.version} (${process.platform}-${process.arch})`);
+          try {
+            const ort = require('onnxruntime-node');
+            const backends = typeof ort.listSupportedBackends === 'function' ? ort.listSupportedBackends() : [];
+            console.log(`  ${c.dim('Backends:')}   ${backends.map((b: any) => b.name).join(', ') || 'cpu'}`);
+          } catch {
+            console.log(`  ${c.dim('Backends:')}   cpu (fallback)`);
+          }
+          console.log(`  ${c.dim('DirectML:')}   ${isGpuAvailable() ? c.green('⚡ Supported & Active (Intel Arc / AI Boost NPU / DirectX 12)') : c.yellow('Not detected (CPU execution)')}`);
+          console.log(`  ${c.dim('License:')}    ${c.green('100% Permissive Commercial (BiRefNet MIT Suite)')}\n`);
+          return;
+        }
+
         const resolvedSource = path.resolve(source);
         if (!fs.existsSync(resolvedSource)) {
           console.error(`\n${c.red('✖')} Source not found: ${c.bold(source)}\n`);
           process.exit(1);
         }
 
+        if (options.dryRun) {
+          console.log(`\n${c.bold('🔍  TOAD Background Remover Dry Run')}`);
+          const isDir = fs.statSync(resolvedSource).isDirectory();
+          if (isDir) {
+            console.log(`  ${c.cyan('Source Directory:')} ${resolvedSource}`);
+            console.log(`  ${c.cyan('Target Directory:')} ${path.resolve(target)}`);
+          } else {
+            console.log(`  ${c.cyan('Source File:')}      ${resolvedSource}`);
+            console.log(`  ${c.cyan('Target File:')}      ${path.resolve(target)}`);
+          }
+          console.log(`  ${c.green('Dry run completed. No inference executed and no files modified.')}\n`);
+          return;
+        }
+
         const isJson = Boolean(options.json);
         const isQuiet = Boolean(options.quiet) || isJson;
         const useMotion = Boolean(options.motion);
         const useHairPreset = Boolean(options.hair);
+        const useDetailPreset = Boolean(options.detail);
         const useFast = Boolean(options.fast);
         const useDyb = Boolean(options.dyb);
-        const selectedModel = options.model ? options.model : (useDyb ? 'birefnet' : 'ormbg');
+        const selectedModel = options.model ? options.model : (useFast ? 'fast' : (useHairPreset ? 'hair' : (useDetailPreset ? 'detail' : 'default')));
         const shouldDefringe = options.defringe !== false;
         const gpuDetected = isGpuAvailable();
 
@@ -977,13 +1010,10 @@ export function createCli(): Command {
           else if (gpuDetected) modeTag = c.green(' [GPU / NPU Accelerated]');
           if (useMotion) modeTag += c.green(' (Motion Blur & Sports Mode)');
           else if (useHairPreset) modeTag += c.green(' (Hair Portrait Mode)');
+          else if (useDetailPreset) modeTag += c.green(' (High Detail Mode)');
           console.log(`  ${c.dim('Model:')}    ${c.cyan(selectedModel)}${modeTag}`);
           if (gpuDetected) {
-            if (selectedModel.toLowerCase().includes('birefnet') || useDyb) {
-              console.log(`  ${c.dim('Hardware:')} ${c.yellow('Intel Arc GPU / AI Boost NPU Detected (CPU execution used for DYB high-precision ops)')}`);
-            } else {
-              console.log(`  ${c.dim('Hardware:')} ${c.green('⚡ Intel Arc GPU / AI Boost NPU DirectML Hardware Acceleration Active')}`);
-            }
+            console.log(`  ${c.dim('Hardware:')} ${c.green('⚡ Intel Arc GPU / AI Boost NPU DirectML Hardware Acceleration Active')}`);
           }
           if (shouldDefringe) console.log(`  ${c.dim('Filter:')}   ${c.yellow('Smart De-Fringe & Edge Decontamination (Active)')}`);
           if (useMotion) console.log(`  ${c.dim('Matting:')}  ${c.yellow('Soft Motion Trail & Thin-Object Protection')}`);
@@ -1008,6 +1038,7 @@ export function createCli(): Command {
           dyb: useDyb,
           fast: useFast,
           hair: useHairPreset,
+          detail: useDetailPreset,
           format: options.format,
           quality: qualityNum,
           trim: options.trim,

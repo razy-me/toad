@@ -357,10 +357,23 @@ export async function trimImageAlpha(image: any, padding = 0, thresholdAlpha = 5
 }
 
 /**
- * Smart color decontamination (De-fringing) & backdrop haze removal.
- * Eliminates grey/white halos around hair by:
- * 1. Clearing low-alpha background haze (alpha < 30).
- * 2. Replacing background-contaminated RGB in semi-transparent edge pixels with genuine subject color.
+ * Automatic subject classification based on aspect ratio and composition (F-55).
+ * Automatically selects portrait model for vertical portrait aspect ratios when zero flags are given.
+ */
+export function detectSubjectType(image: any): 'portrait' | 'general' {
+  const { width, height } = image;
+  const aspectRatio = height / width;
+  // Vertical framing (1.2 to 2.2) strongly correlates with portrait shots
+  if (aspectRatio >= 1.2 && aspectRatio <= 2.2) {
+    return 'portrait';
+  }
+  return 'general';
+}
+
+/**
+ * Smart color decontamination (De-fringing).
+ * Eliminates halos around hair and edges while preserving delicate continuous transparency.
+ * Non-destructive: Does NOT clamp subtle alpha values (< 30) to zero (F-05).
  */
 export function defringeImage(image: any, radius = 3): any {
   const { width, height, data, channels } = image;
@@ -368,14 +381,12 @@ export function defringeImage(image: any, radius = 3): any {
 
   const cleanData = new Uint8ClampedArray(data);
 
-  // Step 1: Backdrop haze removal & edge sharpening
+  // Step 1: Gentle floor noise suppression (only true zero floor noise <= 2 is zeroed, F-05)
   let hasSemiTransparent = false;
   for (let i = 3; i < cleanData.length; i += channels) {
     const a = cleanData[i];
-    if (a < 30) {
+    if (a <= 2) {
       cleanData[i] = 0;
-    } else {
-      cleanData[i] = Math.min(255, Math.round(Math.pow((a - 30) / (255 - 30), 1.25) * 255));
     }
     if (cleanData[i] > 0 && cleanData[i] < 235) {
       hasSemiTransparent = true;
@@ -549,8 +560,14 @@ export async function removeBackgroundFromFile(
       rawImage = rawImage.rgba();
     }
 
-    // Select model using parameter-driven commercial MIT dispatch
-    const modelToUse = resolveModelName(options.model, options);
+    // Adaptive model selection: if no explicit model or flag given, auto-classify subject (F-55)
+    let modelToUse: string;
+    if (!options.model && !options.hair && !options.detail && !options.fast && !options.dyb) {
+      const subject = detectSubjectType(rawImage);
+      modelToUse = subject === 'portrait' ? MODEL_MAP.portrait : MODEL_MAP.default;
+    } else {
+      modelToUse = resolveModelName(options.model, options);
+    }
 
     // Run neural background segmentation
     const segmenter = await getSegmentationPipeline(modelToUse, options.device);
@@ -561,6 +578,11 @@ export async function removeBackgroundFromFile(
     }
 
     let mask = segmentationResult[0].mask;
+
+    // Ensure mask dimensions match source image dimensions exactly (F-15)
+    if (mask.width !== rawImage.width || mask.height !== rawImage.height) {
+      mask = await mask.resize(rawImage.width, rawImage.height);
+    }
 
   // Optional smooth anti-aliased alpha thresholding (F-10)
   if (typeof options.threshold === 'number' && options.threshold >= 0 && options.threshold <= 1) {
