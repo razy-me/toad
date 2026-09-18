@@ -179,9 +179,22 @@ export const MODEL_MAP: Record<string, string> = {
   'birefnet-dis': 'onnx-community/BiRefNet-DIS5K-ONNX'
 };
 
-// Singleton pipeline cache with device-aware composite key
-let cachedPipeline: any = null;
-let currentCacheKey: string | null = null;
+// Disable sharp internal memory cache to prevent memory accumulation in large batch jobs
+try {
+  const sharp = require('sharp');
+  sharp.cache(false);
+  sharp.simd(true);
+} catch {}
+
+// Multi-model pipeline cache by composite key (modelName + device)
+const pipelineCache = new Map<string, any>();
+
+/**
+ * Explicitly clears the loaded neural pipeline cache to free heap and native tensor memory.
+ */
+export function clearPipelineCache(): void {
+  pipelineCache.clear();
+}
 
 /**
  * Configure environment to ensure models are stored in a dedicated, permanent TOAD directory
@@ -274,8 +287,8 @@ export async function getSegmentationPipeline(
   const device = deviceArg || detectBestDevice(modelName);
   const cacheKey = `${modelName}::${device}`;
 
-  if (cachedPipeline && currentCacheKey === cacheKey) {
-    return cachedPipeline;
+  if (pipelineCache.has(cacheKey)) {
+    return pipelineCache.get(cacheKey);
   }
 
   if (inFlightPipelinePromises.has(cacheKey)) {
@@ -301,8 +314,7 @@ export async function getSegmentationPipeline(
             device: dev,
             progress_callback: onProgress
           });
-          cachedPipeline = pipe;
-          currentCacheKey = `${modelName}::${dev}`;
+          pipelineCache.set(cacheKey, pipe);
           return pipe;
         } catch (err: any) {
           attempts++;
@@ -718,6 +730,10 @@ export async function removeBackgroundFromFile(
     backupBuffer = fs.readFileSync(resolvedSource);
   }
 
+  if (options.signal?.aborted) {
+    throw new Error('Operation aborted by user signal');
+  }
+
   const startTime = Date.now();
 
   try {
@@ -729,13 +745,16 @@ export async function removeBackgroundFromFile(
       rawImage = rawImage.rgba();
     }
 
-    const effectiveDevice = options.device || (isGpuAvailable() ? 'dml' : 'cpu');
     let mask: any;
 
     if (options.dyb) {
       // --- STAGE 1: Dual-Model Neural Ensemble (Semantic Foundation + DIS5K Micro-Geometry) ---
-      const subject = detectSubjectType(rawImage);
-      const baseModel = subject === 'portrait' ? MODEL_MAP.portrait : MODEL_MAP.default;
+      const baseModel = MODEL_MAP.default;
+      const effectiveDevice = options.device || detectBestDevice(baseModel);
+
+      if (options.signal?.aborted) {
+        throw new Error('Operation aborted by user signal');
+      }
 
       // Pass A: Semantic Base
       const segmenterA = await getSegmentationPipeline(baseModel, effectiveDevice);
@@ -746,6 +765,10 @@ export async function removeBackgroundFromFile(
       let maskA = resA[0].mask;
       if (maskA.width !== rawImage.width || maskA.height !== rawImage.height) {
         maskA = await maskA.resize(rawImage.width, rawImage.height);
+      }
+
+      if (options.signal?.aborted) {
+        throw new Error('Operation aborted by user signal');
       }
 
       // Pass B: Micro-Geometry Specialist (BiRefNet DIS5K)
@@ -780,13 +803,24 @@ export async function removeBackgroundFromFile(
       // Snaps alpha matte transitions directly to the camera sensor's high-frequency RGB edges
       mask = applyGuidedFilter(rawImage, fusedMask, 4, 1e-3);
     } else {
-      // Adaptive model selection: if no explicit model or flag given, auto-classify subject (F-55)
+      // Standard mode uses the high-accuracy general foundation model (BiRefNet-ONNX) consistently
       let modelToUse: string;
-      if (!options.model && !options.hair && !options.detail && !options.fast && !options.quick) {
-        const subject = detectSubjectType(rawImage);
-        modelToUse = subject === 'portrait' ? MODEL_MAP.portrait : MODEL_MAP.default;
-      } else {
+      if (options.model) {
         modelToUse = resolveModelName(options.model, options);
+      } else if (options.hair) {
+        modelToUse = MODEL_MAP.portrait;
+      } else if (options.detail) {
+        modelToUse = MODEL_MAP.detail;
+      } else if (options.fast || options.quick) {
+        modelToUse = MODEL_MAP.fast;
+      } else {
+        modelToUse = MODEL_MAP.default;
+      }
+
+      const effectiveDevice = options.device || detectBestDevice(modelToUse);
+
+      if (options.signal?.aborted) {
+        throw new Error('Operation aborted by user signal');
       }
 
       // Run neural background segmentation
@@ -855,6 +889,10 @@ export async function removeBackgroundFromFile(
     fs.mkdirSync(targetDir, { recursive: true });
   }
 
+  if (options.signal?.aborted) {
+    throw new Error('Operation aborted by user signal');
+  }
+
   // Atomic file write via temporary staging file to prevent corruption
   const tempPath = path.join(
     targetDir,
@@ -872,17 +910,25 @@ export async function removeBackgroundFromFile(
 
   const durationMs = Date.now() - startTime;
   const outputStat = fs.statSync(targetPath);
+  const outWidth = isolatedImage.width;
+  const outHeight = isolatedImage.height;
+  const outCropBox = (isolatedImage as any).cropBox;
 
-    return {
-      sourceFile: resolvedSource,
-      targetFile: path.resolve(targetPath),
-      width: isolatedImage.width,
-      height: isolatedImage.height,
-      durationMs,
-      originalBytes: stat.size,
-      outputBytes: outputStat.size,
-      cropBox: (isolatedImage as any).cropBox
-    };
+  // Dereference heavy image buffers to free heap memory
+  rawImage = null as any;
+  mask = null as any;
+  isolatedImage = null as any;
+
+  return {
+    sourceFile: resolvedSource,
+    targetFile: path.resolve(targetPath),
+    width: outWidth,
+    height: outHeight,
+    durationMs,
+    originalBytes: stat.size,
+    outputBytes: outputStat.size,
+    cropBox: outCropBox
+  };
   } catch (err) {
     if (isSameFile && backupBuffer) {
       try {
@@ -956,7 +1002,7 @@ export async function removeBackgroundFromDirectory(
 
   // Warm up pipeline once using parameter-resolved model and report download progress
   const warmupModel = resolveModelName(options.model, options);
-  const effectiveDevice = options.device || (isGpuAvailable() ? 'dml' : 'cpu');
+  const effectiveDevice = options.device || detectBestDevice(warmupModel);
   await getSegmentationPipeline(warmupModel, effectiveDevice, options.onDownloadProgress);
 
   const defaultConcurrency = (options.fast || options.quick) ? 4 : 1;
@@ -967,7 +1013,7 @@ export async function removeBackgroundFromDirectory(
   async function worker() {
     while (currentIndex < total) {
       if (options.signal?.aborted) {
-        throw new Error('Batch operation aborted by signal.');
+        break;
       }
       const fileIdx = currentIndex++;
       const file = imageFiles[fileIdx];
@@ -993,6 +1039,9 @@ export async function removeBackgroundFromDirectory(
 
       try {
         const res = await removeBackgroundFromFile(file, targetFile, options);
+        if (options.signal?.aborted) {
+          break;
+        }
         results.push(res);
         completedCount++;
 
@@ -1017,6 +1066,9 @@ export async function removeBackgroundFromDirectory(
           });
         }
       } catch (err: any) {
+        if (options.signal?.aborted) {
+          break;
+        }
         const errMsg = err?.message || String(err);
         errors.push({ sourceFile: file, error: errMsg });
         if (options.onProgress) {

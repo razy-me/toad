@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import * as path from 'node:path';
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 import {
@@ -22,8 +23,9 @@ const TEST_OUT_DIR = path.resolve('tests/dist/bg_remover_test');
 
 describe('TOAD Background Remover Module', () => {
   beforeAll(() => {
-    // Isolate test model cache from user home directory (F-35)
-    process.env.TOAD_MODELS_CACHE = path.resolve('tests/dist/test_models');
+    // Re-use permanent model cache if available to prevent re-downloading ~1GB in tests
+    const defaultCache = path.join(os.homedir(), '.toad', 'models');
+    process.env.TOAD_MODELS_CACHE = fs.existsSync(defaultCache) ? defaultCache : path.resolve('tests/dist/test_models');
     if (!fs.existsSync(TEST_OUT_DIR)) {
       fs.mkdirSync(TEST_OUT_DIR, { recursive: true });
     }

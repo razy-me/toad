@@ -19,7 +19,7 @@ import { bundleAssets } from './tools/assetBundler.js';
 import { formatRustDiagnostic, generateHelpSuggestion } from './tools/diagnostics.js';
 import { compileMotion } from './motion/index.js';
 import { updateToad } from './tools/updater.js';
-import { removeBackground, isGpuAvailable } from './tools/backgroundRemover.js';
+import { removeBackground, isGpuAvailable, detectBestDevice } from './tools/backgroundRemover.js';
 
 
 export interface CliOptions {
@@ -941,6 +941,21 @@ export function createCli(): Command {
     .option('-f, --format <format>', 'Output format: png or webp', 'png')
     .option('-r, --recursive', 'Recursively search subdirectories when source is a folder')
     .action(async (source: string, target: string, options: any) => {
+      const abortController = new AbortController();
+      let isTerminating = false;
+
+      const onSigInt = () => {
+        if (isTerminating) {
+          process.exit(130);
+        }
+        isTerminating = true;
+        process.stdout.write(`\n\n  ${c.yellow('⚠ Vorgang durch Benutzer mit Strg+C abgebrochen.')}\n\n`);
+        abortController.abort();
+        setTimeout(() => process.exit(130), 150).unref();
+      };
+
+      process.on('SIGINT', onSigInt);
+
       try {
         const resolvedSource = path.resolve(source);
         if (!fs.existsSync(resolvedSource)) {
@@ -951,9 +966,8 @@ export function createCli(): Command {
         const isDirectory = fs.statSync(resolvedSource).isDirectory();
         const useFast = Boolean(options.fast || options.quick);
         const useDyb = Boolean(options.dyb);
-        const selectedModel = useDyb ? 'dyb (ensemble + guided filter)' : (useFast ? 'fast (BiRefNet Lite)' : 'auto (adaptive routing)');
-        const gpuDetected = isGpuAvailable();
-        const autoDevice = gpuDetected ? 'dml' : 'cpu';
+        const selectedModel = useDyb ? 'dyb (ensemble + guided filter)' : (useFast ? 'fast (BiRefNet Lite)' : 'auto (BiRefNet)');
+        const effectiveDevice = detectBestDevice(selectedModel);
         // In standard and dyb mode, process strictly 1 image at a time to maximize quality, stability, and RAM efficiency
         const autoConcurrency = useFast ? 4 : 1;
 
@@ -962,12 +976,11 @@ export function createCli(): Command {
         let modeTag = '';
         if (useDyb) modeTag = c.yellow(' [DYB: Multi-Model Ensemble + Native Guided Filter]');
         else if (useFast) modeTag = c.cyan(' [Fast / Quick Mode: BiRefNet Lite 4x Fast-Path]');
-        else if (gpuDetected) modeTag = c.green(' [GPU / NPU Accelerated]');
         console.log(`  ${c.dim('Model:')}    ${c.cyan(selectedModel)}${modeTag}`);
-        if (gpuDetected) {
-          console.log(`  ${c.dim('Hardware:')} ${c.green('⚡ Intel Arc GPU / AI Boost NPU DirectML Hardware Acceleration Active')}`);
+        if (effectiveDevice === 'dml') {
+          console.log(`  ${c.dim('Hardware:')} ${c.green('⚡ DirectML GPU Hardware Acceleration Active')}`);
         } else {
-          console.log(`  ${c.dim('Hardware:')} ${c.yellow('CPU Execution (Optimized Multi-Threaded)')}`);
+          console.log(`  ${c.dim('Hardware:')} ${c.green('⚡ Multi-Threaded CPU Tensor Engine (AVX2/NEON, Memory-Safe)')}`);
         }
         console.log(`  ${c.dim('Features:')} ${c.dim('Original Canvas Preservation, Bilateral Matting, Clean Metadata')}`);
         console.log(`  ${c.dim('Source:')}   ${c.white(resolvedSource)}`);
@@ -1004,8 +1017,9 @@ export function createCli(): Command {
           format: options.format,
           trim: false,
           concurrency: autoConcurrency,
-          device: autoDevice,
+          device: effectiveDevice,
           recursive: options.recursive,
+          signal: abortController.signal,
           onDownloadProgress,
           onProgress: (info: any) => {
             const bar = renderProgressBar(info.index, info.total, 20);
@@ -1049,8 +1063,13 @@ export function createCli(): Command {
           console.log(`  ${c.dim('Location:')} ${c.cyan(singleRes.targetFile)}\n`);
         }
       } catch (err: any) {
+        if (abortController.signal.aborted) {
+          process.exit(130);
+        }
         console.error(`\n${c.bgRed(' ERROR ')} ${c.bold(c.red(`Failed to remove background:`))} ${err.message || String(err)}\n`);
         process.exit(1);
+      } finally {
+        process.removeListener('SIGINT', onSigInt);
       }
     });
 
