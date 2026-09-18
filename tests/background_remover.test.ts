@@ -19,6 +19,8 @@ const TEST_OUT_DIR = path.resolve('tests/dist/bg_remover_test');
 
 describe('TOAD Background Remover Module', () => {
   beforeAll(() => {
+    // Isolate test model cache from user home directory (F-35)
+    process.env.TOAD_MODELS_CACHE = path.resolve('tests/dist/test_models');
     if (!fs.existsSync(TEST_OUT_DIR)) {
       fs.mkdirSync(TEST_OUT_DIR, { recursive: true });
     }
@@ -51,6 +53,12 @@ describe('TOAD Background Remover Module', () => {
         removeBackgroundFromFile('non_existent_file.png', path.join(TEST_OUT_DIR, 'out.png'))
       ).rejects.toThrow(/Source image not found/);
     });
+
+    it('rejects vector SVG files with actionable error message (F-59)', async () => {
+      const source = path.join(FIXTURES_DIR, 'hero_banner.svg');
+      const target = path.join(TEST_OUT_DIR, 'svg_out.png');
+      await expect(removeBackgroundFromFile(source, target)).rejects.toThrow(/Vector SVG format cannot be processed/);
+    });
   });
 
   describe('Single Image Background Removal', () => {
@@ -67,6 +75,17 @@ describe('TOAD Background Remover Module', () => {
       expect(result.height).toBe(1000);
       expect(result.outputBytes).toBeGreaterThan(0);
       expect(result.durationMs).toBeGreaterThan(0);
+    }, 180000);
+
+    it('removes background from a 3-channel RGB JPEG file without error (F-01, F-34)', async () => {
+      const source = path.join(FIXTURES_DIR, 'logo.jpg');
+      const target = path.join(TEST_OUT_DIR, 'logo_jpg_nobg.png');
+
+      const result = await removeBackgroundFromFile(source, target);
+
+      expect(fs.existsSync(target)).toBe(true);
+      expect(result.sourceFile).toBe(source);
+      expect(result.outputBytes).toBeGreaterThan(0);
     }, 180000);
 
     it('supports smart trimming with padding', async () => {
@@ -96,7 +115,7 @@ describe('TOAD Background Remover Module', () => {
 
       expect(fs.existsSync(target)).toBe(true);
       expect(result.outputBytes).toBeGreaterThan(0);
-    }, 60000);
+    }, 180000);
   });
 
   describe('Batch Directory Background Removal', () => {

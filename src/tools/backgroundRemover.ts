@@ -174,12 +174,22 @@ let currentCacheKey: string | null = null;
  * and can run 100% offline once downloaded.
  */
 export function ensureEnvironmentConfigured(): string {
-  const cacheDir = process.env.TOAD_MODELS_CACHE || path.join(os.homedir(), '.toad', 'models');
+  let cacheDir = process.env.TOAD_MODELS_CACHE || path.join(os.homedir(), '.toad', 'models');
   if (!fs.existsSync(cacheDir)) {
-    fs.mkdirSync(cacheDir, { recursive: true });
+    try {
+      fs.mkdirSync(cacheDir, { recursive: true });
+    } catch {
+      // Fallback to system temp directory if home partition is full or unwritable (F-56)
+      cacheDir = path.join(os.tmpdir(), '.toad', 'models');
+      fs.mkdirSync(cacheDir, { recursive: true });
+    }
   }
   env.cacheDir = cacheDir;
   env.allowLocalModels = true;
+  // If in offline mode, disable remote checks to prevent network timeouts (F-18)
+  if (process.env.TOAD_OFFLINE === '1' || process.env.OFFLINE === '1') {
+    env.allowRemoteModels = false;
+  }
   return cacheDir;
 }
 
@@ -540,6 +550,17 @@ export async function removeBackgroundFromFile(
   const ext = path.extname(resolvedSource).toLowerCase();
   if (ext === '.gif') {
     throw new Error(`Animated GIF formats are not supported for single-image background removal. Please extract individual frames.`);
+  }
+  if (ext === '.svg') {
+    throw new Error(`Vector SVG format cannot be processed directly by neural segmentation. Please rasterize to PNG or JPEG first.`);
+  }
+  if (ext === '.tif' || ext === '.tiff') {
+    throw new Error(`Multi-page TIFF format is not supported. Please convert to PNG or JPEG first.`);
+  }
+
+  // Safety check on file size (> 150 MB safety threshold, F-36)
+  if (stat.size > 150 * 1024 * 1024) {
+    throw new Error(`Input image file exceeds safe size limit of 150 MB (${(stat.size / 1024 / 1024).toFixed(1)} MB). Downscale before processing.`);
   }
 
   // Detect in-place overwrite and buffer original file to prevent data loss on error (F-04)
