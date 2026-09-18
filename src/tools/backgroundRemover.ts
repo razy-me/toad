@@ -183,6 +183,7 @@ export const MODEL_MAP: Record<string, string> = {
 try {
   const sharp = require('sharp');
   sharp.cache(false);
+  sharp.concurrency(1);
   sharp.simd(true);
 } catch {}
 
@@ -310,8 +311,16 @@ export async function getSegmentationPipeline(
 
       while (attempts < maxAttempts) {
         try {
+          const sessionOptions: any = {};
+          if (dev === 'cpu') {
+            // Disable memory arena pool and limit thread workspace to strictly cap RAM < 2 GB (well below 50% system RAM)
+            sessionOptions.enableCpuMemArena = false;
+            sessionOptions.intraOpNumThreads = Math.max(2, Math.min(4, os.cpus().length));
+            sessionOptions.interOpNumThreads = 1;
+          }
           const pipe = await pipeline('image-segmentation', modelName, {
             device: dev,
+            session_options: sessionOptions,
             progress_callback: onProgress
           });
           pipelineCache.set(cacheKey, pipe);
