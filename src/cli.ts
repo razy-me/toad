@@ -18,7 +18,7 @@ import { copyToClipboard } from './utils/clipboard.js';
 import { bundleAssets } from './tools/assetBundler.js';
 import { formatRustDiagnostic, generateHelpSuggestion } from './tools/diagnostics.js';
 import { compileMotion } from './motion/index.js';
-import { updateToad } from './tools/updater.js';
+import { updateToad, checkForUpdatesSummary } from './tools/updater.js';
 import { removeBackground, isGpuAvailable, detectBestDevice } from './tools/backgroundRemover.js';
 import {
   startStudioDaemon,
@@ -1161,6 +1161,7 @@ export function createCli(): Command {
     .description('Launch TOAD Studio interactive Web-GUI (Graphic, Animation, BG-Remover, Convert, Audit)')
     .option('-p, --port <number>', 'Port for the studio server (default: 3000)')
     .option('-f, --foreground', 'Run in foreground (attached to current terminal)')
+    .option('--delay-browser', 'Delay browser launch by 3 seconds while checking for updates')
     .action(async (actionOrEntry?: string, options?: any) => {
       const port = options?.port ? parseInt(options.port, 10) : 3000;
 
@@ -1182,6 +1183,28 @@ export function createCli(): Command {
       }
 
       const isForeground = Boolean(options?.foreground);
+      const shouldDelayBrowser = Boolean(options?.delayBrowser);
+
+      const handleBrowserOpening = async (targetUrl: string) => {
+        if (shouldDelayBrowser) {
+          console.log(`  ${c.cyan('🔄')}  ${c.dim('Prüfe auf Updates...')}`);
+          const startCheck = Date.now();
+          const updateInfo = await checkForUpdatesSummary();
+
+          if (updateInfo.hasUpdates) {
+            console.log(`  ${c.yellow('⭐')}  ${c.bold(c.yellow(`${updateInfo.count} neue ${updateInfo.count === 1 ? 'Update verfügbar' : 'Updates verfügbar'}!`))} ${c.dim('(toad update)')}`);
+          } else {
+            console.log(`  ${c.green('✔')}  ${c.dim(updateInfo.message)}`);
+          }
+
+          const elapsed = Date.now() - startCheck;
+          const remainingDelay = Math.max(0, 3000 - elapsed);
+          if (remainingDelay > 0) {
+            await new Promise((resolve) => setTimeout(resolve, remainingDelay));
+          }
+        }
+        openBrowser(targetUrl);
+      };
 
       if (isForeground) {
         let targetFile = actionOrEntry;
@@ -1221,8 +1244,9 @@ export function createCli(): Command {
           });
 
           console.log(`  ${c.green('➜')}  ${c.bold('Studio URL:')}     ${c.cyan(serverInstance.url)}`);
-          console.log(`  ${c.dim('➜')}  ${c.dim('Browser:')}        ${c.green('Opening automatically...')}\n`);
-          openBrowser(serverInstance.url);
+          console.log(`  ${c.dim('➜')}  ${c.dim('Browser:')}        ${c.green(shouldDelayBrowser ? 'Öffnet in 3 Sekunden...' : 'Opening automatically...')}`);
+
+          await handleBrowserOpening(serverInstance.url);
 
           const cleanup = () => {
             clearDaemonInfo();
@@ -1244,8 +1268,10 @@ export function createCli(): Command {
           console.log(`  ${c.green('➜')}  ${c.bold('Studio URL:')}     ${c.cyan(daemon.url)}`);
           console.log(`  ${c.dim('➜')}  ${c.dim('Status:')}         ${c.green('Läuft als Hintergrund-Dienst (PID: ' + daemon.pid + ')')}`);
           console.log(`  ${c.dim('➜')}  ${c.dim('Terminal:')}       ${c.yellow('Dieses CMD-Fenster kann jetzt geschlossen werden.')}`);
-          console.log(`  ${c.dim('➜')}  ${c.dim('Beenden:')}        ${c.dim('toad studio stop (oder direkt im Web-GUI)')}\n`);
-          openBrowser(daemon.url);
+          console.log(`  ${c.dim('➜')}  ${c.dim('Beenden:')}        ${c.dim('toad studio stop (oder direkt im Web-GUI)')}`);
+          console.log(`  ${c.dim('➜')}  ${c.dim('Browser:')}        ${c.green(shouldDelayBrowser ? 'Öffnet in 3 Sekunden...' : 'Opening automatically...')}\n`);
+
+          await handleBrowserOpening(daemon.url);
           process.exit(0);
         } catch (err: any) {
           console.error(`${c.red('Error starting background Studio:')}`, err.message || err);
@@ -1281,9 +1307,9 @@ export function shouldAutoRun(argv1?: string): boolean {
 
 if (shouldAutoRun(process.argv[1])) {
   const args = process.argv.slice(2);
-  // If invoked with completely 0 arguments in an interactive terminal, launch TOAD Studio Web-GUI
+  // If invoked with completely 0 arguments in an interactive terminal, launch TOAD Studio Web-GUI with update check & delay
   if (args.length === 0 && process.stdin.isTTY && !process.env.VITEST && !process.env.CI) {
-    program.parse([process.argv[0]!, process.argv[1]!, 'studio']);
+    program.parse([process.argv[0]!, process.argv[1]!, 'studio', '--delay-browser']);
   } else {
     program.parse(process.argv);
   }

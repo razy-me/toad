@@ -77,6 +77,81 @@ export async function getLatestGitHubInfo(): Promise<{ tag: string; name?: strin
 }
 
 /**
+ * Quick non-blocking update check for TOAD startup.
+ * Checks for git updates (if in repo) or GitHub releases/commits.
+ */
+export async function checkForUpdatesSummary(): Promise<{ hasUpdates: boolean; count: number; message: string }> {
+  const rootDir = getToadRootDir();
+  const isGit = isGitRepo(rootDir);
+
+  if (isGit) {
+    try {
+      // Run git fetch with a 2.5 second timeout so startup never hangs
+      await new Promise<void>((resolve) => {
+        const child = spawn('git', ['fetch', 'origin', 'main'], {
+          cwd: rootDir,
+          stdio: 'ignore'
+        });
+        const timer = setTimeout(() => {
+          try { child.kill(); } catch {}
+          resolve();
+        }, 2500);
+        child.on('close', () => {
+          clearTimeout(timer);
+          resolve();
+        });
+        child.on('error', () => {
+          clearTimeout(timer);
+          resolve();
+        });
+      });
+
+      const countStr = execSync('git rev-list --count HEAD..origin/main', {
+        cwd: rootDir,
+        encoding: 'utf-8',
+        timeout: 1000
+      }).trim();
+      const count = parseInt(countStr, 10);
+      if (!isNaN(count) && count > 0) {
+        return {
+          hasUpdates: true,
+          count,
+          message: `${count} neue ${count === 1 ? 'Update verfügbar' : 'Updates verfügbar'}`
+        };
+      }
+      return { hasUpdates: false, count: 0, message: 'TOAD ist auf dem neuesten Stand' };
+    } catch {
+      // Fallback or offline
+    }
+  }
+
+  // Fallback check via GitHub API with abort controller
+  try {
+    const currentVersion = getCurrentVersion(rootDir);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 2000);
+    const res = await fetch('https://api.github.com/repos/razy-me/toad/releases/latest', {
+      headers: { 'User-Agent': 'toad-updater' },
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+    if (res.ok) {
+      const data = await res.json();
+      const latestTag = (data.tag_name || '').replace(/^v/, '');
+      if (latestTag && latestTag !== currentVersion) {
+        return {
+          hasUpdates: true,
+          count: 1,
+          message: `Neues Update verfügbar: v${latestTag}`
+        };
+      }
+    }
+  } catch {}
+
+  return { hasUpdates: false, count: 0, message: 'TOAD ist auf dem neuesten Stand' };
+}
+
+/**
  * Reads the current TOAD version from package.json.
  */
 export function getCurrentVersion(rootDir: string): string {
