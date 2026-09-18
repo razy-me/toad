@@ -6,9 +6,13 @@
 import * as http from 'node:http';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import * as os from 'node:os';
 import { spawn } from 'node:child_process';
-import { BuildResult } from '../build.js';
+import { BuildResult, compileToad } from '../build.js';
 import { auditDesign } from '../tools/designAuditor.js';
+import { listAllToadFiles, getWorkspaces, addWorkspace, removeWorkspace } from '../utils/fileFinder.js';
+import { formatToad } from '../tools/formatter.js';
+import { generateStudioHtml } from './uiHtml.js';
 
 export interface PreviewServerInstance {
   server: http.Server;
@@ -23,11 +27,13 @@ export function createPreviewServer(
   initialResult: BuildResult | null,
   entryFilePath: string,
   preferredPort = 3000,
-  hostBinding?: string
+  hostBinding?: string,
+  studioMode = false
 ): Promise<PreviewServerInstance> {
   return new Promise((resolve, reject) => {
     let currentResult = initialResult;
     let currentError: string | null = null;
+    let instance: PreviewServerInstance | null = null;
     const sseClients = new Set<http.ServerResponse>();
     const host = hostBinding || process.env.TOAD_HOST || process.env.HOST || '127.0.0.1';
 
@@ -59,7 +65,7 @@ export function createPreviewServer(
       return previewable.length > 0 && fs.existsSync(previewable[0]) ? previewable[0] : null;
     };
 
-    const server = http.createServer((req, res) => {
+    const server = http.createServer(async (req, res) => {
       let url: URL;
       try {
         url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
@@ -127,11 +133,69 @@ export function createPreviewServer(
 
       // 2. Image API Endpoint
       if (url.pathname === '/image') {
-        const imgFile = getPrimaryOutputFile();
+        const queryPath = url.searchParams.get('path');
+        let imgFile: string | null = null;
+
+        if (queryPath) {
+          const resolvedPath = path.resolve(queryPath);
+          if (fs.existsSync(resolvedPath)) {
+            const ext = path.extname(resolvedPath).toLowerCase();
+            if (['.png', '.jpg', '.jpeg', '.webp', '.svg'].includes(ext)) {
+              imgFile = resolvedPath;
+            } else if (ext === '.toad' || ext === '.toadm') {
+              const baseName = path.basename(resolvedPath, ext);
+              const dir = path.dirname(resolvedPath);
+              // Check if pre-rendered image already exists
+              for (const candidateExt of ['.png', '.svg', '.webp', '.jpg']) {
+                const candidate = path.join(dir, `${baseName}${candidateExt}`);
+                if (fs.existsSync(candidate)) {
+                  imgFile = candidate;
+                  break;
+                }
+              }
+              // If not found or forced, compile on the fly!
+              if (!imgFile && ext === '.toad') {
+                try {
+                  const buildRes = await compileToad(resolvedPath, { format: 'png', outDir: dir });
+                  currentResult = buildRes;
+                  imgFile = buildRes.outputFiles.find(f => /\.(png|jpe?g|webp|svg)$/i.test(f)) || null;
+                } catch (err: any) {
+                  currentError = err.message || String(err);
+                }
+              }
+            }
+          }
+        }
+
+        if (!imgFile) {
+          imgFile = getPrimaryOutputFile();
+        }
+
         if (!imgFile || !fs.existsSync(imgFile)) {
-          const produced = (currentResult?.outputFiles || []).map(f => path.extname(f).replace('.', '') || '?').join(', ') || 'nothing yet';
-          res.writeHead(404, { 'Content-Type': 'text/plain' });
-          res.end(`No browser-previewable output. Current build produced: ${produced}. The live preview supports png, jpg, webp and svg.`);
+          if (fs.existsSync(entryFilePath) && entryFilePath.endsWith('.toad')) {
+            try {
+              const resBuild = await compileToad(entryFilePath, { format: 'png' });
+              currentResult = resBuild;
+              imgFile = getPrimaryOutputFile();
+            } catch (err: any) {
+              currentError = err.message || String(err);
+            }
+          }
+        }
+
+        if (!imgFile || !fs.existsSync(imgFile)) {
+          const msg = currentError || 'Keine Bildvorschau verfügbar. Klicke auf "Build ausführen".';
+          const placeholderSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600" fill="#090D16">
+            <rect width="800" height="600" fill="#090D16" />
+            <rect x="24" y="24" width="752" height="552" rx="6" fill="#0F172A" stroke="#1E293B" stroke-dasharray="6 6" />
+            <text x="400" y="280" font-family="system-ui, sans-serif" font-size="18" font-weight="700" fill="#64748B" text-anchor="middle">🐸 TOAD DESIGN VORSCHAU</text>
+            <text x="400" y="320" font-family="ui-monospace, monospace" font-size="12" fill="#94A3B8" text-anchor="middle">${msg.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</text>
+          </svg>`;
+          res.writeHead(200, {
+            'Content-Type': 'image/svg+xml; charset=utf-8',
+            'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
+          });
+          res.end(placeholderSvg);
           return;
         }
 
@@ -155,6 +219,21 @@ export function createPreviewServer(
         }
         return;
       }
+
+      // Helper for reading JSON body
+      const parseJsonBody = (callback: (body: any) => void) => {
+        let raw = '';
+        req.on('data', chunk => { raw += chunk; });
+        req.on('end', () => {
+          try {
+            const parsed = raw ? JSON.parse(raw) : {};
+            callback(parsed);
+          } catch {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Invalid JSON payload' }));
+          }
+        });
+      };
 
       // 3. Open Folder API Endpoint
       // Hardening: only same-origin loopback POST requests may trigger OS actions.
@@ -191,26 +270,490 @@ export function createPreviewServer(
           res.end(JSON.stringify({ status: 'error', message: 'Method Not Allowed. Use POST from the preview page.' }));
           return;
         }
-        const folderPath = path.dirname(path.resolve(entryFilePath));
-        openFolderInExplorer(folderPath);
-        res.writeHead(200, {
-          'Content-Type': 'application/json'
+
+        parseJsonBody((body) => {
+          let folderPath = path.dirname(path.resolve(entryFilePath));
+          const reqPath = body?.dir || body?.path || url.searchParams.get('dir') || url.searchParams.get('path');
+          if (reqPath && typeof reqPath === 'string') {
+            const candidate = path.resolve(process.cwd(), reqPath);
+            if (fs.existsSync(candidate)) {
+              const stat = fs.statSync(candidate);
+              folderPath = stat.isDirectory() ? candidate : path.dirname(candidate);
+            }
+          }
+          openFolderInExplorer(folderPath);
+          res.writeHead(200, {
+            'Content-Type': 'application/json'
+          });
+          res.end(JSON.stringify({ status: 'ok', folder: folderPath }));
         });
-        res.end(JSON.stringify({ status: 'ok', folder: folderPath }));
         return;
       }
 
       // 4. Design Audit API Endpoint
       if (url.pathname === '/api/audit') {
+        const queryPath = url.searchParams.get('path');
+        if (queryPath && fs.existsSync(queryPath) && queryPath.endsWith('.toad')) {
+          compileToad(queryPath, { dryRun: true })
+            .then(buildRes => {
+              const audit = computeAuditSafe(buildRes);
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify(audit || { status: 'no_data' }));
+            })
+            .catch(() => {
+              const audit = computeAuditSafe(currentResult);
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify(audit || { status: 'no_data' }));
+            });
+          return;
+        }
         const audit = computeAuditSafe(currentResult);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(audit || { status: 'no_data' }));
         return;
       }
 
-      // 5. HTML Single Page Preview App
+      // 4b. Studio API: List Discovered Files
+      if (url.pathname === '/api/files') {
+        listAllToadFiles()
+          .then(files => {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ files }));
+          })
+          .catch(err => {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: err.message || String(err) }));
+          });
+        return;
+      }
+
+      // 4c. Studio API: Read File Content
+      if (url.pathname === '/api/file' && req.method === 'GET') {
+        const filePath = url.searchParams.get('path');
+        if (!filePath || !fs.existsSync(filePath)) {
+          res.writeHead(404, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'File not found' }));
+          return;
+        }
+        try {
+          const content = fs.readFileSync(filePath, 'utf-8');
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ path: filePath, content }));
+        } catch (err: any) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: err.message }));
+        }
+        return;
+      }
+
+
+      // 4d. Server Status Endpoint
+      if (url.pathname === '/api/status' && req.method === 'GET') {
+        const addr = server.address();
+        const actualPort = typeof addr === 'object' && addr ? addr.port : preferredPort;
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          status: 'ok',
+          pid: process.pid,
+          port: actualPort,
+          version: '1.2.0',
+          entryFile: entryFilePath
+        }));
+        return;
+      }
+
+      // 4e. Server Graceful Shutdown
+      if (url.pathname === '/api/shutdown' && req.method === 'POST') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, message: 'TOAD Studio Server wird beendet...' }));
+        setTimeout(async () => {
+          try {
+            const { clearDaemonInfo } = await import('./studioDaemon.js');
+            clearDaemonInfo();
+          } catch {}
+          process.exit(0);
+        }, 300);
+        return;
+      }
+
+      // 4f. Studio API: Build Command Runner (with full visual parameter control)
+      if (url.pathname === '/api/build' && req.method === 'POST') {
+        parseJsonBody(async (body) => {
+          const targetPath = body.path || entryFilePath;
+          if (!targetPath || !fs.existsSync(targetPath)) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: 'Zieldatei nicht gefunden: ' + targetPath }));
+            return;
+          }
+          try {
+            const outDir = body.outDir ? path.resolve(body.outDir) : path.dirname(path.resolve(targetPath));
+            const formats = Array.isArray(body.formats) && body.formats.length > 0
+              ? body.formats.join(',')
+              : (body.format || 'png');
+            const scale = body.scale ? parseFloat(body.scale) : 1;
+            const dpi = body.dpi ? parseFloat(body.dpi) : undefined;
+            const quality = body.quality !== undefined ? parseInt(body.quality, 10) : 92;
+            const bleed = body.bleed ? parseFloat(body.bleed) : undefined;
+            const marks = Boolean(body.marks);
+            const cmyk = Boolean(body.cmyk);
+            const dryRun = Boolean(body.dryRun);
+
+            const buildRes = await compileToad(targetPath, {
+              format: formats,
+              scale,
+              dpi,
+              quality,
+              outDir,
+              bleed,
+              dryRun
+            });
+
+            currentResult = buildRes;
+            currentError = null;
+            instance?.broadcastUpdate(buildRes);
+
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+              success: true,
+              durationMs: buildRes.durationMs,
+              outputFiles: buildRes.outputFiles,
+              warnings: buildRes.warnings,
+              dimensions: { width: buildRes.canvas.width, height: buildRes.canvas.height }
+            }));
+          } catch (err: any) {
+            currentError = err.message || String(err);
+            if (currentError) {
+              instance?.broadcastError(currentError);
+            }
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: currentError }));
+          }
+        });
+        return;
+      }
+
+      // 4g. Studio API: Motion Render (.toadm)
+      if (url.pathname === '/api/motion/render' && req.method === 'POST') {
+        parseJsonBody(async (body) => {
+          const targetPath = body.path;
+          if (!targetPath || !fs.existsSync(targetPath)) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: 'Animationsdatei (.toadm) nicht gefunden' }));
+            return;
+          }
+          try {
+            const { compileMotion } = await import('../motion/index.js');
+            const outExt = body.format === 'gif' ? '.gif' : (body.format === 'webm' ? '.webm' : '.mp4');
+            const defaultOut = path.join(path.dirname(targetPath), 'dist', path.basename(targetPath, '.toadm') + outExt);
+            const outPath = body.outPath ? path.resolve(body.outPath) : defaultOut;
+
+            const startTime = Date.now();
+            const outputFile = await compileMotion(targetPath, {
+              format: body.format || 'mp4',
+              fps: body.fps ? parseInt(body.fps, 10) : 60,
+              outputPath: outPath
+            });
+
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+              success: true,
+              outputFile,
+              durationMs: Date.now() - startTime
+            }));
+          } catch (err: any) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: err.message || String(err) }));
+          }
+        });
+        return;
+      }
+
+      // 4h. Studio API: Local AI Background Remover
+      if (url.pathname === '/api/bg-remover/process' && req.method === 'POST') {
+        parseJsonBody(async (body) => {
+          try {
+            const { dataUrl, filename, preset, format, saveToDisk, outDir } = body;
+            if (!dataUrl) {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'No image dataUrl provided' }));
+              return;
+            }
+            const matches = dataUrl.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+            if (!matches || matches.length !== 3) {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'Invalid base64 data URL' }));
+              return;
+            }
+            const buffer = Buffer.from(matches[2], 'base64');
+            const tmpInput = path.join(os.tmpdir(), `toad_bg_in_${Date.now()}_${filename || 'image.png'}`);
+            const outExt = format === 'webp' ? '.webp' : '.png';
+            const tmpOutput = path.join(os.tmpdir(), `toad_bg_out_${Date.now()}${outExt}`);
+
+            fs.writeFileSync(tmpInput, buffer);
+
+            const isDyb = preset === 'dyb' || preset === 'precision';
+            const isFast = preset === 'fast' || preset === 'quick';
+
+            const { removeBackground } = await import('../tools/backgroundRemover.js');
+            const startTime = Date.now();
+            await removeBackground(tmpInput, tmpOutput, {
+              dyb: isDyb,
+              fast: isFast,
+              format: format === 'webp' ? 'webp' : 'png'
+            });
+
+            const outBuf = fs.readFileSync(tmpOutput);
+            const mime = format === 'webp' ? 'image/webp' : 'image/png';
+            const resultUrl = `data:${mime};base64,${outBuf.toString('base64')}`;
+
+            let savedPath: string | null = null;
+            if (saveToDisk !== false) {
+              const targetDir = path.resolve(process.cwd(), outDir || 'freigestellt');
+              if (!fs.existsSync(targetDir)) {
+                fs.mkdirSync(targetDir, { recursive: true });
+              }
+              const baseStem = (filename || 'image').replace(/\.[^/.]+$/, '');
+              const targetFile = path.join(targetDir, `${baseStem}-freigestellt${outExt}`);
+              fs.writeFileSync(targetFile, outBuf);
+              savedPath = targetFile;
+            }
+
+            try { fs.unlinkSync(tmpInput); } catch {}
+            try { fs.unlinkSync(tmpOutput); } catch {}
+
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+              success: true,
+              resultUrl,
+              savedPath,
+              durationMs: Date.now() - startTime
+            }));
+          } catch (err: any) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: err.message || String(err) }));
+          }
+        });
+        return;
+      }
+
+      // 4i. Studio API: PSD to TOAD Converter (formerly import)
+      if ((url.pathname === '/api/convert' || url.pathname === '/api/psd/import') && req.method === 'POST') {
+        parseJsonBody(async (body) => {
+          try {
+            const { dataUrl, filename, extractImages, includeHidden, formatCode, dpi } = body;
+            if (!dataUrl) {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'No PSD dataUrl provided' }));
+              return;
+            }
+            const matches = dataUrl.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+            const base64Data = matches ? matches[2] : dataUrl.replace(/^data:[^;]+;base64,/, '');
+            const buffer = Buffer.from(base64Data, 'base64');
+            const safeName = (filename || 'design.psd').replace(/[^a-zA-Z0-9._-]/g, '_');
+            const tmpPsd = path.join(os.tmpdir(), `toad_psd_${Date.now()}_${safeName}`);
+            fs.writeFileSync(tmpPsd, buffer);
+
+            const outToad = path.join(process.cwd(), path.basename(safeName, path.extname(safeName)) + '.toad');
+
+            const { importPsd } = await import('../importers/psdImporter.js');
+            const resImport = await importPsd(tmpPsd, {
+              outPath: outToad,
+              extractImages: extractImages !== false,
+              includeHidden: Boolean(includeHidden),
+              formatCode: formatCode !== false,
+              dpi: dpi ? parseFloat(dpi) : 72
+            });
+
+            try { fs.unlinkSync(tmpPsd); } catch {}
+
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+              success: true,
+              outPath: outToad,
+              toadCode: resImport.toadCode,
+              stats: resImport.stats,
+              warnings: resImport.warnings
+            }));
+          } catch (err: any) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: err.message || String(err) }));
+          }
+        });
+        return;
+      }
+
+      // 4i2. Studio API: Universal Image Converter, Scaler & Compressor
+      if (url.pathname === '/api/image/convert' && req.method === 'POST') {
+        parseJsonBody(async (body) => {
+          try {
+            const { convertImage } = await import('../tools/imageConverter.js');
+            const input = body.dataUrl || body.filePath;
+            if (!input) {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'Keine Bildquelle (dataUrl oder filePath) angegeben' }));
+              return;
+            }
+
+            const result = await convertImage(input, {
+              format: body.format,
+              quality: body.quality !== undefined ? parseInt(body.quality, 10) : undefined,
+              scale: body.scale !== undefined ? parseFloat(body.scale) : undefined,
+              width: body.width ? parseInt(body.width, 10) : undefined,
+              height: body.height ? parseInt(body.height, 10) : undefined,
+              fit: body.fit,
+              maintainAspectRatio: body.maintainAspectRatio !== false,
+              filter: body.filter,
+              background: body.background,
+              compress: Boolean(body.compress)
+            });
+
+            let savedPath: string | null = null;
+            if (body.saveToDisk) {
+              const outDir = body.outDir ? path.resolve(body.outDir) : process.cwd();
+              const base = (body.filename || 'converted_image').replace(/\.[^/.]+$/, '');
+              savedPath = path.join(outDir, `${base}.${result.format}`);
+              fs.writeFileSync(savedPath, result.buffer);
+            }
+
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+              success: true,
+              dataUrl: result.dataUrl,
+              format: result.format,
+              mimeType: result.mimeType,
+              width: result.width,
+              height: result.height,
+              originalWidth: result.originalWidth,
+              originalHeight: result.originalHeight,
+              originalBytes: result.originalBytes,
+              outputBytes: result.outputBytes,
+              savingsPercent: result.savingsPercent,
+              durationMs: result.durationMs,
+              savedPath
+            }));
+          } catch (err: any) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: err.message || String(err) }));
+          }
+        });
+        return;
+      }
+
+      // 4j. Studio API: Bundler Runner
+      if (url.pathname === '/api/bundle' && req.method === 'POST') {
+        parseJsonBody(async (body) => {
+          const targetPath = body.path || entryFilePath;
+          try {
+            const { bundleAssets } = await import('../tools/assetBundler.js');
+            const bundleRes = await bundleAssets(targetPath, {
+              preset: body.preset || 'favicons',
+              outDir: body.outDir
+            });
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true, ...bundleRes }));
+          } catch (err: any) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: err.message || String(err) }));
+          }
+        });
+        return;
+      }
+
+      // 4k. Studio API: Workspaces Management
+      if (url.pathname === '/api/workspaces') {
+        if (req.method === 'GET') {
+          const list = getWorkspaces();
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ workspaces: list }));
+          return;
+        }
+        if (req.method === 'POST') {
+          parseJsonBody((body) => {
+            const dir = body.dir;
+            const resAdd = addWorkspace(dir);
+            res.writeHead(resAdd.success ? 200 : 400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(resAdd));
+          });
+          return;
+        }
+        if (req.method === 'DELETE') {
+          const dir = url.searchParams.get('dir');
+          if (dir) {
+            const resRem = removeWorkspace(dir);
+            res.writeHead(resRem.success ? 200 : 400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(resRem));
+            return;
+          }
+        }
+      }
+
+      // 4l. Studio API: Project Initializer
+      if (url.pathname === '/api/init' && req.method === 'POST') {
+        parseJsonBody((body) => {
+          try {
+            const name = (body.name || 'mein-design').replace(/[^a-zA-Z0-9_-]/g, '_');
+            const template = body.template || 'poster';
+            const targetDir = body.dir ? path.resolve(body.dir) : process.cwd();
+            const filePath = path.join(targetDir, name.endsWith('.toad') ? name : `${name}.toad`);
+
+            if (fs.existsSync(filePath)) {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: false, error: `Datei existiert bereits: ${filePath}` }));
+              return;
+            }
+
+            let starterCode = '';
+            if (template === 'social') {
+              starterCode = `// TOAD Social Media Banner (1200x630)\ncanvas {\n  width: 1200;\n  height: 630;\n  background: #0B0F19;\n}\n\ntext {\n  content: "TOAD DESIGN";\n  font-size: 64;\n  font-weight: bold;\n  color: #FFFFFF;\n  x: 80;\n  y: 260;\n}\n\ntext {\n  content: "Declarative Graphics Engine";\n  font-size: 28;\n  color: #10B981;\n  x: 80;\n  y: 340;\n}\n`;
+            } else if (template === 'motion') {
+              starterCode = `// TOAD Motion Sequence (.toadm)\n@import scene from "./scene.toad";\n\nmotion {\n  scene: scene;\n  duration: 3.0;\n  fps: 60;\n}\n\nanimate hero {\n  0s: { opacity: 0; scale: 0.8; }\n  1.5s: { opacity: 1; scale: 1.0; ease: ease-out; }\n}\n`;
+            } else {
+              starterCode = `// TOAD Poster Design (1080x1350)\ncanvas {\n  width: 1080;\n  height: 1350;\n  background: #090D16;\n}\n\nrect {\n  x: 60;\n  y: 60;\n  width: 960;\n  height: 1230;\n  border-width: 1;\n  border-color: #1E293B;\n  border-radius: 6;\n}\n\ntext {\n  content: "${name.toUpperCase()}";\n  font-size: 72;\n  font-weight: 800;\n  color: #F8FAFC;\n  x: 100;\n  y: 200;\n}\n\ntext {\n  content: "Kompiliert mit TOAD 1.2";\n  font-size: 24;\n  color: #10B981;\n  x: 100;\n  y: 280;\n}\n`;
+            }
+
+            fs.writeFileSync(filePath, starterCode, 'utf-8');
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true, filePath }));
+          } catch (err: any) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: err.message || String(err) }));
+          }
+        });
+        return;
+      }
+
+      // 4m. Studio API: Audit Quick-Fix
+      if (url.pathname === '/api/audit/fix' && req.method === 'POST') {
+        parseJsonBody(async (body) => {
+          const targetPath = body.path || entryFilePath;
+          if (!targetPath || !fs.existsSync(targetPath)) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: 'Target file not found' }));
+            return;
+          }
+          try {
+            const { formatToad } = await import('../tools/formatter.js');
+            const raw = fs.readFileSync(targetPath, 'utf-8');
+            const formatted = formatToad(raw);
+            fs.writeFileSync(targetPath, formatted, 'utf-8');
+
+            const buildRes = await compileToad(targetPath, { dryRun: true });
+            const audit = computeAuditSafe(buildRes);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true, audit }));
+          } catch (err: any) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: err.message || String(err) }));
+          }
+        });
+        return;
+      }
+
+      // 5. HTML Single Page Preview App & TOAD Studio
       if (url.pathname === '/' || url.pathname === '/index.html') {
-        const html = generatePreviewHtml(path.basename(entryFilePath));
+        const html = studioMode
+          ? generateStudioHtml(entryFilePath)
+          : generatePreviewHtml(path.basename(entryFilePath));
         res.writeHead(200, {
           'Content-Type': 'text/html; charset=utf-8',
           'Content-Length': Buffer.byteLength(html),
@@ -233,7 +776,7 @@ export function createPreviewServer(
         const actualPort = typeof addr === 'object' && addr ? addr.port : port;
         const displayHost = (host === '0.0.0.0' || host === '::') ? 'localhost' : host;
         const url = `http://${displayHost}:${actualPort}/`;
-        const instance: PreviewServerInstance = {
+        instance = {
           server,
           port: actualPort,
           url,

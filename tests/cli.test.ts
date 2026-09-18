@@ -52,6 +52,24 @@ describe('Commander CLI Tool (toad)', () => {
       expect(listCmd).toBeDefined();
       expect(listCmd!.alias()).toBe('ls');
     });
+
+    it('defines studio command with alias ui and stop command', () => {
+      const cli = createCli();
+      const studioCmd = cli.commands.find(c => c.name() === 'studio');
+      expect(studioCmd).toBeDefined();
+      expect(studioCmd!.alias()).toBe('ui');
+
+      const stopCmd = cli.commands.find(c => c.name() === 'stop');
+      expect(stopCmd).toBeDefined();
+    });
+
+    it('defines convert command with alias import and psd2toad', () => {
+      const cli = createCli();
+      const convertCmd = cli.commands.find(c => c.name() === 'convert');
+      expect(convertCmd).toBeDefined();
+      expect(convertCmd!.aliases()).toContain('import');
+      expect(convertCmd!.aliases()).toContain('psd2toad');
+    });
   });
 
   describe('CLI Help & Version Output', () => {

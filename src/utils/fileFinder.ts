@@ -497,7 +497,7 @@ function collectToadFiles(
       }
 
       if (isFile) {
-        if (lower.endsWith('.toad')) {
+        if (lower.endsWith('.toad') || lower.endsWith('.toadm')) {
           const resolved = path.resolve(fullPath);
           const key = resolved.toLowerCase();
           if (!results.has(key)) {

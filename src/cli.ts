@@ -20,6 +20,14 @@ import { formatRustDiagnostic, generateHelpSuggestion } from './tools/diagnostic
 import { compileMotion } from './motion/index.js';
 import { updateToad } from './tools/updater.js';
 import { removeBackground, isGpuAvailable, detectBestDevice } from './tools/backgroundRemover.js';
+import {
+  startStudioDaemon,
+  stopStudioDaemon,
+  getDaemonInfo,
+  isStudioServerRunning,
+  saveDaemonInfo,
+  clearDaemonInfo
+} from './engine/studioDaemon.js';
 
 
 export interface CliOptions {
@@ -417,57 +425,113 @@ export function createCli(): Command {
     });
 
   program
-    .command('import <file>')
+    .command('convert <file>')
+    .alias('import')
     .alias('psd2toad')
-    .description('[Beta] Convert an Adobe Photoshop .psd file into native TOAD DSL code and extract raster assets (Early Preview).')
-    .option('-o, --out <path>', 'Output .toad file path (default: <filename>.toad)')
-    .option('--assets <dir>', 'Directory for extracted raster image assets (default: ./assets)')
-    .option('--no-extract-images', 'Do not extract raster image layers as PNG files')
-    .option('--include-hidden', 'Include hidden Photoshop layers in generated TOAD code')
-    .option('--no-format', 'Do not format generated TOAD code')
+    .description('Universal converter: Convert PSD to TOAD DSL, or convert, resize & compress any image into any format.')
+    .option('-o, --out <path>', 'Output file path or directory')
+    .option('-f, --format <fmt>', 'Target image format: png, jpg, webp, avif, svg, pdf, ico, gif')
+    .option('-q, --quality <number>', 'Image quality 1-100 (default: 85)')
+    .option('-s, --scale <number>', 'Scale factor multiplier (e.g. 0.5, 2, 4)')
+    .option('--width <px>', 'Explicit target width in pixels')
+    .option('--height <px>', 'Explicit target height in pixels')
+    .option('-c, --compress', 'Activate smart web compression preset')
+    .option('--filter <type>', 'Resampling filter: high (bicubic), medium, nearest (pixel art)', 'high')
+    .option('--assets <dir>', 'Directory for extracted raster image assets (PSD mode, default: ./assets)')
+    .option('--no-extract-images', 'Do not extract raster image layers as PNG files (PSD mode)')
+    .option('--include-hidden', 'Include hidden Photoshop layers (PSD mode)')
+    .option('--no-format', 'Do not format generated TOAD code (PSD mode)')
     .option('--dpi <number>', 'Resolution in DPI for font size and unit conversion (default: 72)')
     .action(async (file, opts) => {
       const startTime = Date.now();
       try {
-        const { importPsd } = await import('./importers/psdImporter.js');
         const resolvedPath = path.resolve(process.cwd(), file);
         if (!fs.existsSync(resolvedPath)) {
           console.error(`${c.red('Error:')} File not found: ${resolvedPath}`);
           process.exit(1);
         }
 
-        console.log(`\n  ${c.cyan('➜')}  Importing PSD: ${c.bold(path.basename(resolvedPath))}...`);
+        const ext = path.extname(resolvedPath).toLowerCase();
+        const isPsd = ext === '.psd';
 
-        const result = await importPsd(resolvedPath, {
-          outPath: opts.out,
-          assetsDir: opts.assets,
-          extractImages: opts.extractImages,
-          includeHidden: opts.includeHidden,
-          formatCode: opts.format,
-          dpi: opts.dpi ? parseFloat(opts.dpi) : undefined
+        // If it's a PSD and NO image format flag is given, run PSD to TOAD DSL import
+        if (isPsd && !opts.format) {
+          const { importPsd } = await import('./importers/psdImporter.js');
+          console.log(`\n  ${c.cyan('➜')}  Importing PSD: ${c.bold(path.basename(resolvedPath))}...`);
+
+          const result = await importPsd(resolvedPath, {
+            outPath: opts.out,
+            assetsDir: opts.assets,
+            extractImages: opts.extractImages,
+            includeHidden: opts.includeHidden,
+            formatCode: opts.format,
+            dpi: opts.dpi ? parseFloat(opts.dpi) : undefined
+          });
+
+          const duration = Date.now() - startTime;
+          console.log(`\n${c.bgGreen(' SUCCESS ')} ${c.bold(c.green(`PSD imported in ${duration}ms`))}\n`);
+
+          if (result.outputFile) {
+            console.log(`  ${c.cyan('➜')} ${c.bold('Output:')}   ${c.green(result.outputFile)}`);
+          }
+          console.log(`  ${c.dim('➜')} ${c.dim('Layers:')}   ${result.stats.layersCount} total (${result.stats.textCount} text, ${result.stats.vectorCount} vector, ${result.stats.imageCount} image, ${result.stats.groupCount} group)`);
+
+          if (result.assets.length > 0) {
+            console.log(`  ${c.dim('➜')} ${c.dim('Assets:')}   Extracted ${result.assets.length} image asset(s) to ${opts.assets || './assets'}`);
+          }
+
+          if (result.warnings.length > 0) {
+            console.log('');
+            for (const w of result.warnings) {
+              console.warn(`  ${c.yellow('⚠')} ${c.yellow(`[warning] ${w}`)}`);
+            }
+          }
+          console.log('');
+          return;
+        }
+
+        // Image Conversion, Scaling & Compression mode!
+        console.log(`\n  ${c.cyan('➜')}  Converting Image: ${c.bold(path.basename(resolvedPath))}...`);
+        const { convertImage } = await import('./tools/imageConverter.js');
+        const targetFormat = (opts.format || (opts.compress ? 'webp' : 'png')).toLowerCase();
+
+        const result = await convertImage(resolvedPath, {
+          format: targetFormat as any,
+          quality: opts.quality ? parseInt(opts.quality, 10) : undefined,
+          scale: opts.scale ? parseFloat(opts.scale) : undefined,
+          width: opts.width ? parseInt(opts.width, 10) : undefined,
+          height: opts.height ? parseInt(opts.height, 10) : undefined,
+          filter: opts.filter as any,
+          compress: Boolean(opts.compress)
         });
 
-        const duration = Date.now() - startTime;
-        console.log(`\n${c.bgGreen(' SUCCESS ')} ${c.bold(c.green(`PSD imported in ${duration}ms`))}\n`);
-
-        if (result.outputFile) {
-          console.log(`  ${c.cyan('➜')} ${c.bold('Output:')}   ${c.green(result.outputFile)}`);
-        }
-        console.log(`  ${c.dim('➜')} ${c.dim('Layers:')}   ${result.stats.layersCount} total (${result.stats.textCount} text, ${result.stats.vectorCount} vector, ${result.stats.imageCount} image, ${result.stats.groupCount} group)`);
-
-        if (result.assets.length > 0) {
-          console.log(`  ${c.dim('➜')} ${c.dim('Assets:')}   Extracted ${result.assets.length} image asset(s) to ${opts.assets || './assets'}`);
-        }
-
-        if (result.warnings.length > 0) {
-          console.log('');
-          for (const w of result.warnings) {
-            console.warn(`  ${c.yellow('⚠')} ${c.yellow(`[warning] ${w}`)}`);
+        // Determine destination file path
+        let outPath = opts.out;
+        if (!outPath) {
+          const dir = path.dirname(resolvedPath);
+          const base = path.basename(resolvedPath, ext);
+          outPath = path.join(dir, `${base}.${result.format}`);
+        } else {
+          outPath = path.resolve(process.cwd(), outPath);
+          if (fs.existsSync(outPath) && fs.statSync(outPath).isDirectory()) {
+            const base = path.basename(resolvedPath, ext);
+            outPath = path.join(outPath, `${base}.${result.format}`);
           }
         }
-        console.log('');
+
+        fs.writeFileSync(outPath, result.buffer);
+        const duration = Date.now() - startTime;
+
+        console.log(`\n${c.bgGreen(' SUCCESS ')} ${c.bold(c.green(`Image converted in ${duration}ms`))}\n`);
+        console.log(`  ${c.cyan('➜')} ${c.bold('Output:')}     ${c.green(outPath)}`);
+        console.log(`  ${c.dim('➜')} ${c.dim('Format:')}     ${ext.replace('.', '').toUpperCase()} ➜ ${result.format.toUpperCase()}`);
+        console.log(`  ${c.dim('➜')} ${c.dim('Dimensions:')} ${result.originalWidth}x${result.originalHeight} ➜ ${result.width}x${result.height} px`);
+        const origKb = (result.originalBytes / 1024).toFixed(1);
+        const outKb = (result.outputBytes / 1024).toFixed(1);
+        const savingsTag = result.savingsPercent > 0 ? c.green(`(-${result.savingsPercent}% kleiner)`) : c.dim('(unverändert)');
+        console.log(`  ${c.dim('➜')} ${c.dim('Size:')}       ${origKb} KB ➜ ${c.bold(outKb + ' KB')} ${savingsTag}\n`);
       } catch (err: any) {
-        console.error(`\n${c.bgRed(' ERROR ')} ${c.bold(c.red(`Failed to import PSD:`))} ${err.message}\n`);
+        console.error(`\n${c.bgRed(' ERROR ')} ${c.bold(c.red(`Failed to convert image:`))} ${err.message || String(err)}\n`);
         process.exit(1);
       }
     });
@@ -1081,6 +1145,115 @@ export function createCli(): Command {
       }
     });
 
+  // Command: stop
+  program
+    .command('stop')
+    .description('Stop running background TOAD Studio Web-GUI server')
+    .action(async () => {
+      const res = await stopStudioDaemon();
+      console.log(`\n  ${c.green('✔')} ${res.message}\n`);
+    });
+
+  // Command: studio / ui
+  program
+    .command('studio [actionOrEntry]')
+    .alias('ui')
+    .description('Launch TOAD Studio interactive Web-GUI (Graphic, Animation, BG-Remover, Convert, Audit)')
+    .option('-p, --port <number>', 'Port for the studio server (default: 3000)')
+    .option('-f, --foreground', 'Run in foreground (attached to current terminal)')
+    .action(async (actionOrEntry?: string, options?: any) => {
+      const port = options?.port ? parseInt(options.port, 10) : 3000;
+
+      // Handle subactions: 'stop' or 'status'
+      if (actionOrEntry === 'stop') {
+        const res = await stopStudioDaemon();
+        console.log(`\n  ${c.green('✔')} ${res.message}\n`);
+        return;
+      }
+      if (actionOrEntry === 'status') {
+        const info = getDaemonInfo();
+        const running = await isStudioServerRunning(info?.port || port);
+        if (running) {
+          console.log(`\n  ${c.green('●')} TOAD Studio läuft aktiv auf ${c.cyan(info?.url || `http://localhost:${port}/`)} (PID ${info?.pid || 'unbekannt'})\n`);
+        } else {
+          console.log(`\n  ${c.dim('○')} TOAD Studio ist aktuell nicht aktiv.\n`);
+        }
+        return;
+      }
+
+      const isForeground = Boolean(options?.foreground);
+
+      if (isForeground) {
+        let targetFile = actionOrEntry;
+        if (!targetFile) {
+          try {
+            const files = fs.readdirSync(process.cwd()).filter(f => f.toLowerCase().endsWith('.toad'));
+            if (files.length > 0) targetFile = path.resolve(files[0]!);
+          } catch {}
+        } else {
+          targetFile = path.resolve(targetFile);
+        }
+
+        console.log(`\n  ${c.bold(c.green('🐸 TOAD Studio Web-GUI'))}`);
+        console.log(`  ${c.dim('Interactive Visual Suite: Graphic, Animation, BG-Remover, Convert, Report/Audit')}`);
+
+        try {
+          let initialRes = null;
+          if (targetFile && fs.existsSync(targetFile)) {
+            try {
+              initialRes = await compileToad(targetFile, { format: 'png' });
+            } catch {}
+          }
+          const serverInstance = await createPreviewServer(
+            initialRes,
+            targetFile || 'studio.toad',
+            port,
+            undefined,
+            true // studioMode = true
+          );
+
+          saveDaemonInfo({
+            pid: process.pid,
+            port: serverInstance.port,
+            url: serverInstance.url,
+            entryFile: targetFile,
+            startTime: Date.now()
+          });
+
+          console.log(`  ${c.green('➜')}  ${c.bold('Studio URL:')}     ${c.cyan(serverInstance.url)}`);
+          console.log(`  ${c.dim('➜')}  ${c.dim('Browser:')}        ${c.green('Opening automatically...')}\n`);
+          openBrowser(serverInstance.url);
+
+          const cleanup = () => {
+            clearDaemonInfo();
+            process.exit(0);
+          };
+          process.on('SIGINT', cleanup);
+          process.on('SIGTERM', cleanup);
+        } catch (err: any) {
+          console.error(`${c.red('Error launching Studio:')}`, err.message || err);
+          process.exit(1);
+        }
+      } else {
+        // Run detached background daemon so user can close terminal!
+        console.log(`\n  ${c.bold(c.green('🐸 TOAD Studio Web-GUI'))}`);
+        console.log(`  ${c.dim('Interactive Visual Suite: Graphic, Animation, BG-Remover, Convert, Report/Audit')}`);
+
+        try {
+          const daemon = await startStudioDaemon(port, actionOrEntry);
+          console.log(`  ${c.green('➜')}  ${c.bold('Studio URL:')}     ${c.cyan(daemon.url)}`);
+          console.log(`  ${c.dim('➜')}  ${c.dim('Status:')}         ${c.green('Läuft als Hintergrund-Dienst (PID: ' + daemon.pid + ')')}`);
+          console.log(`  ${c.dim('➜')}  ${c.dim('Terminal:')}       ${c.yellow('Dieses CMD-Fenster kann jetzt geschlossen werden.')}`);
+          console.log(`  ${c.dim('➜')}  ${c.dim('Beenden:')}        ${c.dim('toad studio stop (oder direkt im Web-GUI)')}\n`);
+          openBrowser(daemon.url);
+          process.exit(0);
+        } catch (err: any) {
+          console.error(`${c.red('Error starting background Studio:')}`, err.message || err);
+          process.exit(1);
+        }
+      }
+    });
+
   return program;
 }
 
@@ -1107,5 +1280,12 @@ export function shouldAutoRun(argv1?: string): boolean {
 }
 
 if (shouldAutoRun(process.argv[1])) {
-  program.parse(process.argv);
+  const args = process.argv.slice(2);
+  // If invoked with completely 0 arguments in an interactive terminal, launch TOAD Studio Web-GUI
+  if (args.length === 0 && process.stdin.isTTY && !process.env.VITEST && !process.env.CI) {
+    program.parse([process.argv[0]!, process.argv[1]!, 'studio']);
+  } else {
+    program.parse(process.argv);
+  }
 }
+

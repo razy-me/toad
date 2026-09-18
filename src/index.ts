@@ -200,3 +200,12 @@ export {
   BatchRemovalResult
 } from './tools/backgroundRemover.js';
 
+// 19. Universal Image Converter & Scaler
+export {
+  convertImage,
+  ImageConvertOptions,
+  ImageConvertResult,
+  SupportedImageFormat
+} from './tools/imageConverter.js';
+
+
