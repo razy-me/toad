@@ -948,6 +948,7 @@ export function createCli(): Command {
           process.exit(1);
         }
 
+        const isDirectory = fs.statSync(resolvedSource).isDirectory();
         const useFast = Boolean(options.fast || options.quick);
         const useDyb = Boolean(options.dyb);
         const selectedModel = useDyb ? 'dyb (ensemble + guided filter)' : (useFast ? 'fast (BiRefNet Lite)' : 'auto (adaptive routing)');
@@ -971,8 +972,29 @@ export function createCli(): Command {
         console.log(`  ${c.dim('Source:')}   ${c.white(resolvedSource)}`);
         console.log(`  ${c.dim('Target:')}   ${c.cyan(path.resolve(target))}\n`);
 
-        const isDirectory = fs.statSync(resolvedSource).isDirectory();
-        let processedCount = 0;
+        function renderProgressBar(current: number, total: number, width = 20): string {
+          const pct = total > 0 ? Math.min(1, Math.max(0, current / total)) : 0;
+          const filled = Math.round(pct * width);
+          const empty = width - filled;
+          const bar = '█'.repeat(filled) + '░'.repeat(empty);
+          return `[${c.green(bar)}] ${(pct * 100).toFixed(0).padStart(3)}%`;
+        }
+
+        const onDownloadProgress = (p: any) => {
+          if (p.status === 'progress' && p.file) {
+            const pct = typeof p.progress === 'number' ? Math.round(p.progress) : 0;
+            const bar = renderProgressBar(pct, 100, 20);
+            const mbLoaded = p.loaded ? (p.loaded / 1024 / 1024).toFixed(1) : '0';
+            const mbTotal = p.total ? (p.total / 1024 / 1024).toFixed(1) : '?';
+            process.stdout.write(`\r  📥 Initializing AI model (${p.file}): ${bar} (${mbLoaded}/${mbTotal} MB)   `);
+          } else if (p.status === 'done' && p.file) {
+            process.stdout.write(`\r  ✔ Model weights ready: ${c.bold(p.file)}                                \n`);
+          }
+        };
+
+        if (!isDirectory) {
+          console.log(`  ⏳ Processing ${c.cyan(path.basename(resolvedSource))} (Neural Segmentation & Matting)...`);
+        }
 
         const result = await removeBackground(resolvedSource, target, {
           dyb: useDyb,
@@ -983,19 +1005,22 @@ export function createCli(): Command {
           concurrency: autoConcurrency,
           device: autoDevice,
           recursive: options.recursive,
-          onProgress: (info) => {
-            if (info.status === 'success') {
-              processedCount++;
+          onDownloadProgress,
+          onProgress: (info: any) => {
+            const bar = renderProgressBar(info.index, info.total, 20);
+            const baseName = path.basename(info.sourceFile);
+            if (info.status === 'start') {
+              process.stdout.write(`\r  ⏳ ${bar} [${info.index}/${info.total}] ${c.cyan(baseName)} (processing...)          `);
+            } else if (info.status === 'success') {
               const sizeKb = (info.outputBytes / 1024).toFixed(1);
               const sizeStr = info.outputBytes > 1024 * 1024
                 ? `${(info.outputBytes / 1024 / 1024).toFixed(2)} MB`
                 : `${sizeKb} KB`;
               const dimStr = c.dim(`(${info.width}x${info.height})`);
               const durationStr = c.dim(`${info.durationMs}ms`);
-              const countStr = c.cyan(`[${info.index}/${info.total}]`);
-              console.log(`  ${countStr} ${c.bold(path.basename(info.sourceFile))} ${dimStr} ${c.yellow(sizeStr.padStart(8))} ${durationStr}`);
-            } else {
-              console.warn(`  ${c.red('✖')} [${info.index}/${info.total}] ${path.basename(info.sourceFile)}: ${info.error}`);
+              process.stdout.write(`\r  ✔ ${bar} [${info.index}/${info.total}] ${c.bold(baseName)} ${dimStr} ${c.yellow(sizeStr.padStart(8))} ${durationStr}          \n`);
+            } else if (info.status === 'error') {
+              process.stdout.write(`\r  ✖ ${bar} [${info.index}/${info.total}] ${c.red(baseName)}: ${info.error}          \n`);
             }
           }
         });

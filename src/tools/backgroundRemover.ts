@@ -110,19 +110,29 @@ export interface BgRemovalOptions {
    * Optional progress callback for batch processing.
    */
   onProgress?: (progress: BgProgressInfo) => void;
+
+  /**
+   * Optional callback for model download progress.
+   */
+  onDownloadProgress?: (info: any) => void;
+
+  /**
+   * Optional callback for single-image processing stages.
+   */
+  onFileProgress?: (info: { file: string; stage: string }) => void;
 }
 
 export interface BgProgressInfo {
   index: number;
   total: number;
   sourceFile: string;
-  targetFile: string;
-  width: number;
-  height: number;
-  durationMs: number;
-  originalBytes: number;
-  outputBytes: number;
-  status: 'success' | 'error';
+  targetFile?: string;
+  width?: number;
+  height?: number;
+  durationMs?: number;
+  originalBytes?: number;
+  outputBytes?: number;
+  status: 'start' | 'success' | 'error';
   error?: string;
 }
 
@@ -944,9 +954,10 @@ export async function removeBackgroundFromDirectory(
 
   const batchStartTime = Date.now();
 
-  // Warm up pipeline once using parameter-resolved model
+  // Warm up pipeline once using parameter-resolved model and report download progress
   const warmupModel = resolveModelName(options.model, options);
-  await getSegmentationPipeline(warmupModel, options.device);
+  const effectiveDevice = options.device || (isGpuAvailable() ? 'dml' : 'cpu');
+  await getSegmentationPipeline(warmupModel, effectiveDevice, options.onDownloadProgress);
 
   const defaultConcurrency = (options.fast || options.quick) ? 4 : 2;
   const concurrency = Math.max(1, Math.min(8, options.concurrency ?? defaultConcurrency));
@@ -969,6 +980,16 @@ export async function removeBackgroundFromDirectory(
 
       const outExt = (options.format === 'webp') ? '.webp' : '.png';
       const targetFile = path.join(outSubDir, `${parsed.name}${outExt}`);
+
+      if (options.onProgress) {
+        options.onProgress({
+          index: fileIdx + 1,
+          total,
+          sourceFile: file,
+          targetFile,
+          status: 'start'
+        });
+      }
 
       try {
         const res = await removeBackgroundFromFile(file, targetFile, options);
@@ -998,18 +1019,12 @@ export async function removeBackgroundFromDirectory(
       } catch (err: any) {
         const errMsg = err?.message || String(err);
         errors.push({ sourceFile: file, error: errMsg });
-        completedCount++;
         if (options.onProgress) {
           options.onProgress({
-            index: completedCount,
+            index: completedCount + 1,
             total,
             sourceFile: file,
             targetFile,
-            width: 0,
-            height: 0,
-            durationMs: 0,
-            originalBytes: 0,
-            outputBytes: 0,
             status: 'error',
             error: errMsg
           });
