@@ -967,7 +967,7 @@ export function createCli(): Command {
         } else {
           console.log(`  ${c.dim('Hardware:')} ${c.yellow('CPU Execution (Optimized Multi-Threaded)')}`);
         }
-        console.log(`  ${c.dim('Features:')} ${c.dim('Auto-Crop Trim (Active), Bilateral Matting, Bloat-Free Metadata')}`);
+        console.log(`  ${c.dim('Features:')} ${c.dim('Original Canvas Preservation, Bilateral Matting, Clean Metadata')}`);
         console.log(`  ${c.dim('Source:')}   ${c.white(resolvedSource)}`);
         console.log(`  ${c.dim('Target:')}   ${c.cyan(path.resolve(target))}\n`);
 
@@ -979,8 +979,7 @@ export function createCli(): Command {
           fast: useFast,
           quick: useFast,
           format: options.format,
-          trim: true,
-          padding: 0,
+          trim: false,
           concurrency: autoConcurrency,
           device: autoDevice,
           recursive: options.recursive,

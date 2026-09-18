@@ -834,8 +834,8 @@ export async function removeBackgroundFromFile(
     isolatedImage = defringeImage(isolatedImage, options.defringeRadius || defaultRadius);
   }
 
-  // Always automatically trim transparent margins (auto-crop) unless explicitly disabled (F-40)
-  if (options.trim !== false) {
+  // Trimming is disabled by default to strictly preserve original image dimensions and canvas positioning
+  if (options.trim === true) {
     isolatedImage = await trimImageAlpha(isolatedImage, options.padding || 0);
   }
 
