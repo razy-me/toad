@@ -29,17 +29,35 @@
 
 ## 🚀 Quickstart
 
+### 📦 One-Line Installation (No Node.js or Git required!)
+
+**Windows (PowerShell):**
+```powershell
+irm https://raw.githubusercontent.com/razy-me/toad/main/install.ps1 | iex
+```
+
+**macOS / Linux (Bash):**
 ```bash
-# Installation
+curl -fsSL https://raw.githubusercontent.com/razy-me/toad/main/install.sh | bash
+```
+
+*The installer automatically configures `toad` in your PATH and bundles a lightweight runtime if you don't already have Node.js installed.*
+
+### 🛠️ Developer Setup (Manual)
+```bash
 git clone https://github.com/razy-me/toad.git
 cd toad && npm install && npm run build && npm link
+```
 
-# Basic Commands
+### ⌨️ Commands
+```bash
 toad init my-project     # New starter project
 toad design.toad         # Compile
 toad design.toad -w      # Live browser preview
 toad audit design.toad   # Quality & accessibility audit
 toad format design.toad  # Auto-format
+toad remove-bg <img> <dir> # Smart on-device AI background remover (files & folders)
+toad update              # Update TOAD to latest version from GitHub
 ```
 
 ---

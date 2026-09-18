@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="0 0 1200 630" width="3000" height="1575">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xml:space="preserve" viewBox="0 0 1200 630" width="3000" height="1575">
   <defs>
     <linearGradient id="lin_grad_1" x1="15%" y1="15%" x2="85%" y2="85%" color-interpolation="sRGB">
       <stop offset="0%" stop-color="#0f172a" />
@@ -25,8 +25,8 @@
  <rect x="80" y="80" width="80" height="28" rx="4" ry="4" fill="#f59e0b" />
       <text x="86.5" y="98.5" font-family="sans-serif" font-size="12" font-weight="bold" font-style="normal" text-anchor="start" xml:space="preserve" style="font-weight: bold; font-style: normal;" fill="#000000">ANNOUNCEMENT</text>
     </g>
-    <text x="80" y="158" font-family="Inter" font-size="38" font-weight="700" font-style="normal" text-anchor="start" xml:space="preserve" style="font-weight: 700; font-style: normal;" fill="#f8fafc" id="headline"><tspan>Introducing toad: The Declarative Design DSL</tspan><tspan x="80" y="205.5">Compiler for High-Performance Visual Production</tspan></text>
-    <text x="80" y="858" font-family="Inter" font-size="18" font-weight="400" font-style="normal" text-anchor="start" xml:space="preserve" style="font-weight: 400; font-style: normal;" fill="#94a3b8" id="description"><tspan>Compile declarative design templates to multi-scale PNG/JPG and native layered Photoshop PSD files instantly</tspan><tspan x="80" y="883.2">with zero runtime overhead.</tspan></text>
+    <text x="80" y="158" font-family="Inter" font-size="38" font-weight="700" font-style="normal" text-anchor="start" xml:space="preserve" style="font-weight: 700; font-style: normal;" fill="#f8fafc" id="headline"><tspan x="80" y="158">Introducing toad: The Declarative Design DSL</tspan><tspan x="80" y="205.5">Compiler for High-Performance Visual Production</tspan></text>
+    <text x="80" y="858" font-family="Inter" font-size="18" font-weight="400" font-style="normal" text-anchor="start" xml:space="preserve" style="font-weight: 400; font-style: normal;" fill="#94a3b8" id="description"><tspan x="80" y="858">Compile declarative design templates to multi-scale PNG/JPG and native layered Photoshop PSD files instantly</tspan><tspan x="80" y="883.2">with zero runtime overhead.</tspan></text>
     <g id="authorInfo">
       <g id="authorAvatar">
  <circle cx="128" cy="1574" r="48" fill="#2563eb" stroke="#3b82f6" stroke-width="3" />

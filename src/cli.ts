@@ -18,6 +18,8 @@ import { copyToClipboard } from './utils/clipboard.js';
 import { bundleAssets } from './tools/assetBundler.js';
 import { formatRustDiagnostic, generateHelpSuggestion } from './tools/diagnostics.js';
 import { compileMotion } from './motion/index.js';
+import { updateToad } from './tools/updater.js';
+import { removeBackground, isGpuAvailable } from './tools/backgroundRemover.js';
 
 
 export interface CliOptions {
@@ -872,9 +874,9 @@ export function createCli(): Command {
   // Command: motion <file>
   program
     .command('motion <file>')
-    .description('[Beta] Compile and render a TOAD Motion animation (.toadm) to video or frames (Early Preview).')
-    .option('-o, --out <path>', 'Output video or frames path')
-    .option('-f, --format <format>', 'Export format: mp4, webm, frames', 'mp4')
+    .description('[Beta] Compile and render a TOAD Motion animation (.toadm) to video, GIF, or frames (Early Preview).')
+    .option('-o, --out <path>', 'Output video, GIF, or frames path')
+    .option('-f, --format <format>', 'Export format: mp4, webm, gif, frames', 'mp4')
     .option('--fps <fps>', 'Frames per second override (e.g. 30 or 60)')
     .option('--ffmpeg-path <path>', 'Path to custom FFmpeg binary')
     .action(async (file: string, options: any) => {
@@ -906,6 +908,131 @@ export function createCli(): Command {
         console.log(`\n${c.green('✔')} Motion export finished successfully: ${c.bold(c.cyan(outResult))}\n`);
       } catch (err: any) {
         console.error(`\n${c.red('✖')} Motion compilation error: ${err.message || String(err)}\n`);
+        process.exit(1);
+      }
+    });
+
+  // Command: update / upgrade
+  program
+    .command('update')
+    .alias('upgrade')
+    .description('Update TOAD to the latest version directly from GitHub')
+    .option('-c, --check', 'Check for updates without installing')
+    .option('-f, --force', 'Force update even if local changes exist or already on latest')
+    .action(async (options: any) => {
+      try {
+        await updateToad({
+          checkOnly: options.check,
+          force: options.force
+        });
+      } catch (err: any) {
+        console.error(`\n${c.red('✖')} Update failed: ${err.message || String(err)}\n`);
+        process.exit(1);
+      }
+    });
+
+  // Command: remove-bg <source> <target>
+  program
+    .command('remove-bg <source> <target>')
+    .alias('rembg')
+    .alias('bg-remove')
+    .alias('cutout')
+    .option('-m, --model <model>', 'AI model override (defaults to best quality: birefnet)')
+    .option('--fast', 'Speed preset: use lightweight fast model (ormbg)')
+    .option('-f, --format <format>', 'Output format: png or webp', 'png')
+    .option('--trim', 'Auto-crop transparent margins around isolated subject')
+    .option('--padding <px>', 'Padding in pixels when trimming', '0')
+    .option('--hair', 'Optimize specifically for portraits and fine hair')
+    .option('--motion', 'Optimize for fast motion, sports gear (golf clubs, hockey sticks), and motion blur')
+    .option('--defringe', 'Enable edge de-fringing and color decontamination (enabled by default)')
+    .option('--no-defringe', 'Disable automatic edge de-fringing and color decontamination')
+    .option('--gpu', 'Accelerate on GPU / NPU hardware (DirectML on Intel Arc / AI Boost)')
+    .option('-r, --recursive', 'Recursively search subdirectories when source is a folder')
+    .action(async (source: string, target: string, options: any) => {
+      try {
+        const resolvedSource = path.resolve(source);
+        if (!fs.existsSync(resolvedSource)) {
+          console.error(`\n${c.red('✖')} Source not found: ${c.bold(source)}\n`);
+          process.exit(1);
+        }
+
+        const useMotion = Boolean(options.motion);
+        const useHairPreset = Boolean(options.hair);
+        const useFast = Boolean(options.fast);
+        const selectedModel = useFast ? 'ormbg' : (options.model || 'birefnet');
+        const shouldDefringe = options.defringe !== false;
+        const gpuDetected = isGpuAvailable();
+
+        console.log(`\n${c.bold('✂️   TOAD Local Background Remover')}`);
+        console.log(`  ${c.green('🔒 [Local AI]')} ${c.dim('100% on-device processing. No images uploaded.')}`);
+        let modeTag = '';
+        if (useMotion) modeTag = c.green(' (Motion Blur & Sports Mode)');
+        else if (useHairPreset) modeTag = c.green(' (Hair Portrait Mode)');
+        else if (!useFast) modeTag = c.green(' (Ultra-High Quality)');
+        console.log(`  ${c.dim('Model:')}    ${c.cyan(selectedModel)}${modeTag}`);
+        if (gpuDetected) console.log(`  ${c.dim('Hardware:')} ${c.green('⚡ Intel Arc GPU / AI Boost NPU Detected (Auto-Accelerated)')}`);
+        if (shouldDefringe) console.log(`  ${c.dim('Filter:')}   ${c.yellow('Smart De-Fringe & Edge Decontamination (Active)')}`);
+        if (useMotion) console.log(`  ${c.dim('Matting:')}  ${c.yellow('Soft Motion Trail & Thin-Object Protection')}`);
+        console.log(`  ${c.dim('Source:')}   ${c.white(resolvedSource)}`);
+        console.log(`  ${c.dim('Target:')}   ${c.cyan(path.resolve(target))}\n`);
+
+        const isDirectory = fs.statSync(resolvedSource).isDirectory();
+        const paddingNum = options.padding ? parseInt(options.padding, 10) : 0;
+        const thresholdNum = options.threshold ? parseFloat(options.threshold) : undefined;
+
+        let processedCount = 0;
+
+        const result = await removeBackground(resolvedSource, target, {
+          model: selectedModel,
+          format: options.format,
+          trim: options.trim,
+          padding: paddingNum,
+          threshold: thresholdNum,
+          defringe: shouldDefringe,
+          motion: useMotion,
+          device: options.gpu ? 'dml' : undefined,
+          recursive: options.recursive,
+          onProgress: (info) => {
+            if (info.status === 'success') {
+              processedCount++;
+              const sizeKb = (info.outputBytes / 1024).toFixed(1);
+              const sizeStr = info.outputBytes > 1024 * 1024
+                ? `${(info.outputBytes / 1024 / 1024).toFixed(2)} MB`
+                : `${sizeKb} KB`;
+              const dimStr = c.dim(`(${info.width}x${info.height})`);
+              const durationStr = c.dim(`${info.durationMs}ms`);
+              const countStr = c.cyan(`[${info.index}/${info.total}]`);
+              console.log(`  ${countStr} ${c.bold(path.basename(info.sourceFile))} ${dimStr} ${c.yellow(sizeStr.padStart(8))} ${durationStr}`);
+            } else {
+              console.warn(`  ${c.red('✖')} [${info.index}/${info.total}] ${path.basename(info.sourceFile)}: ${info.error}`);
+            }
+          }
+        });
+
+        if (isDirectory) {
+          const batchRes = result as any;
+          const sec = (batchRes.durationMs / 1000).toFixed(2);
+          if (batchRes.total === 0) {
+            console.log(`  ${c.yellow('⚠ No supported images (.png, .jpg, .jpeg, .webp) found in directory.')}\n`);
+            return;
+          }
+          console.log(`\n${c.bgGreen(' SUCCESS ')} ${c.bold(c.green(`Processed ${batchRes.succeeded}/${batchRes.total} image(s) in ${sec}s`))}`);
+          console.log(`  ${c.cyan('➜')} Output folder: ${c.bold(path.resolve(target))}\n`);
+          if (batchRes.failed > 0) {
+            console.log(`  ${c.yellow(`⚠ ${batchRes.failed} image(s) failed to process.`)}\n`);
+          }
+        } else {
+          const singleRes = result as any;
+          const sizeKb = (singleRes.outputBytes / 1024).toFixed(1);
+          const sizeStr = singleRes.outputBytes > 1024 * 1024
+            ? `${(singleRes.outputBytes / 1024 / 1024).toFixed(2)} MB`
+            : `${sizeKb} KB`;
+          console.log(`\n${c.bgGreen(' SUCCESS ')} ${c.bold(c.green(`Background removed in ${singleRes.durationMs}ms`))}`);
+          console.log(`  ${c.cyan('➜')} ${c.bold(path.basename(singleRes.targetFile))} ${c.yellow(sizeStr)} ${c.dim(`(${singleRes.width}x${singleRes.height})`)}`);
+          console.log(`  ${c.dim('Location:')} ${c.cyan(singleRes.targetFile)}\n`);
+        }
+      } catch (err: any) {
+        console.error(`\n${c.bgRed(' ERROR ')} ${c.bold(c.red(`Failed to remove background:`))} ${err.message || String(err)}\n`);
         process.exit(1);
       }
     });

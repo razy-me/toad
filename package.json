@@ -47,10 +47,11 @@
     "prepack": "npm run build"
   },
   "dependencies": {
+    "@huggingface/transformers": "^4.3.0",
     "@napi-rs/canvas": "^0.1.65",
     "ag-psd": "^21.0.0",
-    "commander": "^12.1.0",
-    "chokidar": "^3.6.0"
+    "chokidar": "^3.6.0",
+    "commander": "^12.1.0"
   },
   "devDependencies": {
     "@types/node": "^20.14.12",

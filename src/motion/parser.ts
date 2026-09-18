@@ -309,6 +309,30 @@ export class MotionParser {
       } else if (key === 'stroke-width' || key === 'strokewidth') {
         const val = this.advance();
         props.strokeWidth = val.numValue ?? parseFloat(val.value);
+      } else if (
+        key === 'draw' ||
+        key === 'drawprogress' ||
+        key === 'draw-progress' ||
+        key === 'strokeprogress' ||
+        key === 'stroke-progress'
+      ) {
+        const val = this.advance();
+        props.strokeEnd = val.numValue ?? parseFloat(val.value);
+        if (props.strokeStart === undefined) {
+          props.strokeStart = 0;
+        }
+      } else if (key === 'strokeend' || key === 'stroke-end') {
+        const val = this.advance();
+        props.strokeEnd = val.numValue ?? parseFloat(val.value);
+      } else if (key === 'strokestart' || key === 'stroke-start') {
+        const val = this.advance();
+        props.strokeStart = val.numValue ?? parseFloat(val.value);
+      } else if (key === 'strokeoffset' || key === 'stroke-offset') {
+        const val = this.advance();
+        props.strokeOffset = val.numValue ?? parseFloat(val.value);
+      } else if (key === 'trimmode' || key === 'trim-mode') {
+        const val = this.advance();
+        props.trimMode = val.value.toLowerCase() as 'parallel' | 'sequential';
       } else if (key === 'blur') {
         const val = this.advance();
         props.blur = val.numValue ?? parseFloat(val.value);

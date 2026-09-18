@@ -117,4 +117,27 @@ describe('TOAD Motion: Path & Border Sampler', () => {
     expect(pt25.x).toBeCloseTo(150, 1);
     expect(pt25.y).toBeCloseTo(100, 1);
   });
+
+  it('clamps progress for open paths without wrapping around modulo 1', () => {
+    // Open path with a single straight line from (0, 0) to (100, 0)
+    const segments = [{
+      p0: { x: 0, y: 0 },
+      cp1: { x: 33.3, y: 0 },
+      cp2: { x: 66.6, y: 0 },
+      p1: { x: 100, y: 0 }
+    }];
+
+    const openPath = new ParametricPath(segments, 20, true);
+    expect(openPath.isOpen).toBe(true);
+
+    // Progress > 1 should clamp to end point (100, 0) instead of wrapping to (20, 0)
+    const ptOver = openPath.sample(1.2);
+    expect(ptOver.x).toBeCloseTo(100, 1);
+    expect(ptOver.y).toBeCloseTo(0, 1);
+
+    // Progress < 0 should clamp to start point (0, 0)
+    const ptUnder = openPath.sample(-0.2);
+    expect(ptUnder.x).toBeCloseTo(0, 1);
+    expect(ptUnder.y).toBeCloseTo(0, 1);
+  });
 });

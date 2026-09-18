@@ -7,13 +7,14 @@
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { createCanvas, SKRSContext2D, loadImage, Image } from '@napi-rs/canvas';
+import { createCanvas, SKRSContext2D, loadImage, Image, Path2D } from '@napi-rs/canvas';
 import { initializeCanvas, readPsd, Psd, Layer } from 'ag-psd';
 import { parseToad } from '../parser/parser.js';
 import { resolveImportsAndComponents } from '../parser/importResolver.js';
 import { solveLayout, LayoutResult, LayoutNode } from '../parser/math.js';
 import { CanvasRenderer } from '../engine/canvasRenderer.js';
-import { extractBorderSegments, CubicSegment } from './pathSampler.js';
+import { extractBorderSegments, CubicSegment, trimSvgPath, trimSegments, segmentsToPathD } from './pathSampler.js';
+import type { ElementMotionState } from './motionSolver.js';
 
 let isPsdCanvasInitialized = false;
 function ensurePsdCanvas(): void {
@@ -36,7 +37,7 @@ export interface MotionSceneElement {
   };
   layoutNode?: LayoutNode;
   svgPath?: string;
-  render(ctx: SKRSContext2D, opacityMultiplier: number): void;
+  render(ctx: SKRSContext2D, opacityMultiplier: number, state?: ElementMotionState): void;
 }
 
 export interface MotionScene {
@@ -93,6 +94,7 @@ async function loadToadScene(filePath: string): Promise<MotionScene> {
   const elements = new Map<string, MotionSceneElement>();
   const order: string[] = [];
 
+  const sceneDir = path.dirname(filePath);
   const nodesToProcess = layout.nodes || [];
   for (const node of nodesToProcess) {
     const id = node.id ? (node.id.startsWith('#') ? node.id : '#' + node.id) : '#' + node.name;
@@ -100,24 +102,74 @@ async function loadToadScene(filePath: string): Promise<MotionScene> {
     const nodeW = Math.max(1, node.box.w);
     const nodeH = Math.max(1, node.box.h);
 
-    // Create isolated single-node layout
+    // Compute extra padding for drop shadows or blurs to prevent edge clipping
+    let padding = 0;
+    const rawShadows = (node.style as any)?.shadows || (node.style?.shadow ? [node.style.shadow] : []);
+    for (const s of rawShadows) {
+      const blur = typeof s.blur === 'number' ? s.blur : 0;
+      const spread = typeof s.spread === 'number' ? s.spread : 0;
+      const ox = Math.abs(typeof s.offsetX === 'number' ? s.offsetX : 0);
+      const oy = Math.abs(typeof s.offsetY === 'number' ? s.offsetY : 0);
+      const needed = blur + spread + Math.max(ox, oy);
+      if (needed > padding) padding = needed;
+    }
+    const customBlur = (node.style as any)?.blur;
+    if (typeof customBlur === 'number') {
+      padding = Math.max(padding, customBlur * 2);
+    }
+    padding = Math.min(Math.ceil(padding), 80);
+
+    const canvasW = nodeW + padding * 2;
+    const canvasH = nodeH + padding * 2;
+
+    // Create isolated single-node layout.
+    // Crucial: Set children: undefined so container groups do not bake duplicate static copies of their children!
+    const origX = (node as any).x ?? node.box.x ?? 0;
+    const origY = (node as any).y ?? node.box.y ?? 0;
+    const isolatedNode: any = {
+      ...node,
+      parentId: undefined,
+      parent: undefined,
+      children: undefined, // Fix container ghosting
+      x: padding,
+      y: padding,
+      width: nodeW,
+      height: nodeH,
+      box: { x: padding, y: padding, w: nodeW, h: nodeH }
+    };
+
+    if (node.polygonLayout?.canvasPoints) {
+      isolatedNode.polygonLayout = {
+        ...node.polygonLayout,
+        canvasPoints: node.polygonLayout.canvasPoints.map((p: any) => ({
+          x: p.x - origX + padding,
+          y: p.y - origY + padding
+        }))
+      };
+    }
+
     const singleLayout: any = {
       canvas: {
         ...layout.canvas,
         name: 'isolated',
-        width: nodeW,
-        height: nodeH
+        width: canvasW,
+        height: canvasH,
+        background: undefined,
+        fill: undefined,
+        photoSrc: undefined,
+        bleed: 0,
+        cropMarks: false
       },
-      nodes: [{
-        ...node,
-        box: { x: 0, y: 0, w: nodeW, h: nodeH }
-      }],
+      nodes: [isolatedNode],
+      rootNodes: [isolatedNode],
       fonts: layout.fonts || [],
       warnings: [],
       dependencies: []
     };
 
-    const nodeCanvas = await CanvasRenderer.renderToCanvas(singleLayout);
+    const nodeCanvas = await CanvasRenderer.renderToCanvas(singleLayout, {
+      basePath: sceneDir
+    });
 
     const element: MotionSceneElement = {
       id,
@@ -129,10 +181,65 @@ async function loadToadScene(filePath: string): Promise<MotionScene> {
         borderRadius: node.style?.borderRadius
       },
       layoutNode: node,
-      render: (ctx, opacityMultiplier) => {
+      render: (ctx, opacityMultiplier, state) => {
         const prevAlpha = ctx.globalAlpha;
         ctx.globalAlpha *= opacityMultiplier;
-        (ctx as any).drawImage(nodeCanvas, 0, 0);
+
+        const isTrimming =
+          state &&
+          (state.strokeEnd !== undefined || state.strokeStart !== undefined);
+
+        if (isTrimming) {
+          const start = state.strokeStart ?? 0;
+          const end = state.strokeEnd ?? 1;
+
+          if (end <= start || end <= 0) {
+            ctx.globalAlpha = prevAlpha;
+            return;
+          }
+
+          if (end >= 1 && start <= 0 && !state.stroke && !state.strokeWidth) {
+            (ctx as any).drawImage(nodeCanvas, -padding, -padding);
+            ctx.globalAlpha = prevAlpha;
+            return;
+          }
+
+          const pathD = node.pathLayout?.d || (node as any).d;
+          if (pathD) {
+            const trimmedD = trimSvgPath(pathD, start, end, state.trimMode || 'parallel');
+            if (trimmedD) {
+              ctx.save();
+              ctx.strokeStyle = state.stroke || node.style?.stroke || '#000000';
+              ctx.lineWidth = state.strokeWidth ?? node.style?.strokeWidth ?? 1;
+              ctx.lineCap = (node.style as any)?.strokeCap || 'round';
+              ctx.lineJoin = (node.style as any)?.strokeJoin || 'round';
+              ctx.stroke(new Path2D(trimmedD));
+              ctx.restore();
+            }
+          } else {
+            const localNode = {
+              ...node,
+              box: { ...node.box, x: 0, y: 0 }
+            };
+            const borderSegs = extractBorderSegments(localNode);
+            if (borderSegs.length > 0) {
+              const trimmedSegs = trimSegments(borderSegs, start, end);
+              if (trimmedSegs.length > 0) {
+                const trimmedD = segmentsToPathD([trimmedSegs]);
+                ctx.save();
+                ctx.strokeStyle = state.stroke || node.style?.stroke || '#000000';
+                ctx.lineWidth = state.strokeWidth ?? node.style?.strokeWidth ?? 1;
+                ctx.lineCap = (node.style as any)?.strokeCap || 'round';
+                ctx.lineJoin = (node.style as any)?.strokeJoin || 'round';
+                ctx.stroke(new Path2D(trimmedD));
+                ctx.restore();
+              }
+            }
+          }
+        } else {
+          (ctx as any).drawImage(nodeCanvas, -padding, -padding);
+        }
+
         ctx.globalAlpha = prevAlpha;
       }
     };
@@ -304,10 +411,46 @@ async function loadSvgScene(filePath: string): Promise<MotionScene> {
         box: { x: 0, y: 0, w: width, h: height },
         style: { color: '#000000' }
       } as any,
-      render: (ctx, opacityMultiplier) => {
+      render: (ctx, opacityMultiplier, state) => {
         const prevAlpha = ctx.globalAlpha;
         ctx.globalAlpha *= opacityMultiplier;
-        (ctx as any).drawImage(img, 0, 0);
+        if (d) {
+          const isTrimming =
+            state &&
+            (state.strokeEnd !== undefined || state.strokeStart !== undefined);
+
+          let activeD = d;
+          if (isTrimming) {
+            const start = state.strokeStart ?? 0;
+            const end = state.strokeEnd ?? 1;
+            if (end <= start || end <= 0) {
+              ctx.globalAlpha = prevAlpha;
+              return;
+            }
+            activeD = trimSvgPath(d, start, end, state.trimMode || 'parallel');
+          }
+
+          if (activeD) {
+            const p2d = new Path2D(activeD);
+            const fillMatch = attrs.match(/fill=["']([^"']+)["']/i);
+            const fill = fillMatch ? fillMatch[1] : '#000000';
+            if (fill !== 'none' && !isTrimming) {
+              ctx.fillStyle = fill;
+              ctx.fill(p2d);
+            }
+            const strokeMatch = attrs.match(/stroke=["']([^"']+)["']/i);
+            if (strokeMatch && strokeMatch[1] !== 'none') {
+              ctx.strokeStyle = state?.stroke || strokeMatch[1]!;
+              const swMatch = attrs.match(/stroke-width=["']([^"']+)["']/i);
+              ctx.lineWidth = state?.strokeWidth ?? (swMatch ? parseFloat(swMatch[1]!) : 1);
+              ctx.lineCap = 'round';
+              ctx.lineJoin = 'round';
+              ctx.stroke(p2d);
+            }
+          }
+        } else {
+          (ctx as any).drawImage(img, 0, 0);
+        }
         ctx.globalAlpha = prevAlpha;
       }
     };

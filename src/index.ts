@@ -177,3 +177,21 @@ export {
   ExtractedAsset
 } from './importers/psdImporter.js';
 
+// 17. TOAD Motion Engine
+export * from './motion/index.js';
+
+// 18. Local AI Background Remover
+export {
+  removeBackground,
+  removeBackgroundFromFile,
+  removeBackgroundFromDirectory,
+  findImagesInDir,
+  trimImageAlpha,
+  isGpuAvailable,
+  detectBestDevice,
+  BgRemovalOptions,
+  BgProgressInfo,
+  SingleFileResult,
+  BatchRemovalResult
+} from './tools/backgroundRemover.js';
+

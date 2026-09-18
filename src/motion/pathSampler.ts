@@ -280,9 +280,11 @@ export class ParametricPath {
   private segments: CubicSegment[];
   private lut: LutEntry[] = [];
   public totalLength = 0;
+  public isOpen: boolean;
 
-  constructor(segments: CubicSegment[], samplesPerSegment = 20) {
+  constructor(segments: CubicSegment[], samplesPerSegment = 20, isOpen = false) {
     this.segments = segments;
+    this.isOpen = isOpen;
     this.buildLut(samplesPerSegment);
   }
 
@@ -327,10 +329,15 @@ export class ParametricPath {
       };
     }
 
-    // Wrap / clamp progress to [0, 1]
-    let p = progress % 1;
-    if (p < 0) p += 1;
-    if (progress === 1) p = 1;
+    // Wrap for closed loops / clamp for open paths
+    let p: number;
+    if (this.isOpen) {
+      p = Math.max(0, Math.min(1, progress));
+    } else {
+      p = progress % 1;
+      if (p < 0) p += 1;
+      if (progress === 1) p = 1;
+    }
 
     const targetDist = p * this.totalLength;
 
@@ -387,3 +394,143 @@ export class ParametricPath {
     };
   }
 }
+
+/**
+ * Trims a single cubic Bézier segment to parameter interval [u0, u1] in [0, 1].
+ * Uses exact analytical subdivision via De Casteljau derivative evaluation.
+ */
+export function trimCubicSegment(seg: CubicSegment, u0: number, u1: number): CubicSegment {
+  if (u0 <= 0 && u1 >= 1) return seg;
+  if (u0 >= u1) {
+    const pt = evaluateCubic(seg.p0, seg.cp1, seg.cp2, seg.p1, u0);
+    return { p0: pt, cp1: pt, cp2: pt, p1: pt };
+  }
+  const p0 = evaluateCubic(seg.p0, seg.cp1, seg.cp2, seg.p1, u0);
+  const p1 = evaluateCubic(seg.p0, seg.cp1, seg.cp2, seg.p1, u1);
+  const d0 = evaluateCubicDerivative(seg.p0, seg.cp1, seg.cp2, seg.p1, u0);
+  const d1 = evaluateCubicDerivative(seg.p0, seg.cp1, seg.cp2, seg.p1, u1);
+  const dt = (u1 - u0) / 3;
+  return {
+    p0,
+    cp1: { x: p0.x + dt * d0.x, y: p0.y + dt * d0.y },
+    cp2: { x: p1.x - dt * d1.x, y: p1.y - dt * d1.y },
+    p1
+  };
+}
+
+/**
+ * Trims a sequence of cubic segments (a subpath) by normalized arc-length [startProgress, endProgress] in [0, 1].
+ */
+export function trimSegments(
+  segments: CubicSegment[],
+  startProgress: number,
+  endProgress: number
+): CubicSegment[] {
+  const pStart = Math.max(0, Math.min(1, startProgress));
+  const pEnd = Math.max(0, Math.min(1, endProgress));
+  if (pStart >= pEnd || segments.length === 0) return [];
+
+  const lengths = segments.map(s => segmentLength(s.p0, s.cp1, s.cp2, s.p1));
+  const totalLength = lengths.reduce((sum, l) => sum + l, 0);
+  if (totalLength <= 1e-6) return [];
+
+  const targetStart = pStart * totalLength;
+  const targetEnd = pEnd * totalLength;
+
+  const result: CubicSegment[] = [];
+  let accum = 0;
+
+  for (let i = 0; i < segments.length; i++) {
+    const seg = segments[i]!;
+    const len = lengths[i]!;
+    const segStart = accum;
+    const segEnd = accum + len;
+    accum = segEnd;
+
+    // Segment entirely outside interval
+    if (segEnd <= targetStart || segStart >= targetEnd) {
+      continue;
+    }
+
+    if (len <= 1e-6) continue;
+
+    // Local segment parameter interval
+    const u0 = Math.max(0, Math.min(1, (targetStart - segStart) / len));
+    const u1 = Math.max(0, Math.min(1, (targetEnd - segStart) / len));
+
+    if (u1 > u0) {
+      result.push(trimCubicSegment(seg, u0, u1));
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Serializes a collection of subpaths (CubicSegment[][]) into an SVG path 'd' string.
+ */
+export function segmentsToPathD(subpaths: CubicSegment[][]): string {
+  let d = '';
+  for (const sp of subpaths) {
+    if (sp.length === 0) continue;
+    d += `M ${sp[0]!.p0.x.toFixed(2)} ${sp[0]!.p0.y.toFixed(2)} `;
+    for (const seg of sp) {
+      d += `C ${seg.cp1.x.toFixed(2)} ${seg.cp1.y.toFixed(2)}, ${seg.cp2.x.toFixed(2)} ${seg.cp2.y.toFixed(2)}, ${seg.p1.x.toFixed(2)} ${seg.p1.y.toFixed(2)} `;
+    }
+  }
+  return d.trim();
+}
+
+/**
+ * Trims an entire SVG path string along its length.
+ * Supports:
+ * - 'parallel' mode: every subpath traces simultaneously from start to end (ideal for circuit boards, network trees, flowcharts)
+ * - 'sequential' mode: continuous drawing from the first subpath to the last subpath along cumulative arc length
+ */
+export function trimSvgPath(
+  d: string,
+  start: number,
+  end: number,
+  mode: 'parallel' | 'sequential' = 'parallel'
+): string {
+  if (start <= 0 && end >= 1) return d;
+  if (start >= end || end <= 0) return '';
+
+  const subpaths = svgPathToSubpaths(d);
+  if (subpaths.length === 0) return '';
+
+  if (mode === 'parallel') {
+    const trimmed = subpaths.map(sp => trimSegments(sp.segments, start, end));
+    return segmentsToPathD(trimmed);
+  } else {
+    const allLengths = subpaths.map(sp => {
+      return sp.segments.reduce((acc, s) => acc + segmentLength(s.p0, s.cp1, s.cp2, s.p1), 0);
+    });
+    const total = allLengths.reduce((a, b) => a + b, 0);
+    if (total <= 1e-6) return '';
+
+    const targetStart = Math.max(0, Math.min(1, start)) * total;
+    const targetEnd = Math.max(0, Math.min(1, end)) * total;
+
+    let accum = 0;
+    const trimmedSubpaths: CubicSegment[][] = [];
+    for (let i = 0; i < subpaths.length; i++) {
+      const sp = subpaths[i]!;
+      const spLen = allLengths[i]!;
+      const spStart = accum;
+      const spEnd = accum + spLen;
+      accum = spEnd;
+
+      if (spEnd <= targetStart || spStart >= targetEnd) continue;
+      if (spLen <= 1e-6) continue;
+
+      const localStart = Math.max(0, (targetStart - spStart) / spLen);
+      const localEnd = Math.min(1, (targetEnd - spStart) / spLen);
+      if (localEnd > localStart) {
+        trimmedSubpaths.push(trimSegments(sp.segments, localStart, localEnd));
+      }
+    }
+    return segmentsToPathD(trimmedSubpaths);
+  }
+}
+

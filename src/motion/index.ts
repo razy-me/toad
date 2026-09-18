@@ -21,7 +21,7 @@ import { exportMotionVideo, VideoExportOptions } from './videoExporter.js';
 
 export interface CompileMotionOptions {
   outputPath?: string;
-  format?: 'mp4' | 'webm' | 'frames';
+  format?: 'mp4' | 'webm' | 'gif' | 'frames';
   fps?: number;
   ffmpegPath?: string;
   onProgress?: (currentFrame: number, totalFrames: number) => void;
@@ -50,10 +50,12 @@ export async function compileMotion(
     const matchedImport = doc.imports.find(imp => imp.alias === doc.motion.scene);
     if (matchedImport) {
       scenePath = path.resolve(dir, matchedImport.path);
+    } else {
+      throw new Error(
+        `Scene alias '${doc.motion.scene}' specified in motion block was not found in @imports. Available imports: ${doc.imports.map(i => `'${i.alias}'`).join(', ') || 'none'}`
+      );
     }
-  }
-
-  if (!scenePath && doc.imports.length > 0) {
+  } else if (doc.imports.length > 0) {
     scenePath = path.resolve(dir, doc.imports[0]!.path);
   }
 
@@ -66,7 +68,14 @@ export async function compileMotion(
 
   const fps = options.fps ?? doc.motion.fps ?? 60;
   const duration = doc.motion.duration ?? 3.0;
-  const ext = options.format === 'webm' ? '.webm' : options.format === 'frames' ? '' : '.mp4';
+  const ext =
+    options.format === 'gif'
+      ? '.gif'
+      : options.format === 'webm'
+      ? '.webm'
+      : options.format === 'frames'
+      ? ''
+      : '.mp4';
   const defaultOut = path.join(dir, 'dist', path.basename(resolvedPath, '.toadm') + ext);
   const outputPath = options.outputPath ?? defaultOut;
 

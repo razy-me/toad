@@ -48,7 +48,7 @@ describe('PSD to TOAD Converter (psdImporter)', () => {
       });
 
       expect(parsePostScriptFont('TimesNewRomanPS-BoldMT')).toEqual({
-        fontFamily: 'Times New Roman PS',
+        fontFamily: 'Times New Roman',
         fontWeight: 700,
         isItalic: false
       });
@@ -133,7 +133,7 @@ describe('PSD to TOAD Converter (psdImporter)', () => {
   });
 
   describe('Raster Image Extraction', () => {
-    const testOutDir = path.resolve(process.cwd(), 'tmp_psd_test');
+    const testOutDir = path.resolve('tests/dist/psd_test');
     const testAssetsDir = path.join(testOutDir, 'assets');
 
     afterAll(() => {
@@ -187,6 +187,186 @@ describe('PSD to TOAD Converter (psdImporter)', () => {
       const ast = parseToad(result.toadCode, toadOutFile);
       const errors = ast.diagnostics.filter(d => d.severity === 'error');
       expect(errors).toHaveLength(0);
+    });
+  });
+
+  describe('Fidelity Hardening & Edge Cases', () => {
+    it('generates mask property for clipped layers', async () => {
+      const syntheticPsd: Psd = {
+        width: 500,
+        height: 400,
+        children: [
+          {
+            name: 'Base Shape',
+            left: 50,
+            top: 50,
+            right: 250,
+            bottom: 250,
+            vectorMask: {
+              paths: [{
+                open: false,
+                knots: [
+                  { linked: false, points: [50, 50, 50, 50, 50, 50] },
+                  { linked: false, points: [250, 50, 250, 50, 250, 50] },
+                  { linked: false, points: [250, 250, 250, 250, 250, 250] },
+                  { linked: false, points: [50, 250, 50, 250, 50, 250] }
+                ]
+              }]
+            }
+          },
+          {
+            name: 'Clipped Overlay',
+            left: 60,
+            top: 60,
+            right: 240,
+            bottom: 240,
+            clipping: true,
+            clipped: true,
+            text: {
+              text: 'Clipped Text',
+              style: { fontSize: 20 }
+            }
+          }
+        ]
+      };
+
+      const psdBuf = writePsdBuffer(syntheticPsd);
+      const res = await importPsd(psdBuf, { extractImages: false });
+
+      expect(res.toadCode).toContain('mask: #Base_Shape;');
+      expect(res.toadCode).toContain('Clipped Text');
+
+      const reAst = parseToad(res.toadCode, 'clipping.toad');
+      expect(reAst.diagnostics.filter(d => d.severity === 'error')).toHaveLength(0);
+    });
+
+    it('emits explicit at and size coordinates on group folders with relative child offsets', async () => {
+      const c1 = createCanvas(300, 40);
+      const c2 = createCanvas(400, 80);
+      const syntheticPsd: Psd = {
+        width: 800,
+        height: 600,
+        children: [
+          {
+            name: 'Card Folder',
+            children: [
+              {
+                name: 'Header',
+                left: 100,
+                top: 80,
+                right: 400,
+                bottom: 120,
+                canvas: c1 as unknown as HTMLCanvasElement,
+                text: { text: 'Card Header', style: { fontSize: 24 } }
+              },
+              {
+                name: 'Body',
+                left: 100,
+                top: 140,
+                right: 500,
+                bottom: 220,
+                canvas: c2 as unknown as HTMLCanvasElement,
+                text: { text: 'Card Body Prose', style: { fontSize: 16 } }
+              }
+            ]
+          }
+        ]
+      };
+
+      const psdBuf = writePsdBuffer(syntheticPsd);
+      const res = await importPsd(psdBuf, { extractImages: false });
+
+      expect(res.toadCode).toContain('group #Card_Folder');
+      expect(res.toadCode).toContain('at: 100px 80px;');
+      expect(res.toadCode).toContain('size: 400px 140px;'); // 500 - 100 = 400, 220 - 80 = 140
+
+      // Children should have local offsets relative to group origin (100, 80)
+      expect(res.toadCode).toContain('at: 0px 0px;');   // 100 - 100 = 0, 80 - 80 = 0
+      expect(res.toadCode).toContain('at: 0px 60px;');  // 100 - 100 = 0, 140 - 80 = 60
+
+      const reAst = parseToad(res.toadCode, 'group.toad');
+      expect(reAst.diagnostics.filter(d => d.severity === 'error')).toHaveLength(0);
+    });
+
+    it('normalizes carriage returns and emits font-style italic', async () => {
+      const syntheticPsd: Psd = {
+        width: 600,
+        height: 400,
+        children: [
+          {
+            name: 'Italic Multiline Text',
+            left: 20,
+            top: 30,
+            right: 300,
+            bottom: 150,
+            text: {
+              text: 'Paragraph 1\rParagraph 2\r\nParagraph 3',
+              style: {
+                font: { name: 'Arial-ItalicMT' },
+                fontSize: 18
+              }
+            }
+          }
+        ]
+      };
+
+      const psdBuf = writePsdBuffer(syntheticPsd);
+      const res = await importPsd(psdBuf, { extractImages: false });
+
+      expect(res.toadCode).toContain('font-style: italic;');
+      expect(res.toadCode).toContain('Paragraph 1\\nParagraph 2\\nParagraph 3');
+
+      const reAst = parseToad(res.toadCode, 'italic.toad');
+      expect(reAst.diagnostics.filter(d => d.severity === 'error')).toHaveLength(0);
+    });
+
+    it('preserves non-uniform background photo layers as extracted image assets', async () => {
+      const c = createCanvas(200, 200);
+      const ctx = c.getContext('2d');
+      // Draw a gradient so canvas is non-uniform
+      ctx.fillStyle = '#FF0000';
+      ctx.fillRect(0, 0, 100, 200);
+      ctx.fillStyle = '#0000FF';
+      ctx.fillRect(100, 0, 100, 200);
+
+      const syntheticPsd: Psd = {
+        width: 200,
+        height: 200,
+        children: [
+          {
+            name: 'Background Photo',
+            left: 0,
+            top: 0,
+            right: 200,
+            bottom: 200,
+            canvas: c as unknown as HTMLCanvasElement
+          }
+        ]
+      };
+
+      const testOutDir = path.resolve('tests/dist/psd_test');
+      if (!fs.existsSync(testOutDir)) {
+        fs.mkdirSync(testOutDir, { recursive: true });
+      }
+
+      const psdBuf = writePsdBuffer(syntheticPsd);
+      const res = await importPsd(psdBuf, {
+        outPath: path.join(testOutDir, 'bg_test.toad'),
+        extractImages: true
+      });
+
+      // Canvas should be transparent and layer preserved as extracted image asset
+      expect(res.toadCode).toContain('fill: transparent;');
+      expect(res.toadCode).toContain('image #Background_Photo');
+      expect(res.stats.imageCount).toBe(1);
+      expect(res.assets).toHaveLength(1);
+    });
+
+    afterAll(() => {
+      const testOutDir = path.resolve('tests/dist/psd_test');
+      if (fs.existsSync(testOutDir)) {
+        fs.rmSync(testOutDir, { recursive: true, force: true });
+      }
     });
   });
 });

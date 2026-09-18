@@ -42,6 +42,10 @@ export interface KeyframeProperties {
   fill?: string;
   stroke?: string;
   strokeWidth?: number;
+  strokeStart?: number; // 0.0 to 1.0
+  strokeEnd?: number;   // 0.0 to 1.0
+  strokeOffset?: number; // 0.0 to 1.0
+  trimMode?: 'parallel' | 'sequential';
   blur?: number;
   ease?: EasingDefinition;
   along?: AlongPathDefinition;

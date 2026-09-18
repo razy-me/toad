@@ -18,7 +18,7 @@ let isPsdCanvasInitialized = false;
 function ensurePsdCanvas(): void {
   if (!isPsdCanvasInitialized) {
     initializeCanvas((width: number, height: number) => {
-      return createCanvas(width, height) as unknown as HTMLCanvasElement;
+      return createCanvas(Math.max(1, width), Math.max(1, height)) as unknown as HTMLCanvasElement;
     });
     isPsdCanvasInitialized = true;
   }
@@ -70,15 +70,16 @@ export function parsePostScriptFont(psName?: string): { fontFamily: string; font
     return { fontFamily: 'Inter', fontWeight: 400, isItalic: false };
   }
 
+  const vendorSuffixRegex = /(MT|PSMT|PS|Std|Pro|OTF|TTF)$/i;
   // Remove common Adobe / Monotype / System PostScript suffixes
-  let clean = psName.replace(/(MT|PSMT|PS|Std|Pro|OTF|TTF)$/i, '');
+  let clean = psName.replace(vendorSuffixRegex, '');
 
   let familyPart = clean;
   let stylePart = '';
 
   if (clean.includes('-')) {
     const parts = clean.split('-');
-    familyPart = parts[0]!;
+    familyPart = parts[0]!.replace(vendorSuffixRegex, '');
     stylePart = parts.slice(1).join('-');
   }
 
@@ -316,12 +317,38 @@ export async function importPsd(
 
   const lines: string[] = [];
 
+  // Helper to compute deep bounds for groups
+  function getLayerBounds(layer: Layer): { left: number; top: number; right: number; bottom: number } {
+    if (layer.children && layer.children.length > 0) {
+      let minX = Infinity;
+      let minY = Infinity;
+      let maxX = -Infinity;
+      let maxY = -Infinity;
+      for (const ch of layer.children) {
+        const cb = getLayerBounds(ch);
+        minX = Math.min(minX, cb.left);
+        minY = Math.min(minY, cb.top);
+        maxX = Math.max(maxX, cb.right);
+        maxY = Math.max(maxY, cb.bottom);
+      }
+      if (minX !== Infinity) {
+        return { left: Math.round(minX), top: Math.round(minY), right: Math.round(maxX), bottom: Math.round(maxY) };
+      }
+    }
+
+    const left = Math.round(layer.left ?? 0);
+    const top = Math.round(layer.top ?? 0);
+    const right = Math.round(layer.right ?? left);
+    const bottom = Math.round(layer.bottom ?? top);
+    return { left, top, right, bottom };
+  }
+
   // 1. Canvas Definition
   const canvasName = psd.name || inputBaseName;
   lines.push(`canvas "${canvasName}" {`);
   lines.push(`  size: ${docWidth}px ${docHeight}px;`);
 
-  // Detect canvas background fill if layer 0 is a full-bleed background
+  // Detect canvas background fill if layer 0 is a full-bleed solid background
   let startIndex = 0;
   const firstLayer = psd.children && psd.children.length > 0 ? psd.children[0] : undefined;
   if (firstLayer && !firstLayer.hidden && firstLayer.canvas && !firstLayer.text && (!firstLayer.children || firstLayer.children.length === 0)) {
@@ -334,10 +361,27 @@ export async function importPsd(
     if (isFullSize && isBgName && firstLayer.canvas) {
       try {
         const ctx = (firstLayer.canvas as any).getContext('2d');
-        const pixel = ctx.getImageData(0, 0, 1, 1).data;
-        const hex = psdColorToToad({ r: pixel[0], g: pixel[1], b: pixel[2], a: pixel[3] / 255 });
-        lines.push(`  fill: ${hex};`);
-        startIndex = 1; // Handled as canvas background
+        const cW = firstLayer.canvas.width;
+        const cH = firstLayer.canvas.height;
+        // Multi-point probe to check if canvas is uniform solid or complex photo/artwork
+        const p1 = ctx.getImageData(0, 0, 1, 1).data;
+        const p2 = ctx.getImageData(Math.floor(cW / 2), Math.floor(cH / 2), 1, 1).data;
+        const p3 = ctx.getImageData(Math.max(0, cW - 1), Math.max(0, cH - 1), 1, 1).data;
+        const p4 = ctx.getImageData(0, Math.max(0, cH - 1), 1, 1).data;
+
+        const isUniform = p1[0] === p2[0] && p1[1] === p2[1] && p1[2] === p2[2] && p1[3] === p2[3] &&
+                          p1[0] === p3[0] && p1[1] === p3[1] && p1[2] === p3[2] && p1[3] === p3[3] &&
+                          p1[0] === p4[0] && p1[1] === p4[1] && p1[2] === p4[2] && p1[3] === p4[3];
+
+        if (isUniform) {
+          const hex = psdColorToToad({ r: p1[0], g: p1[1], b: p1[2], a: p1[3] / 255 });
+          lines.push(`  fill: ${hex};`);
+          startIndex = 1; // Handled cleanly as solid canvas background
+        } else {
+          // Complex photo, artwork, or gradient: keep canvas clean and extract layer 0 as image asset
+          lines.push(`  fill: transparent;`);
+          startIndex = 0;
+        }
       } catch {
         lines.push(`  fill: #FFFFFF;`);
       }
@@ -352,9 +396,9 @@ export async function importPsd(
   lines.push('');
 
   // 2. Recursive Layer Walker
-  function processLayer(layer: Layer, indent = ''): void {
+  function processLayer(layer: Layer, indent = '', parentLeft = 0, parentTop = 0, maskTargetId?: string): string | undefined {
     if (layer.hidden && !options.includeHidden) {
-      return;
+      return undefined;
     }
 
     stats.layersCount++;
@@ -367,6 +411,9 @@ export async function importPsd(
     const bottom = Math.round(layer.bottom ?? top);
     const w = Math.max(1, right - left);
     const h = Math.max(1, bottom - top);
+
+    const localLeft = left - parentLeft;
+    const localTop = top - parentTop;
 
     // Common layer properties (opacity, blendMode, shadow)
     const commonProps: string[] = [];
@@ -403,26 +450,37 @@ export async function importPsd(
     // A. Folder / Group
     if (layer.children && layer.children.length > 0) {
       stats.groupCount++;
+      const bounds = getLayerBounds(layer);
+      const gLeft = bounds.left;
+      const gTop = bounds.top;
+      const gW = Math.max(1, bounds.right - bounds.left);
+      const gH = Math.max(1, bounds.bottom - bounds.top);
+      const groupLocalLeft = gLeft - parentLeft;
+      const groupLocalTop = gTop - parentTop;
+
       lines.push(`${indent}group #${id} "${layerName}" {`);
+      lines.push(`${indent}  at: ${groupLocalLeft}px ${groupLocalTop}px;`);
+      lines.push(`${indent}  size: ${gW}px ${gH}px;`);
+      if (maskTargetId) {
+        lines.push(`${indent}  mask: #${maskTargetId};`);
+      }
       for (const prop of commonProps) {
         lines.push(`${indent}  ${prop}`);
       }
-      for (const child of layer.children) {
-        processLayer(child, indent + '  ');
-      }
+      processLayersList(layer.children, indent + '  ', gLeft, gTop);
       lines.push(`${indent}}`);
       lines.push('');
-      return;
+      return id;
     }
 
     // B. Text Layer
     if (layer.text) {
       stats.textCount++;
-      const textRaw = layer.text.text || '';
+      const textRaw = (layer.text.text || '').replace(/\r\n|\r/g, '\n');
       const textJson = JSON.stringify(textRaw);
 
       const postScriptName = layer.text.style?.font?.name;
-      const { fontFamily, fontWeight } = parsePostScriptFont(postScriptName);
+      const { fontFamily, fontWeight, isItalic } = parsePostScriptFont(postScriptName);
 
       const rawFontSize = layer.text.style?.fontSize || 16;
       const fontSizePx = dpi !== 72 ? Math.round((rawFontSize * dpi) / 72) : Math.round(rawFontSize);
@@ -430,11 +488,14 @@ export async function importPsd(
       const textColor = psdColorToToad(layer.text.style?.fillColor, '#000000');
 
       lines.push(`${indent}text #${id} ${textJson} {`);
-      lines.push(`${indent}  at: ${left}px ${top}px;`);
+      lines.push(`${indent}  at: ${localLeft}px ${localTop}px;`);
       lines.push(`${indent}  font-family: "${fontFamily}";`);
       lines.push(`${indent}  font-size: ${fontSizePx}px;`);
       if (fontWeight !== 400) {
         lines.push(`${indent}  font-weight: ${fontWeight};`);
+      }
+      if (isItalic) {
+        lines.push(`${indent}  font-style: italic;`);
       }
       lines.push(`${indent}  color: ${textColor};`);
 
@@ -462,13 +523,17 @@ export async function importPsd(
         lines.push(`${indent}  line-height: ${lh}px;`);
       }
 
+      if (maskTargetId) {
+        lines.push(`${indent}  mask: #${maskTargetId};`);
+      }
+
       for (const prop of commonProps) {
         lines.push(`${indent}  ${prop}`);
       }
 
       lines.push(`${indent}}`);
       lines.push('');
-      return;
+      return id;
     }
 
     // C. Vector Shape Layer
@@ -488,32 +553,66 @@ export async function importPsd(
 
       // Stroke from layer effects
       const strokeEffect = layer.effects?.stroke?.[0];
+      const strokeSize = typeof strokeEffect?.size === 'number'
+        ? strokeEffect.size
+        : (strokeEffect?.size?.value ?? 1);
       const strokeProp = strokeEffect && strokeEffect.enabled !== false
-        ? `border: ${strokeEffect.size?.value ?? 1}px ${psdColorToToad(strokeEffect.color)};`
+        ? `border: ${strokeSize}px ${psdColorToToad(strokeEffect.color)};`
         : null;
 
       if (rectCheck && rectCheck.isRect) {
         // Output clean rect
         lines.push(`${indent}rect #${id} "${layerName}" {`);
-        lines.push(`${indent}  at: ${Math.round(rectCheck.x)}px ${Math.round(rectCheck.y)}px;`);
+        lines.push(`${indent}  at: ${Math.round(rectCheck.x - parentLeft)}px ${Math.round(rectCheck.y - parentTop)}px;`);
         lines.push(`${indent}  size: ${Math.round(rectCheck.w)}px ${Math.round(rectCheck.h)}px;`);
         lines.push(`${indent}  fill: ${fillColor};`);
         if (strokeProp) lines.push(`${indent}  ${strokeProp}`);
+        if (maskTargetId) lines.push(`${indent}  mask: #${maskTargetId};`);
         for (const prop of commonProps) lines.push(`${indent}  ${prop}`);
         lines.push(`${indent}}`);
         lines.push('');
-        return;
+        return id;
       } else {
-        // Output SVG vector path
-        const d = bezierPathToSvgD(firstPath);
+        // Compute path bounds from knots
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        for (const k of firstPath.knots || []) {
+          const kx = k.points[2]!;
+          const ky = k.points[3]!;
+          minX = Math.min(minX, kx);
+          minY = Math.min(minY, ky);
+          maxX = Math.max(maxX, kx);
+          maxY = Math.max(maxY, ky);
+        }
+        const pathW = Math.max(1, Math.round(maxX - minX));
+        const pathH = Math.max(1, Math.round(maxY - minY));
+        const localPathX = Math.round(minX - parentLeft);
+        const localPathY = Math.round(minY - parentTop);
+
+        // Normalize firstPath knots relative to (minX, minY)
+        const normalizedPath: BezierPath = {
+          ...firstPath,
+          knots: (firstPath.knots || []).map(k => ({
+            ...k,
+            points: [
+              k.points[0]! - minX, k.points[1]! - minY,
+              k.points[2]! - minX, k.points[3]! - minY,
+              k.points[4]! - minX, k.points[5]! - minY,
+            ]
+          }))
+        };
+
+        const d = bezierPathToSvgD(normalizedPath);
         lines.push(`${indent}path #${id} "${layerName}" {`);
+        lines.push(`${indent}  at: ${localPathX}px ${localPathY}px;`);
+        lines.push(`${indent}  size: ${pathW}px ${pathH}px;`);
         lines.push(`${indent}  d: "${d}";`);
         lines.push(`${indent}  fill: ${fillColor};`);
         if (strokeProp) lines.push(`${indent}  ${strokeProp}`);
+        if (maskTargetId) lines.push(`${indent}  mask: #${maskTargetId};`);
         for (const prop of commonProps) lines.push(`${indent}  ${prop}`);
         lines.push(`${indent}}`);
         lines.push('');
-        return;
+        return id;
       }
     }
 
@@ -544,35 +643,56 @@ export async function importPsd(
 
         lines.push(`${indent}image #${id} "${layerName}" {`);
         lines.push(`${indent}  src: "${relAssetPath}";`);
-        lines.push(`${indent}  at: ${left}px ${top}px;`);
+        lines.push(`${indent}  at: ${localLeft}px ${localTop}px;`);
         lines.push(`${indent}  size: ${w}px ${h}px;`);
         lines.push(`${indent}  fit: cover;`);
+        if (maskTargetId) lines.push(`${indent}  mask: #${maskTargetId};`);
         for (const prop of commonProps) lines.push(`${indent}  ${prop}`);
         lines.push(`${indent}}`);
         lines.push('');
       } catch (err: any) {
         warnings.push(`Failed to export raster layer '${layerName}': ${err.message}`);
       }
-      return;
+      return id;
     }
 
     // Fallback: Empty container or unknown layer
     if (w > 0 && h > 0) {
       lines.push(`${indent}rect #${id} "${layerName}" {`);
-      lines.push(`${indent}  at: ${left}px ${top}px;`);
+      lines.push(`${indent}  at: ${localLeft}px ${localTop}px;`);
       lines.push(`${indent}  size: ${w}px ${h}px;`);
       lines.push(`${indent}  fill: transparent;`);
+      if (maskTargetId) lines.push(`${indent}  mask: #${maskTargetId};`);
       for (const prop of commonProps) lines.push(`${indent}  ${prop}`);
       lines.push(`${indent}}`);
       lines.push('');
+      return id;
+    }
+
+    return undefined;
+  }
+
+  // Helper to process a list of sibling layers and track clipping masks
+  function processLayersList(layers: Layer[], indent = '', parentLeft = 0, parentTop = 0): void {
+    let lastBaseId: string | undefined;
+
+    for (const layer of layers) {
+      if (layer.hidden && !options.includeHidden) {
+        continue;
+      }
+
+      const isClipped = Boolean(layer.clipping || (layer as any).clipped);
+      const layerId = processLayer(layer, indent, parentLeft, parentTop, isClipped ? lastBaseId : undefined);
+      if (!isClipped && layerId) {
+        lastBaseId = layerId;
+      }
     }
   }
 
   // Traverse top-level layers
   const topLayers = psd.children || [];
-  for (let i = startIndex; i < topLayers.length; i++) {
-    processLayer(topLayers[i]!);
-  }
+  const initialLayers = topLayers.slice(startIndex);
+  processLayersList(initialLayers, '', 0, 0);
 
   let code = lines.join('\n');
 
