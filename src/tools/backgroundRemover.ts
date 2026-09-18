@@ -639,8 +639,12 @@ export async function removeBackgroundFromFile(
 
   // Smart color decontamination (De-fringing) for hair & fine edges:
   // Active by default for highest quality, unless explicitly disabled with defringe: false.
-  // In fast/quick mode, use a lightweight radius (1) for maximum throughput while preserving clean edges.
-  if (options.defringe !== false) {
+  // Fast-Path: In fast/quick mode, skip expensive CPU convolution by default for max throughput, unless explicitly enabled.
+  const shouldRunDefringe = (options.fast || options.quick)
+    ? options.defringe === true
+    : options.defringe !== false;
+
+  if (shouldRunDefringe) {
     const defaultRadius = (options.fast || options.quick) ? 1 : 3;
     isolatedImage = defringeImage(isolatedImage, options.defringeRadius || defaultRadius);
   }
@@ -759,7 +763,8 @@ export async function removeBackgroundFromDirectory(
   const warmupModel = resolveModelName(options.model, options);
   await getSegmentationPipeline(warmupModel, options.device);
 
-  const concurrency = Math.max(1, Math.min(8, options.concurrency ?? 2));
+  const defaultConcurrency = (options.fast || options.quick) ? 4 : 2;
+  const concurrency = Math.max(1, Math.min(8, options.concurrency ?? defaultConcurrency));
   let currentIndex = 0;
   let completedCount = 0;
 

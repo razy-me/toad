@@ -951,6 +951,7 @@ export function createCli(): Command {
     .option('--no-defringe', 'Disable automatic edge de-fringing and color decontamination')
     .option('--gpu', 'Accelerate on GPU / NPU hardware (DirectML on Intel Arc / AI Boost)')
     .option('-r, --recursive', 'Recursively search subdirectories when source is a folder')
+    .option('-c, --concurrency <number>', 'Concurrent workers for batch processing (default: 2, or 4 in fast mode)')
     .option('--doctor', 'Run hardware and execution provider diagnostic report and exit')
     .option('--dry-run', 'Preview image scanning and model routing without running neural inference')
     .option('--json', 'Output results in structured JSON format')
@@ -1000,7 +1001,7 @@ export function createCli(): Command {
         const useFast = Boolean(options.fast || options.quick);
         const useDyb = Boolean(options.dyb);
         const selectedModel = options.model ? options.model : (useFast ? 'fast' : (useHairPreset ? 'hair' : (useDetailPreset ? 'detail' : 'default')));
-        const shouldDefringe = options.defringe !== false;
+        const shouldDefringe = useFast ? options.defringe === true : options.defringe !== false;
         const gpuDetected = isGpuAvailable();
 
         if (!isQuiet) {
@@ -1008,7 +1009,7 @@ export function createCli(): Command {
           console.log(`  ${c.green('🔒 [Local AI]')} ${c.dim('100% on-device processing. No images uploaded.')}`);
           let modeTag = '';
           if (useDyb) modeTag = c.yellow(' [DYB: Do Your Best / Ultra-Detail]');
-          else if (useFast) modeTag = c.cyan(' [Fast / Quick Mode: BiRefNet Lite]');
+          else if (useFast) modeTag = c.cyan(' [Fast / Quick Mode: BiRefNet Lite 4x Fast-Path]');
           else if (gpuDetected) modeTag = c.green(' [GPU / NPU Accelerated]');
           if (useMotion) modeTag += c.green(' (Motion Blur & Sports Mode)');
           else if (useHairPreset) modeTag += c.green(' (Hair Portrait Mode)');
@@ -1017,7 +1018,11 @@ export function createCli(): Command {
           if (gpuDetected) {
             console.log(`  ${c.dim('Hardware:')} ${c.green('⚡ Intel Arc GPU / AI Boost NPU DirectML Hardware Acceleration Active')}`);
           }
-          if (shouldDefringe) console.log(`  ${c.dim('Filter:')}   ${c.yellow('Smart De-Fringe & Edge Decontamination (Active)')}`);
+          if (shouldDefringe) {
+            console.log(`  ${c.dim('Filter:')}   ${c.yellow('Smart De-Fringe & Edge Decontamination (Active)')}`);
+          } else if (useFast) {
+            console.log(`  ${c.dim('Filter:')}   ${c.dim('Fast-Path (CPU De-Fringe Bypassed for Max Batch Throughput)')}`);
+          }
           if (useMotion) console.log(`  ${c.dim('Matting:')}  ${c.yellow('Soft Motion Trail & Thin-Object Protection')}`);
           console.log(`  ${c.dim('Source:')}   ${c.white(resolvedSource)}`);
           console.log(`  ${c.dim('Target:')}   ${c.cyan(path.resolve(target))}\n`);
@@ -1032,6 +1037,8 @@ export function createCli(): Command {
           : undefined;
         const rawQuality = options.quality ? parseInt(options.quality, 10) : 95;
         const qualityNum = Number.isFinite(rawQuality) && rawQuality >= 1 && rawQuality <= 100 ? rawQuality : 95;
+        const rawConcurrency = options.concurrency ? parseInt(options.concurrency, 10) : undefined;
+        const concurrencyNum = Number.isFinite(rawConcurrency) && rawConcurrency! >= 1 ? rawConcurrency : undefined;
 
         let processedCount = 0;
 
@@ -1048,6 +1055,7 @@ export function createCli(): Command {
           padding: paddingNum,
           threshold: thresholdNum,
           defringe: shouldDefringe,
+          concurrency: concurrencyNum,
           motion: useMotion,
           device: options.gpu ? 'dml' : undefined,
           recursive: options.recursive,
