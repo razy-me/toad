@@ -719,6 +719,7 @@ export async function removeBackgroundFromFile(
       rawImage = rawImage.rgba();
     }
 
+    const effectiveDevice = options.device || (isGpuAvailable() ? 'dml' : 'cpu');
     let mask: any;
 
     if (options.dyb) {
@@ -727,7 +728,7 @@ export async function removeBackgroundFromFile(
       const baseModel = subject === 'portrait' ? MODEL_MAP.portrait : MODEL_MAP.default;
 
       // Pass A: Semantic Base
-      const segmenterA = await getSegmentationPipeline(baseModel, options.device);
+      const segmenterA = await getSegmentationPipeline(baseModel, effectiveDevice);
       const resA = await segmenterA(rawImage);
       if (!Array.isArray(resA) || resA.length === 0 || !resA[0].mask) {
         throw new Error(`Failed to generate base segmentation mask for image: ${path.basename(resolvedSource)}`);
@@ -738,7 +739,7 @@ export async function removeBackgroundFromFile(
       }
 
       // Pass B: Micro-Geometry Specialist (BiRefNet DIS5K)
-      const segmenterB = await getSegmentationPipeline(MODEL_MAP.detail, options.device);
+      const segmenterB = await getSegmentationPipeline(MODEL_MAP.detail, effectiveDevice);
       const resB = await segmenterB(rawImage);
       if (!Array.isArray(resB) || resB.length === 0 || !resB[0].mask) {
         throw new Error(`Failed to generate detail segmentation mask for image: ${path.basename(resolvedSource)}`);
@@ -779,7 +780,7 @@ export async function removeBackgroundFromFile(
       }
 
       // Run neural background segmentation
-      const segmenter = await getSegmentationPipeline(modelToUse, options.device);
+      const segmenter = await getSegmentationPipeline(modelToUse, effectiveDevice);
       const segmentationResult = await segmenter(rawImage);
 
       if (!Array.isArray(segmentationResult) || segmentationResult.length === 0 || !segmentationResult[0].mask) {
@@ -833,8 +834,8 @@ export async function removeBackgroundFromFile(
     isolatedImage = defringeImage(isolatedImage, options.defringeRadius || defaultRadius);
   }
 
-  // Optional smart auto-trim
-  if (options.trim) {
+  // Always automatically trim transparent margins (auto-crop) unless explicitly disabled (F-40)
+  if (options.trim !== false) {
     isolatedImage = await trimImageAlpha(isolatedImage, options.padding || 0);
   }
 

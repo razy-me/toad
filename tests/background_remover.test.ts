@@ -223,14 +223,26 @@ describe('TOAD Background Remover Module', () => {
       expect(fs.existsSync(path.join(targetDir, 'img2.png'))).toBe(true);
     }, 120000);
 
-    it('verifies CLI help no longer lists manual options (--hair, --detail, --model)', async () => {
+    it('verifies CLI help is radically streamlined and zero-config', async () => {
       const { stdout } = await execAsync('node ./dist/cli.js remove-bg --help');
       expect(stdout).not.toContain('--hair');
       expect(stdout).not.toContain('--detail');
       expect(stdout).not.toContain('--model');
+      expect(stdout).not.toContain('--padding');
+      expect(stdout).not.toContain('--trim');
+      expect(stdout).not.toContain('--motion');
+      expect(stdout).not.toContain('--defringe');
+      expect(stdout).not.toContain('--no-defringe');
+      expect(stdout).not.toContain('--gpu');
+      expect(stdout).not.toContain('--concurrency');
+      expect(stdout).not.toContain('--doctor');
+      expect(stdout).not.toContain('--quiet');
+      expect(stdout).not.toContain('--json');
       expect(stdout).toContain('--dyb');
       expect(stdout).toContain('--fast');
       expect(stdout).toContain('--quick');
+      expect(stdout).toContain('--format');
+      expect(stdout).toContain('--recursive');
     });
   });
 });

@@ -939,100 +939,39 @@ export function createCli(): Command {
     .option('--fast', 'Speed preset: use lightweight fast model (BiRefNet Lite, MIT License)')
     .option('--quick', 'Speed preset: alias for --fast (BiRefNet Lite, MIT License)')
     .option('-f, --format <format>', 'Output format: png or webp', 'png')
-    .option('--quality <1-100>', 'WebP compression quality (1-100)', '95')
-    .option('--trim', 'Auto-crop transparent margins around isolated subject')
-    .option('--padding <px>', 'Padding in pixels when trimming', '0')
-    .option('--threshold <cutoff>', 'Hard alpha threshold cutoff between 0.0 and 1.0')
-    .option('--motion', 'Optimize for fast motion, sports gear (golf clubs, hockey sticks), and motion blur')
-    .option('--defringe', 'Enable edge de-fringing and color decontamination (enabled by default)')
-    .option('--no-defringe', 'Disable automatic edge de-fringing and color decontamination')
-    .option('--gpu', 'Accelerate on GPU / NPU hardware (DirectML on Intel Arc / AI Boost)')
     .option('-r, --recursive', 'Recursively search subdirectories when source is a folder')
-    .option('-c, --concurrency <number>', 'Concurrent workers for batch processing (default: 2, or 4 in fast mode)')
-    .option('--doctor', 'Run hardware and execution provider diagnostic report and exit')
-    .option('--dry-run', 'Preview image scanning and model routing without running neural inference')
-    .option('--json', 'Output results in structured JSON format')
-    .option('-q, --quiet', 'Suppress console logs except errors')
     .action(async (source: string, target: string, options: any) => {
       try {
-        if (options.doctor) {
-          console.log(`\n${c.bold('🩺  TOAD Background Remover Hardware Diagnostics')}`);
-          console.log(`  ${c.dim('Node.js:')}    ${process.version} (${process.platform}-${process.arch})`);
-          try {
-            const ort = require('onnxruntime-node');
-            const backends = typeof ort.listSupportedBackends === 'function' ? ort.listSupportedBackends() : [];
-            console.log(`  ${c.dim('Backends:')}   ${backends.map((b: any) => b.name).join(', ') || 'cpu'}`);
-          } catch {
-            console.log(`  ${c.dim('Backends:')}   cpu (fallback)`);
-          }
-          console.log(`  ${c.dim('DirectML:')}   ${isGpuAvailable() ? c.green('⚡ Supported & Active (Intel Arc / AI Boost NPU / DirectX 12)') : c.yellow('Not detected (CPU execution)')}`);
-          console.log(`  ${c.dim('License:')}    ${c.green('100% Permissive Commercial (BiRefNet MIT Suite)')}\n`);
-          return;
-        }
-
         const resolvedSource = path.resolve(source);
         if (!fs.existsSync(resolvedSource)) {
           console.error(`\n${c.red('✖')} Source not found: ${c.bold(source)}\n`);
           process.exit(1);
         }
 
-        if (options.dryRun) {
-          console.log(`\n${c.bold('🔍  TOAD Background Remover Dry Run')}`);
-          const isDir = fs.statSync(resolvedSource).isDirectory();
-          if (isDir) {
-            console.log(`  ${c.cyan('Source Directory:')} ${resolvedSource}`);
-            console.log(`  ${c.cyan('Target Directory:')} ${path.resolve(target)}`);
-          } else {
-            console.log(`  ${c.cyan('Source File:')}      ${resolvedSource}`);
-            console.log(`  ${c.cyan('Target File:')}      ${path.resolve(target)}`);
-          }
-          console.log(`  ${c.green('Dry run completed. No inference executed and no files modified.')}\n`);
-          return;
-        }
-
-        const isJson = Boolean(options.json);
-        const isQuiet = Boolean(options.quiet) || isJson;
-        const useMotion = Boolean(options.motion);
         const useFast = Boolean(options.fast || options.quick);
         const useDyb = Boolean(options.dyb);
         const selectedModel = useDyb ? 'dyb (ensemble + guided filter)' : (useFast ? 'fast (BiRefNet Lite)' : 'auto (adaptive routing)');
-        const shouldDefringe = useFast ? options.defringe === true : options.defringe !== false;
         const gpuDetected = isGpuAvailable();
+        const autoDevice = gpuDetected ? 'dml' : 'cpu';
+        const autoConcurrency = useFast ? 4 : 2;
 
-        if (!isQuiet) {
-          console.log(`\n${c.bold('✂️   TOAD Local Background Remover')}`);
-          console.log(`  ${c.green('🔒 [Local AI]')} ${c.dim('100% on-device processing. No images uploaded.')}`);
-          let modeTag = '';
-          if (useDyb) modeTag = c.yellow(' [DYB: Multi-Model Ensemble + Native Guided Filter]');
-          else if (useFast) modeTag = c.cyan(' [Fast / Quick Mode: BiRefNet Lite 4x Fast-Path]');
-          else if (gpuDetected) modeTag = c.green(' [GPU / NPU Accelerated]');
-          if (useMotion) modeTag += c.green(' (Motion Blur & Sports Mode)');
-          console.log(`  ${c.dim('Model:')}    ${c.cyan(selectedModel)}${modeTag}`);
-          if (gpuDetected) {
-            console.log(`  ${c.dim('Hardware:')} ${c.green('⚡ Intel Arc GPU / AI Boost NPU DirectML Hardware Acceleration Active')}`);
-          }
-          if (shouldDefringe) {
-            console.log(`  ${c.dim('Filter:')}   ${c.yellow('Smart De-Fringe & Edge Decontamination (Active)')}`);
-          } else if (useFast) {
-            console.log(`  ${c.dim('Filter:')}   ${c.dim('Fast-Path (CPU De-Fringe Bypassed for Max Batch Throughput)')}`);
-          }
-          if (useMotion) console.log(`  ${c.dim('Matting:')}  ${c.yellow('Soft Motion Trail & Thin-Object Protection')}`);
-          console.log(`  ${c.dim('Source:')}   ${c.white(resolvedSource)}`);
-          console.log(`  ${c.dim('Target:')}   ${c.cyan(path.resolve(target))}\n`);
+        console.log(`\n${c.bold('✂️   TOAD Local Background Remover')}`);
+        console.log(`  ${c.green('🔒 [Local AI]')} ${c.dim('100% on-device processing. Zero parameters required.')}`);
+        let modeTag = '';
+        if (useDyb) modeTag = c.yellow(' [DYB: Multi-Model Ensemble + Native Guided Filter]');
+        else if (useFast) modeTag = c.cyan(' [Fast / Quick Mode: BiRefNet Lite 4x Fast-Path]');
+        else if (gpuDetected) modeTag = c.green(' [GPU / NPU Accelerated]');
+        console.log(`  ${c.dim('Model:')}    ${c.cyan(selectedModel)}${modeTag}`);
+        if (gpuDetected) {
+          console.log(`  ${c.dim('Hardware:')} ${c.green('⚡ Intel Arc GPU / AI Boost NPU DirectML Hardware Acceleration Active')}`);
+        } else {
+          console.log(`  ${c.dim('Hardware:')} ${c.yellow('CPU Execution (Optimized Multi-Threaded)')}`);
         }
+        console.log(`  ${c.dim('Features:')} ${c.dim('Auto-Crop Trim (Active), Bilateral Matting, Bloat-Free Metadata')}`);
+        console.log(`  ${c.dim('Source:')}   ${c.white(resolvedSource)}`);
+        console.log(`  ${c.dim('Target:')}   ${c.cyan(path.resolve(target))}\n`);
 
         const isDirectory = fs.statSync(resolvedSource).isDirectory();
-        const rawPad = options.padding ? parseInt(options.padding, 10) : 0;
-        const paddingNum = Number.isFinite(rawPad) && rawPad >= 0 ? rawPad : 0;
-        const rawThreshold = options.threshold ? parseFloat(options.threshold) : undefined;
-        const thresholdNum = typeof rawThreshold === 'number' && !Number.isNaN(rawThreshold) && rawThreshold >= 0 && rawThreshold <= 1
-          ? rawThreshold
-          : undefined;
-        const rawQuality = options.quality ? parseInt(options.quality, 10) : 95;
-        const qualityNum = Number.isFinite(rawQuality) && rawQuality >= 1 && rawQuality <= 100 ? rawQuality : 95;
-        const rawConcurrency = options.concurrency ? parseInt(options.concurrency, 10) : undefined;
-        const concurrencyNum = Number.isFinite(rawConcurrency) && rawConcurrency! >= 1 ? rawConcurrency : undefined;
-
         let processedCount = 0;
 
         const result = await removeBackground(resolvedSource, target, {
@@ -1040,17 +979,12 @@ export function createCli(): Command {
           fast: useFast,
           quick: useFast,
           format: options.format,
-          quality: qualityNum,
-          trim: options.trim,
-          padding: paddingNum,
-          threshold: thresholdNum,
-          defringe: shouldDefringe,
-          concurrency: concurrencyNum,
-          motion: useMotion,
-          device: options.gpu ? 'dml' : undefined,
+          trim: true,
+          padding: 0,
+          concurrency: autoConcurrency,
+          device: autoDevice,
           recursive: options.recursive,
           onProgress: (info) => {
-            if (isQuiet) return;
             if (info.status === 'success') {
               processedCount++;
               const sizeKb = (info.outputBytes / 1024).toFixed(1);
@@ -1067,9 +1001,7 @@ export function createCli(): Command {
           }
         });
 
-        if (isJson) {
-          console.log(JSON.stringify(result, null, 2));
-        } else if (isDirectory) {
+        if (isDirectory) {
           const batchRes = result as any;
           const sec = (batchRes.durationMs / 1000).toFixed(2);
           if (batchRes.total === 0) {
