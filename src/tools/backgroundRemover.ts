@@ -74,6 +74,16 @@ export interface BgRemovalOptions {
   motion?: boolean;
 
   /**
+   * Optimize specifically for portraits, human hair, and fine wisps.
+   */
+  hair?: boolean;
+
+  /**
+   * Fast preview preset (uses lightweight model).
+   */
+  fast?: boolean;
+
+  /**
    * Device provider for ONNX runtime: 'cpu' (default), 'dml' (DirectML GPU/NPU), or 'webgpu'.
    */
   device?: 'cpu' | 'webgpu' | 'dml';
@@ -229,15 +239,19 @@ export async function trimImageAlpha(image: any, padding = 0, thresholdAlpha = 5
   let maxY = -1;
 
   for (let y = 0; y < height; y++) {
+    const rowOffset = y * width;
+    let rowHasAlpha = false;
     for (let x = 0; x < width; x++) {
-      const idx = (y * width + x) * channels;
-      const alpha = data[idx + 3];
+      const alpha = data[(rowOffset + x) * channels + 3];
       if (alpha > thresholdAlpha) {
+        rowHasAlpha = true;
         if (x < minX) minX = x;
         if (x > maxX) maxX = x;
-        if (y < minY) minY = y;
-        if (y > maxY) maxY = y;
       }
+    }
+    if (rowHasAlpha) {
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
     }
   }
 
@@ -272,6 +286,7 @@ export function defringeImage(image: any, radius = 3): any {
   const cleanData = new Uint8ClampedArray(data);
 
   // Step 1: Backdrop haze removal & edge sharpening
+  let hasSemiTransparent = false;
   for (let i = 3; i < cleanData.length; i += channels) {
     const a = cleanData[i];
     if (a < 30) {
@@ -279,23 +294,34 @@ export function defringeImage(image: any, radius = 3): any {
     } else {
       cleanData[i] = Math.min(255, Math.round(Math.pow((a - 30) / (255 - 30), 1.25) * 255));
     }
+    if (cleanData[i] > 0 && cleanData[i] < 235) {
+      hasSemiTransparent = true;
+    }
   }
 
-  // Step 2: Color decontamination
+  // Fast path: If there are no semi-transparent boundary pixels, skip expensive convolution
+  if (!hasSemiTransparent) {
+    return new RawImage(cleanData, width, height, channels);
+  }
+
+  // Step 2: Color decontamination with precomputed row bounds
   const r = Math.max(1, Math.min(6, radius));
   for (let y = 0; y < height; y++) {
+    const rowOffset = y * width;
     for (let x = 0; x < width; x++) {
-      const idx = (y * width + x) * channels;
+      const idx = (rowOffset + x) * channels;
       const alpha = cleanData[idx + 3];
       if (alpha > 0 && alpha < 235) {
         let sumR = 0, sumG = 0, sumB = 0, count = 0;
-        for (let dy = -r; dy <= r; dy++) {
-          const ny = y + dy;
-          if (ny < 0 || ny >= height) continue;
-          for (let dx = -r; dx <= r; dx++) {
-            const nx = x + dx;
-            if (nx < 0 || nx >= width) continue;
-            const nidx = (ny * width + nx) * channels;
+        const yMin = Math.max(0, y - r);
+        const yMax = Math.min(height - 1, y + r);
+        const xMin = Math.max(0, x - r);
+        const xMax = Math.min(width - 1, x + r);
+
+        for (let ny = yMin; ny <= yMax; ny++) {
+          const nRowOffset = ny * width;
+          for (let nx = xMin; nx <= xMax; nx++) {
+            const nidx = (nRowOffset + nx) * channels;
             if (cleanData[nidx + 3] >= 235) {
               sumR += data[nidx];
               sumG += data[nidx + 1];
@@ -393,8 +419,11 @@ export async function removeBackgroundFromFile(
 
   const startTime = Date.now();
 
-  // Load input image
-  const rawImage = await RawImage.read(resolvedSource);
+  // Load input image and guarantee 4-channel RGBA format for putAlpha
+  let rawImage = await RawImage.read(resolvedSource);
+  if (rawImage.channels < 4) {
+    rawImage = rawImage.rgba();
+  }
 
   // Select model: if dyb is enabled, use birefnet; otherwise options.model or default (ormbg)
   const modelToUse = options.dyb ? 'birefnet' : (options.model || 'ormbg');
@@ -443,8 +472,20 @@ export async function removeBackgroundFromFile(
     fs.mkdirSync(targetDir, { recursive: true });
   }
 
-  // Save the result
-  await isolatedImage.save(targetPath);
+  // Atomic file write via temporary staging file to prevent corruption
+  const tempPath = path.join(
+    targetDir,
+    `.toad-tmp-${Date.now()}-${Math.random().toString(36).slice(2)}${path.extname(targetPath) || '.png'}`
+  );
+  try {
+    await isolatedImage.save(tempPath);
+    fs.renameSync(tempPath, targetPath);
+  } catch (saveErr) {
+    if (fs.existsSync(tempPath)) {
+      try { fs.unlinkSync(tempPath); } catch {}
+    }
+    throw saveErr;
+  }
 
   const durationMs = Date.now() - startTime;
   const outputStat = fs.statSync(targetPath);
@@ -528,6 +569,13 @@ export async function removeBackgroundFromDirectory(
     try {
       const res = await removeBackgroundFromFile(file, targetFile, options);
       results.push(res);
+
+      // Yield event loop and clear heap memory to prevent V8 exhaustion during large batches
+      await new Promise((resolve) => setImmediate(resolve));
+      if (typeof global !== 'undefined' && typeof (global as any).gc === 'function') {
+        try { (global as any).gc(); } catch {}
+      }
+
       if (options.onProgress) {
         options.onProgress({
           index: i + 1,

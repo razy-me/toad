@@ -941,12 +941,15 @@ export function createCli(): Command {
     .option('-f, --format <format>', 'Output format: png or webp', 'png')
     .option('--trim', 'Auto-crop transparent margins around isolated subject')
     .option('--padding <px>', 'Padding in pixels when trimming', '0')
+    .option('--threshold <cutoff>', 'Hard alpha threshold cutoff between 0.0 and 1.0')
     .option('--hair', 'Optimize specifically for portraits and fine hair')
     .option('--motion', 'Optimize for fast motion, sports gear (golf clubs, hockey sticks), and motion blur')
     .option('--defringe', 'Enable edge de-fringing and color decontamination (enabled by default)')
     .option('--no-defringe', 'Disable automatic edge de-fringing and color decontamination')
     .option('--gpu', 'Accelerate on GPU / NPU hardware (DirectML on Intel Arc / AI Boost)')
     .option('-r, --recursive', 'Recursively search subdirectories when source is a folder')
+    .option('--json', 'Output results in structured JSON format')
+    .option('-q, --quiet', 'Suppress console logs except errors')
     .action(async (source: string, target: string, options: any) => {
       try {
         const resolvedSource = path.resolve(source);
@@ -955,32 +958,37 @@ export function createCli(): Command {
           process.exit(1);
         }
 
+        const isJson = Boolean(options.json);
+        const isQuiet = Boolean(options.quiet) || isJson;
         const useMotion = Boolean(options.motion);
         const useHairPreset = Boolean(options.hair);
+        const useFast = Boolean(options.fast);
         const useDyb = Boolean(options.dyb);
         const selectedModel = options.model ? options.model : (useDyb ? 'birefnet' : 'ormbg');
         const shouldDefringe = options.defringe !== false;
         const gpuDetected = isGpuAvailable();
 
-        console.log(`\n${c.bold('✂️   TOAD Local Background Remover')}`);
-        console.log(`  ${c.green('🔒 [Local AI]')} ${c.dim('100% on-device processing. No images uploaded.')}`);
-        let modeTag = '';
-        if (useDyb) modeTag = c.yellow(' [DYB: Do Your Best / Ultra-Detail]');
-        else if (gpuDetected) modeTag = c.green(' [GPU / NPU Accelerated]');
-        if (useMotion) modeTag += c.green(' (Motion Blur & Sports Mode)');
-        else if (useHairPreset) modeTag += c.green(' (Hair Portrait Mode)');
-        console.log(`  ${c.dim('Model:')}    ${c.cyan(selectedModel)}${modeTag}`);
-        if (gpuDetected) {
-          if (selectedModel.toLowerCase().includes('birefnet') || useDyb) {
-            console.log(`  ${c.dim('Hardware:')} ${c.yellow('Intel Arc GPU / AI Boost NPU Detected (CPU execution used for DYB high-precision ops)')}`);
-          } else {
-            console.log(`  ${c.dim('Hardware:')} ${c.green('⚡ Intel Arc GPU / AI Boost NPU DirectML Hardware Acceleration Active')}`);
+        if (!isQuiet) {
+          console.log(`\n${c.bold('✂️   TOAD Local Background Remover')}`);
+          console.log(`  ${c.green('🔒 [Local AI]')} ${c.dim('100% on-device processing. No images uploaded.')}`);
+          let modeTag = '';
+          if (useDyb) modeTag = c.yellow(' [DYB: Do Your Best / Ultra-Detail]');
+          else if (gpuDetected) modeTag = c.green(' [GPU / NPU Accelerated]');
+          if (useMotion) modeTag += c.green(' (Motion Blur & Sports Mode)');
+          else if (useHairPreset) modeTag += c.green(' (Hair Portrait Mode)');
+          console.log(`  ${c.dim('Model:')}    ${c.cyan(selectedModel)}${modeTag}`);
+          if (gpuDetected) {
+            if (selectedModel.toLowerCase().includes('birefnet') || useDyb) {
+              console.log(`  ${c.dim('Hardware:')} ${c.yellow('Intel Arc GPU / AI Boost NPU Detected (CPU execution used for DYB high-precision ops)')}`);
+            } else {
+              console.log(`  ${c.dim('Hardware:')} ${c.green('⚡ Intel Arc GPU / AI Boost NPU DirectML Hardware Acceleration Active')}`);
+            }
           }
+          if (shouldDefringe) console.log(`  ${c.dim('Filter:')}   ${c.yellow('Smart De-Fringe & Edge Decontamination (Active)')}`);
+          if (useMotion) console.log(`  ${c.dim('Matting:')}  ${c.yellow('Soft Motion Trail & Thin-Object Protection')}`);
+          console.log(`  ${c.dim('Source:')}   ${c.white(resolvedSource)}`);
+          console.log(`  ${c.dim('Target:')}   ${c.cyan(path.resolve(target))}\n`);
         }
-        if (shouldDefringe) console.log(`  ${c.dim('Filter:')}   ${c.yellow('Smart De-Fringe & Edge Decontamination (Active)')}`);
-        if (useMotion) console.log(`  ${c.dim('Matting:')}  ${c.yellow('Soft Motion Trail & Thin-Object Protection')}`);
-        console.log(`  ${c.dim('Source:')}   ${c.white(resolvedSource)}`);
-        console.log(`  ${c.dim('Target:')}   ${c.cyan(path.resolve(target))}\n`);
 
         const isDirectory = fs.statSync(resolvedSource).isDirectory();
         const paddingNum = options.padding ? parseInt(options.padding, 10) : 0;
@@ -991,6 +999,8 @@ export function createCli(): Command {
         const result = await removeBackground(resolvedSource, target, {
           model: selectedModel,
           dyb: useDyb,
+          fast: useFast,
+          hair: useHairPreset,
           format: options.format,
           trim: options.trim,
           padding: paddingNum,
@@ -1000,6 +1010,7 @@ export function createCli(): Command {
           device: options.gpu ? 'dml' : undefined,
           recursive: options.recursive,
           onProgress: (info) => {
+            if (isQuiet) return;
             if (info.status === 'success') {
               processedCount++;
               const sizeKb = (info.outputBytes / 1024).toFixed(1);
@@ -1016,7 +1027,9 @@ export function createCli(): Command {
           }
         });
 
-        if (isDirectory) {
+        if (isJson) {
+          console.log(JSON.stringify(result, null, 2));
+        } else if (isDirectory) {
           const batchRes = result as any;
           const sec = (batchRes.durationMs / 1000).toFixed(2);
           if (batchRes.total === 0) {
