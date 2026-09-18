@@ -270,6 +270,113 @@ export function detectBestDevice(modelArg?: string): 'dml' | 'cpu' {
   return 'dml';
 }
 
+/**
+ * Unified TOAD AI Model Suite.
+ * Covers general subjects, portraits/hair, ultra-fine DIS5K geometry, and lightweight fast path.
+ */
+export const TOAD_AI_SUITE_MODELS = [
+  MODEL_MAP.default,
+  MODEL_MAP.fast,
+  MODEL_MAP.portrait,
+  MODEL_MAP.detail
+];
+
+/**
+ * Checks whether an ONNX model is already fully downloaded and cached locally on disk.
+ */
+export function isModelCached(modelName: string): boolean {
+  try {
+    const cacheDir = ensureEnvironmentConfigured();
+    const modelFile = path.join(cacheDir, modelName, 'onnx', 'model.onnx');
+    return fs.existsSync(modelFile) && fs.statSync(modelFile).size > 50 * 1024 * 1024;
+  } catch {
+    return false;
+  }
+}
+
+let isSuiteVerified = false;
+
+/**
+ * Ensures all models in the TOAD AI Suite are downloaded and ready on first execution.
+ * Presents all models as a single, unified "AI-Model" to the user.
+ */
+export async function ensureAiModelSuiteReady(
+  onProgress?: (info: { status: 'progress' | 'done'; model: string; progress?: number; loaded?: number; total?: number }) => void
+): Promise<void> {
+  if (isSuiteVerified) {
+    onProgress?.({ status: 'done', model: 'AI-Model' });
+    return;
+  }
+
+  ensureEnvironmentConfigured();
+
+  const approxSizes: Record<string, number> = {
+    [MODEL_MAP.default]: 972 * 1024 * 1024,
+    [MODEL_MAP.fast]: 150 * 1024 * 1024,
+    [MODEL_MAP.portrait]: 972 * 1024 * 1024,
+    [MODEL_MAP.detail]: 972 * 1024 * 1024
+  };
+
+  const totalBytes = Object.values(approxSizes).reduce((a, b) => a + b, 0);
+  const uncachedModels = TOAD_AI_SUITE_MODELS.filter((m) => !isModelCached(m));
+
+  if (uncachedModels.length === 0) {
+    isSuiteVerified = true;
+    onProgress?.({ status: 'done', model: 'AI-Model', progress: 100, loaded: totalBytes, total: totalBytes });
+    return;
+  }
+
+  let bytesFromCompleted = 0;
+  for (const m of TOAD_AI_SUITE_MODELS) {
+    if (isModelCached(m)) {
+      bytesFromCompleted += approxSizes[m] || 0;
+    }
+  }
+
+  const initialPct = Math.min(99, Math.round((bytesFromCompleted / totalBytes) * 100));
+  onProgress?.({
+    status: 'progress',
+    model: 'AI-Model',
+    progress: initialPct,
+    loaded: bytesFromCompleted,
+    total: totalBytes
+  });
+
+  for (const model of uncachedModels) {
+    const modelExpectedBytes = approxSizes[model] || (900 * 1024 * 1024);
+    try {
+      await getSegmentationPipeline(model, 'cpu', (p: any) => {
+        if (p.status === 'progress') {
+          const fileRatio = typeof p.progress === 'number' ? p.progress / 100 : 0;
+          const currentModelLoaded = fileRatio * modelExpectedBytes;
+          const currentTotalLoaded = Math.min(totalBytes, bytesFromCompleted + currentModelLoaded);
+          const currentPct = Math.min(99, Math.round((currentTotalLoaded / totalBytes) * 100));
+
+          onProgress?.({
+            status: 'progress',
+            model: 'AI-Model',
+            progress: currentPct,
+            loaded: currentTotalLoaded,
+            total: totalBytes
+          });
+        }
+      });
+      bytesFromCompleted += modelExpectedBytes;
+    } catch {
+      bytesFromCompleted += modelExpectedBytes;
+    }
+  }
+
+  isSuiteVerified = true;
+  onProgress?.({
+    status: 'done',
+    model: 'AI-Model',
+    progress: 100,
+    loaded: totalBytes,
+    total: totalBytes
+  });
+}
+
 // In-flight initialization mutex map to prevent parallel duplicate model downloads (F-12)
 const inFlightPipelinePromises = new Map<string, Promise<any>>();
 
@@ -744,6 +851,7 @@ export async function removeBackgroundFromFile(
   }
 
   const startTime = Date.now();
+  await ensureAiModelSuiteReady(options.onDownloadProgress);
 
   try {
     // Load input image and guarantee 4-channel RGBA format for putAlpha (supports grayscale, RGB, RGBA)
@@ -1009,10 +1117,13 @@ export async function removeBackgroundFromDirectory(
 
   const batchStartTime = Date.now();
 
-  // Warm up pipeline once using parameter-resolved model and report download progress
+  // On first execution, ensure all models in the AI-Model suite are ready and cached
+  await ensureAiModelSuiteReady(options.onDownloadProgress);
+
+  // Warm up pipeline once using parameter-resolved model
   const warmupModel = resolveModelName(options.model, options);
   const effectiveDevice = options.device || detectBestDevice(warmupModel);
-  await getSegmentationPipeline(warmupModel, effectiveDevice, options.onDownloadProgress);
+  await getSegmentationPipeline(warmupModel, effectiveDevice);
 
   const defaultConcurrency = (options.fast || options.quick) ? 4 : 1;
   const concurrency = Math.max(1, Math.min(8, options.concurrency ?? defaultConcurrency));

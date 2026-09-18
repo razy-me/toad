@@ -975,7 +975,7 @@ export function createCli(): Command {
         let modeTag = '';
         if (useDyb) modeTag = c.yellow(' [DYB: Multi-Model Ensemble + Native Guided Filter]');
         else if (useFast) modeTag = c.cyan(' [Fast / Quick Mode: BiRefNet Lite 4x Fast-Path]');
-        console.log(`  ${c.dim('Model:')}    ${c.cyan(selectedModel)}${modeTag}`);
+        console.log(`  ${c.dim('Model:')}    ${c.cyan('AI-Model')}${modeTag}`);
         if (effectiveDevice === 'dml') {
           console.log(`  ${c.dim('Hardware:')} ${c.green('⚡ DirectML GPU Hardware Acceleration Active')}`);
         } else {
@@ -993,15 +993,23 @@ export function createCli(): Command {
           return `[${c.green(bar)}] ${(pct * 100).toFixed(0).padStart(3)}%`;
         }
 
+        let aiModelReportedDone = false;
         const onDownloadProgress = (p: any) => {
-          if (p.status === 'progress' && p.file) {
+          if (p.status === 'progress') {
             const pct = typeof p.progress === 'number' ? Math.round(p.progress) : 0;
             const bar = renderProgressBar(pct, 100, 20);
-            const mbLoaded = p.loaded ? (p.loaded / 1024 / 1024).toFixed(1) : '0';
-            const mbTotal = p.total ? (p.total / 1024 / 1024).toFixed(1) : '?';
-            process.stdout.write(`\r  📥 Initializing AI model (${p.file}): ${bar} (${mbLoaded}/${mbTotal} MB)   `);
-          } else if (p.status === 'done' && p.file) {
-            process.stdout.write(`\r  ✔ Model weights ready: ${c.bold(p.file)}                                \n`);
+            let sizeInfo = '';
+            if (p.loaded && p.total) {
+              const gbLoaded = (p.loaded / 1024 / 1024 / 1024).toFixed(2);
+              const gbTotal = (p.total / 1024 / 1024 / 1024).toFixed(2);
+              sizeInfo = ` (${gbLoaded}/${gbTotal} GB)`;
+            }
+            process.stdout.write(`\r  📥 Initializing AI-Model: ${bar}${sizeInfo}   `);
+          } else if (p.status === 'done') {
+            if (!aiModelReportedDone) {
+              aiModelReportedDone = true;
+              process.stdout.write(`\r  ✔ AI-Model ready (100% on-device)                                    \n`);
+            }
           }
         };
 
