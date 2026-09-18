@@ -937,7 +937,8 @@ export function createCli(): Command {
     .alias('rembg')
     .alias('bg-remove')
     .alias('cutout')
-    .option('-m, --model <model>', 'AI model override (defaults to best quality: birefnet)')
+    .option('-m, --model <model>', 'AI model override (default: ormbg with GPU/NPU acceleration)')
+    .option('--dyb', 'Deep portrait model: uses BiRefNet (ultra-fine hair segmentation, CPU-only)')
     .option('--fast', 'Speed preset: use lightweight fast model (ormbg)')
     .option('-f, --format <format>', 'Output format: png or webp', 'png')
     .option('--trim', 'Auto-crop transparent margins around isolated subject')
@@ -958,19 +959,24 @@ export function createCli(): Command {
 
         const useMotion = Boolean(options.motion);
         const useHairPreset = Boolean(options.hair);
-        const useFast = Boolean(options.fast);
-        const selectedModel = useFast ? 'ormbg' : (options.model || 'birefnet');
+        const useDyb = Boolean(options.dyb);
+        const selectedModel = options.model || (useDyb ? 'birefnet' : 'ormbg');
         const shouldDefringe = options.defringe !== false;
         const gpuDetected = isGpuAvailable();
 
         console.log(`\n${c.bold('✂️   TOAD Local Background Remover')}`);
         console.log(`  ${c.green('🔒 [Local AI]')} ${c.dim('100% on-device processing. No images uploaded.')}`);
         let modeTag = '';
-        if (useMotion) modeTag = c.green(' (Motion Blur & Sports Mode)');
+        if (useDyb) modeTag = c.yellow(' (Deep BiRefNet Mode, CPU)');
+        else if (useMotion) modeTag = c.green(' (Motion Blur & Sports Mode)');
         else if (useHairPreset) modeTag = c.green(' (Hair Portrait Mode)');
-        else if (!useFast) modeTag = c.green(' (Ultra-High Quality)');
+        else modeTag = c.green(' (Hardware-Accelerated)');
         console.log(`  ${c.dim('Model:')}    ${c.cyan(selectedModel)}${modeTag}`);
-        if (gpuDetected) console.log(`  ${c.dim('Hardware:')} ${c.green('⚡ Intel Arc GPU / AI Boost NPU Detected (Auto-Accelerated)')}`);
+        if (gpuDetected && !selectedModel.toLowerCase().includes('birefnet') && selectedModel.toLowerCase() !== 'dyb') {
+          console.log(`  ${c.dim('Hardware:')} ${c.green('⚡ Intel Arc GPU / AI Boost NPU Detected (Auto-Accelerated)')}`);
+        } else if (selectedModel.toLowerCase().includes('birefnet') || selectedModel.toLowerCase() === 'dyb') {
+          console.log(`  ${c.dim('Hardware:')} ${c.yellow('⚙️  High-Precision Multi-Scale CPU Engine')}`);
+        }
         if (shouldDefringe) console.log(`  ${c.dim('Filter:')}   ${c.yellow('Smart De-Fringe & Edge Decontamination (Active)')}`);
         if (useMotion) console.log(`  ${c.dim('Matting:')}  ${c.yellow('Soft Motion Trail & Thin-Object Protection')}`);
         console.log(`  ${c.dim('Source:')}   ${c.white(resolvedSource)}`);

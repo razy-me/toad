@@ -117,6 +117,7 @@ export const SUPPORTED_BG_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp'
 export const MODEL_MAP: Record<string, string> = {
   ormbg: 'onnx-community/ormbg-ONNX',
   birefnet: 'onnx-community/BiRefNet-ONNX',
+  dyb: 'onnx-community/BiRefNet-ONNX',
   'birefnet-hr': 'onnx-community/BiRefNet-ONNX',
   'birefnet-full': 'onnx-community/BiRefNet-ONNX',
   'birefnet-lite': 'onnx-community/BiRefNet_lite-ONNX'
@@ -142,10 +143,11 @@ export function ensureEnvironmentConfigured(): string {
 
 /**
  * Resolves the model name from user alias or full identifier.
- * Always defaults to the highest-quality state-of-the-art model (BiRefNet).
+ * Defaults to 'ormbg' which delivers state-of-the-art segmentation with full GPU / NPU (DirectML) acceleration.
+ * When deep portrait mode (--dyb) is requested, resolves to BiRefNet (high quality, CPU only).
  */
 export function resolveModelName(modelArg?: string): string {
-  if (!modelArg) return MODEL_MAP.birefnet;
+  if (!modelArg) return MODEL_MAP.ormbg;
   const lower = modelArg.toLowerCase().trim();
   if (MODEL_MAP[lower]) return MODEL_MAP[lower];
   return modelArg;
