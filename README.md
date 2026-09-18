@@ -56,8 +56,8 @@ toad design.toad         # Compile
 toad design.toad -w      # Live browser preview
 toad audit design.toad   # Quality & accessibility audit
 toad format design.toad  # Auto-format
-toad remove-bg <img> <dir> # Smart on-device AI background remover (files & folders)
-toad update              # Update TOAD to latest version from GitHub
+toad remove-bg <img> <target> # 100% on-device AI background remover (commercial MIT BiRefNet)
+toad update                 # Update TOAD to latest version from GitHub
 ```
 
 ---

@@ -84,6 +84,21 @@ export interface BgRemovalOptions {
   fast?: boolean;
 
   /**
+   * Optimize specifically for fine geometric details, jewelry, lace, and fine wireframes.
+   */
+  detail?: boolean;
+
+  /**
+   * Number of concurrent image workers in directory processing (default: 2, max: 8).
+   */
+  concurrency?: number;
+
+  /**
+   * Optional AbortSignal to cancel running operations.
+   */
+  signal?: AbortSignal;
+
+  /**
    * Device provider for ONNX runtime: 'cpu' (default), 'dml' (DirectML GPU/NPU), or 'webgpu'.
    */
   device?: 'cpu' | 'webgpu' | 'dml';
@@ -130,15 +145,24 @@ export interface BatchRemovalResult {
 
 export const SUPPORTED_BG_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp']);
 
+/**
+ * 100% Commercial MIT-Licensed Model Matrix.
+ * All non-commercial and CC-BY-NC restricted models are strictly excluded.
+ */
 export const MODEL_MAP: Record<string, string> = {
-  ormbg: 'onnx-community/ormbg-ONNX',
-  fast: 'onnx-community/ormbg-ONNX',
-  gpu: 'onnx-community/ormbg-ONNX',
+  default: 'onnx-community/BiRefNet-ONNX',
+  general: 'onnx-community/BiRefNet-ONNX',
   birefnet: 'onnx-community/BiRefNet-ONNX',
   dyb: 'onnx-community/BiRefNet-ONNX',
-  'birefnet-hr': 'onnx-community/BiRefNet-ONNX',
-  'birefnet-full': 'onnx-community/BiRefNet-ONNX',
-  'birefnet-lite': 'onnx-community/BiRefNet_lite-ONNX'
+  portrait: 'onnx-community/BiRefNet-portrait-ONNX',
+  hair: 'onnx-community/BiRefNet-portrait-ONNX',
+  detail: 'onnx-community/BiRefNet-DIS5K-ONNX',
+  dis: 'onnx-community/BiRefNet-DIS5K-ONNX',
+  fast: 'onnx-community/BiRefNet_lite-ONNX',
+  lite: 'onnx-community/BiRefNet_lite-ONNX',
+  'birefnet-lite': 'onnx-community/BiRefNet_lite-ONNX',
+  'birefnet-portrait': 'onnx-community/BiRefNet-portrait-ONNX',
+  'birefnet-dis': 'onnx-community/BiRefNet-DIS5K-ONNX'
 };
 
 // Singleton pipeline cache with device-aware composite key
@@ -160,11 +184,14 @@ export function ensureEnvironmentConfigured(): string {
 }
 
 /**
- * Resolves the model name from user alias or full identifier.
- * Defaults to the best GPU/NPU-compatible model (ormbg) unless DYB / BiRefNet is requested.
+ * Resolves the model name from user alias, full identifier, or active parameters.
+ * Defaults to the state-of-the-art general model (BiRefNet-ONNX, MIT License).
  */
-export function resolveModelName(modelArg?: string): string {
-  if (!modelArg) return MODEL_MAP.ormbg;
+export function resolveModelName(modelArg?: string, options?: BgRemovalOptions): string {
+  if (options?.hair) return MODEL_MAP.hair;
+  if (options?.detail) return MODEL_MAP.detail;
+  if (options?.fast) return MODEL_MAP.fast;
+  if (!modelArg) return MODEL_MAP.default;
   const lower = modelArg.toLowerCase().trim();
   if (MODEL_MAP[lower]) return MODEL_MAP[lower];
   return modelArg;
@@ -411,6 +438,13 @@ export function defringeImage(image: any, radius = 3): any {
  * 1. Preserves continuous low-alpha motion streaks (alpha >= 15) so thin moving rods don't vanish.
  * 2. Unmultiplies background colors and extends the moving object's color into the blur gradient.
  */
+/**
+ * Motion Blur & Thin-Object Matting Refinement.
+ * Specifically handles fast-moving sports gear (golf clubs, hockey sticks, bats),
+ * motion-blurred limbs, and semi-transparent motion trails:
+ * 1. Preserves continuous low-alpha motion streaks with a smooth sigmoid response curve.
+ * 2. Bilateral distance-weighted color extension to eliminate background fringing on fast motion.
+ */
 export function applyMotionBlurMatte(image: any, originalImage: any): any {
   const { width, height, data, channels } = image;
   if (channels < 4) return image;
@@ -418,41 +452,48 @@ export function applyMotionBlurMatte(image: any, originalImage: any): any {
   const resultData = new Uint8ClampedArray(data);
   const origData = originalImage.data;
 
-  // Preserve motion trail transparency with soft curve (protects low-alpha streaks)
+  // Preserve motion trail transparency with smooth curve (protects low-alpha streaks without harsh stepping)
   for (let i = 3; i < resultData.length; i += channels) {
     const a = resultData[i];
-    if (a > 15 && a < 180) {
-      resultData[i] = Math.min(255, Math.round(a * 1.15));
+    if (a > 10 && a < 200) {
+      const factor = 1.0 + 0.3 * (1 - Math.abs(a - 100) / 100);
+      resultData[i] = Math.min(255, Math.round(a * factor));
     }
   }
 
-  // Decontaminate motion trail RGB using color of the opaque moving object
-  const r = 4;
+  // Decontaminate motion trail RGB using distance-weighted color of opaque moving object
+  const r = 3;
   for (let y = 0; y < height; y++) {
+    const rowOffset = y * width;
     for (let x = 0; x < width; x++) {
-      const idx = (y * width + x) * channels;
+      const idx = (rowOffset + x) * channels;
       const alpha = resultData[idx + 3];
       if (alpha > 10 && alpha < 220) {
-        let sumR = 0, sumG = 0, sumB = 0, count = 0;
-        for (let dy = -r; dy <= r; dy++) {
-          const ny = y + dy;
-          if (ny < 0 || ny >= height) continue;
-          for (let dx = -r; dx <= r; dx++) {
-            const nx = x + dx;
-            if (nx < 0 || nx >= width) continue;
-            const nidx = (ny * width + nx) * channels;
+        let sumR = 0, sumG = 0, sumB = 0, totalW = 0;
+        const yMin = Math.max(0, y - r);
+        const yMax = Math.min(height - 1, y + r);
+        const xMin = Math.max(0, x - r);
+        const xMax = Math.min(width - 1, x + r);
+
+        for (let ny = yMin; ny <= yMax; ny++) {
+          const dy = ny - y;
+          const nRowOffset = ny * width;
+          for (let nx = xMin; nx <= xMax; nx++) {
+            const dx = nx - x;
+            const nidx = (nRowOffset + nx) * channels;
             if (resultData[nidx + 3] >= 220) {
-              sumR += origData[nidx];
-              sumG += origData[nidx + 1];
-              sumB += origData[nidx + 2];
-              count++;
+              const weight = 1 / (1 + dx * dx + dy * dy);
+              sumR += origData[nidx] * weight;
+              sumG += origData[nidx + 1] * weight;
+              sumB += origData[nidx + 2] * weight;
+              totalW += weight;
             }
           }
         }
-        if (count > 0) {
-          resultData[idx] = Math.round(sumR / count);
-          resultData[idx + 1] = Math.round(sumG / count);
-          resultData[idx + 2] = Math.round(sumB / count);
+        if (totalW > 0) {
+          resultData[idx] = Math.round(sumR / totalW);
+          resultData[idx + 1] = Math.round(sumG / totalW);
+          resultData[idx + 2] = Math.round(sumB / totalW);
         }
       }
     }
@@ -469,7 +510,13 @@ export async function removeBackgroundFromFile(
   targetPath: string,
   options: BgRemovalOptions = {}
 ): Promise<SingleFileResult> {
+  if (options.signal?.aborted) {
+    throw new Error('Background removal aborted by signal.');
+  }
+
   const resolvedSource = path.resolve(sourcePath);
+  const resolvedTarget = path.resolve(targetPath);
+
   if (!fs.existsSync(resolvedSource)) {
     throw new Error(`Source image not found: ${resolvedSource}`);
   }
@@ -484,26 +531,36 @@ export async function removeBackgroundFromFile(
     throw new Error(`Animated GIF formats are not supported for single-image background removal. Please extract individual frames.`);
   }
 
+  // Detect in-place overwrite and buffer original file to prevent data loss on error (F-04)
+  const isSameFile = resolvedSource === resolvedTarget;
+  let backupBuffer: Buffer | null = null;
+  if (isSameFile) {
+    backupBuffer = fs.readFileSync(resolvedSource);
+  }
+
   const startTime = Date.now();
 
-  // Load input image and guarantee 4-channel RGBA format for putAlpha
-  let rawImage = await RawImage.read(resolvedSource);
-  if (rawImage.channels < 4) {
-    rawImage = rawImage.rgba();
-  }
+  try {
+    // Load input image and guarantee 4-channel RGBA format for putAlpha (supports grayscale, RGB, RGBA)
+    let rawImage = await RawImage.read(resolvedSource);
+    if (rawImage.channels === 1) {
+      rawImage = rawImage.rgb().rgba();
+    } else if (rawImage.channels < 4) {
+      rawImage = rawImage.rgba();
+    }
 
-  // Select model: if dyb is enabled, use birefnet; otherwise options.model or default (ormbg)
-  const modelToUse = options.dyb ? 'birefnet' : (options.model || 'ormbg');
+    // Select model using parameter-driven commercial MIT dispatch
+    const modelToUse = resolveModelName(options.model, options);
 
-  // Run neural background segmentation
-  const segmenter = await getSegmentationPipeline(modelToUse, options.device);
-  const segmentationResult = await segmenter(rawImage);
+    // Run neural background segmentation
+    const segmenter = await getSegmentationPipeline(modelToUse, options.device);
+    const segmentationResult = await segmenter(rawImage);
 
-  if (!Array.isArray(segmentationResult) || segmentationResult.length === 0 || !segmentationResult[0].mask) {
-    throw new Error(`Failed to generate segmentation mask for image: ${path.basename(resolvedSource)}`);
-  }
+    if (!Array.isArray(segmentationResult) || segmentationResult.length === 0 || !segmentationResult[0].mask) {
+      throw new Error(`Failed to generate segmentation mask for image: ${path.basename(resolvedSource)}`);
+    }
 
-  let mask = segmentationResult[0].mask;
+    let mask = segmentationResult[0].mask;
 
   // Optional smooth anti-aliased alpha thresholding (F-10)
   if (typeof options.threshold === 'number' && options.threshold >= 0 && options.threshold <= 1) {
@@ -566,16 +623,24 @@ export async function removeBackgroundFromFile(
   const durationMs = Date.now() - startTime;
   const outputStat = fs.statSync(targetPath);
 
-  return {
-    sourceFile: resolvedSource,
-    targetFile: path.resolve(targetPath),
-    width: isolatedImage.width,
-    height: isolatedImage.height,
-    durationMs,
-    originalBytes: stat.size,
-    outputBytes: outputStat.size,
-    cropBox: (isolatedImage as any).cropBox
-  };
+    return {
+      sourceFile: resolvedSource,
+      targetFile: path.resolve(targetPath),
+      width: isolatedImage.width,
+      height: isolatedImage.height,
+      durationMs,
+      originalBytes: stat.size,
+      outputBytes: outputStat.size,
+      cropBox: (isolatedImage as any).cropBox
+    };
+  } catch (err) {
+    if (isSameFile && backupBuffer) {
+      try {
+        fs.writeFileSync(resolvedSource, backupBuffer);
+      } catch {}
+    }
+    throw err;
+  }
 }
 
 /**
@@ -639,65 +704,81 @@ export async function removeBackgroundFromDirectory(
 
   const batchStartTime = Date.now();
 
-  // Warm up pipeline once
-  await getSegmentationPipeline(options.model, options.device);
+  // Warm up pipeline once using parameter-resolved model
+  const warmupModel = resolveModelName(options.model, options);
+  await getSegmentationPipeline(warmupModel, options.device);
 
-  for (let i = 0; i < total; i++) {
-    const file = imageFiles[i];
-    const rel = path.relative(resolvedSourceDir, file);
-    const parsed = path.parse(rel);
-    const outSubDir = path.join(resolvedTargetDir, parsed.dir);
-    if (!fs.existsSync(outSubDir)) {
-      fs.mkdirSync(outSubDir, { recursive: true });
-    }
+  const concurrency = Math.max(1, Math.min(8, options.concurrency ?? 2));
+  let currentIndex = 0;
+  let completedCount = 0;
 
-    const outExt = (options.format === 'webp') ? '.webp' : '.png';
-    const targetFile = path.join(outSubDir, `${parsed.name}${outExt}`);
-
-    try {
-      const res = await removeBackgroundFromFile(file, targetFile, options);
-      results.push(res);
-
-      // Yield event loop and clear heap memory to prevent V8 exhaustion during large batches
-      await new Promise((resolve) => setImmediate(resolve));
-      if (typeof global !== 'undefined' && typeof (global as any).gc === 'function') {
-        try { (global as any).gc(); } catch {}
+  async function worker() {
+    while (currentIndex < total) {
+      if (options.signal?.aborted) {
+        throw new Error('Batch operation aborted by signal.');
+      }
+      const fileIdx = currentIndex++;
+      const file = imageFiles[fileIdx];
+      const rel = path.relative(resolvedSourceDir, file);
+      const parsed = path.parse(rel);
+      const outSubDir = path.join(resolvedTargetDir, parsed.dir);
+      if (!fs.existsSync(outSubDir)) {
+        fs.mkdirSync(outSubDir, { recursive: true });
       }
 
-      if (options.onProgress) {
-        options.onProgress({
-          index: i + 1,
-          total,
-          sourceFile: file,
-          targetFile,
-          width: res.width,
-          height: res.height,
-          durationMs: res.durationMs,
-          originalBytes: res.originalBytes,
-          outputBytes: res.outputBytes,
-          status: 'success'
-        });
-      }
-    } catch (err: any) {
-      const errMsg = err?.message || String(err);
-      errors.push({ sourceFile: file, error: errMsg });
-      if (options.onProgress) {
-        options.onProgress({
-          index: i + 1,
-          total,
-          sourceFile: file,
-          targetFile,
-          width: 0,
-          height: 0,
-          durationMs: 0,
-          originalBytes: 0,
-          outputBytes: 0,
-          status: 'error',
-          error: errMsg
-        });
+      const outExt = (options.format === 'webp') ? '.webp' : '.png';
+      const targetFile = path.join(outSubDir, `${parsed.name}${outExt}`);
+
+      try {
+        const res = await removeBackgroundFromFile(file, targetFile, options);
+        results.push(res);
+        completedCount++;
+
+        // Yield event loop and clear heap memory to prevent V8 exhaustion during large batches
+        await new Promise((resolve) => setImmediate(resolve));
+        if (typeof global !== 'undefined' && typeof (global as any).gc === 'function') {
+          try { (global as any).gc(); } catch {}
+        }
+
+        if (options.onProgress) {
+          options.onProgress({
+            index: completedCount,
+            total,
+            sourceFile: file,
+            targetFile,
+            width: res.width,
+            height: res.height,
+            durationMs: res.durationMs,
+            originalBytes: res.originalBytes,
+            outputBytes: res.outputBytes,
+            status: 'success'
+          });
+        }
+      } catch (err: any) {
+        const errMsg = err?.message || String(err);
+        errors.push({ sourceFile: file, error: errMsg });
+        completedCount++;
+        if (options.onProgress) {
+          options.onProgress({
+            index: completedCount,
+            total,
+            sourceFile: file,
+            targetFile,
+            width: 0,
+            height: 0,
+            durationMs: 0,
+            originalBytes: 0,
+            outputBytes: 0,
+            status: 'error',
+            error: errMsg
+          });
+        }
       }
     }
   }
+
+  const workers = Array.from({ length: Math.min(concurrency, total || 1) }, () => worker());
+  await Promise.all(workers);
 
   return {
     total,

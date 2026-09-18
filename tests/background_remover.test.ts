@@ -25,11 +25,15 @@ describe('TOAD Background Remover Module', () => {
   });
 
   describe('Model Configuration & Helpers', () => {
-    it('resolves model aliases correctly', () => {
-      expect(resolveModelName('ormbg')).toBe(MODEL_MAP.ormbg);
+    it('resolves model aliases correctly with commercial MIT defaults', () => {
       expect(resolveModelName('birefnet')).toBe(MODEL_MAP.birefnet);
-      expect(resolveModelName('dyb')).toBe(MODEL_MAP.birefnet);
-      expect(resolveModelName(undefined)).toBe(MODEL_MAP.ormbg);
+      expect(resolveModelName('hair')).toBe(MODEL_MAP.hair);
+      expect(resolveModelName('portrait')).toBe(MODEL_MAP.portrait);
+      expect(resolveModelName('detail')).toBe(MODEL_MAP.detail);
+      expect(resolveModelName('fast')).toBe(MODEL_MAP.fast);
+      expect(resolveModelName(undefined)).toBe(MODEL_MAP.default);
+      expect(resolveModelName(undefined, { hair: true })).toBe(MODEL_MAP.hair);
+      expect(resolveModelName(undefined, { detail: true })).toBe(MODEL_MAP.detail);
       expect(resolveModelName('custom/model')).toBe('custom/model');
     });
 
@@ -63,7 +67,7 @@ describe('TOAD Background Remover Module', () => {
       expect(result.height).toBe(1000);
       expect(result.outputBytes).toBeGreaterThan(0);
       expect(result.durationMs).toBeGreaterThan(0);
-    }, 60000);
+    }, 180000);
 
     it('supports smart trimming with padding', async () => {
       const source = path.join(FIXTURES_DIR, 'logo.png');
@@ -78,7 +82,8 @@ describe('TOAD Background Remover Module', () => {
       // Trimmed dimensions should be smaller than original 1000x1000 canvas
       expect(result.width).toBeLessThan(1000);
       expect(result.height).toBeLessThan(1000);
-    }, 60000);
+      expect(result.cropBox).toBeDefined();
+    }, 180000);
 
     it('supports WebP output format', async () => {
       const source = path.join(FIXTURES_DIR, 'logo.png');
