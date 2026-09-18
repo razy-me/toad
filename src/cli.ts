@@ -939,6 +939,7 @@ export function createCli(): Command {
     .option('--dyb', 'Do-Your-Best preset: use slower, ultra-detail model (birefnet CPU)')
     .option('--fast', 'Speed preset: use lightweight fast model (ormbg)')
     .option('-f, --format <format>', 'Output format: png or webp', 'png')
+    .option('--quality <1-100>', 'WebP compression quality (1-100)', '95')
     .option('--trim', 'Auto-crop transparent margins around isolated subject')
     .option('--padding <px>', 'Padding in pixels when trimming', '0')
     .option('--threshold <cutoff>', 'Hard alpha threshold cutoff between 0.0 and 1.0')
@@ -991,8 +992,14 @@ export function createCli(): Command {
         }
 
         const isDirectory = fs.statSync(resolvedSource).isDirectory();
-        const paddingNum = options.padding ? parseInt(options.padding, 10) : 0;
-        const thresholdNum = options.threshold ? parseFloat(options.threshold) : undefined;
+        const rawPad = options.padding ? parseInt(options.padding, 10) : 0;
+        const paddingNum = Number.isFinite(rawPad) && rawPad >= 0 ? rawPad : 0;
+        const rawThreshold = options.threshold ? parseFloat(options.threshold) : undefined;
+        const thresholdNum = typeof rawThreshold === 'number' && !Number.isNaN(rawThreshold) && rawThreshold >= 0 && rawThreshold <= 1
+          ? rawThreshold
+          : undefined;
+        const rawQuality = options.quality ? parseInt(options.quality, 10) : 95;
+        const qualityNum = Number.isFinite(rawQuality) && rawQuality >= 1 && rawQuality <= 100 ? rawQuality : 95;
 
         let processedCount = 0;
 
@@ -1002,6 +1009,7 @@ export function createCli(): Command {
           fast: useFast,
           hair: useHairPreset,
           format: options.format,
+          quality: qualityNum,
           trim: options.trim,
           padding: paddingNum,
           threshold: thresholdNum,

@@ -116,6 +116,7 @@ export interface SingleFileResult {
   durationMs: number;
   originalBytes: number;
   outputBytes: number;
+  cropBox?: { x: number; y: number; width: number; height: number };
 }
 
 export interface BatchRemovalResult {
@@ -140,9 +141,9 @@ export const MODEL_MAP: Record<string, string> = {
   'birefnet-lite': 'onnx-community/BiRefNet_lite-ONNX'
 };
 
-// Singleton pipeline cache to avoid reloading model weights repeatedly
+// Singleton pipeline cache with device-aware composite key
 let cachedPipeline: any = null;
-let currentModelName: string | null = null;
+let currentCacheKey: string | null = null;
 
 /**
  * Configure environment to ensure models are stored in a dedicated, permanent TOAD directory
@@ -206,24 +207,46 @@ export function detectBestDevice(modelArg?: string): 'dml' | 'cpu' {
 
 /**
  * Loads or returns cached image segmentation pipeline.
+ * Caches by composite key (modelName + device) so device switches trigger fresh loading.
  */
 export async function getSegmentationPipeline(
   modelArg?: string,
-  deviceArg?: 'cpu' | 'webgpu' | 'dml'
+  deviceArg?: 'cpu' | 'webgpu' | 'dml',
+  onProgress?: (progress: any) => void
 ): Promise<any> {
   ensureEnvironmentConfigured();
   const modelName = resolveModelName(modelArg);
   const device = deviceArg || detectBestDevice(modelName);
+  const cacheKey = `${modelName}::${device}`;
 
-  if (cachedPipeline && currentModelName === modelName) {
+  if (cachedPipeline && currentCacheKey === cacheKey) {
     return cachedPipeline;
   }
 
-  cachedPipeline = await pipeline('image-segmentation', modelName, {
-    device
-  });
-  currentModelName = modelName;
-  return cachedPipeline;
+  // Robust retry with exponential backoff on network downloads (F-44)
+  let attempts = 0;
+  const maxAttempts = 3;
+  let lastError: any = null;
+
+  while (attempts < maxAttempts) {
+    try {
+      cachedPipeline = await pipeline('image-segmentation', modelName, {
+        device,
+        progress_callback: onProgress
+      });
+      currentCacheKey = cacheKey;
+      return cachedPipeline;
+    } catch (err: any) {
+      attempts++;
+      lastError = err;
+      if (attempts < maxAttempts) {
+        const delayMs = Math.pow(2, attempts) * 500;
+        await new Promise((r) => setTimeout(r, delayMs));
+      }
+    }
+  }
+
+  throw lastError;
 }
 
 /**
@@ -270,7 +293,14 @@ export async function trimImageAlpha(image: any, padding = 0, thresholdAlpha = 5
     return image;
   }
 
-  return await image.crop([cropXMin, cropYMin, cropXMax, cropYMax]);
+  const cropped = await image.crop([cropXMin, cropYMin, cropXMax, cropYMax]);
+  (cropped as any).cropBox = {
+    x: cropXMin,
+    y: cropYMin,
+    width: cropXMax - cropXMin + 1,
+    height: cropYMax - cropYMin + 1
+  };
+  return cropped;
 }
 
 /**
@@ -438,12 +468,21 @@ export async function removeBackgroundFromFile(
 
   let mask = segmentationResult[0].mask;
 
-  // Optional alpha thresholding
+  // Optional smooth anti-aliased alpha thresholding (F-10)
   if (typeof options.threshold === 'number' && options.threshold >= 0 && options.threshold <= 1) {
-    const cutoff = Math.round(options.threshold * 255);
+    const cutoff = options.threshold * 255;
+    const slope = 0.2;
     const maskData = mask.data;
     for (let i = 0; i < maskData.length; i++) {
-      maskData[i] = maskData[i] >= cutoff ? 255 : 0;
+      const diff = maskData[i] - cutoff;
+      if (diff <= -15) {
+        maskData[i] = 0;
+      } else if (diff >= 15) {
+        maskData[i] = 255;
+      } else {
+        const val = 1 / (1 + Math.exp(-diff * slope));
+        maskData[i] = Math.min(255, Math.max(0, Math.round(val * 255)));
+      }
     }
   }
 
@@ -497,7 +536,8 @@ export async function removeBackgroundFromFile(
     height: isolatedImage.height,
     durationMs,
     originalBytes: stat.size,
-    outputBytes: outputStat.size
+    outputBytes: outputStat.size,
+    cropBox: (isolatedImage as any).cropBox
   };
 }
 
