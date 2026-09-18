@@ -942,19 +942,18 @@ export function createCli(): Command {
     .option('-r, --recursive', 'Recursively search subdirectories when source is a folder')
     .action(async (source: string, target: string, options: any) => {
       const abortController = new AbortController();
-      let isTerminating = false;
-
-      const onSigInt = () => {
-        if (isTerminating) {
-          process.exit(130);
-        }
-        isTerminating = true;
-        process.stdout.write(`\n\n  ${c.yellow('⚠ Vorgang durch Benutzer mit Strg+C abgebrochen.')}\n\n`);
-        abortController.abort();
-        setTimeout(() => process.exit(130), 150).unref();
+      const terminateNow = () => {
+        try {
+          process.stdout.write(`\n\n  ${c.yellow('⚠ Vorgang durch Benutzer mit Strg+C abgebrochen. Beende sofort...')}\n\n`);
+        } catch {}
+        try {
+          abortController.abort();
+        } catch {}
+        process.exit(130);
       };
 
-      process.on('SIGINT', onSigInt);
+      process.once('SIGINT', terminateNow);
+      process.once('SIGBREAK', terminateNow);
 
       try {
         const resolvedSource = path.resolve(source);
@@ -1069,7 +1068,8 @@ export function createCli(): Command {
         console.error(`\n${c.bgRed(' ERROR ')} ${c.bold(c.red(`Failed to remove background:`))} ${err.message || String(err)}\n`);
         process.exit(1);
       } finally {
-        process.removeListener('SIGINT', onSigInt);
+        process.removeListener('SIGINT', terminateNow);
+        process.removeListener('SIGBREAK', terminateNow);
       }
     });
 
