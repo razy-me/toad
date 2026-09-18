@@ -954,7 +954,8 @@ export function createCli(): Command {
         const selectedModel = useDyb ? 'dyb (ensemble + guided filter)' : (useFast ? 'fast (BiRefNet Lite)' : 'auto (adaptive routing)');
         const gpuDetected = isGpuAvailable();
         const autoDevice = gpuDetected ? 'dml' : 'cpu';
-        const autoConcurrency = useFast ? 4 : 2;
+        // In standard and dyb mode, process strictly 1 image at a time to maximize quality, stability, and RAM efficiency
+        const autoConcurrency = useFast ? 4 : 1;
 
         console.log(`\n${c.bold('✂️   TOAD Local Background Remover')}`);
         console.log(`  ${c.green('🔒 [Local AI]')} ${c.dim('100% on-device processing. Zero parameters required.')}`);

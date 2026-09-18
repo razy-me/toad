@@ -959,7 +959,7 @@ export async function removeBackgroundFromDirectory(
   const effectiveDevice = options.device || (isGpuAvailable() ? 'dml' : 'cpu');
   await getSegmentationPipeline(warmupModel, effectiveDevice, options.onDownloadProgress);
 
-  const defaultConcurrency = (options.fast || options.quick) ? 4 : 2;
+  const defaultConcurrency = (options.fast || options.quick) ? 4 : 1;
   const concurrency = Math.max(1, Math.min(8, options.concurrency ?? defaultConcurrency));
   let currentIndex = 0;
   let completedCount = 0;

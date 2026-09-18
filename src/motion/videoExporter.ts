@@ -62,6 +62,71 @@ export function isFfmpegAvailable(customPath?: string): boolean {
 }
 
 /**
+ * Detects supported hardware-accelerated video encoders for the current FFmpeg binary.
+ */
+let cachedHwEncoder: { encoder: string; extraArgs: string[] } | null | undefined = undefined;
+
+export function detectFfmpegHwEncoder(ffmpegBin: string): { encoder: string; extraArgs: string[] } | null {
+  if (cachedHwEncoder !== undefined) return cachedHwEncoder;
+  try {
+    const encodersOut = execSync(`"${ffmpegBin}" -encoders`, { stdio: ['ignore', 'pipe', 'ignore'] }).toString();
+
+    // 1. NVIDIA NVENC (Highest performance and quality)
+    if (encodersOut.includes('h264_nvenc')) {
+      try {
+        // Quick verification probe with a 256x256 test frame
+        execSync(`"${ffmpegBin}" -y -f lavfi -i color=c=black:s=256x256:d=0.1 -c:v h264_nvenc -preset p6 -cq 20 -f null -`, {
+          stdio: 'ignore'
+        });
+        cachedHwEncoder = {
+          encoder: 'h264_nvenc',
+          extraArgs: ['-preset', 'p6', '-cq', '20', '-b:v', '0', '-spatial-aq', '1']
+        };
+        return cachedHwEncoder;
+      } catch {}
+    }
+
+    // 2. Intel QuickSync (QSV)
+    if (encodersOut.includes('h264_qsv')) {
+      try {
+        execSync(`"${ffmpegBin}" -y -f lavfi -i color=c=black:s=256x256:d=0.1 -c:v h264_qsv -global_quality 20 -f null -`, {
+          stdio: 'ignore'
+        });
+        cachedHwEncoder = {
+          encoder: 'h264_qsv',
+          extraArgs: ['-global_quality', '20']
+        };
+        return cachedHwEncoder;
+      } catch {}
+    }
+
+    // 3. AMD AMF
+    if (encodersOut.includes('h264_amf')) {
+      try {
+        execSync(`"${ffmpegBin}" -y -f lavfi -i color=c=black:s=256x256:d=0.1 -c:v h264_amf -quality quality -f null -`, {
+          stdio: 'ignore'
+        });
+        cachedHwEncoder = {
+          encoder: 'h264_amf',
+          extraArgs: ['-quality', 'quality']
+        };
+        return cachedHwEncoder;
+      } catch {}
+    }
+  } catch {}
+
+  cachedHwEncoder = null;
+  return null;
+}
+
+/**
+ * Resets the cached hardware encoder detection (primarily for unit tests).
+ */
+export function resetFfmpegHwEncoderCache(): void {
+  cachedHwEncoder = undefined;
+}
+
+/**
  * Exports a TOAD Motion animation to video or frame sequence.
  */
 export async function exportMotionVideo(
@@ -133,16 +198,32 @@ export async function exportMotionVideo(
   } else if (format === 'webm') {
     extraArgs = ['-c:v', 'libvpx-vp9', '-pix_fmt', 'yuva420p', '-auto-alt-ref', '0'];
   } else {
-    extraArgs = [
-      '-c:v',
-      'libx264',
-      '-vf',
-      'pad=ceil(iw/2)*2:ceil(ih/2)*2',
-      '-pix_fmt',
-      'yuv420p',
-      '-movflags',
-      '+faststart'
-    ];
+    // Hardware acceleration (NVIDIA NVENC, Intel QSV, AMD AMF) with CPU fallback
+    const hw = detectFfmpegHwEncoder(ffmpegBin);
+    if (hw) {
+      extraArgs = [
+        '-c:v',
+        hw.encoder,
+        ...hw.extraArgs,
+        '-vf',
+        'pad=ceil(iw/2)*2:ceil(ih/2)*2',
+        '-pix_fmt',
+        'yuv420p',
+        '-movflags',
+        '+faststart'
+      ];
+    } else {
+      extraArgs = [
+        '-c:v',
+        'libx264',
+        '-vf',
+        'pad=ceil(iw/2)*2:ceil(ih/2)*2',
+        '-pix_fmt',
+        'yuv420p',
+        '-movflags',
+        '+faststart'
+      ];
+    }
   }
 
   const args = [
