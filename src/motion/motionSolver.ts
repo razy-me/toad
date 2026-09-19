@@ -260,10 +260,10 @@ export class MotionSolver {
 
         // F-100: Orbital rotation around parent center
         if (parentState.rotateDeg !== 0) {
-          const pCenterX = parentEl.box.x + parentEl.box.width / 2;
-          const pCenterY = parentEl.box.y + parentEl.box.height / 2;
-          const elCenterX = element.box.x + element.box.width / 2;
-          const elCenterY = element.box.y + element.box.height / 2;
+          const pCenterX = parentState.x + (parentEl.box.width * parentState.scaleX) / 2;
+          const pCenterY = parentState.y + (parentEl.box.height * parentState.scaleY) / 2;
+          const elCenterX = state.x + (element.box.width * state.scaleX) / 2;
+          const elCenterY = state.y + (element.box.height * state.scaleY) / 2;
           const dx = elCenterX - pCenterX;
           const dy = elCenterY - pCenterY;
           const rad = (parentState.rotateDeg * Math.PI) / 180;

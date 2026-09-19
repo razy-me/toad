@@ -372,7 +372,8 @@ export class ParametricPath {
 
     const span = e1.cumLength - e0.cumLength;
     const localRatio = span > 1e-6 ? (targetDist - e0.cumLength) / span : 0;
-    const t = e0.t + localRatio * (e1.t - e0.t);
+    const t0 = e0.segIndex === e1.segIndex ? e0.t : 0;
+    const t = t0 + localRatio * (e1.t - t0);
     const seg = this.segments[e1.segIndex]!;
 
     const pt = evaluateCubic(seg.p0, seg.cp1, seg.cp2, seg.p1, t);

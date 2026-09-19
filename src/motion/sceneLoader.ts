@@ -13,6 +13,7 @@ import { parseToad } from '../parser/parser.js';
 import { resolveImportsAndComponents } from '../parser/importResolver.js';
 import { solveLayout, LayoutResult, LayoutNode } from '../parser/math.js';
 import { CanvasRenderer } from '../engine/canvasRenderer.js';
+import { svgPathToSubpaths } from '../engine/vectorPathParser.js';
 import { extractBorderSegments, CubicSegment, trimSvgPath, trimSegments, segmentsToPathD } from './pathSampler.js';
 import type { ElementMotionState } from './motionSolver.js';
 
@@ -369,30 +370,39 @@ async function loadPsdScene(filePath: string): Promise<MotionScene> {
 }
 
 function computeSvgPathBBox(d: string): { x: number; y: number; width: number; height: number } | null {
-  const nums = d.match(/[-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?/g);
-  if (!nums || nums.length < 2) return null;
-  let minX = Infinity;
-  let minY = Infinity;
-  let maxX = -Infinity;
-  let maxY = -Infinity;
-  for (let i = 0; i < nums.length - 1; i += 2) {
-    const x = parseFloat(nums[i]!);
-    const y = parseFloat(nums[i + 1]!);
-    if (Number.isFinite(x) && Number.isFinite(y)) {
-      minX = Math.min(minX, x);
-      minY = Math.min(minY, y);
-      maxX = Math.max(maxX, x);
-      maxY = Math.max(maxY, y);
+  try {
+    const subpaths = svgPathToSubpaths(d);
+    if (!subpaths || subpaths.length === 0) return null;
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
+    for (const sp of subpaths) {
+      for (const seg of sp.segments) {
+        for (let t = 0; t <= 1; t += 0.2) {
+          const mt = 1 - t;
+          const x = mt * mt * mt * seg.p0.x + 3 * mt * mt * t * seg.cp1.x + 3 * mt * t * t * seg.cp2.x + t * t * t * seg.p1.x;
+          const y = mt * mt * mt * seg.p0.y + 3 * mt * mt * t * seg.cp1.y + 3 * mt * t * t * seg.cp2.y + t * t * t * seg.p1.y;
+          if (Number.isFinite(x) && Number.isFinite(y)) {
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x);
+            maxY = Math.max(maxY, y);
+          }
+        }
+      }
     }
-  }
-  if (Number.isFinite(minX) && Number.isFinite(minY) && maxX >= minX && maxY >= minY) {
-    return {
-      x: minX,
-      y: minY,
-      width: Math.max(1, maxX - minX),
-      height: Math.max(1, maxY - minY)
-    };
-  }
+
+    if (Number.isFinite(minX) && Number.isFinite(minY) && maxX >= minX && maxY >= minY) {
+      return {
+        x: minX,
+        y: minY,
+        width: Math.max(1, maxX - minX),
+        height: Math.max(1, maxY - minY)
+      };
+    }
+  } catch {}
   return null;
 }
 

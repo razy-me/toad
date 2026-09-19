@@ -105,9 +105,9 @@ export function spring(stiffness = 100, damping = 10, mass = 1): Easer {
   const zeta = c / (2 * Math.sqrt(k * m)); // damping ratio
 
   const blendSettle = (raw: number, t: number): number => {
-    if (t <= 0.95) return raw;
+    if (t <= 0.98) return raw;
     if (t >= 1) return 1;
-    const alpha = (t - 0.95) / 0.05;
+    const alpha = (t - 0.98) / 0.02;
     const s = alpha * alpha * (3 - 2 * alpha);
     return raw * (1 - s) + s;
   };

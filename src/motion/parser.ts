@@ -270,7 +270,7 @@ export class MotionParser {
       time = this.currentDuration;
       isTo = true;
     } else if (timeTok.type === MotionTokenType.PERCENT && timeTok.numValue !== undefined) {
-      time = (timeTok.numValue / 100) * this.currentDuration;
+      time = timeTok.numValue * this.currentDuration;
     } else if (timeTok.type === MotionTokenType.TIME && timeTok.numValue !== undefined) {
       time = timeTok.numValue;
     } else if (timeTok.value === '0s' || timeTok.value === '0') {

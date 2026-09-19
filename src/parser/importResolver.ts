@@ -379,11 +379,21 @@ export class ImportResolver {
         if (typeof value.value === 'string' && value.value.includes('>')) {
           let str = value.value;
           str = str.replace(/>([a-zA-Z_][a-zA-Z0-9_.-]*)/g, (match, varName) => {
-            const resolved = lookup(varName);
+            let resolved = lookup(varName);
             if (resolved) {
               if (resolved.type === 'NumberLiteral') return String(resolved.value);
               if (resolved.type === 'DimensionLiteral') return String(resolved.value) + (resolved.unit || '');
               if (resolved.type === 'ColorLiteral' || resolved.type === 'StringLiteral') return String(resolved.value);
+            }
+            const minusIdx = varName.indexOf('-');
+            if (minusIdx > 0) {
+              const baseVar = varName.slice(0, minusIdx);
+              const remainder = varName.slice(minusIdx);
+              resolved = lookup(baseVar);
+              if (resolved) {
+                const valStr = resolved.type === 'DimensionLiteral' ? String((resolved as any).value) + ((resolved as any).unit || '') : String((resolved as any).value);
+                return valStr + ' ' + remainder;
+              }
             }
             return match;
           });
@@ -439,10 +449,19 @@ export class ImportResolver {
       case 'CalcValue': {
         let expr = value.expression;
         expr = expr.replace(/>([a-zA-Z_][a-zA-Z0-9_.-]*)/g, (match, varName) => {
-          const resolved = lookup(varName);
+          let resolved = lookup(varName);
           if (resolved) {
             if (resolved.type === 'NumberLiteral' || resolved.type === 'DimensionLiteral') {
               return String((resolved as any).value) + (resolved.type === 'DimensionLiteral' ? (resolved as any).unit : '');
+            }
+          }
+          const minusIdx = varName.indexOf('-');
+          if (minusIdx > 0) {
+            const baseVar = varName.slice(0, minusIdx);
+            const remainder = varName.slice(minusIdx);
+            resolved = lookup(baseVar);
+            if (resolved && (resolved.type === 'NumberLiteral' || resolved.type === 'DimensionLiteral')) {
+              return String((resolved as any).value) + (resolved.type === 'DimensionLiteral' ? (resolved as any).unit : '') + ' ' + remainder;
             }
           }
           return match;

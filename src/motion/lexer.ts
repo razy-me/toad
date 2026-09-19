@@ -266,10 +266,21 @@ export class MotionLexer {
     }
 
     // Numbers, Times (0.5s, 200ms), Percentages (50%), Pixels (10px), Degrees (45deg)
-    if (/[0-9]/.test(ch) || (ch === '-' && /[0-9]/.test(this.src[this.pos + 1] ?? ''))) {
+    const isNumberStart = /[0-9]/.test(ch) ||
+      ((ch === '-' || ch === '+') && (/[0-9]/.test(this.src[this.pos + 1] ?? '') || (this.src[this.pos + 1] === '.' && /[0-9]/.test(this.src[this.pos + 2] ?? '')))) ||
+      (ch === '.' && /[0-9]/.test(this.src[this.pos + 1] ?? ''));
+
+    if (isNumberStart) {
       let numStr = this.advance();
-      while (/[0-9.]/.test(this.peek())) {
-        numStr += this.advance();
+      while (/[0-9.]/.test(this.peek()) || ((this.peek() === 'e' || this.peek() === 'E') && /[0-9+-]/.test(this.src[this.pos + 1] ?? ''))) {
+        if (this.peek() === 'e' || this.peek() === 'E') {
+          numStr += this.advance();
+          if (this.peek() === '+' || this.peek() === '-') {
+            numStr += this.advance();
+          }
+        } else {
+          numStr += this.advance();
+        }
       }
       const rawNum = parseFloat(numStr);
 

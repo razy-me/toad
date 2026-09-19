@@ -635,14 +635,19 @@ export function resolveDimension(
       const v = parseFloat(trimmed);
       return isNaN(v) ? 0 : sanitize(v * 16);
     }
-    if (trimmed.endsWith('in')) return sanitize((parseFloat(trimmed) || 0) * dpi);
-    if (trimmed.endsWith('mm')) return sanitize((parseFloat(trimmed) || 0) * (dpi / 25.4));
-    if (trimmed.endsWith('cm')) return sanitize((parseFloat(trimmed) || 0) * (dpi / 2.54));
-    if (trimmed.endsWith('pt')) return sanitize((parseFloat(trimmed) || 0) * (dpi / 72));
-    if (trimmed.endsWith('px')) return sanitize(parseFloat(trimmed) || 0);
+    const unitMatch = trimmed.match(/^(-?\d+(?:\.\d+)?)(in|mm|cm|pt|px)$/i);
+    if (unitMatch) {
+      const num = parseFloat(unitMatch[1]!);
+      const u = unitMatch[2]!.toLowerCase();
+      if (u === 'in') return sanitize(num * dpi);
+      if (u === 'mm') return sanitize(num * (dpi / 25.4));
+      if (u === 'cm') return sanitize(num * (dpi / 2.54));
+      if (u === 'pt') return sanitize(num * (dpi / 72));
+      if (u === 'px') return sanitize(num);
+    }
 
     const num = parseFloat(trimmed);
-    return isNaN(num) ? 0 : sanitize(num);
+    return isNaN(num) ? sanitize(intrinsicSize) : sanitize(num);
   }
   return 0;
 }
@@ -1635,7 +1640,7 @@ export class LayoutSolver {
 
     // If grid, position children in tile matrix
     if (elem.type === 'grid' && elem.children && elem.children.length > 0) {
-      let cols = typeof elem.columns === 'number' && Number.isFinite(elem.columns) && elem.columns > 0 ? Math.floor(elem.columns) : 1;
+      let cols = typeof elem.columns === 'number' && Number.isFinite(elem.columns) && elem.columns > 0 ? Math.min(1000, Math.floor(elem.columns)) : 1;
       if (cols < 1) cols = 1;
       const gap = elem.gap || 0;
       const colGap = elem.columnGap ?? gap;
