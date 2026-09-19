@@ -3420,7 +3420,7 @@ export function generateStudioHtml(initialFile?: string): string {
       bgr: {
         sourcePath: './bilder',
         sourceName: 'Ordner: ./bilder',
-        preset: 'dyb',
+        preset: 'standard',
         format: 'png',
         targetDir: './freigestellt'
       },
