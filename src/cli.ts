@@ -1161,6 +1161,7 @@ export function createCli(): Command {
     .description('Launch TOAD Studio interactive Web-GUI (Graphic, Animation, BG-Remover, Convert, Audit)')
     .option('-p, --port <number>', 'Port for the studio server (default: 3000)')
     .option('-f, --foreground', 'Run in foreground (attached to current terminal)')
+    .option('--no-browser', 'Do not open browser automatically')
     .option('--delay-browser', 'Delay browser launch by 3 seconds while checking for updates')
     .action(async (actionOrEntry?: string, options?: any) => {
       const port = options?.port ? parseInt(options.port, 10) : 3000;
@@ -1184,8 +1185,11 @@ export function createCli(): Command {
 
       const isForeground = Boolean(options?.foreground);
       const shouldDelayBrowser = Boolean(options?.delayBrowser);
+      const openBrowserEnabled = options?.browser !== false;
 
       const handleBrowserOpening = async (targetUrl: string) => {
+        if (!openBrowserEnabled) return;
+
         if (shouldDelayBrowser) {
           console.log(`  ${c.cyan('🔄')}  ${c.dim('Prüfe auf Updates...')}`);
           const startCheck = Date.now();
@@ -1244,9 +1248,10 @@ export function createCli(): Command {
           });
 
           console.log(`  ${c.green('➜')}  ${c.bold('Studio URL:')}     ${c.cyan(serverInstance.url)}`);
-          console.log(`  ${c.dim('➜')}  ${c.dim('Browser:')}        ${c.green(shouldDelayBrowser ? 'Öffnet in 3 Sekunden...' : 'Opening automatically...')}`);
-
-          await handleBrowserOpening(serverInstance.url);
+          if (openBrowserEnabled) {
+            console.log(`  ${c.dim('➜')}  ${c.dim('Browser:')}        ${c.green(shouldDelayBrowser ? 'Öffnet in 3 Sekunden...' : 'Opening automatically...')}`);
+            await handleBrowserOpening(serverInstance.url);
+          }
 
           const cleanup = () => {
             clearDaemonInfo();

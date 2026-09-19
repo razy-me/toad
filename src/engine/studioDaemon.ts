@@ -148,7 +148,7 @@ export async function startStudioDaemon(
     cliScript = path.resolve(process.cwd(), 'dist/cli.js');
   }
 
-  const args = [cliScript, 'studio', '--foreground', '--port', String(port)];
+  const args = [cliScript, 'studio', '--foreground', '--no-browser', '--port', String(port)];
   if (entryFile) {
     args.push(entryFile);
   }
