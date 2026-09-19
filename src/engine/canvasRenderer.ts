@@ -153,9 +153,18 @@ export class CanvasRenderer {
       // JPEG has no alpha channel: flatten onto canvas background (or white) instead of producing black.
       const flattened = createCanvas(canvas.width, canvas.height);
       const fctx = flattened.getContext('2d');
-      const bg = typeof layout.canvas.background === 'string' && layout.canvas.background ? layout.canvas.background : '#ffffff';
-      fctx.fillStyle = bg;
-      fctx.fillRect(0, 0, flattened.width, flattened.height);
+      const bg = layout.canvas.background;
+      if (typeof bg === 'string' && bg && bg !== 'transparent' && bg !== 'none') {
+        fctx.fillStyle = bg;
+        fctx.fillRect(0, 0, flattened.width, flattened.height);
+      } else if (bg && typeof bg === 'object' && (bg as any).type) {
+        const grad = createCanvasGradient(fctx, bg as any, { x: 0, y: 0, w: flattened.width, h: flattened.height });
+        fctx.fillStyle = grad;
+        fctx.fillRect(0, 0, flattened.width, flattened.height);
+      } else {
+        fctx.fillStyle = '#ffffff';
+        fctx.fillRect(0, 0, flattened.width, flattened.height);
+      }
       fctx.drawImage(canvas, 0, 0);
       return flattened.encode('jpeg', quality);
     }
@@ -183,48 +192,46 @@ export class CanvasRenderer {
     layoutCanvas?: LayoutResult['canvas']
   ): Promise<void> {
     ctx.save();
+    try {
+      // 1. Opacity. Applied exactly ONCE: isolated layers render their subtree
+      // with opacity overridden to 1 and re-composite carrying the factor.
+      const rawOverride = effects?.overrideOpacity;
+      const rawNodeOpacity = typeof node.opacity === 'number' ? node.opacity : (typeof node.style?.opacity === 'number' ? node.style.opacity : 1);
+      const validOverride = typeof rawOverride === 'number' && Number.isFinite(rawOverride) ? Math.max(0, Math.min(1, rawOverride)) : undefined;
+      const validNodeOpacity = typeof rawNodeOpacity === 'number' && Number.isFinite(rawNodeOpacity) ? Math.max(0, Math.min(1, rawNodeOpacity)) : 1;
+      const ownOpacity = validOverride !== undefined ? validOverride : validNodeOpacity;
+      if (ownOpacity < 1) {
+        ctx.globalAlpha *= ownOpacity;
+      }
 
-    // 1. Opacity. Applied exactly ONCE: isolated layers render their subtree
-    // with opacity overridden to 1 and re-composite carrying the factor.
-    const rawOverride = effects?.overrideOpacity;
-    const rawNodeOpacity = typeof node.opacity === 'number' ? node.opacity : (typeof node.style?.opacity === 'number' ? node.style.opacity : 1);
-    const validOverride = typeof rawOverride === 'number' && Number.isFinite(rawOverride) ? Math.max(0, Math.min(1, rawOverride)) : undefined;
-    const validNodeOpacity = typeof rawNodeOpacity === 'number' && Number.isFinite(rawNodeOpacity) ? Math.max(0, Math.min(1, rawNodeOpacity)) : 1;
-    const ownOpacity = validOverride !== undefined ? validOverride : validNodeOpacity;
-    if (ownOpacity < 1) {
-      ctx.globalAlpha *= ownOpacity;
-    }
+      // 2. Blend Mode
+      if (node.style.blendMode) {
+        ctx.globalCompositeOperation = mapBlendMode(node.style.blendMode);
+      }
 
-    // 2. Blend Mode
-    if (node.style.blendMode) {
-      ctx.globalCompositeOperation = mapBlendMode(node.style.blendMode);
-    }
+      const isContainer = node.type === 'group' || node.type === 'grid' || node.type === 'stack';
+      const containerHasOwnEffect = isContainer &&
+        Array.isArray(node.children) && node.children.length > 0 &&
+        !!(node.style.shadow || node.style.outerGlow);
 
-    const isContainer = node.type === 'group' || node.type === 'grid' || node.type === 'stack';
-    const containerHasOwnEffect = isContainer &&
-      Array.isArray(node.children) && node.children.length > 0 &&
-      !!(node.style.shadow || node.style.outerGlow);
+      // 3. CSS Filters - rendered into an isolated offscreen layer so the filter
+      // applies to this node's pixels only. backdrop-filter has no canvas
+      // equivalent and remains unsupported. drop-shadow()/opacity() crash the
+      // Skia ctx.filter backend, so they are split out and applied at
+      // composite time instead of silently skipping the whole filter chain.
+      if (!skipFilter && !effects?.suppressEffects && !containerHasOwnEffect &&
+          node.style.filter && this.canvasFilterSupported()) {
+        await this.renderNodeIsolated(ctx, node, basePath, {}, layoutCanvas);
+        return;
+      }
 
-    // 3. CSS Filters - rendered into an isolated offscreen layer so the filter
-    // applies to this node's pixels only. backdrop-filter has no canvas
-    // equivalent and remains unsupported. drop-shadow()/opacity() crash the
-    // Skia ctx.filter backend, so they are split out and applied at
-    // composite time instead of silently skipping the whole filter chain.
-    if (!skipFilter && !effects?.suppressEffects && !containerHasOwnEffect &&
-        node.style.filter && this.canvasFilterSupported()) {
-      await this.renderNodeIsolated(ctx, node, basePath, {}, layoutCanvas);
-      ctx.restore();
-      return;
-    }
-
-    // 4. Container-level shadow/glow must wrap the UNION of the children, not
-    // leak onto every descendant: render the subtree into an isolated layer
-    // and stamp the effect once during composition.
-    if (containerHasOwnEffect && !effects?.suppressEffects) {
-      await this.renderNodeIsolated(ctx, node, basePath, { containerEffect: true }, layoutCanvas);
-      ctx.restore();
-      return;
-    }
+      // 4. Container-level shadow/glow must wrap the UNION of the children, not
+      // leak onto every descendant: render the subtree into an isolated layer
+      // and stamp the effect once during composition.
+      if (containerHasOwnEffect && !effects?.suppressEffects) {
+        await this.renderNodeIsolated(ctx, node, basePath, { containerEffect: true }, layoutCanvas);
+        return;
+      }
 
     // 5. 2D Transforms
     const hasTransform = node.style.rotation || node.style.scale !== undefined || node.style.skewX || node.style.skewY;
@@ -348,45 +355,50 @@ export class CanvasRenderer {
         if (d) {
           const pathObj = new Path2D(d);
           ctx.save();
-          ctx.translate(node.x, node.y);
-          if (node.type === 'icon') {
-            ctx.scale(node.width / 24, node.height / 24);
-          }
-
-          // Fill
-          const fill = node.style.fill || node.fill;
-          if (fill) {
-            if (typeof fill === 'string') {
-              ctx.fillStyle = fill;
-            } else {
-              // Pass normalized box since ctx is already translated.
-              // For icons, the context is already scaled by (node.width / 24, node.height / 24),
-              // so the icon's local coordinate space is 24x24 units.
-              const localBox = node.type === 'icon'
-                ? { x: 0, y: 0, w: 24, h: 24 }
-                : { x: 0, y: 0, w: node.width, h: node.height };
-              ctx.fillStyle = createCanvasGradient(ctx, fill as any, localBox);
+          try {
+            ctx.translate(node.x, node.y);
+            if (node.type === 'icon') {
+              const sx = Number.isFinite(node.width) && node.width > 0 ? node.width / 24 : 1;
+              const sy = Number.isFinite(node.height) && node.height > 0 ? node.height / 24 : 1;
+              ctx.scale(sx, sy);
             }
-            ctx.fill(pathObj);
-          }
 
-          // Stroke
-          const stroke = node.style.stroke || node.stroke || (node.type === 'icon' && !node.style.fill && !node.fill ? (node.style.color || '#000000') : undefined);
-          if (stroke) {
-            ctx.strokeStyle = stroke;
-            ctx.lineWidth = node.style.strokeWidth ?? (node.type === 'icon' ? 2 : 1);
-            if (node.style.strokeCap || node.type === 'icon') ctx.lineCap = node.style.strokeCap || 'round';
-            if (node.style.strokeJoin || node.type === 'icon') ctx.lineJoin = node.style.strokeJoin || 'round';
-            if (node.style.strokeStyle === 'dashed') {
-              ctx.setLineDash([6, 6]);
-            } else if (node.style.strokeStyle === 'dotted') {
-              ctx.setLineDash([2, 2]);
-            } else {
-              ctx.setLineDash([]);
+            // Fill
+            const fill = node.style.fill || node.fill;
+            if (fill) {
+              if (typeof fill === 'string') {
+                ctx.fillStyle = fill;
+              } else {
+                // Pass normalized box since ctx is already translated.
+                // For icons, the context is already scaled by (node.width / 24, node.height / 24),
+                // so the icon's local coordinate space is 24x24 units.
+                const localBox = node.type === 'icon'
+                  ? { x: 0, y: 0, w: 24, h: 24 }
+                  : { x: 0, y: 0, w: node.width, h: node.height };
+                ctx.fillStyle = createCanvasGradient(ctx, fill as any, localBox);
+              }
+              ctx.fill(pathObj);
             }
-            ctx.stroke(pathObj);
+
+            // Stroke
+            const stroke = node.style.stroke || node.stroke || (node.type === 'icon' && !node.style.fill && !node.fill ? (node.style.color || '#000000') : undefined);
+            if (stroke) {
+              ctx.strokeStyle = stroke;
+              ctx.lineWidth = node.style.strokeWidth ?? (node.type === 'icon' ? 2 : 1);
+              if (node.style.strokeCap || node.type === 'icon') ctx.lineCap = node.style.strokeCap || 'round';
+              if (node.style.strokeJoin || node.type === 'icon') ctx.lineJoin = node.style.strokeJoin || 'round';
+              if (node.style.strokeStyle === 'dashed') {
+                ctx.setLineDash([6, 6]);
+              } else if (node.style.strokeStyle === 'dotted') {
+                ctx.setLineDash([2, 2]);
+              } else {
+                ctx.setLineDash([]);
+              }
+              ctx.stroke(pathObj);
+            }
+          } finally {
+            ctx.restore();
           }
-          ctx.restore();
         }
         break;
       }
@@ -621,65 +633,74 @@ export class CanvasRenderer {
           }
           if (img) {
             const rad = node.adjustLayout.radius;
-            const feather = Math.max(1, node.adjustLayout.feather);
+            if (!Number.isFinite(rad) || rad <= 0) break;
+            const feather = Math.max(1, Number.isFinite(node.adjustLayout.feather) ? node.adjustLayout.feather : 1);
             const cx = node.x + node.width / 2;
             const cy = node.y + node.height / 2;
             const spotW = Math.round(rad * 2);
             const spotH = Math.round(rad * 2);
+            if (spotW <= 0 || spotH <= 0) break;
 
-            // 1. Offscreen canvas for the adjusted image patch
-            const patchCanvas = createCanvas(spotW, spotH);
-            const pctx = patchCanvas.getContext('2d');
-
-            // Draw full image shifted so (cx, cy) is at center of patchCanvas
-            const imgW = layoutCanvas.width;
-            const imgH = layoutCanvas.height;
-            const drawX = rad - cx;
-            const drawY = rad - cy;
-            drawImageWithFit(pctx, img, 'cover', drawX, drawY, imgW, imgH);
-
-            // Apply photoParams + local adjustParams
-            const mergedParams: PhotoAdjustParams = {
-              ...(layoutCanvas.photoParams || {}),
-              ...(node.adjustLayout.params || {})
-            };
-            // Additive adjustments
-            if (layoutCanvas.photoParams?.exposure !== undefined && node.adjustLayout.params?.exposure !== undefined) {
-              mergedParams.exposure = (layoutCanvas.photoParams.exposure || 0) + (node.adjustLayout.params.exposure || 0);
-            }
-            if (layoutCanvas.photoParams?.contrast !== undefined && node.adjustLayout.params?.contrast !== undefined) {
-              mergedParams.contrast = (layoutCanvas.photoParams.contrast || 1) * (node.adjustLayout.params.contrast || 1);
-            }
-            if (layoutCanvas.photoParams?.brightness !== undefined && node.adjustLayout.params?.brightness !== undefined) {
-              mergedParams.brightness = (layoutCanvas.photoParams.brightness || 1) * (node.adjustLayout.params.brightness || 1);
-            }
-            if (layoutCanvas.photoParams?.saturation !== undefined && node.adjustLayout.params?.saturation !== undefined) {
-              mergedParams.saturation = (layoutCanvas.photoParams.saturation || 1) * (node.adjustLayout.params.saturation || 1);
-            }
-            if (layoutCanvas.photoParams?.warmth !== undefined && node.adjustLayout.params?.warmth !== undefined) {
-              mergedParams.warmth = (layoutCanvas.photoParams.warmth || 0) + (node.adjustLayout.params.warmth || 0);
-            }
-
+            let patchCanvas: any = null;
+            let maskCanvas: any = null;
             try {
-              const pData = pctx.getImageData(0, 0, spotW, spotH);
-              applyPhotographicGrading(pData.data, mergedParams);
-              pctx.putImageData(pData, 0, 0);
+              // 1. Offscreen canvas for the adjusted image patch
+              patchCanvas = createCanvas(spotW, spotH);
+              const pctx = patchCanvas.getContext('2d');
 
-              // 2. Soft radial feather mask via destination-in
-              const maskCanvas = createCanvas(spotW, spotH);
-              const mctx = maskCanvas.getContext('2d');
-              const grad = mctx.createRadialGradient(rad, rad, Math.max(0, rad - feather), rad, rad, rad);
-              grad.addColorStop(0, 'rgba(0, 0, 0, 1)');
-              grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-              mctx.fillStyle = grad;
-              mctx.fillRect(0, 0, spotW, spotH);
+              // Draw full image shifted so (cx, cy) is at center of patchCanvas
+              const imgW = layoutCanvas.width;
+              const imgH = layoutCanvas.height;
+              const drawX = rad - cx;
+              const drawY = rad - cy;
+              drawImageWithFit(pctx, img, 'cover', drawX, drawY, imgW, imgH);
 
-              pctx.globalCompositeOperation = 'destination-in';
-              pctx.drawImage(maskCanvas, 0, 0);
+              // Apply photoParams + local adjustParams
+              const mergedParams: PhotoAdjustParams = {
+                ...(layoutCanvas.photoParams || {}),
+                ...(node.adjustLayout.params || {})
+              };
+              // Additive adjustments
+              if (layoutCanvas.photoParams?.exposure !== undefined && node.adjustLayout.params?.exposure !== undefined) {
+                mergedParams.exposure = (layoutCanvas.photoParams.exposure || 0) + (node.adjustLayout.params.exposure || 0);
+              }
+              if (layoutCanvas.photoParams?.contrast !== undefined && node.adjustLayout.params?.contrast !== undefined) {
+                mergedParams.contrast = (layoutCanvas.photoParams.contrast || 1) * (node.adjustLayout.params.contrast || 1);
+              }
+              if (layoutCanvas.photoParams?.brightness !== undefined && node.adjustLayout.params?.brightness !== undefined) {
+                mergedParams.brightness = (layoutCanvas.photoParams.brightness || 1) * (node.adjustLayout.params.brightness || 1);
+              }
+              if (layoutCanvas.photoParams?.saturation !== undefined && node.adjustLayout.params?.saturation !== undefined) {
+                mergedParams.saturation = (layoutCanvas.photoParams.saturation || 1) * (node.adjustLayout.params.saturation || 1);
+              }
+              if (layoutCanvas.photoParams?.warmth !== undefined && node.adjustLayout.params?.warmth !== undefined) {
+                mergedParams.warmth = (layoutCanvas.photoParams.warmth || 0) + (node.adjustLayout.params.warmth || 0);
+              }
 
-              // 3. Stamp feathered adjustment patch onto main canvas
-              (ctx as any).drawImage(patchCanvas, cx - rad, cy - rad, spotW, spotH);
-            } catch {}
+              try {
+                const pData = pctx.getImageData(0, 0, spotW, spotH);
+                applyPhotographicGrading(pData.data, mergedParams);
+                pctx.putImageData(pData, 0, 0);
+
+                // 2. Soft radial feather mask via destination-in
+                maskCanvas = createCanvas(spotW, spotH);
+                const mctx = maskCanvas.getContext('2d');
+                const grad = mctx.createRadialGradient(rad, rad, Math.max(0, rad - feather), rad, rad, rad);
+                grad.addColorStop(0, 'rgba(0, 0, 0, 1)');
+                grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                mctx.fillStyle = grad;
+                mctx.fillRect(0, 0, spotW, spotH);
+
+                pctx.globalCompositeOperation = 'destination-in';
+                pctx.drawImage(maskCanvas, 0, 0);
+
+                // 3. Stamp feathered adjustment patch onto main canvas
+                (ctx as any).drawImage(patchCanvas, cx - rad, cy - rad, spotW, spotH);
+              } catch {}
+            } catch {} finally {
+              if (patchCanvas) { patchCanvas.width = 1; patchCanvas.height = 1; }
+              if (maskCanvas) { maskCanvas.width = 1; maskCanvas.height = 1; }
+            }
           }
         }
         break;
@@ -702,81 +723,87 @@ export class CanvasRenderer {
           ctx.clip();
         }
 
-        // Check for sibling clipping masks
-        if (node.children && node.children.length > 0) {
-          let i = 0;
-          while (i < node.children.length) {
-            const child = node.children[i]!;
-            const isMask = child.style.clip === true || (child as any).clip === true;
+        try {
+          // Check for sibling clipping masks
+          if (node.children && node.children.length > 0) {
+            let i = 0;
+            while (i < node.children.length) {
+              const child = node.children[i]!;
+              const isMask = child.style.clip === true || (child as any).clip === true;
 
-            if (isMask) {
-              // 1. Draw mask shape itself (including its fill, stroke, background pixels)
-              await this.renderNode(ctx, child, basePath);
+              if (isMask) {
+                // 1. Draw mask shape itself (including its fill, stroke, background pixels)
+                await this.renderNode(ctx, child, basePath);
 
-              // 2. Find subsequent sibling nodes to clip until the next mask or end of children
-              const maskedSiblings: LayoutNode[] = [];
-              let j = i + 1;
-              while (j < node.children.length) {
-                const nextChild = node.children[j]!;
-                const nextIsMask = nextChild.style.clip === true || (nextChild as any).clip === true;
-                if (nextIsMask) {
-                  break;
-                }
-                maskedSiblings.push(nextChild);
-                j++;
-              }
-
-              if (maskedSiblings.length > 0) {
-                ctx.save();
-                let isAlreadyClipped = false;
-                ctx.beginPath();
-                if (child.type === 'circle') {
-                  const cx = child.x + child.width / 2;
-                  const cy = child.y + child.height / 2;
-                  drawCircle(ctx, cx, cy, { rx: child.width / 2, ry: child.height / 2 });
-                } else if (child.type === 'polygon' && child.polygonLayout?.canvasPoints) {
-                  drawPolygon(ctx, child.polygonLayout.canvasPoints);
-                } else if ((child.type === 'path' || child.type === 'shape' || child.type === 'icon' || ['star', 'triangle', 'arrow', 'cross'].includes(child.type)) && child.pathLayout) {
-                  const p2d = new Path2D(child.pathLayout.d);
-                  const prevTransform = (ctx as any).getTransform();
-                  ctx.translate(child.x, child.y);
-                  if (child.type === 'icon') {
-                    const sx = child.width > 0 ? child.width / 24 : 1;
-                    const sy = child.height > 0 ? child.height / 24 : 1;
-                    ctx.scale(sx, sy);
+                // 2. Find subsequent sibling nodes to clip until the next mask or end of children
+                const maskedSiblings: LayoutNode[] = [];
+                let j = i + 1;
+                while (j < node.children.length) {
+                  const nextChild = node.children[j]!;
+                  const nextIsMask = nextChild.style.clip === true || (nextChild as any).clip === true;
+                  if (nextIsMask) {
+                    break;
                   }
-                  ctx.clip(p2d);
-                  ctx.setTransform(prevTransform);
-                  isAlreadyClipped = true;
-                } else {
-                  drawRect(ctx, child.x, child.y, child.width, child.height, child.style.borderRadius);
-                }
-                if (!isAlreadyClipped) {
-                  ctx.clip();
+                  maskedSiblings.push(nextChild);
+                  j++;
                 }
 
-                for (const sibling of maskedSiblings) {
-                  await this.renderNode(ctx, sibling, basePath, false, undefined, layoutCanvas);
+                if (maskedSiblings.length > 0) {
+                  ctx.save();
+                  try {
+                    let isAlreadyClipped = false;
+                    ctx.beginPath();
+                    if (child.type === 'circle') {
+                      const cx = child.x + child.width / 2;
+                      const cy = child.y + child.height / 2;
+                      drawCircle(ctx, cx, cy, { rx: child.width / 2, ry: child.height / 2 });
+                    } else if (child.type === 'polygon' && child.polygonLayout?.canvasPoints) {
+                      drawPolygon(ctx, child.polygonLayout.canvasPoints);
+                    } else if ((child.type === 'path' || child.type === 'shape' || child.type === 'icon' || ['star', 'triangle', 'arrow', 'cross'].includes(child.type)) && child.pathLayout) {
+                      const p2d = new Path2D(child.pathLayout.d);
+                      const prevTransform = (ctx as any).getTransform();
+                      ctx.translate(child.x, child.y);
+                      if (child.type === 'icon') {
+                        const sx = child.width > 0 ? child.width / 24 : 1;
+                        const sy = child.height > 0 ? child.height / 24 : 1;
+                        ctx.scale(sx, sy);
+                      }
+                      ctx.clip(p2d);
+                      ctx.setTransform(prevTransform);
+                      isAlreadyClipped = true;
+                    } else {
+                      drawRect(ctx, child.x, child.y, child.width, child.height, child.style.borderRadius);
+                    }
+                    if (!isAlreadyClipped) {
+                      ctx.clip();
+                    }
+
+                    for (const sibling of maskedSiblings) {
+                      await this.renderNode(ctx, sibling, basePath, false, undefined, layoutCanvas);
+                    }
+                  } finally {
+                    ctx.restore();
+                  }
                 }
-                ctx.restore();
+
+                i = j;
+              } else {
+                await this.renderNode(ctx, child, basePath, false, undefined, layoutCanvas);
+                i++;
               }
-
-              i = j;
-            } else {
-              await this.renderNode(ctx, child, basePath, false, undefined, layoutCanvas);
-              i++;
             }
           }
-        }
-
-        if (hasGroupClip) {
-          ctx.restore();
+        } finally {
+          if (hasGroupClip) {
+            ctx.restore();
+          }
         }
         break;
       }
     }
-
-    ctx.restore();
+    } finally {
+      ctx.restore();
+    }
   }
 
   private static applyFillAndStroke(ctx: CanvasRenderingContext2D | SKRSContext2D, node: LayoutNode): void {
@@ -876,14 +903,61 @@ export class CanvasRenderer {
         ctx.stroke();
         ctx.restore();
       } else if (strokePos === 'outside') {
+        ctx.save();
+        const shapePath = this.getNodePath2D(node);
+        const pad = strokeW * 4 + 1000;
+        const clipPath = new Path2D();
+        clipPath.rect(node.x - pad, node.y - pad, node.width + pad * 2, node.height + pad * 2);
+        clipPath.addPath(shapePath);
+        ctx.clip(clipPath, 'evenodd');
         ctx.lineWidth = strokeW * 2;
-        ctx.stroke();
+        ctx.stroke(shapePath);
+        ctx.restore();
       } else {
         ctx.lineWidth = strokeW;
         ctx.stroke();
       }
       ctx.restore();
     }
+  }
+
+  private static getNodePath2D(node: LayoutNode): Path2D {
+    const p = new Path2D();
+    if (node.type === 'circle') {
+      const cx = node.x + node.width / 2;
+      const cy = node.y + node.height / 2;
+      p.ellipse(cx, cy, Math.max(0, node.width / 2), Math.max(0, node.height / 2), 0, 0, Math.PI * 2);
+    } else if (node.type === 'polygon' && node.polygonLayout?.canvasPoints && node.polygonLayout.canvasPoints.length > 0) {
+      const pts = node.polygonLayout.canvasPoints;
+      p.moveTo(pts[0]!.x, pts[0]!.y);
+      for (let i = 1; i < pts.length; i++) {
+        p.lineTo(pts[i]!.x, pts[i]!.y);
+      }
+      p.closePath();
+    } else {
+      const r = node.style.borderRadius;
+      if (typeof r === 'number' && r > 0) {
+        if (typeof (p as any).roundRect === 'function') {
+          (p as any).roundRect(node.x, node.y, Math.max(0, node.width), Math.max(0, node.height), r);
+        } else {
+          p.rect(node.x, node.y, Math.max(0, node.width), Math.max(0, node.height));
+        }
+      } else if (Array.isArray(r)) {
+        const corners: [number, number, number, number] = r.length === 2
+          ? [r[0] ?? 0, r[1] ?? 0, r[0] ?? 0, r[1] ?? 0]
+          : r.length === 4
+            ? [r[0] ?? 0, r[1] ?? 0, r[2] ?? 0, r[3] ?? 0]
+            : [r[0] ?? 0, r[0] ?? 0, r[0] ?? 0, r[0] ?? 0];
+        if (typeof (p as any).roundRect === 'function') {
+          (p as any).roundRect(node.x, node.y, Math.max(0, node.width), Math.max(0, node.height), corners);
+        } else {
+          p.rect(node.x, node.y, Math.max(0, node.width), Math.max(0, node.height));
+        }
+      } else {
+        p.rect(node.x, node.y, Math.max(0, node.width), Math.max(0, node.height));
+      }
+    }
+    return p;
   }
 
   private static async resolveImage(imgSrc: string, basePath?: string): Promise<Image | null> {
@@ -1012,11 +1086,61 @@ export class CanvasRenderer {
       }
     }
 
-    const pad = (opts.containerEffect ? 0 : estimateFilterPad(node.style.filter || '')) + extraPad;
-    const ox = node.x - pad;
-    const oy = node.y - pad;
-    const w = node.width + pad * 2;
-    const h = node.height + pad * 2;
+    const extraPadVal = Number.isFinite(extraPad) ? Math.max(0, extraPad) : 0;
+    const pad = (opts.containerEffect ? 0 : estimateFilterPad(node.style.filter || '')) + extraPadVal;
+
+    // F-024: Validate node geometry against NaN
+    const nodeX = Number.isFinite(node.x) ? node.x : 0;
+    const nodeY = Number.isFinite(node.y) ? node.y : 0;
+    const nodeW = Number.isFinite(node.width) ? Math.max(0, node.width) : 0;
+    const nodeH = Number.isFinite(node.height) ? Math.max(0, node.height) : 0;
+
+    // F-028: Account for node's own 2D rotation/scale/skew transforms to calculate the true bounding box
+    let originX = nodeX + nodeW / 2;
+    let originY = nodeY + nodeH / 2;
+    if (node.style.transformOrigin) {
+      const oxVal = node.style.transformOrigin.x;
+      const oyVal = node.style.transformOrigin.y;
+      if (typeof oxVal === 'number' && Number.isFinite(oxVal)) originX = nodeX + oxVal;
+      else if (typeof oxVal === 'string' && oxVal.endsWith('%')) originX = nodeX + nodeW * (parseFloat(oxVal) / 100);
+      if (typeof oyVal === 'number' && Number.isFinite(oyVal)) originY = nodeY + oyVal;
+      else if (typeof oyVal === 'string' && oyVal.endsWith('%')) originY = nodeY + nodeH * (parseFloat(oyVal) / 100);
+    }
+
+    const rad = ((node.style.rotation || 0) * Math.PI) / 180;
+    const cosR = Math.cos(rad);
+    const sinR = Math.sin(rad);
+    const sx = typeof node.style.scale === 'number' ? (Number.isFinite(node.style.scale) ? node.style.scale : 1) : (Number.isFinite(node.style.scale?.x) ? (node.style.scale?.x ?? 1) : 1);
+    const sy = typeof node.style.scale === 'number' ? (Number.isFinite(node.style.scale) ? node.style.scale : 1) : (Number.isFinite(node.style.scale?.y) ? (node.style.scale?.y ?? 1) : 1);
+    const tanSkewX = node.style.skewX && Number.isFinite(node.style.skewX) ? Math.tan((node.style.skewX * Math.PI) / 180) : 0;
+    const tanSkewY = node.style.skewY && Number.isFinite(node.style.skewY) ? Math.tan((node.style.skewY * Math.PI) / 180) : 0;
+
+    const transformCorner = (px: number, py: number): [number, number] => {
+      const rx = px - originX;
+      const ry = py - originY;
+      const xRot = rx * cosR - ry * sinR;
+      const yRot = rx * sinR + ry * cosR;
+      const xSc = xRot * sx;
+      const ySc = yRot * sy;
+      const xSkew = xSc + ySc * tanSkewX;
+      const ySkew = ySc + xSc * tanSkewY;
+      return [xSkew + originX, ySkew + originY];
+    };
+
+    const c1 = transformCorner(nodeX, nodeY);
+    const c2 = transformCorner(nodeX + nodeW, nodeY);
+    const c3 = transformCorner(nodeX, nodeY + nodeH);
+    const c4 = transformCorner(nodeX + nodeW, nodeY + nodeH);
+
+    const minLocalX = Math.min(c1[0], c2[0], c3[0], c4[0]);
+    const maxLocalX = Math.max(c1[0], c2[0], c3[0], c4[0]);
+    const minLocalY = Math.min(c1[1], c2[1], c3[1], c4[1]);
+    const maxLocalY = Math.max(c1[1], c2[1], c3[1], c4[1]);
+
+    const ox = minLocalX - pad;
+    const oy = minLocalY - pad;
+    const w = (maxLocalX - minLocalX) + pad * 2;
+    const h = (maxLocalY - minLocalY) + pad * 2;
 
     // Device-space AABB of the padded box under the current full transform,
     // so translations (bleed margin), ancestor rotations and scales survive.
@@ -1024,7 +1148,7 @@ export class CanvasRenderer {
     let dx = 0; let dy = 0; let dw = Math.max(1, Math.ceil(w)); let dh = Math.max(1, Math.ceil(h));
     try {
       const t = anyCtx.getTransform();
-      if (t && typeof t.a === 'number') {
+      if (t && typeof t.a === 'number' && Number.isFinite(t.a) && Number.isFinite(t.d)) {
         mat = { a: t.a, b: t.b, c: t.c, d: t.d, e: t.e, f: t.f };
         const xs = [
           mat.a * ox + mat.c * oy + mat.e,
@@ -1045,82 +1169,100 @@ export class CanvasRenderer {
       }
     } catch { /* backend without getTransform: legacy scale-only path */ }
 
-    const MAX_OFFSCREEN_DIMENSION = 8192;
+    // F-024: Validate dw, dh, dx, dy against NaN and non-finite numbers
+    if (!Number.isFinite(dx)) dx = 0;
+    if (!Number.isFinite(dy)) dy = 0;
+    if (!Number.isFinite(dw) || dw < 1) dw = 1;
+    if (!Number.isFinite(dh) || dh < 1) dh = 1;
+
+    // F-021: Cap MAX_OFFSCREEN_DIMENSION to 4096
+    const MAX_OFFSCREEN_DIMENSION = 4096;
     dw = Math.min(MAX_OFFSCREEN_DIMENSION, Math.max(1, dw));
     dh = Math.min(MAX_OFFSCREEN_DIMENSION, Math.max(1, dh));
 
-    const oc = createCanvas(dw, dh);
-    const octx = oc.getContext('2d');
-    if (mat) {
-      octx.setTransform(mat.a, mat.b, mat.c, mat.d, mat.e - dx, mat.f - dy);
-    } else {
-      const s = this.currentZoomScale(ctx);
-      octx.setTransform(s, 0, 0, s, -ox * s, -oy * s);
-    }
+    let oc: any = null;
+    let sil: any = null;
+    let bl: any = null;
+
     try {
-      if (filterCss && filterCss !== 'none') (octx as any).filter = sanitizeFilterCss(filterCss);
-    } catch { /* unsupported: renders unfiltered inside the layer */ }
+      oc = createCanvas(dw, dh);
+      const octx = oc.getContext('2d');
+      if (mat) {
+        octx.setTransform(mat.a, mat.b, mat.c, mat.d, mat.e - dx, mat.f - dy);
+      } else {
+        const s = this.currentZoomScale(ctx);
+        octx.setTransform(s, 0, 0, s, -ox * s, -oy * s);
+      }
+      try {
+        if (filterCss && filterCss !== 'none') (octx as any).filter = sanitizeFilterCss(filterCss);
+      } catch { /* unsupported: renders unfiltered inside the layer */ }
 
-    await this.renderNode(octx as unknown as SKRSContext2D, node, basePath, true, {
-      overrideOpacity: 1,
-      suppressEffects: opts.containerEffect
-    }, layoutCanvas);
-    try { (octx as any).filter = 'none'; } catch { /* ignore */ }
+      await this.renderNode(octx as unknown as SKRSContext2D, node, basePath, true, {
+        overrideOpacity: 1,
+        suppressEffects: opts.containerEffect
+      }, layoutCanvas);
+      try { (octx as any).filter = 'none'; } catch { /* ignore */ }
 
-    // Composite in device space. Skia ignores ctx.shadow* for drawImage, so
-    // drop-shadow()/container shadows are stamped as a blurred tinted
-    // silhouette BEFORE the layer itself.
-    try {
-      if (shadowSpec) {
-        const z = mat ? (Math.hypot(mat.a, mat.b) || 1) : this.currentZoomScale(ctx);
-        const dOffX = mat ? mat.a * shadowSpec.offsetX + mat.c * shadowSpec.offsetY : shadowSpec.offsetX * z;
-        const dOffY = mat ? mat.b * shadowSpec.offsetX + mat.d * shadowSpec.offsetY : shadowSpec.offsetY * z;
-        const devBlur = shadowSpec.blur * z;
+      // Composite in device space. Skia ignores ctx.shadow* for drawImage, so
+      // drop-shadow()/container shadows are stamped as a blurred tinted
+      // silhouette BEFORE the layer itself.
+      try {
+        if (shadowSpec) {
+          const z = mat ? (Math.hypot(mat.a, mat.b) || 1) : this.currentZoomScale(ctx);
+          const dOffX = mat ? mat.a * shadowSpec.offsetX + mat.c * shadowSpec.offsetY : shadowSpec.offsetX * z;
+          const dOffY = mat ? mat.b * shadowSpec.offsetX + mat.d * shadowSpec.offsetY : shadowSpec.offsetY * z;
+          const devBlur = shadowSpec.blur * z;
 
-        const sil = createCanvas(dw, dh);
-        const silCtx = sil.getContext('2d');
-        silCtx.drawImage(oc, 0, 0);
-        silCtx.globalCompositeOperation = 'source-in';
-        silCtx.fillStyle = shadowSpec.color;
-        silCtx.fillRect(0, 0, dw, dh);
+          sil = createCanvas(dw, dh);
+          const silCtx = sil.getContext('2d');
+          silCtx.drawImage(oc, 0, 0);
+          silCtx.globalCompositeOperation = 'source-in';
+          silCtx.fillStyle = shadowSpec.color;
+          silCtx.fillRect(0, 0, dw, dh);
 
-        let layer: any = sil;
-        if (devBlur > 0.3) {
-          const bl = createCanvas(dw, dh);
-          const bctx = bl.getContext('2d');
-          try { (bctx as any).filter = sanitizeFilterCss(`blur(${(devBlur / 2).toFixed(2)}px)`); } catch { /* keep sharp */ }
-          bctx.drawImage(sil, 0, 0);
-          layer = bl;
+          let layer: any = sil;
+          if (devBlur > 0.3) {
+            bl = createCanvas(dw, dh);
+            const bctx = bl.getContext('2d');
+            try { (bctx as any).filter = sanitizeFilterCss(`blur(${(devBlur / 2).toFixed(2)}px)`); } catch { /* keep sharp */ }
+            bctx.drawImage(sil, 0, 0);
+            layer = bl;
+          }
+
+          ctx.save();
+          try {
+            if (mat) anyCtx.setTransform(1, 0, 0, 1, 0, 0);
+            anyCtx.drawImage(layer, dx + dOffX, dy + dOffY);
+          } finally {
+            if (mat) anyCtx.setTransform(mat.a, mat.b, mat.c, mat.d, mat.e, mat.f);
+            ctx.restore();
+          }
         }
 
         ctx.save();
+        ctx.globalAlpha *= opacityFactor;
         try {
-          if (mat) anyCtx.setTransform(1, 0, 0, 1, 0, 0);
-          anyCtx.drawImage(layer, dx + dOffX, dy + dOffY);
+          if (mat) {
+            anyCtx.setTransform(1, 0, 0, 1, 0, 0);
+            try {
+              anyCtx.drawImage(oc, dx, dy);
+            } finally {
+              anyCtx.setTransform(mat.a, mat.b, mat.c, mat.d, mat.e, mat.f);
+            }
+          } else {
+            anyCtx.drawImage(oc, ox, oy, w, h);
+          }
         } finally {
-          if (mat) anyCtx.setTransform(mat.a, mat.b, mat.c, mat.d, mat.e, mat.f);
           ctx.restore();
         }
-      }
-
-      ctx.save();
-      ctx.globalAlpha *= opacityFactor;
-      try {
-        if (mat) {
-          anyCtx.setTransform(1, 0, 0, 1, 0, 0);
-          try {
-            anyCtx.drawImage(oc, dx, dy);
-          } finally {
-            anyCtx.setTransform(mat.a, mat.b, mat.c, mat.d, mat.e, mat.f);
-          }
-        } else {
-          anyCtx.drawImage(oc, ox, oy, w, h);
-        }
       } finally {
-        ctx.restore();
+        // inner composite finished
       }
     } finally {
-      // outer save/restore owned by renderNode's frame
+      // Free native Skia backing surface allocations
+      if (oc) { oc.width = 1; oc.height = 1; }
+      if (sil) { sil.width = 1; sil.height = 1; }
+      if (bl) { bl.width = 1; bl.height = 1; }
     }
   }
 }

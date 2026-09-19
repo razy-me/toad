@@ -351,7 +351,10 @@ export function distributeGradientStops(stops: GradientStopInput[]): Distributed
   }
 
   const result: DistributedGradientStop[] = stops.map(s => {
-    const p = s.position ?? s.offset ?? -1;
+    let p = s.position ?? s.offset ?? -1;
+    if (typeof p !== 'number' || !Number.isFinite(p) || isNaN(p)) {
+      p = -1;
+    }
     return {
       color: s.color,
       position: p,
@@ -406,6 +409,13 @@ export function createCanvasGradient(
   const distributedStops = distributeGradientStops(grad.stops).sort((a, b) => a.position - b.position);
   const angle = typeof grad.angleDeg === 'number' ? grad.angleDeg : typeof (grad as any).angle === 'number' ? (grad as any).angle : undefined;
 
+  const safeAddColorStop = (gradient: CanvasGradient, pos: number, col: string) => {
+    let offset = typeof pos === 'number' && Number.isFinite(pos) && !isNaN(pos) ? Math.min(1, Math.max(0, pos)) : 0;
+    try {
+      gradient.addColorStop(offset, col || '#000000');
+    } catch {}
+  };
+
   if (grad.type === 'conic') {
     const cx = box.x + box.w / 2;
     const cy = box.y + box.h / 2;
@@ -418,8 +428,7 @@ export function createCanvasGradient(
     }
     const canvasGrad = (ctx as any).createConicGradient(startAngle, cx, cy);
     for (const s of distributedStops) {
-      const offset = Math.min(1, Math.max(0, s.position));
-      canvasGrad.addColorStop(offset, s.color);
+      safeAddColorStop(canvasGrad, s.position, s.color);
     }
     return canvasGrad;
   }
@@ -427,23 +436,25 @@ export function createCanvasGradient(
   if (grad.type === 'radial') {
     const cx = box.x + box.w / 2;
     const cy = box.y + box.h / 2;
-    const rx = (box.w || 1) / 2;
-    const ry = (box.h || 1) / 2;
+    const bw = Math.max(1, Math.abs(box.w || 1));
+    const bh = Math.max(1, Math.abs(box.h || 1));
+    const rx = bw / 2;
+    const ry = bh / 2;
     let radius: number;
     if (grad.shape === 'circle') {
       // Explicit circle shape: use closest-side radius so circle stays contained in element
-      radius = Math.min(rx, ry) || 1;
+      radius = Math.max(0.1, Math.min(rx, ry));
     } else {
       // Non-square bounds without explicit 'circle' (CSS default ellipse):
       // use geometric mean sqrt(rx * ry) so gradient area matches ellipse area
       // without severe over-illumination along the minor axis.
-      radius = Math.sqrt(rx * ry) || Math.max(rx, ry) || 1;
+      radius = Math.max(0.1, Math.sqrt(rx * ry) || Math.max(rx, ry));
     }
+    if (!Number.isFinite(radius) || radius <= 0) radius = 1;
     const canvasGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
 
     for (const s of distributedStops) {
-      const offset = Math.min(1, Math.max(0, s.position));
-      canvasGrad.addColorStop(offset, s.color);
+      safeAddColorStop(canvasGrad, s.position, s.color);
     }
     return canvasGrad;
   }
@@ -489,8 +500,7 @@ export function createCanvasGradient(
 
   const canvasGrad = ctx.createLinearGradient(x0, y0, x1, y1);
   for (const s of distributedStops) {
-    const offset = Math.min(1, Math.max(0, s.position));
-    canvasGrad.addColorStop(offset, s.color);
+    safeAddColorStop(canvasGrad, s.position, s.color);
   }
 
   return canvasGrad;
@@ -791,9 +801,12 @@ export function drawCircle(
 ): void {
   ctx.beginPath();
   if (typeof r === 'number') {
-    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    const validR = Math.max(0, Number.isFinite(r) ? r : 0);
+    ctx.arc(cx, cy, validR, 0, Math.PI * 2);
   } else {
-    ctx.ellipse(cx, cy, r.rx, r.ry, 0, 0, Math.PI * 2);
+    const validRx = Math.max(0, Number.isFinite(r?.rx) ? r.rx : 0);
+    const validRy = Math.max(0, Number.isFinite(r?.ry) ? r.ry : 0);
+    ctx.ellipse(cx, cy, validRx, validRy, 0, 0, Math.PI * 2);
   }
 }
 
@@ -927,13 +940,16 @@ export interface PhotoAdjustParams {
  * Applies high-precision per-pixel photographic tone and color adjustments to an ImageData buffer.
  */
 export function applyPhotographicGrading(data: Uint8ClampedArray, params: PhotoAdjustParams): void {
-  const exposure = params.exposure ?? 0;
-  const contrast = params.contrast ?? 1;
-  const brightness = params.brightness ?? 1;
-  const saturation = params.saturation ?? 1;
-  const warmth = params.warmth ?? 0;
-  const highlights = params.highlights ?? 0;
-  const shadows = params.shadows ?? 0;
+  const sanitize = (val: number | undefined, def: number) => {
+    return typeof val === 'number' && Number.isFinite(val) && !isNaN(val) ? val : def;
+  };
+  const exposure = sanitize(params.exposure, 0);
+  const contrast = sanitize(params.contrast, 1);
+  const brightness = sanitize(params.brightness, 1);
+  const saturation = sanitize(params.saturation, 1);
+  const warmth = sanitize(params.warmth, 0);
+  const highlights = sanitize(params.highlights, 0);
+  const shadows = sanitize(params.shadows, 0);
 
   // Precompute exposure factor (2^Ev)
   const expFactor = exposure !== 0 ? Math.pow(2, exposure) : 1;
@@ -1007,9 +1023,9 @@ export function applyPhotographicGrading(data: Uint8ClampedArray, params: PhotoA
       b = gray + (b - gray) * saturation;
     }
 
-    data[i] = r < 0 ? 0 : r > 255 ? 255 : (r | 0);
-    data[i + 1] = g < 0 ? 0 : g > 255 ? 255 : (g | 0);
-    data[i + 2] = b < 0 ? 0 : b > 255 ? 255 : (b | 0);
+    data[i] = !Number.isFinite(r) || isNaN(r) ? data[i]! : r < 0 ? 0 : r > 255 ? 255 : (r | 0);
+    data[i + 1] = !Number.isFinite(g) || isNaN(g) ? data[i + 1]! : g < 0 ? 0 : g > 255 ? 255 : (g | 0);
+    data[i + 2] = !Number.isFinite(b) || isNaN(b) ? data[i + 2]! : b < 0 ? 0 : b > 255 ? 255 : (b | 0);
   }
 }
 

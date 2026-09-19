@@ -283,7 +283,7 @@ export class MotionLexer {
           loc: { start, end: this.currentPos(), file: this.file }
         };
       }
-      if (this.peek() === 'm' && this.src[this.pos + 1] === 's') {
+      if (this.peek() === 'm' && this.src[this.pos + 1] === 's' && !/[a-zA-Z0-9_]/.test(this.src[this.pos + 2] ?? '')) {
         this.advance(); // m
         this.advance(); // s
         return {
@@ -302,7 +302,7 @@ export class MotionLexer {
           loc: { start, end: this.currentPos(), file: this.file }
         };
       }
-      if (this.peek() === 'd' && this.src[this.pos + 1] === 'e' && this.src[this.pos + 2] === 'g') {
+      if (this.peek() === 'd' && this.src[this.pos + 1] === 'e' && this.src[this.pos + 2] === 'g' && !/[a-zA-Z0-9_]/.test(this.src[this.pos + 3] ?? '')) {
         this.advance(); // d
         this.advance(); // e
         this.advance(); // g
@@ -313,7 +313,7 @@ export class MotionLexer {
           loc: { start, end: this.currentPos(), file: this.file }
         };
       }
-      if (this.peek() === 'p' && this.src[this.pos + 1] === 'x') {
+      if (this.peek() === 'p' && this.src[this.pos + 1] === 'x' && !/[a-zA-Z0-9_]/.test(this.src[this.pos + 2] ?? '')) {
         this.advance(); // p
         this.advance(); // x
         return {

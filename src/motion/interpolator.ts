@@ -97,32 +97,37 @@ export function spring(stiffness = 100, damping = 10, mass = 1): Easer {
   const w0 = Math.sqrt(k / m); // undamped angular frequency
   const zeta = c / (2 * Math.sqrt(k * m)); // damping ratio
 
+  const blendSettle = (raw: number, t: number): number => {
+    if (t <= 0.95) return raw;
+    if (t >= 1) return 1;
+    const alpha = (t - 0.95) / 0.05;
+    const s = alpha * alpha * (3 - 2 * alpha);
+    return raw * (1 - s) + s;
+  };
+
   if (zeta < 1) {
     // Underdamped (oscillates and overshoots)
     const wd = w0 * Math.sqrt(1 - zeta * zeta);
     return (t: number) => {
-      if (t >= 1) return 1;
       const decay = Math.exp(-zeta * w0 * t * 5); // scale t to feel natural over [0, 1]
       const envelope = Math.cos(wd * t * 5) + ((zeta * w0) / wd) * Math.sin(wd * t * 5);
-      return 1 - decay * envelope;
+      return blendSettle(1 - decay * envelope, t);
     };
   } else if (Math.abs(zeta - 1) < 1e-4) {
     // Critically damped (fastest return without oscillation)
     return (t: number) => {
-      if (t >= 1) return 1;
       const decay = Math.exp(-w0 * t * 5);
-      return 1 - decay * (1 + w0 * t * 5);
+      return blendSettle(1 - decay * (1 + w0 * t * 5), t);
     };
   } else {
     // Overdamped
     const s = w0 * Math.sqrt(zeta * zeta - 1);
     return (t: number) => {
-      if (t >= 1) return 1;
       const gamma1 = -zeta * w0 + s;
       const gamma2 = -zeta * w0 - s;
       const c1 = gamma2 / (gamma2 - gamma1);
       const c2 = -gamma1 / (gamma2 - gamma1);
-      return 1 - (c1 * Math.exp(gamma1 * t * 5) + c2 * Math.exp(gamma2 * t * 5));
+      return blendSettle(1 - (c1 * Math.exp(gamma1 * t * 5) + c2 * Math.exp(gamma2 * t * 5)), t);
     };
   }
 }

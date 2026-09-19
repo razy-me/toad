@@ -550,7 +550,7 @@ export class SvgExporter {
           pathTransforms.push(`scale(${node.width / 24} ${node.height / 24})`);
         }
         const filteredAttrs = attrs.filter(a => !a.startsWith('transform='));
-        return `${indent}<path d="${d}" transform="${pathTransforms.join(' ')}" ${fillAttr} ${strokeAttrs} ${filteredAttrs.join(' ')} />`.replace(/\s+/g, ' ');
+        return `${indent}<path d="${this.escapeAttr(d)}" transform="${pathTransforms.join(' ')}" ${fillAttr} ${strokeAttrs} ${filteredAttrs.join(' ')} />`.replace(/\s+/g, ' ');
       }
 
       case 'qrcode': {
@@ -563,7 +563,7 @@ export class SvgExporter {
         pathTransforms.push(`translate(${node.x} ${node.y})`);
         const filteredAttrs = attrs.filter(a => !a.startsWith('transform='));
         const effectiveFill = fillAttr || 'fill="#000000"';
-        let qrMarkup = `${indent}<path d="${d}" transform="${pathTransforms.join(' ')}" ${effectiveFill} ${strokeAttrs} ${filteredAttrs.join(' ')} />`.replace(/\s+/g, ' ');
+        let qrMarkup = `${indent}<path d="${this.escapeAttr(d)}" transform="${pathTransforms.join(' ')}" ${effectiveFill} ${strokeAttrs} ${filteredAttrs.join(' ')} />`.replace(/\s+/g, ' ');
 
         if (node.qrcodeLayout?.logo && node.qrcodeLayout.logoBox) {
           const { x: lbX, y: lbY, width: lbW, height: lbH } = node.qrcodeLayout.logoBox;
@@ -595,7 +595,7 @@ export class SvgExporter {
         pathTransforms.push(`translate(${node.x} ${node.y})`);
         const filteredAttrs = attrs.filter(a => !a.startsWith('transform='));
         const effectiveFill = fillAttr || 'fill="#000000"';
-        let barMarkup = `${indent}<path d="${d}" transform="${pathTransforms.join(' ')}" ${effectiveFill} ${strokeAttrs} ${filteredAttrs.join(' ')} />`.replace(/\s+/g, ' ');
+        let barMarkup = `${indent}<path d="${this.escapeAttr(d)}" transform="${pathTransforms.join(' ')}" ${effectiveFill} ${strokeAttrs} ${filteredAttrs.join(' ')} />`.replace(/\s+/g, ' ');
 
         if (node.barcodeLayout?.showText && node.barcodeLayout.text) {
           const fontSize = Math.max(10, Math.min(16, Math.floor(node.height * 0.18)));
@@ -624,7 +624,7 @@ export class SvgExporter {
             const w = node.width;
             const h = node.height;
             const pathD = `M ${x + tl} ${y} H ${x + w - tr} A ${tr} ${tr} 0 0 1 ${x + w} ${y + tr} V ${y + h - br} A ${br} ${br} 0 0 1 ${x + w - br} ${y + h} H ${x + bl} A ${bl} ${bl} 0 0 1 ${x} ${y + h - bl} V ${y + tl} A ${tl} ${tl} 0 0 1 ${x + tl} ${y} Z`;
-            bgMarkup = `<path d="${pathD}" ${this.getFillAttr(node)} ${this.getStrokeAttrs(node)} />`;
+            bgMarkup = `<path d="${this.escapeAttr(pathD)}" ${this.getFillAttr(node)} ${this.getStrokeAttrs(node)} />`;
           } else {
             bgMarkup = `<rect x="${node.x}" y="${node.y}" width="${node.width}" height="${node.height}" ${this.getFillAttr(node)} ${this.getStrokeAttrs(node)} />`;
           }

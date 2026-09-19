@@ -205,15 +205,16 @@ export class AstCache {
     const entry = this.cache.get(key);
     if (entry) {
       const normalizedDeps = dependencies.map(normalizeCachePath);
-      entry.dependencies = normalizedDeps;
-      entry.dependencyMtimes = {};
+      const newMtimes: Record<string, number> = {};
       for (const dep of normalizedDeps) {
         try {
           if (fs.existsSync(dep)) {
-            entry.dependencyMtimes[dep] = fs.statSync(dep).mtimeMs;
+            newMtimes[dep] = fs.statSync(dep).mtimeMs;
           }
         } catch {}
       }
+      entry.dependencies = normalizedDeps;
+      entry.dependencyMtimes = newMtimes;
     }
   }
 

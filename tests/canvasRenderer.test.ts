@@ -281,5 +281,55 @@ describe('Canvas Renderer Engine (@napi-rs/canvas)', () => {
       const buf = await renderToBuffer(layout);
       expect(buf.length).toBeGreaterThan(0);
     });
+
+    it('renders rotated element with filter without error (F-028)', async () => {
+      const src = `
+        canvas { width: 300px; height: 300px; }
+        rect #rotBlur {
+          at: 100px 100px;
+          size: 80px 80px;
+          fill: #ef4444;
+          rotation: 45deg;
+          filter: blur(4px);
+        }
+      `;
+      const doc = parseToad(src);
+      const resolved = await resolveImportsAndComponents(doc, 'main.toad');
+      const layout = await solveLayout(resolved);
+      const buf = await renderToBuffer(layout);
+      expect(buf.length).toBeGreaterThan(0);
+    });
+
+    it('renders outside layer stroke without error (F-041)', async () => {
+      const src = `
+        canvas { width: 200px; height: 200px; }
+        rect #stroked {
+          at: 50px 50px;
+          size: 100px 100px;
+          fill: #3b82f6;
+          stroke: 4px outside #10b981;
+        }
+      `;
+      const doc = parseToad(src);
+      const resolved = await resolveImportsAndComponents(doc, 'main.toad');
+      const layout = await solveLayout(resolved);
+      const buf = await renderToBuffer(layout);
+      expect(buf.length).toBeGreaterThan(0);
+    });
+
+    it('handles adjust node with 0 radius gracefully without crashing (F-023)', async () => {
+      const src = `
+        canvas { width: 200px; height: 200px; }
+        adjust #adj {
+          at: 50px 50px;
+          size: 0px 0px;
+        }
+      `;
+      const doc = parseToad(src);
+      const resolved = await resolveImportsAndComponents(doc, 'main.toad');
+      const layout = await solveLayout(resolved);
+      const buf = await renderToBuffer(layout);
+      expect(buf.length).toBeGreaterThan(0);
+    });
   });
 });

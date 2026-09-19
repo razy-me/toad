@@ -62,7 +62,16 @@ export interface OpenTypeFontNames {
   instances?: FontNamedInstance[];
 }
 
+const MAX_FONT_NAME_CACHE = 500;
 const fontNameCache = new Map<string, OpenTypeFontNames | null>();
+
+function setFontNameCache(filePath: string, val: OpenTypeFontNames | null): void {
+  if (fontNameCache.size >= MAX_FONT_NAME_CACHE) {
+    const firstKey = fontNameCache.keys().next().value;
+    if (firstKey !== undefined) fontNameCache.delete(firstKey);
+  }
+  fontNameCache.set(filePath, val);
+}
 
 /**
  * Reads a slice of a file into a Buffer using a file descriptor to avoid loading
@@ -152,7 +161,7 @@ export function parseOpenTypeFontNames(filePath: string): OpenTypeFontNames | nu
 
       let val = '';
       if (platformId === 0 || platformId === 3 || (platformId === 2 && encodingId === 1)) {
-        for (let j = 0; j < length; j += 2) {
+        for (let j = 0; j + 1 < length && strOffset + j + 1 < buf.length; j += 2) {
           val += String.fromCharCode(buf.readUInt16BE(strOffset + j));
         }
       } else {
@@ -208,10 +217,10 @@ export function parseOpenTypeFontNames(filePath: string): OpenTypeFontNames | nu
       subfamily,
       ...(instances.length > 0 ? { instances } : {})
     };
-    fontNameCache.set(filePath, result);
+    setFontNameCache(filePath, result);
     return result;
   } catch {
-    fontNameCache.set(filePath, null);
+    setFontNameCache(filePath, null);
     return null;
   } finally {
     if (fd !== null) {
@@ -367,6 +376,9 @@ export class FontLoader {
       }
 
       const success = Boolean(GlobalFonts.registerFromPath(resolvedPath, alias));
+      if (!success) {
+        return false;
+      }
       const names = parseOpenTypeFontNames(resolvedPath);
       const familyName = alias || names?.family || path.basename(resolvedPath, path.extname(resolvedPath));
       this.registeredFamilies.add(familyName);
@@ -584,19 +596,17 @@ export class FontLoader {
         );
       }
 
-      const collectFontFiles = (dir: string, depth = 0): string[] => {
-        if (depth > 1 || !fs.existsSync(dir)) return [];
+      const collectFontFiles = (dir: string): string[] => {
+        if (!fs.existsSync(dir)) return [];
         const results: string[] = [];
         try {
           const entries = fs.readdirSync(dir, { withFileTypes: true });
           for (const entry of entries) {
-            const full = path.join(dir, entry.name);
-            if (entry.isDirectory()) {
-              results.push(...collectFontFiles(full, depth + 1));
-            } else if (entry.isFile()) {
+            if (results.length >= 250) break;
+            if (entry.isFile()) {
               const l = entry.name.toLowerCase();
               if (l.endsWith('.ttf') || l.endsWith('.otf')) {
-                results.push(full);
+                results.push(path.join(dir, entry.name));
               }
             }
           }
@@ -686,6 +696,10 @@ export class FontLoader {
 
     const matched = findBestFace();
     if (!matched) {
+      if (this.unresolvableFamilies.size >= 300) {
+        const first = this.unresolvableFamilies.values().next().value;
+        if (first !== undefined) this.unresolvableFamilies.delete(first);
+      }
       this.unresolvableFamilies.add(targetFamily);
     }
     return matched;
