@@ -300,45 +300,49 @@ function sanitizeElementId(rawName: string, usedIds: Set<string>): string {
  * Imports and converts a Photoshop .psd file into TOAD DSL.
  */
 export async function importPsd(
-  input: string | Buffer,
+  input: string | Buffer | Psd,
   options: PsdImportOptions = {}
 ): Promise<PsdImportResult> {
   ensurePsdCanvas();
 
-  let buffer: Buffer;
+  function escapeDslString(str: string): string {
+    return String(str)
+      .replace(/\\/g, '\\\\')
+      .replace(/"/g, '\\"')
+      .replace(/\n/g, '\\n')
+      .replace(/\r/g, '\\r');
+  }
+
+  let psd: Psd;
   let inputFileDir: string | undefined;
   let inputBaseName = 'document';
 
-  if (typeof input === 'string') {
-    const resolvedPath = path.resolve(process.cwd(), input);
-    if (!fs.existsSync(resolvedPath)) {
-      throw new Error(`PSD file not found: ${resolvedPath}`);
-    }
-    buffer = fs.readFileSync(resolvedPath);
-    inputFileDir = path.dirname(resolvedPath);
-    inputBaseName = path.basename(resolvedPath, path.extname(resolvedPath));
+  if (typeof input === 'object' && input !== null && !Buffer.isBuffer(input) && 'width' in input && 'children' in input) {
+    psd = input as Psd;
   } else {
-    buffer = input;
-  }
+    let buffer: Buffer;
+    if (typeof input === 'string') {
+      const resolvedPath = path.resolve(process.cwd(), input);
+      if (!fs.existsSync(resolvedPath)) {
+        throw new Error(`PSD file not found: ${resolvedPath}`);
+      }
+      buffer = fs.readFileSync(resolvedPath);
+      inputFileDir = path.dirname(resolvedPath);
+      inputBaseName = path.basename(resolvedPath, path.extname(resolvedPath));
+    } else {
+      buffer = input as Buffer;
+    }
 
-function escapeDslString(str: string): string {
-  return String(str)
-    .replace(/\\/g, '\\\\')
-    .replace(/"/g, '\\"')
-    .replace(/\n/g, '\\n')
-    .replace(/\r/g, '\\r');
-}
-
-  let psd: Psd;
-  try {
-    psd = readPsd(buffer as any, {
-      skipThumbnail: true,
-      skipCompositeImageData: true,
-      skipLinkedFilesData: true,
-      skipLayerImageData: options.extractImages === false
-    });
-  } catch (err: any) {
-    throw new Error(`Failed to parse PSD file (file may be corrupted or invalid): ${err?.message || String(err)}`);
+    try {
+      psd = readPsd(buffer as any, {
+        skipThumbnail: true,
+        skipCompositeImageData: true,
+        skipLinkedFilesData: true,
+        skipLayerImageData: options.extractImages === false
+      });
+    } catch (err: any) {
+      throw new Error(`Failed to parse PSD file (file may be corrupted or invalid): ${err?.message || String(err)}`);
+    }
   }
   const dpi = options.dpi || (psd as any).resolution || 72;
 
@@ -547,13 +551,27 @@ function escapeDslString(str: string): string {
       const textRaw = (layer.text.text || '').replace(/\r\n|\r/g, '\n');
       const textJson = JSON.stringify(textRaw);
 
-      const postScriptName = layer.text.style?.font?.name;
+      const firstRunStyle = (layer.text as any).styleRuns?.[0]?.style;
+      const effectiveStyle = layer.text.style || firstRunStyle;
+
+      const postScriptName = effectiveStyle?.font?.name || firstRunStyle?.font?.name;
       const { fontFamily, fontWeight, isItalic } = parsePostScriptFont(postScriptName);
 
-      const rawFontSize = layer.text.style?.fontSize || 16;
-      const fontSizePx = dpi !== 72 ? Math.round((rawFontSize * dpi) / 72) : Math.round(rawFontSize);
+      const rawFontSize = effectiveStyle?.fontSize || firstRunStyle?.fontSize || 16;
 
-      const textColor = psdColorToToad(layer.text.style?.fillColor, '#000000');
+      let transformScaleY = 1;
+      if (Array.isArray(layer.text.transform) && layer.text.transform.length >= 4) {
+        const [, b, , d] = layer.text.transform;
+        const sY = Math.hypot(b || 0, d || 1);
+        if (sY > 0.01 && Number.isFinite(sY)) {
+          transformScaleY = sY;
+        }
+      }
+
+      const effectiveFontSize = rawFontSize * transformScaleY;
+      const fontSizePx = dpi !== 72 ? Math.round((effectiveFontSize * dpi) / 72) : Math.round(effectiveFontSize);
+
+      const textColor = psdColorToToad(effectiveStyle?.fillColor || firstRunStyle?.fillColor, '#000000');
 
       lines.push(`${indent}text #${id} ${textJson} {`);
       lines.push(`${indent}  at: ${localLeft}px ${localTop}px;`);
@@ -584,10 +602,12 @@ function escapeDslString(str: string): string {
       }
 
       // Leading / Line Height
-      if (layer.text.style?.leading && layer.text.style.leading > 0) {
+      const leadingVal = effectiveStyle?.leading || firstRunStyle?.leading;
+      if (leadingVal && leadingVal > 0) {
+        const effectiveLh = leadingVal * transformScaleY;
         const lh = dpi !== 72
-          ? Math.round((layer.text.style.leading * dpi) / 72)
-          : Math.round(layer.text.style.leading);
+          ? Math.round((effectiveLh * dpi) / 72)
+          : Math.round(effectiveLh);
         lines.push(`${indent}  line-height: ${lh}px;`);
       }
 

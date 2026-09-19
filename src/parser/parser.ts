@@ -408,7 +408,13 @@ export class Parser {
             this.advance(); // consume ':'
           }
 
+          const prevProp = this.currentProperty;
+          if (argName) {
+            this.currentProperty = argName;
+          }
           const val = this.parseValue();
+          this.currentProperty = prevProp;
+
           args.push({
             type: 'ComponentArgument',
             name: argName,

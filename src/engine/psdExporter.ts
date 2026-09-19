@@ -145,6 +145,8 @@ export interface PsdExportOptions {
   basePath?: string;
   generateThumbnail?: boolean;
   humanizeLayerNames?: boolean;
+  docWidth?: number;
+  docHeight?: number;
 }
 
 export class PsdExporter {
@@ -244,7 +246,12 @@ export class PsdExporter {
         siblingCountsByType: rootSiblingCounts,
         humanizeLayerNames: options.humanizeLayerNames,
       };
-      const layer = await this.buildPsdLayer(node, scale, options.basePath, effectiveDpi, IDENTITY_MATRIX, rootContext, options);
+      const docOptions: PsdExportOptions = {
+        ...options,
+        docWidth,
+        docHeight
+      };
+      const layer = await this.buildPsdLayer(node, scale, options.basePath, effectiveDpi, IDENTITY_MATRIX, rootContext, docOptions);
       if (layer) {
         if (isMask) {
           layer.clipping = false;
@@ -757,7 +764,9 @@ export class PsdExporter {
       let groupVectorMask: LayerVectorMask | undefined;
       const groupHasMask = node.style.clip === true || (node as any).clip === true || node.style.borderRadius !== undefined || (node as any).radius !== undefined;
       if (groupHasMask) {
-        const groupVectorData = this.buildVectorShape(node, scale, width, height, currentMat, dpi);
+        const docW = options?.docWidth ?? width;
+        const docH = options?.docHeight ?? height;
+        const groupVectorData = this.buildVectorShape(node, scale, docW, docH, currentMat, dpi);
         groupVectorMask = groupVectorData.vectorMask;
       }
 
@@ -1020,7 +1029,9 @@ export class PsdExporter {
       left,
       top
     );
-    const vectorData = this.buildVectorShape(cleanNode, scale, width, height, currentMat, dpi);
+    const docW = options?.docWidth ?? width;
+    const docH = options?.docHeight ?? height;
+    const vectorData = this.buildVectorShape(cleanNode, scale, docW, docH, currentMat, dpi);
     const effects = this.buildLayerEffects(cleanNode, scale);
 
     const baseLayer: Layer = {

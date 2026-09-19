@@ -249,13 +249,49 @@ export class PdfExporter {
 
     const customFontEntries: string[] = [];
     for (const [psName, tag] of this.customFontMap.entries()) {
+      const face = FontLoader.getFaceByPostScriptName(psName);
+      let fontStreamObjId: number | undefined;
+      let fontFileClause = '';
+
+      if (face?.filePath && fs.existsSync(face.filePath) && face.filePath.toLowerCase().endsWith('.ttf')) {
+        try {
+          const fontBuf = fs.readFileSync(face.filePath);
+          fontStreamObjId = this.allocId();
+          const streamHeader = Buffer.from(`<< /Length ${fontBuf.length} /Length1 ${fontBuf.length} >>\nstream\n`, 'ascii');
+          const streamFooter = Buffer.from('\nendstream', 'ascii');
+          this.objects.push({
+            id: fontStreamObjId,
+            content: Buffer.concat([streamHeader, fontBuf, streamFooter])
+          });
+          fontFileClause = ` /FontFile2 ${fontStreamObjId} 0 R`;
+        } catch {
+          // Fallback to font descriptor without stream
+        }
+      }
+
+      // Calculate accurate character widths for chars 32..255 (REG-19)
+      const widthsArray: number[] = [];
+      try {
+        if (!this.measureCtx) {
+          this.measureCtx = createCanvas(10, 10).getContext('2d');
+        }
+        this.measureCtx.font = `100px "${face?.originalFamily || psName}"`;
+        for (let c = 32; c <= 255; c++) {
+          const charStr = String.fromCharCode(c);
+          const w = Math.round(this.measureCtx.measureText(charStr).width * 10);
+          widthsArray.push(Number.isFinite(w) && w > 0 ? w : 600);
+        }
+      } catch {
+        for (let c = 32; c <= 255; c++) widthsArray.push(600);
+      }
+      const widths = widthsArray.join(' ');
+
       const fontDescId = this.allocId();
       const fontObjId = this.allocId();
       this.objects.push({
         id: fontDescId,
-        content: `<< /Type /FontDescriptor /FontName /${psName} /Flags 32 /ItalicAngle 0 /Ascent 750 /Descent -250 /CapHeight 700 /StemV 80 >>`
+        content: `<< /Type /FontDescriptor /FontName /${psName} /Flags 32 /ItalicAngle 0 /Ascent 750 /Descent -250 /CapHeight 700 /StemV 80${fontFileClause} >>`
       });
-      const widths = Array(224).fill(600).join(' ');
       this.objects.push({
         id: fontObjId,
         content: `<< /Type /Font /Subtype /TrueType /BaseFont /${psName} /FirstChar 32 /LastChar 255 /Widths [${widths}] /FontDescriptor ${fontDescId} 0 R /Encoding /WinAnsiEncoding >>`

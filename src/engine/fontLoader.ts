@@ -344,11 +344,24 @@ export function parseOpenTypeMetrics(filePath: string): FontHeaderMetrics | null
 export class FontLoader {
   private static registeredFamilies = new Set<string>();
   private static registeredFaces: FontFaceMeta[] = [];
+  private static readonly MAX_METRICS_CACHE = 1000;
   private static metricsCache = new Map<string, FontHeaderMetrics>();
   private static systemFontsIndexed = false;
   private static systemFontFiles: string[] = [];
   private static parsedFontFiles = new Set<string>();
   private static unresolvableFamilies = new Set<string>();
+
+  public static getFaceByPostScriptName(postScriptName: string): FontFaceMeta | undefined {
+    return this.registeredFaces.find(f => f.postScriptName === postScriptName);
+  }
+
+  private static setMetricsCache(key: string, val: FontHeaderMetrics): void {
+    if (this.metricsCache.size >= this.MAX_METRICS_CACHE) {
+      const firstKey = this.metricsCache.keys().next().value;
+      if (firstKey !== undefined) this.metricsCache.delete(firstKey);
+    }
+    this.metricsCache.set(key, val);
+  }
 
   public static getFontMetrics(family: string, weight?: string | number, style?: string): FontHeaderMetrics | null {
     if (!family) return null;
@@ -382,6 +395,11 @@ export class FontLoader {
       const names = parseOpenTypeFontNames(resolvedPath);
       const familyName = alias || names?.family || path.basename(resolvedPath, path.extname(resolvedPath));
       this.registeredFamilies.add(familyName);
+
+      // Invalidate unresolvable cache for newly registered font family (REG-13)
+      this.unresolvableFamilies.delete(familyName.toLowerCase());
+      if (alias) this.unresolvableFamilies.delete(alias.toLowerCase());
+      if (names?.family) this.unresolvableFamilies.delete(names.family.toLowerCase());
 
       if (names?.postScript) {
         const sub = (names.subfamily || '').toLowerCase();
@@ -439,10 +457,10 @@ export class FontLoader {
         const metrics = parseOpenTypeMetrics(resolvedPath);
         if (metrics) {
           const famKey = familyName.toLowerCase();
-          this.metricsCache.set(famKey, metrics);
-          if (alias) this.metricsCache.set(alias.toLowerCase(), metrics);
-          if (names?.family) this.metricsCache.set(names.family.toLowerCase(), metrics);
-          this.metricsCache.set(`${famKey}:${detectedWeight}:${detectedStyle}`, metrics);
+          this.setMetricsCache(famKey, metrics);
+          if (alias) this.setMetricsCache(alias.toLowerCase(), metrics);
+          if (names?.family) this.setMetricsCache(names.family.toLowerCase(), metrics);
+          this.setMetricsCache(`${famKey}:${detectedWeight}:${detectedStyle}`, metrics);
         }
       }
 
@@ -596,18 +614,21 @@ export class FontLoader {
         );
       }
 
-      const collectFontFiles = (dir: string): string[] => {
-        if (!fs.existsSync(dir)) return [];
+      const collectFontFiles = (dir: string, depth = 0): string[] => {
+        if (!fs.existsSync(dir) || depth > 3) return [];
         const results: string[] = [];
         try {
           const entries = fs.readdirSync(dir, { withFileTypes: true });
           for (const entry of entries) {
-            if (results.length >= 250) break;
+            if (results.length >= 1000) break;
+            const full = path.join(dir, entry.name);
             if (entry.isFile()) {
               const l = entry.name.toLowerCase();
               if (l.endsWith('.ttf') || l.endsWith('.otf')) {
-                results.push(path.join(dir, entry.name));
+                results.push(full);
               }
+            } else if (entry.isDirectory() && !entry.name.startsWith('.')) {
+              results.push(...collectFontFiles(full, depth + 1));
             }
           }
         } catch {
@@ -643,7 +664,8 @@ export class FontLoader {
     style?: string
   ): string | null {
     if (!family) return null;
-    const targetFamily = family.toLowerCase().trim();
+    const unquotedFamily = family.replace(/^['"]+|['"]+$/g, '').trim();
+    const targetFamily = unquotedFamily.toLowerCase();
     if (this.unresolvableFamilies.has(targetFamily)) return null;
 
     const targetWeight = normalizeFontWeightToNumber(weight);

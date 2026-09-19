@@ -4443,7 +4443,7 @@ export function generateStudioHtml(initialFile?: string): string {
           updateInlineGhost(rawQuery, topMatch);
 
           if (currentItems.length === 0) {
-            menu.innerHTML = '<div style="padding: 12px 14px; font-size: 12px; color: var(--text-dim); text-align: center;"><i class="fa-solid fa-magnifying-glass" style="margin-right: 6px;"></i> Keine Datei gefunden für "' + rawQuery + '"</div>';
+            menu.innerHTML = '<div style="padding: 12px 14px; font-size: 12px; color: var(--text-dim); text-align: center;"><i class="fa-solid fa-magnifying-glass" style="margin-right: 6px;"></i> Keine Datei gefunden für "' + escapeHtml(rawQuery) + '"</div>';
             menu.classList.add('open');
             activeIdx = -1;
             return;
@@ -4451,7 +4451,7 @@ export function generateStudioHtml(initialFile?: string): string {
 
           var html = currentItems.slice(0, 15).map(function(f, idx) {
             var isSel = (f.path === wizardData[wizKey].file);
-            return '<div class="wiz-suggestion-item ' + (isSel ? 'active' : '') + '" data-idx="' + idx + '" data-path="' + f.path + '">' +
+            return '<div class="wiz-suggestion-item ' + (isSel ? 'active' : '') + '" data-idx="' + idx + '" data-path="' + escapeHtml(f.path) + '">' +
               '<div class="wiz-suggestion-name">' +
                 '<i class="fa-solid fa-file-lines" style="color: var(--accent); font-size: 11px;"></i> ' +
                 highlightMatches(f.name, q) +
@@ -4476,12 +4476,12 @@ export function generateStudioHtml(initialFile?: string): string {
         }
 
         function highlightMatches(text, query) {
-          if (!query) return text;
+          if (!query) return escapeHtml(text);
           var idx = text.toLowerCase().indexOf(query.toLowerCase());
-          if (idx === -1) return text;
-          var before = text.substring(0, idx);
-          var match = text.substring(idx, idx + query.length);
-          var after = text.substring(idx + query.length);
+          if (idx === -1) return escapeHtml(text);
+          var before = escapeHtml(text.substring(0, idx));
+          var match = escapeHtml(text.substring(idx, idx + query.length));
+          var after = escapeHtml(text.substring(idx + query.length));
           return before + '<span style="color: var(--accent); font-weight: 800; text-decoration: underline;">' + match + '</span>' + after;
         }
 
@@ -4509,10 +4509,14 @@ export function generateStudioHtml(initialFile?: string): string {
           });
         }
 
-        // Live input event: updates dynamically with every single character typed
+        var searchDebounceTimer = null;
+        // Live input event: updates dynamically with debounced suggestion rendering (150ms)
         input.addEventListener('input', function() {
           wizardData[wizKey].file = input.value;
-          renderSuggestions(input.value);
+          clearTimeout(searchDebounceTimer);
+          searchDebounceTimer = setTimeout(function() {
+            renderSuggestions(input.value);
+          }, 150);
         });
 
         // Focus & Click: instantly open dropdown

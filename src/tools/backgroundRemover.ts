@@ -1025,7 +1025,10 @@ export async function removeBackgroundFromFile(
     `.toad-tmp-${Date.now()}-${Math.random().toString(36).slice(2)}${path.extname(targetPath) || '.png'}`
   );
   try {
-    await isolatedImage.save(tempPath);
+    const saveOptions = options.quality !== undefined
+      ? { quality: options.quality }
+      : (options.format === 'webp' ? { quality: 95 } : undefined);
+    await (isolatedImage as any).save(tempPath, saveOptions);
     fs.renameSync(tempPath, targetPath);
   } catch (saveErr) {
     if (fs.existsSync(tempPath)) {
