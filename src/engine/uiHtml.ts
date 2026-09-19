@@ -1739,217 +1739,253 @@ export function generateStudioHtml(initialFile?: string): string {
       line-height: 1.5;
     }
 
-    /* Hub & Command Builder Deck */
-    .hub-viewport {
-      flex: 1;
-      overflow-y: auto;
-      padding: 36px 32px 80px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 100%;
-    }
-
-    .hub-container {
-      max-width: 1440px;
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 28px;
-    }
-
-    .hub-header-wrap {
-      text-align: center;
-      margin-bottom: 8px;
-    }
-
-    .hub-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      padding: 4px 12px;
-      border-radius: 999px;
-      background: var(--accent-dim);
-      color: var(--accent);
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      margin-bottom: 12px;
-    }
-
-    .hub-title {
-      font-size: 28px;
-      font-weight: 800;
-      letter-spacing: -0.03em;
-      color: var(--text);
-      margin-bottom: 8px;
-    }
-
-    .hub-subtitle {
-      font-size: 14px;
-      color: var(--text-dim);
-      max-width: 680px;
-      margin: 0 auto;
-      line-height: 1.5;
-    }
-
-    /* 5 Vertical Cards Grid */
-    .hub-cards-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 16px;
-      align-items: stretch;
-    }
-
-    @media (max-width: 1280px) {
-      .hub-cards-grid {
-        grid-template-columns: repeat(3, 1fr);
-      }
-    }
-
-    @media (max-width: 860px) {
-      .hub-cards-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .hub-card {
-      background: var(--bg-surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 22px 18px;
-      display: flex;
-      flex-direction: column;
-      cursor: pointer;
-      position: relative;
+    /* Full-Height 5-Column Command Builder Hub */
+    #tab-hub {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100vw;
+      height: 100vh;
       overflow: hidden;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 100;
+      background: #060a14;
+      display: none;
     }
 
-    .hub-card::before {
+    #tab-hub.active {
+      display: flex;
+    }
+
+    .hub-fullscreen-columns {
+      display: flex;
+      flex-direction: row;
+      width: 100vw;
+      height: 100vh;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #060a14;
+    }
+
+    .hub-col {
+      flex: 1;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 56px 36px 48px;
+      position: relative;
+      cursor: pointer;
+      overflow: hidden;
+      user-select: none;
+      border-right: 1px solid rgba(255, 255, 255, 0.07);
+      background: #080d1a;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .hub-col:last-child {
+      border-right: none;
+    }
+
+    .hub-col:hover {
+      flex: 1.4;
+      z-index: 10;
+    }
+
+    .hub-col::before {
       content: '';
       position: absolute;
       top: 0;
       left: 0;
       right: 0;
-      height: 3px;
+      height: 4px;
       background: transparent;
-      transition: background 0.2s;
+      transition: all 0.3s ease;
     }
 
-    .hub-card:hover {
-      transform: translateY(-4px);
-      border-color: #334155;
-      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4);
-      background: #111827;
+    .hub-col.col-bgr:hover {
+      background: radial-gradient(circle at 50% 25%, rgba(16, 185, 129, 0.18) 0%, #0a1424 100%);
+      box-shadow: 0 0 60px rgba(16, 185, 129, 0.2);
+    }
+    .hub-col.col-bgr:hover::before { background: var(--accent); }
+
+    .hub-col.col-build:hover {
+      background: radial-gradient(circle at 50% 25%, rgba(6, 182, 212, 0.18) 0%, #0a1424 100%);
+      box-shadow: 0 0 60px rgba(6, 182, 212, 0.2);
+    }
+    .hub-col.col-build:hover::before { background: var(--cyan); }
+
+    .hub-col.col-motion:hover {
+      background: radial-gradient(circle at 50% 25%, rgba(168, 85, 247, 0.18) 0%, #0a1424 100%);
+      box-shadow: 0 0 60px rgba(168, 85, 247, 0.2);
+    }
+    .hub-col.col-motion:hover::before { background: var(--violet); }
+
+    .hub-col.col-convert:hover {
+      background: radial-gradient(circle at 50% 25%, rgba(245, 158, 11, 0.18) 0%, #0a1424 100%);
+      box-shadow: 0 0 60px rgba(245, 158, 11, 0.2);
+    }
+    .hub-col.col-convert:hover::before { background: var(--amber); }
+
+    .hub-col.col-report:hover {
+      background: radial-gradient(circle at 50% 25%, rgba(244, 63, 94, 0.18) 0%, #0a1424 100%);
+      box-shadow: 0 0 60px rgba(244, 63, 94, 0.2);
+    }
+    .hub-col.col-report:hover::before { background: var(--rose); }
+
+    .hub-col-top {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
 
-    .hub-card.card-bgr:hover::before { background: var(--accent); }
-    .hub-card.card-build:hover::before { background: var(--cyan); }
-    .hub-card.card-motion:hover::before { background: var(--violet); }
-    .hub-card.card-convert:hover::before { background: var(--amber); }
-    .hub-card.card-report:hover::before { background: var(--rose); }
+    .hub-col-idx {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+    }
 
-    .hub-card-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 12px;
+    .hub-col-cmd {
+      display: inline-block;
+      align-self: flex-start;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-dim);
+      transition: all 0.2s;
+    }
+
+    .hub-col:hover .hub-col-cmd {
+      color: var(--text);
+      border-color: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.09);
+    }
+
+    .hub-col-body {
+      display: flex;
+      flex-direction: column;
+      margin: auto 0;
+      padding: 24px 0;
+    }
+
+    .hub-col-icon {
+      width: 68px;
+      height: 68px;
+      border-radius: 18px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
-      margin-bottom: 16px;
-      transition: transform 0.2s ease;
+      font-size: 28px;
+      margin-bottom: 24px;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .hub-card:hover .hub-card-icon {
-      transform: scale(1.08);
+    .hub-col:hover .hub-col-icon {
+      transform: scale(1.12) translateY(-4px);
     }
 
-    .card-bgr .hub-card-icon { background: rgba(16, 185, 129, 0.15); color: var(--accent); border: 1px solid rgba(16, 185, 129, 0.3); }
-    .card-build .hub-card-icon { background: rgba(6, 182, 212, 0.15); color: var(--cyan); border: 1px solid rgba(6, 182, 212, 0.3); }
-    .card-motion .hub-card-icon { background: rgba(168, 85, 247, 0.15); color: var(--violet); border: 1px solid rgba(168, 85, 247, 0.3); }
-    .card-convert .hub-card-icon { background: rgba(245, 158, 11, 0.15); color: var(--amber); border: 1px solid rgba(245, 158, 11, 0.3); }
-    .card-report .hub-card-icon { background: rgba(244, 63, 94, 0.15); color: var(--rose); border: 1px solid rgba(244, 63, 94, 0.3); }
+    .col-bgr .hub-col-icon { background: rgba(16, 185, 129, 0.14); color: var(--accent); border: 1px solid rgba(16, 185, 129, 0.3); }
+    .col-build .hub-col-icon { background: rgba(6, 182, 212, 0.14); color: var(--cyan); border: 1px solid rgba(6, 182, 212, 0.3); }
+    .col-motion .hub-col-icon { background: rgba(168, 85, 247, 0.14); color: var(--violet); border: 1px solid rgba(168, 85, 247, 0.3); }
+    .col-convert .hub-col-icon { background: rgba(245, 158, 11, 0.14); color: var(--amber); border: 1px solid rgba(245, 158, 11, 0.3); }
+    .col-report .hub-col-icon { background: rgba(244, 63, 94, 0.14); color: var(--rose); border: 1px solid rgba(244, 63, 94, 0.3); }
 
-    .hub-card-cmd {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      color: var(--text-dim);
-      margin-bottom: 6px;
-      display: inline-block;
-    }
-
-    .hub-card-title {
-      font-size: 17px;
-      font-weight: 700;
+    .hub-col-title {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
       color: var(--text);
-      margin-bottom: 6px;
+      margin: 0 0 12px 0;
     }
 
-    .hub-card-desc {
-      font-size: 12px;
+    .hub-col-desc {
+      font-size: 13px;
+      line-height: 1.55;
       color: var(--text-muted);
-      line-height: 1.45;
-      margin-bottom: 16px;
-      min-height: 36px;
+      margin: 0 0 24px 0;
+      min-height: 40px;
     }
 
-    .hub-card-features {
+    .hub-col-features {
       list-style: none;
       padding: 0;
-      margin: 0 0 20px 0;
+      margin: 0;
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      flex: 1;
+      gap: 10px;
     }
 
-    .hub-card-features li {
-      font-size: 11px;
+    .hub-col-features li {
+      font-size: 12px;
       color: var(--text-dim);
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
+      white-space: nowrap;
     }
 
-    .hub-card-features li i {
-      font-size: 10px;
-      color: var(--text-muted);
+    .hub-col:hover .hub-col-features li {
+      color: var(--text);
     }
 
-    .hub-card-action {
-      margin-top: auto;
+    .hub-col-features li i {
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    .col-bgr:hover .hub-col-features li i { color: var(--accent); }
+    .col-build:hover .hub-col-features li i { color: var(--cyan); }
+    .col-motion:hover .hub-col-features li i { color: var(--violet); }
+    .col-convert:hover .hub-col-features li i { color: var(--amber); }
+    .col-report:hover .hub-col-features li i { color: var(--rose); }
+
+    .hub-col-footer {
+      margin-top: 16px;
+    }
+
+    .hub-col-action {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding-top: 14px;
-      border-top: 1px solid var(--border);
-      font-size: 12px;
-      font-weight: 600;
+      padding: 14px 20px;
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      font-size: 13px;
+      font-weight: 700;
       color: var(--text);
+      transition: all 0.25s ease;
     }
 
-    .hub-card-action i {
-      transition: transform 0.15s ease;
-      color: var(--text-dim);
-    }
-
-    .hub-card:hover .hub-card-action i {
-      transform: translateX(4px);
-      color: var(--text);
-    }
+    .col-bgr:hover .hub-col-action { background: var(--accent); color: #021a10; border-color: var(--accent); box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35); }
+    .col-build:hover .hub-col-action { background: var(--cyan); color: #02151d; border-color: var(--cyan); box-shadow: 0 8px 24px rgba(6, 182, 212, 0.35); }
+    .col-motion:hover .hub-col-action { background: var(--violet); color: #160424; border-color: var(--violet); box-shadow: 0 8px 24px rgba(168, 85, 247, 0.35); }
+    .col-convert:hover .hub-col-action { background: var(--amber); color: #211300; border-color: var(--amber); box-shadow: 0 8px 24px rgba(245, 158, 11, 0.35); }
+    .col-report:hover .hub-col-action { background: var(--rose); color: #220309; border-color: var(--rose); box-shadow: 0 8px 24px rgba(244, 63, 94, 0.35); }
 
     /* Wizard Container & Step Deck */
     .wizard-deck {
       display: none;
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow-y: auto;
+      padding: 40px 24px 80px;
+      background: #060a14;
+      z-index: 120;
       flex-direction: column;
-      gap: 22px;
-      max-width: 900px;
-      margin: 0 auto;
-      width: 100%;
+      align-items: center;
+      justify-content: flex-start;
     }
 
     .wizard-topbar {
@@ -1957,8 +1993,11 @@ export function generateStudioHtml(initialFile?: string): string {
       align-items: center;
       justify-content: space-between;
       gap: 16px;
-      padding-bottom: 16px;
+      padding-bottom: 20px;
       border-bottom: 1px solid var(--border);
+      max-width: 900px;
+      width: 100%;
+      margin: 0 auto 24px;
     }
 
     .btn-wizard-back {
@@ -2179,47 +2218,25 @@ export function generateStudioHtml(initialFile?: string): string {
 </head>
 <body>
 
-  <!-- Top Header Deck -->
-  <header>
+  <!-- Top Header Deck (Visible only in sub-workspaces, hidden on Hub start page) -->
+  <header id="studio-header" style="display: none;">
     <div style="display: flex; align-items: center; gap: 12px;">
+      <button class="btn-header" onclick="switchTab('hub')" title="Zurück zum Hauptmenü (5 Bereiche)">
+        <i class="fa-solid fa-arrow-left"></i>
+        <span>Hauptmenü</span>
+      </button>
+
       <div class="brand">
         <div class="brand-icon"><i class="fa-solid fa-frog"></i></div>
         <span>TOAD Studio</span>
         <span class="brand-badge">v1.2</span>
       </div>
 
-      <button class="btn-header" id="btn-toggle-sidebar" onclick="toggleSidebar()" title="Dateibaum ein-/ausblenden (mehr Platz für Arbeitsbereich)">
+      <button class="btn-header" id="btn-toggle-sidebar" onclick="toggleSidebar()" title="Dateibaum ein-/ausblenden">
         <i class="fa-solid fa-folder-tree" id="sidebar-toggle-icon"></i>
         <span>Dateibaum</span>
       </button>
     </div>
-
-    <nav>
-      <button class="nav-btn active" id="nav-btn-hub" onclick="switchTab('hub')">
-        <i class="fa-solid fa-compass"></i>
-        <span>Command Builder</span>
-      </button>
-      <button class="nav-btn" id="nav-btn-graphic" onclick="switchTab('graphic')">
-        <i class="fa-solid fa-image"></i>
-        <span>Grafik &amp; Build</span>
-      </button>
-      <button class="nav-btn" id="nav-btn-animation" onclick="switchTab('animation')">
-        <i class="fa-solid fa-film"></i>
-        <span>Animation</span>
-      </button>
-      <button class="nav-btn" id="nav-btn-bg-remover" onclick="switchTab('bg-remover')">
-        <i class="fa-solid fa-wand-magic-sparkles"></i>
-        <span>Freistellen</span>
-      </button>
-      <button class="nav-btn" id="nav-btn-convert" onclick="switchTab('convert')">
-        <i class="fa-solid fa-arrows-rotate"></i>
-        <span>Konvertieren</span>
-      </button>
-      <button class="nav-btn" id="nav-btn-report" onclick="switchTab('report')">
-        <i class="fa-solid fa-chart-simple"></i>
-        <span>Qualitäts-Audit</span>
-      </button>
-    </nav>
 
     <div class="header-actions">
       <button class="btn-header" onclick="openInitModal()" title="Neues .toad Design anlegen">
@@ -2245,7 +2262,7 @@ export function generateStudioHtml(initialFile?: string): string {
   <div class="app-body">
 
     <!-- Unified Collapsible Left Sidebar (Available in Graphic, Animation, Report) -->
-    <aside class="sidebar" id="global-sidebar">
+    <aside class="sidebar" id="global-sidebar" style="display: none;">
       <div class="sidebar-header">
         <span class="sidebar-title"><i class="fa-solid fa-folder-tree"></i> Dateibaum</span>
         <button class="btn-secondary" style="padding: 3px 8px; font-size: 11px;" onclick="loadFiles()">
@@ -2263,135 +2280,154 @@ export function generateStudioHtml(initialFile?: string): string {
       </div>
     </aside>
 
-    <main class="content">
+    <main class="content" style="padding: 0; margin: 0; width: 100vw; height: 100vh; overflow: hidden;">
 
-      <!-- Tab 0: Command Builder Hub -->
+      <!-- Tab 0: Command Builder Hub (5 Full-Height Vertical Columns) -->
       <div class="tab-view active" id="tab-hub">
-        <div class="hub-viewport">
-          <div class="hub-container">
-            
-            <!-- MAIN MENU: 5 Vertical Category Columns -->
-            <div id="hub-main-menu">
-              <div class="hub-header-wrap">
-                <div class="hub-badge"><i class="fa-solid fa-compass"></i> Interaktiver Command Builder</div>
-                <h1 class="hub-title">Was möchtest du heute tun?</h1>
-                <p class="hub-subtitle">
-                  Wähle einen der 5 Bereiche. Der Assistent führt dich Schritt für Schritt zum schlüsselfertigen Terminal-Befehl – mit Direkt-Ausführung im CMD oder Copy &amp; Paste.
-                </p>
-              </div>
-
-              <div class="hub-cards-grid">
-                <!-- Card 1: Freistellen -->
-                <div class="hub-card card-bgr" onclick="openWizard('bgr')">
-                  <div class="hub-card-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
-                  <span class="hub-card-cmd">toad remove-bg</span>
-                  <div class="hub-card-title">Freistellen</div>
-                  <div class="hub-card-desc">Lokale KI-Hintergrundentfernung für Bilder &amp; Bilderserien ohne Cloud.</div>
-                  <ul class="hub-card-features">
-                    <li><i class="fa-solid fa-check"></i> Schnell, Standard &amp; DYB</li>
-                    <li><i class="fa-solid fa-check"></i> Einzelne Bilder &amp; ganze Ordner</li>
-                    <li><i class="fa-solid fa-check"></i> Verlustfreies PNG oder WebP</li>
-                    <li><i class="fa-solid fa-check"></i> Automatisches Speichern</li>
-                  </ul>
-                  <div class="hub-card-action">
-                    <span>Assistent starten</span>
-                    <i class="fa-solid fa-arrow-right"></i>
-                  </div>
-                </div>
-
-                <!-- Card 2: Grafik & Build -->
-                <div class="hub-card card-build" onclick="openWizard('build')">
-                  <div class="hub-card-icon"><i class="fa-solid fa-image"></i></div>
-                  <span class="hub-card-cmd">toad build</span>
-                  <div class="hub-card-title">Grafik &amp; Build</div>
-                  <div class="hub-card-desc">Kompiliere deklarative .toad Layouts in gestochen scharfe Grafiken.</div>
-                  <ul class="hub-card-features">
-                    <li><i class="fa-solid fa-check"></i> PNG, WebP, JPG, PSD</li>
-                    <li><i class="fa-solid fa-check"></i> Alle Formate auf einmal (-f all)</li>
-                    <li><i class="fa-solid fa-check"></i> Skalierung 1x, 2x, 4x Retina</li>
-                    <li><i class="fa-solid fa-check"></i> Millisekunden-schnell</li>
-                  </ul>
-                  <div class="hub-card-action">
-                    <span>Assistent starten</span>
-                    <i class="fa-solid fa-arrow-right"></i>
-                  </div>
-                </div>
-
-                <!-- Card 3: Animation -->
-                <div class="hub-card card-motion" onclick="openWizard('motion')">
-                  <div class="hub-card-icon"><i class="fa-solid fa-film"></i></div>
-                  <span class="hub-card-cmd">toad motion</span>
-                  <div class="hub-card-title">Animation</div>
-                  <div class="hub-card-desc">Rendere flüssige Keyframe-Animationen aus .toadm Dateien.</div>
-                  <ul class="hub-card-features">
-                    <li><i class="fa-solid fa-check"></i> MP4, WebM, GIF, Frames</li>
-                    <li><i class="fa-solid fa-check"></i> 30, 60 oder 120 FPS</li>
-                    <li><i class="fa-solid fa-check"></i> Hardware-Encoding &amp; Easing</li>
-                    <li><i class="fa-solid fa-check"></i> Live-Player Vorschau</li>
-                  </ul>
-                  <div class="hub-card-action">
-                    <span>Assistent starten</span>
-                    <i class="fa-solid fa-arrow-right"></i>
-                  </div>
-                </div>
-
-                <!-- Card 4: Konvertieren -->
-                <div class="hub-card card-convert" onclick="openWizard('convert')">
-                  <div class="hub-card-icon"><i class="fa-solid fa-arrows-rotate"></i></div>
-                  <span class="hub-card-cmd">toad convert</span>
-                  <div class="hub-card-title">Konvertieren</div>
-                  <div class="hub-card-desc">Universeller Bildkonverter, Skalierer und Photoshop-Importer.</div>
-                  <ul class="hub-card-features">
-                    <li><i class="fa-solid fa-check"></i> WebP, AVIF, PNG, SVG, PDF</li>
-                    <li><i class="fa-solid fa-check"></i> PSD zu .toad Code &amp; Assets</li>
-                    <li><i class="fa-solid fa-check"></i> Freie Zielskalierung (px / mult)</li>
-                    <li><i class="fa-solid fa-check"></i> Intelligente Web-Kompression</li>
-                  </ul>
-                  <div class="hub-card-action">
-                    <span>Assistent starten</span>
-                    <i class="fa-solid fa-arrow-right"></i>
-                  </div>
-                </div>
-
-                <!-- Card 5: Qualitäts-Audit -->
-                <div class="hub-card card-report" onclick="openWizard('report')">
-                  <div class="hub-card-icon"><i class="fa-solid fa-chart-simple"></i></div>
-                  <span class="hub-card-cmd">toad report</span>
-                  <div class="hub-card-title">Qualitäts-Audit</div>
-                  <div class="hub-card-desc">Tiefenanalyse für Barrierefreiheit, Kontraste &amp; Anti-AI-Slop.</div>
-                  <ul class="hub-card-features">
-                    <li><i class="fa-solid fa-check"></i> WCAG 2.2 Farbkontraste</li>
-                    <li><i class="fa-solid fa-check"></i> 13 TOAD-Syntaxregeln Check</li>
-                    <li><i class="fa-solid fa-check"></i> Anti-AI-Slop Heuristiken</li>
-                    <li><i class="fa-solid fa-check"></i> 1-Klick Auto-Reparatur (--fixes)</li>
-                  </ul>
-                  <div class="hub-card-action">
-                    <span>Assistent starten</span>
-                    <i class="fa-solid fa-arrow-right"></i>
-                  </div>
-                </div>
+        <!-- MAIN MENU: 5 Full-Height Vertical Columns -->
+        <div id="hub-main-menu" class="hub-fullscreen-columns">
+          <!-- Column 1: Freistellen -->
+          <div class="hub-col col-bgr" onclick="openWizard('bgr')">
+            <div class="hub-col-top">
+              <span class="hub-col-idx">01 // TOAD KI</span>
+              <span class="hub-col-cmd">toad remove-bg</span>
+            </div>
+            <div class="hub-col-body">
+              <div class="hub-col-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+              <h2 class="hub-col-title">Freistellen</h2>
+              <p class="hub-col-desc">Lokale KI-Hintergrundentfernung für Bilder &amp; Bilderserien ohne Cloud.</p>
+              <ul class="hub-col-features">
+                <li><i class="fa-solid fa-check"></i> Schnell, Standard &amp; DYB</li>
+                <li><i class="fa-solid fa-check"></i> Einzelne Bilder &amp; ganze Ordner</li>
+                <li><i class="fa-solid fa-check"></i> Verlustfreies PNG oder WebP</li>
+                <li><i class="fa-solid fa-check"></i> Automatisches Speichern</li>
+              </ul>
+            </div>
+            <div class="hub-col-footer">
+              <div class="hub-col-action">
+                <span>Assistent starten</span>
+                <i class="fa-solid fa-arrow-right"></i>
               </div>
             </div>
-
-            <!-- INTERACTIVE WIZARD DECK -->
-            <div id="hub-wizard-deck" class="wizard-deck">
-              <div class="wizard-topbar">
-                <button type="button" class="btn-wizard-back" onclick="closeWizard()">
-                  <i class="fa-solid fa-arrow-left"></i>
-                  <span>Zurück zum Hauptmenü</span>
-                </button>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                  <span id="wizard-title-badge" class="hub-badge" style="margin-bottom: 0;">Assistent</span>
-                  <span id="wizard-header-title" style="font-weight: 700; font-size: 15px; color: var(--text);">Freistellen</span>
-                </div>
-                <div class="wizard-progress-bar" id="wizard-step-indicators"></div>
-              </div>
-
-              <!-- Wizard Dynamic Card Content -->
-              <div class="wizard-card" id="wizard-card-body"></div>
-            </div>
-
           </div>
+
+          <!-- Column 2: Grafik & Build -->
+          <div class="hub-col col-build" onclick="openWizard('build')">
+            <div class="hub-col-top">
+              <span class="hub-col-idx">02 // ENGINE</span>
+              <span class="hub-col-cmd">toad build</span>
+            </div>
+            <div class="hub-col-body">
+              <div class="hub-col-icon"><i class="fa-solid fa-image"></i></div>
+              <h2 class="hub-col-title">Grafik &amp; Build</h2>
+              <p class="hub-col-desc">Kompiliere deklarative .toad Layouts in gestochen scharfe Grafiken.</p>
+              <ul class="hub-col-features">
+                <li><i class="fa-solid fa-check"></i> PNG, WebP, JPG, PSD</li>
+                <li><i class="fa-solid fa-check"></i> Alle Formate synchron (-f all)</li>
+                <li><i class="fa-solid fa-check"></i> Skalierung 1x, 2x, 4x Retina</li>
+                <li><i class="fa-solid fa-check"></i> Millisekunden-schnell</li>
+              </ul>
+            </div>
+            <div class="hub-col-footer">
+              <div class="hub-col-action">
+                <span>Assistent starten</span>
+                <i class="fa-solid fa-arrow-right"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- Column 3: Animation -->
+          <div class="hub-col col-motion" onclick="openWizard('motion')">
+            <div class="hub-col-top">
+              <span class="hub-col-idx">03 // MOTION</span>
+              <span class="hub-col-cmd">toad motion</span>
+            </div>
+            <div class="hub-col-body">
+              <div class="hub-col-icon"><i class="fa-solid fa-film"></i></div>
+              <h2 class="hub-col-title">Animation</h2>
+              <p class="hub-col-desc">Rendere flüssige Keyframe-Animationen aus .toadm Dateien.</p>
+              <ul class="hub-col-features">
+                <li><i class="fa-solid fa-check"></i> MP4, WebM, GIF, Frames</li>
+                <li><i class="fa-solid fa-check"></i> 30, 60 oder 120 FPS</li>
+                <li><i class="fa-solid fa-check"></i> Hardware-Encoding &amp; Easing</li>
+                <li><i class="fa-solid fa-check"></i> Live-Player Vorschau</li>
+              </ul>
+            </div>
+            <div class="hub-col-footer">
+              <div class="hub-col-action">
+                <span>Assistent starten</span>
+                <i class="fa-solid fa-arrow-right"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- Column 4: Konvertieren -->
+          <div class="hub-col col-convert" onclick="openWizard('convert')">
+            <div class="hub-col-top">
+              <span class="hub-col-idx">04 // MEDIA</span>
+              <span class="hub-col-cmd">toad convert</span>
+            </div>
+            <div class="hub-col-body">
+              <div class="hub-col-icon"><i class="fa-solid fa-arrows-rotate"></i></div>
+              <h2 class="hub-col-title">Konvertieren</h2>
+              <p class="hub-col-desc">Universeller Bildkonverter, Skalierer und Photoshop-Importer.</p>
+              <ul class="hub-col-features">
+                <li><i class="fa-solid fa-check"></i> WebP, AVIF, PNG, SVG, PDF</li>
+                <li><i class="fa-solid fa-check"></i> PSD zu .toad Code &amp; Assets</li>
+                <li><i class="fa-solid fa-check"></i> Freie Zielskalierung (px / mult)</li>
+                <li><i class="fa-solid fa-check"></i> Intelligente Web-Kompression</li>
+              </ul>
+            </div>
+            <div class="hub-col-footer">
+              <div class="hub-col-action">
+                <span>Assistent starten</span>
+                <i class="fa-solid fa-arrow-right"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- Column 5: Qualitäts-Audit -->
+          <div class="hub-col col-report" onclick="openWizard('report')">
+            <div class="hub-col-top">
+              <span class="hub-col-idx">05 // AUDIT</span>
+              <span class="hub-col-cmd">toad report</span>
+            </div>
+            <div class="hub-col-body">
+              <div class="hub-col-icon"><i class="fa-solid fa-chart-simple"></i></div>
+              <h2 class="hub-col-title">Qualitäts-Audit</h2>
+              <p class="hub-col-desc">Tiefenanalyse für Barrierefreiheit, Kontraste &amp; Anti-AI-Slop.</p>
+              <ul class="hub-col-features">
+                <li><i class="fa-solid fa-check"></i> WCAG 2.2 Farbkontraste</li>
+                <li><i class="fa-solid fa-check"></i> 13 TOAD-Syntaxregeln Check</li>
+                <li><i class="fa-solid fa-check"></i> Anti-AI-Slop Heuristiken</li>
+                <li><i class="fa-solid fa-check"></i> 1-Klick Auto-Reparatur (--fixes)</li>
+              </ul>
+            </div>
+            <div class="hub-col-footer">
+              <div class="hub-col-action">
+                <span>Assistent starten</span>
+                <i class="fa-solid fa-arrow-right"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- INTERACTIVE WIZARD DECK -->
+        <div id="hub-wizard-deck" class="wizard-deck">
+          <div class="wizard-topbar">
+            <button type="button" class="btn-wizard-back" onclick="closeWizard()">
+              <i class="fa-solid fa-arrow-left"></i>
+              <span>Zurück zur Übersicht</span>
+            </button>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span id="wizard-title-badge" class="hub-col-cmd" style="margin: 0;">Assistent</span>
+              <span id="wizard-header-title" style="font-weight: 700; font-size: 15px; color: var(--text);">Freistellen</span>
+            </div>
+            <div class="wizard-progress-bar" id="wizard-step-indicators"></div>
+          </div>
+
+          <!-- Wizard Dynamic Card Content -->
+          <div class="wizard-card" id="wizard-card-body" style="max-width: 900px; width: 100%; margin: 0 auto;"></div>
         </div>
       </div>
 
@@ -3470,10 +3506,17 @@ export function generateStudioHtml(initialFile?: string): string {
       renderWizardStep();
     }
 
+    function toPosix(p) {
+      if (!p) return '';
+      return p.split('\\\\').join('/');
+    }
+
     function closeWizard() {
       currentWizard = null;
-      document.getElementById('hub-wizard-deck').style.display = 'none';
-      document.getElementById('hub-main-menu').style.display = 'block';
+      var deck = document.getElementById('hub-wizard-deck');
+      if (deck) deck.style.display = 'none';
+      var menu = document.getElementById('hub-main-menu');
+      if (menu) menu.style.display = 'flex';
     }
 
     function nextWizardStep() {
@@ -3494,29 +3537,29 @@ export function generateStudioHtml(initialFile?: string): string {
     function getGeneratedCommand(type) {
       if (type === 'bgr') {
         var d = wizardData.bgr;
-        var src = (d.sourcePath || './bilder').replace(/\\/g, '/');
-        var tgt = (d.targetDir || './freigestellt').replace(/\\/g, '/');
+        var src = toPosix(d.sourcePath || './bilder');
+        var tgt = toPosix(d.targetDir || './freigestellt');
         var flag = d.preset === 'dyb' ? ' --dyb' : (d.preset === 'fast' ? ' --fast' : '');
         return 'toad remove-bg "' + src + '" "' + tgt + '"' + flag + ' -f ' + d.format;
       }
       if (type === 'build') {
         var d = wizardData.build;
-        var f = (d.file || (allFiles.find(function(x) { return x.path.endsWith('.toad'); }) || {}).path || 'design.toad').replace(/\\/g, '/');
+        var f = toPosix(d.file || (allFiles.find(function(x) { return x.path.endsWith('.toad'); }) || {}).path || 'design.toad');
         return 'toad build "' + f + '" -f ' + d.format + ' -s ' + d.scale;
       }
       if (type === 'motion') {
         var d = wizardData.motion;
-        var f = (d.file || (allFiles.find(function(x) { return x.path.endsWith('.toadm'); }) || {}).path || 'animation.toadm').replace(/\\/g, '/');
+        var f = toPosix(d.file || (allFiles.find(function(x) { return x.path.endsWith('.toadm'); }) || {}).path || 'animation.toadm');
         return 'toad motion "' + f + '" -f ' + d.format + ' --fps ' + d.fps;
       }
       if (type === 'convert') {
         var d = wizardData.convert;
-        var f = (d.file || 'bild.png').replace(/\\/g, '/');
+        var f = toPosix(d.file || 'bild.png');
         return 'toad convert "' + f + '" -f ' + d.format + ' -q ' + d.quality;
       }
       if (type === 'report') {
         var d = wizardData.report;
-        var f = (d.file || (allFiles.find(function(x) { return x.path.endsWith('.toad'); }) || {}).path || 'design.toad').replace(/\\/g, '/');
+        var f = toPosix(d.file || (allFiles.find(function(x) { return x.path.endsWith('.toad'); }) || {}).path || 'design.toad');
         if (d.mode === 'fixes') return 'toad report "' + f + '" --fixes';
         if (d.mode === 'slop') return 'toad report "' + f + '" --slop-only';
         if (d.mode === 'strict') return 'toad report "' + f + '" --strict';
@@ -3667,17 +3710,17 @@ export function generateStudioHtml(initialFile?: string): string {
               '<div class="wizard-step-subtitle">Ziehe einzelne Bilder, eine Bilderserie oder einen ganzen Ordner hinein – oder wähle sie per Dialog oder Pfad aus.</div>' +
             '</div>' +
 
-            '<div class="dropzone" id="wiz-bgr-dropzone" style="padding: 24px;" onclick="document.getElementById(\'wiz-bgr-file-input\').click()">' +
+            '<div class="dropzone" id="wiz-bgr-dropzone" style="padding: 24px;" onclick="triggerWizBgrFileInput()">' +
               '<input type="file" id="wiz-bgr-file-input" style="display:none;" accept="image/*" multiple onchange="onWizBgrFiles(this.files)">' +
               '<input type="file" id="wiz-bgr-folder-input" style="display:none;" webkitdirectory mozdirectory directory multiple onchange="onWizBgrFolder(this.files)">' +
               '<i class="fa-solid fa-cloud-arrow-up dropzone-icon" style="font-size: 32px;"></i>' +
               '<div style="font-size: 14px; font-weight: 700; color: var(--text); margin-top: 6px;">Bilder oder Ordner hier ablegen</div>' +
               '<div style="font-size: 11px; color: var(--text-dim); margin-top: 4px;">Unterstützt PNG, JPG, WebP, AVIF, TIFF</div>' +
               '<div style="display: flex; gap: 8px; margin-top: 12px;" onclick="event.stopPropagation()">' +
-                '<button type="button" class="btn-secondary" onclick="document.getElementById(\'wiz-bgr-file-input\').click()">' +
+                '<button type="button" class="btn-secondary" onclick="triggerWizBgrFileInput()">' +
                   '<i class="fa-solid fa-images"></i> Einzelne Bilder wählen' +
                 '</button>' +
-                '<button type="button" class="btn-secondary" onclick="document.getElementById(\'wiz-bgr-folder-input\').click()">' +
+                '<button type="button" class="btn-secondary" onclick="triggerWizBgrFolderInput()">' +
                   '<i class="fa-solid fa-folder-open"></i> Ganzen Ordner wählen' +
                 '</button>' +
               '</div>' +
@@ -3716,7 +3759,7 @@ export function generateStudioHtml(initialFile?: string): string {
               '<div class="wizard-step-subtitle">Wähle die passende KI-Präzision für deine Motive.</div>' +
             '</div>' +
             '<div class="wizard-tiles-grid">' +
-              '<div class="wizard-tile ' + (wizardData.bgr.preset === 'fast' ? 'active' : '') + '" onclick="selectWizPreset(\'fast\')">' +
+              '<div class="wizard-tile ' + (wizardData.bgr.preset === 'fast' ? 'active' : '') + '" data-val="fast" onclick="selectWizPreset(this.dataset.val)">' +
                 '<div class="wizard-tile-header">' +
                   '<i class="fa-solid fa-bolt wizard-tile-icon" style="color: var(--amber);"></i>' +
                   '<span class="wizard-tile-title">Schnell</span>' +
@@ -3725,7 +3768,7 @@ export function generateStudioHtml(initialFile?: string): string {
                 '<span style="font-size: 10px; font-family: var(--font-mono); color: var(--cyan); margin-top: auto;">--fast</span>' +
               '</div>' +
 
-              '<div class="wizard-tile ' + (wizardData.bgr.preset === 'standard' ? 'active' : '') + '" onclick="selectWizPreset(\'standard\')">' +
+              '<div class="wizard-tile ' + (wizardData.bgr.preset === 'standard' ? 'active' : '') + '" data-val="standard" onclick="selectWizPreset(this.dataset.val)">' +
                 '<div class="wizard-tile-header">' +
                   '<i class="fa-solid fa-crosshairs wizard-tile-icon" style="color: var(--accent);"></i>' +
                   '<span class="wizard-tile-title">Standard</span>' +
@@ -3734,7 +3777,7 @@ export function generateStudioHtml(initialFile?: string): string {
                 '<span style="font-size: 10px; font-family: var(--font-mono); color: var(--accent); margin-top: auto;">Standard</span>' +
               '</div>' +
 
-              '<div class="wizard-tile ' + (wizardData.bgr.preset === 'dyb' ? 'active' : '') + '" onclick="selectWizPreset(\'dyb\')">' +
+              '<div class="wizard-tile ' + (wizardData.bgr.preset === 'dyb' ? 'active' : '') + '" data-val="dyb" onclick="selectWizPreset(this.dataset.val)">' +
                 '<div class="wizard-tile-header">' +
                   '<i class="fa-solid fa-gem wizard-tile-icon" style="color: var(--violet);"></i>' +
                   '<span class="wizard-tile-title">Höchste Präzision</span>' +
@@ -3762,7 +3805,7 @@ export function generateStudioHtml(initialFile?: string): string {
               '<div class="wizard-step-subtitle">Beide Formate unterstützen vollständige Alpha-Transparenz.</div>' +
             '</div>' +
             '<div class="wizard-tiles-grid" style="grid-template-columns: 1fr 1fr;">' +
-              '<div class="wizard-tile ' + (wizardData.bgr.format === 'png' ? 'active' : '') + '" onclick="selectWizFormat(\'png\')">' +
+              '<div class="wizard-tile ' + (wizardData.bgr.format === 'png' ? 'active' : '') + '" data-val="png" onclick="selectWizFormat(this.dataset.val)">' +
                 '<div class="wizard-tile-header">' +
                   '<i class="fa-solid fa-file-image wizard-tile-icon" style="color: var(--accent);"></i>' +
                   '<span class="wizard-tile-title">PNG (Verlustfrei)</span>' +
@@ -3770,7 +3813,7 @@ export function generateStudioHtml(initialFile?: string): string {
                 '<div class="wizard-tile-desc">Verlustfreie 8-Bit Alpha-Transparenz. Maximale Qualität für Print, Layouts &amp; Weiterbearbeitung.</div>' +
               '</div>' +
 
-              '<div class="wizard-tile ' + (wizardData.bgr.format === 'webp' ? 'active' : '') + '" onclick="selectWizFormat(\'webp\')">' +
+              '<div class="wizard-tile ' + (wizardData.bgr.format === 'webp' ? 'active' : '') + '" data-val="webp" onclick="selectWizFormat(this.dataset.val)">' +
                 '<div class="wizard-tile-header">' +
                   '<i class="fa-solid fa-globe wizard-tile-icon" style="color: var(--cyan);"></i>' +
                   '<span class="wizard-tile-title">WebP (Kompakt)</span>' +
@@ -3799,9 +3842,9 @@ export function generateStudioHtml(initialFile?: string): string {
             '<div style="display: flex; flex-direction: column; gap: 10px;">' +
               '<input type="text" class="input-control" id="wiz-bgr-target" value="' + wizardData.bgr.targetDir + '" oninput="wizardData.bgr.targetDir = this.value" placeholder="./freigestellt">' +
               '<div style="display: flex; gap: 8px;">' +
-                '<button type="button" class="btn-secondary" style="font-size: 11px; padding: 5px 10px;" onclick="setWizTargetDir(\'./freigestellt\')">./freigestellt</button>' +
-                '<button type="button" class="btn-secondary" style="font-size: 11px; padding: 5px 10px;" onclick="setWizTargetDir(\'./output\')">./output</button>' +
-                '<button type="button" class="btn-secondary" style="font-size: 11px; padding: 5px 10px;" onclick="setWizTargetDir(\'./cutouts\')">./cutouts</button>' +
+                '<button type="button" class="btn-secondary" style="font-size: 11px; padding: 5px 10px;" data-val="./freigestellt" onclick="setWizTargetDir(this.dataset.val)">./freigestellt</button>' +
+                '<button type="button" class="btn-secondary" style="font-size: 11px; padding: 5px 10px;" data-val="./output" onclick="setWizTargetDir(this.dataset.val)">./output</button>' +
+                '<button type="button" class="btn-secondary" style="font-size: 11px; padding: 5px 10px;" data-val="./cutouts" onclick="setWizTargetDir(this.dataset.val)">./cutouts</button>' +
               '</div>' +
             '</div>' +
 
@@ -3848,23 +3891,23 @@ export function generateStudioHtml(initialFile?: string): string {
               '<div class="wizard-step-subtitle">TOAD kann Rastergrafiken, Vektoren und native Photoshop-Dateien ausgeben.</div>' +
             '</div>' +
             '<div class="wizard-tiles-grid">' +
-              '<div class="wizard-tile ' + (wizardData.build.format === 'png' ? 'active' : '') + '" onclick="selectWizBuildFormat(\'png\')">' +
+              '<div class="wizard-tile ' + (wizardData.build.format === 'png' ? 'active' : '') + '" data-val="png" onclick="selectWizBuildFormat(this.dataset.val)">' +
                 '<div class="wizard-tile-header"><i class="fa-solid fa-file-image wizard-tile-icon"></i><span class="wizard-tile-title">PNG</span></div>' +
                 '<div class="wizard-tile-desc">Standard-Grafikformat mit Transparenz.</div>' +
               '</div>' +
-              '<div class="wizard-tile ' + (wizardData.build.format === 'webp' ? 'active' : '') + '" onclick="selectWizBuildFormat(\'webp\')">' +
+              '<div class="wizard-tile ' + (wizardData.build.format === 'webp' ? 'active' : '') + '" data-val="webp" onclick="selectWizBuildFormat(this.dataset.val)">' +
                 '<div class="wizard-tile-header"><i class="fa-solid fa-globe wizard-tile-icon" style="color: var(--cyan);"></i><span class="wizard-tile-title">WebP</span></div>' +
                 '<div class="wizard-tile-desc">Hochkomprimiert für Webseiten.</div>' +
               '</div>' +
-              '<div class="wizard-tile ' + (wizardData.build.format === 'jpg' ? 'active' : '') + '" onclick="selectWizBuildFormat(\'jpg\')">' +
+              '<div class="wizard-tile ' + (wizardData.build.format === 'jpg' ? 'active' : '') + '" data-val="jpg" onclick="selectWizBuildFormat(this.dataset.val)">' +
                 '<div class="wizard-tile-header"><i class="fa-solid fa-camera wizard-tile-icon" style="color: var(--amber);"></i><span class="wizard-tile-title">JPEG</span></div>' +
                 '<div class="wizard-tile-desc">Ideal für Fotocollagen ohne Alpha.</div>' +
               '</div>' +
-              '<div class="wizard-tile ' + (wizardData.build.format === 'psd' ? 'active' : '') + '" onclick="selectWizBuildFormat(\'psd\')">' +
+              '<div class="wizard-tile ' + (wizardData.build.format === 'psd' ? 'active' : '') + '" data-val="psd" onclick="selectWizBuildFormat(this.dataset.val)">' +
                 '<div class="wizard-tile-header"><i class="fa-solid fa-layer-group wizard-tile-icon" style="color: var(--violet);"></i><span class="wizard-tile-title">PSD (Photoshop)</span></div>' +
                 '<div class="wizard-tile-desc">Mit echten bearbeitbaren Ebenen.</div>' +
               '</div>' +
-              '<div class="wizard-tile ' + (wizardData.build.format === 'all' ? 'active' : '') + '" onclick="selectWizBuildFormat(\'all\')">' +
+              '<div class="wizard-tile ' + (wizardData.build.format === 'all' ? 'active' : '') + '" data-val="all" onclick="selectWizBuildFormat(this.dataset.val)">' +
                 '<div class="wizard-tile-header"><i class="fa-solid fa-boxes-stacked wizard-tile-icon" style="color: var(--rose);"></i><span class="wizard-tile-title">Alle Formate</span></div>' +
                 '<div class="wizard-tile-desc">PNG, WebP, JPEG und PSD synchron.</div>' +
               '</div>' +
@@ -3882,15 +3925,15 @@ export function generateStudioHtml(initialFile?: string): string {
               '<div class="wizard-step-subtitle">Skaliere verlustfrei mit sub-pixelgenauer Vektorberechnung.</div>' +
             '</div>' +
             '<div class="wizard-tiles-grid" style="grid-template-columns: repeat(3, 1fr);">' +
-              '<div class="wizard-tile ' + (wizardData.build.scale === '1' ? 'active' : '') + '" onclick="selectWizBuildScale(\'1\')">' +
+              '<div class="wizard-tile ' + (wizardData.build.scale === '1' ? 'active' : '') + '" data-val="1" onclick="selectWizBuildScale(this.dataset.val)">' +
                 '<div class="wizard-tile-header"><span class="wizard-tile-title">1x (Original)</span></div>' +
                 '<div class="wizard-tile-desc">Standard 72 DPI für Bildschirmdarstellung.</div>' +
               '</div>' +
-              '<div class="wizard-tile ' + (wizardData.build.scale === '2' ? 'active' : '') + '" onclick="selectWizBuildScale(\'2\')">' +
+              '<div class="wizard-tile ' + (wizardData.build.scale === '2' ? 'active' : '') + '" data-val="2" onclick="selectWizBuildScale(this.dataset.val)">' +
                 '<div class="wizard-tile-header"><span class="wizard-tile-title">2x (Retina)</span></div>' +
                 '<div class="wizard-tile-desc">Doppelte Auflösung für hochauflösende Displays.</div>' +
               '</div>' +
-              '<div class="wizard-tile ' + (wizardData.build.scale === '4' ? 'active' : '') + '" onclick="selectWizBuildScale(\'4\')">' +
+              '<div class="wizard-tile ' + (wizardData.build.scale === '4' ? 'active' : '') + '" data-val="4" onclick="selectWizBuildScale(this.dataset.val)">' +
                 '<div class="wizard-tile-header"><span class="wizard-tile-title">4x (Ultra HD / Print)</span></div>' +
                 '<div class="wizard-tile-desc">Vierfache Auflösung (300 DPI) für Posterdruck.</div>' +
               '</div>' +
@@ -3932,19 +3975,19 @@ export function generateStudioHtml(initialFile?: string): string {
               '<div class="wizard-step-subtitle">Wähle das Format für deinen Einsatzzweck.</div>' +
             '</div>' +
             '<div class="wizard-tiles-grid">' +
-              '<div class="wizard-tile ' + (wizardData.motion.format === 'mp4' ? 'active' : '') + '" onclick="selectWizMotionFormat(\'mp4\')">' +
+              '<div class="wizard-tile ' + (wizardData.motion.format === 'mp4' ? 'active' : '') + '" data-val="mp4" onclick="selectWizMotionFormat(this.dataset.val)">' +
                 '<div class="wizard-tile-header"><i class="fa-solid fa-video wizard-tile-icon"></i><span class="wizard-tile-title">MP4 (H.264)</span></div>' +
                 '<div class="wizard-tile-desc">Universell kompatibel für alle Plattformen und Player.</div>' +
               '</div>' +
-              '<div class="wizard-tile ' + (wizardData.motion.format === 'webm' ? 'active' : '') + '" onclick="selectWizMotionFormat(\'webm\')">' +
+              '<div class="wizard-tile ' + (wizardData.motion.format === 'webm' ? 'active' : '') + '" data-val="webm" onclick="selectWizMotionFormat(this.dataset.val)">' +
                 '<div class="wizard-tile-header"><i class="fa-solid fa-film wizard-tile-icon" style="color: var(--cyan);"></i><span class="wizard-tile-title">WebM (VP9)</span></div>' +
                 '<div class="wizard-tile-desc">Schlank für Web-Integration mit Alpha-Kanal.</div>' +
               '</div>' +
-              '<div class="wizard-tile ' + (wizardData.motion.format === 'gif' ? 'active' : '') + '" onclick="selectWizMotionFormat(\'gif\')">' +
+              '<div class="wizard-tile ' + (wizardData.motion.format === 'gif' ? 'active' : '') + '" data-val="gif" onclick="selectWizMotionFormat(this.dataset.val)">' +
                 '<div class="wizard-tile-header"><i class="fa-solid fa-play wizard-tile-icon" style="color: var(--amber);"></i><span class="wizard-tile-title">GIF (Animiert)</span></div>' +
                 '<div class="wizard-tile-desc">Perfekt für Messenger, GitHub Readmes und Social.</div>' +
               '</div>' +
-              '<div class="wizard-tile ' + (wizardData.motion.format === 'frames' ? 'active' : '') + '" onclick="selectWizMotionFormat(\'frames\')">' +
+              '<div class="wizard-tile ' + (wizardData.motion.format === 'frames' ? 'active' : '') + '" data-val="frames" onclick="selectWizMotionFormat(this.dataset.val)">' +
                 '<div class="wizard-tile-header"><i class="fa-solid fa-images wizard-tile-icon" style="color: var(--violet);"></i><span class="wizard-tile-title">Frames (PNG)</span></div>' +
                 '<div class="wizard-tile-desc">Exportiert jedes Frame als einzelnes PNG.</div>' +
               '</div>' +
@@ -3962,15 +4005,15 @@ export function generateStudioHtml(initialFile?: string): string {
               '<div class="wizard-step-subtitle">Höhere Frameraten erzeugen ultra-flüssige Bewegungen.</div>' +
             '</div>' +
             '<div class="wizard-tiles-grid" style="grid-template-columns: repeat(3, 1fr);">' +
-              '<div class="wizard-tile ' + (wizardData.motion.fps === '30' ? 'active' : '') + '" onclick="selectWizMotionFps(\'30\')">' +
+              '<div class="wizard-tile ' + (wizardData.motion.fps === '30' ? 'active' : '') + '" data-val="30" onclick="selectWizMotionFps(this.dataset.val)">' +
                 '<div class="wizard-tile-header"><span class="wizard-tile-title">30 FPS</span></div>' +
                 '<div class="wizard-tile-desc">Standard für Web &amp; kompakte Dateigrößen.</div>' +
               '</div>' +
-              '<div class="wizard-tile ' + (wizardData.motion.fps === '60' ? 'active' : '') + '" onclick="selectWizMotionFps(\'60\')">' +
+              '<div class="wizard-tile ' + (wizardData.motion.fps === '60' ? 'active' : '') + '" data-val="60" onclick="selectWizMotionFps(this.dataset.val)">' +
                 '<div class="wizard-tile-header"><span class="wizard-tile-title">60 FPS (Flüssig)</span></div>' +
                 '<div class="wizard-tile-desc">Empfohlen für moderne UI- &amp; Motion-Designs.</div>' +
               '</div>' +
-              '<div class="wizard-tile ' + (wizardData.motion.fps === '120' ? 'active' : '') + '" onclick="selectWizMotionFps(\'120\')">' +
+              '<div class="wizard-tile ' + (wizardData.motion.fps === '120' ? 'active' : '') + '" data-val="120" onclick="selectWizMotionFps(this.dataset.val)">' +
                 '<div class="wizard-tile-header"><span class="wizard-tile-title">120 FPS</span></div>' +
                 '<div class="wizard-tile-desc">Ultra-Smooth für High-Refresh Displays.</div>' +
               '</div>' +
@@ -3991,13 +4034,13 @@ export function generateStudioHtml(initialFile?: string): string {
               '<div class="wizard-step-title">Was möchtest du konvertieren?</div>' +
               '<div class="wizard-step-subtitle">Ziehe ein Bild oder eine Photoshop PSD-Datei hinein oder wähle sie aus.</div>' +
             '</div>' +
-            '<div class="dropzone" id="wiz-convert-dropzone" style="padding: 24px;" onclick="document.getElementById(\'wiz-convert-input\').click()">' +
+            '<div class="dropzone" id="wiz-convert-dropzone" style="padding: 24px;" onclick="triggerWizConvertInput()">' +
               '<input type="file" id="wiz-convert-input" style="display:none;" accept="image/*,.psd,.svg,.pdf,.ico,.avif" onchange="onWizConvertFile(this.files[0])">' +
               '<i class="fa-solid fa-cloud-arrow-up dropzone-icon" style="font-size: 32px;"></i>' +
               '<div style="font-size: 14px; font-weight: 700; color: var(--text); margin-top: 6px;">Bild oder PSD hier ablegen</div>' +
               '<div style="font-size: 11px; color: var(--text-dim); margin-top: 4px;">WebP, JPG, PNG, AVIF, SVG, PSD, PDF, ICO</div>' +
               '<div style="margin-top: 12px;" onclick="event.stopPropagation()">' +
-                '<button type="button" class="btn-secondary" onclick="document.getElementById(\'wiz-convert-input\').click()">' +
+                '<button type="button" class="btn-secondary" onclick="triggerWizConvertInput()">' +
                   '<i class="fa-solid fa-file"></i> Datei auswählen' +
                 '</button>' +
               '</div>' +
@@ -4024,27 +4067,27 @@ export function generateStudioHtml(initialFile?: string): string {
               '<div class="wizard-step-subtitle">Wähle das gewünschte Format.</div>' +
             '</div>' +
             '<div class="wizard-tiles-grid">' +
-              '<div class="wizard-tile ' + (wizardData.convert.format === 'webp' ? 'active' : '') + '" onclick="selectWizConvertFormat(\'webp\')">' +
+              '<div class="wizard-tile ' + (wizardData.convert.format === 'webp' ? 'active' : '') + '" data-val="webp" onclick="selectWizConvertFormat(this.dataset.val)">' +
                 '<div class="wizard-tile-header"><i class="fa-solid fa-bolt wizard-tile-icon" style="color: var(--accent);"></i><span class="wizard-tile-title">WebP</span></div>' +
                 '<div class="wizard-tile-desc">Moderne Web-Kompression, bis zu 70% kleiner.</div>' +
               '</div>' +
-              '<div class="wizard-tile ' + (wizardData.convert.format === 'png' ? 'active' : '') + '" onclick="selectWizConvertFormat(\'png\')">' +
+              '<div class="wizard-tile ' + (wizardData.convert.format === 'png' ? 'active' : '') + '" data-val="png" onclick="selectWizConvertFormat(this.dataset.val)">' +
                 '<div class="wizard-tile-header"><i class="fa-solid fa-file-image wizard-tile-icon"></i><span class="wizard-tile-title">PNG</span></div>' +
                 '<div class="wizard-tile-desc">Verlustfrei mit 8-Bit Alpha-Transparenz.</div>' +
               '</div>' +
-              '<div class="wizard-tile ' + (wizardData.convert.format === 'jpg' ? 'active' : '') + '" onclick="selectWizConvertFormat(\'jpg\')">' +
+              '<div class="wizard-tile ' + (wizardData.convert.format === 'jpg' ? 'active' : '') + '" data-val="jpg" onclick="selectWizConvertFormat(this.dataset.val)">' +
                 '<div class="wizard-tile-header"><i class="fa-solid fa-camera wizard-tile-icon" style="color: var(--amber);"></i><span class="wizard-tile-title">JPEG</span></div>' +
                 '<div class="wizard-tile-desc">Universell für Web &amp; Fotoanzeige.</div>' +
               '</div>' +
-              '<div class="wizard-tile ' + (wizardData.convert.format === 'avif' ? 'active' : '') + '" onclick="selectWizConvertFormat(\'avif\')">' +
+              '<div class="wizard-tile ' + (wizardData.convert.format === 'avif' ? 'active' : '') + '" data-val="avif" onclick="selectWizConvertFormat(this.dataset.val)">' +
                 '<div class="wizard-tile-header"><i class="fa-solid fa-sparkles wizard-tile-icon" style="color: var(--cyan);"></i><span class="wizard-tile-title">AVIF</span></div>' +
                 '<div class="wizard-tile-desc">Next-Gen Ultra-Kompression für maximale Performance.</div>' +
               '</div>' +
-              '<div class="wizard-tile ' + (wizardData.convert.format === 'svg' ? 'active' : '') + '" onclick="selectWizConvertFormat(\'svg\')">' +
+              '<div class="wizard-tile ' + (wizardData.convert.format === 'svg' ? 'active' : '') + '" data-val="svg" onclick="selectWizConvertFormat(this.dataset.val)">' +
                 '<div class="wizard-tile-header"><i class="fa-solid fa-bezier-curve wizard-tile-icon" style="color: var(--violet);"></i><span class="wizard-tile-title">SVG</span></div>' +
                 '<div class="wizard-tile-desc">Skalierbare Vektorgrafik.</div>' +
               '</div>' +
-              '<div class="wizard-tile ' + (wizardData.convert.format === 'ico' ? 'active' : '') + '" onclick="selectWizConvertFormat(\'ico\')">' +
+              '<div class="wizard-tile ' + (wizardData.convert.format === 'ico' ? 'active' : '') + '" data-val="ico" onclick="selectWizConvertFormat(this.dataset.val)">' +
                 '<div class="wizard-tile-header"><i class="fa-solid fa-icons wizard-tile-icon"></i><span class="wizard-tile-title">Favicon (ICO)</span></div>' +
                 '<div class="wizard-tile-desc">Website-Icon in 16x16 bis 256x256.</div>' +
               '</div>' +
@@ -4062,19 +4105,19 @@ export function generateStudioHtml(initialFile?: string): string {
               '<div class="wizard-step-subtitle">Wähle die Balance zwischen Dateigröße und Schärfe.</div>' +
             '</div>' +
             '<div class="wizard-tiles-grid" style="grid-template-columns: repeat(2, 1fr);">' +
-              '<div class="wizard-tile ' + (wizardData.convert.quality === '80' ? 'active' : '') + '" onclick="selectWizConvertQuality(\'80\')">' +
+              '<div class="wizard-tile ' + (wizardData.convert.quality === '80' ? 'active' : '') + '" data-val="80" onclick="selectWizConvertQuality(this.dataset.val)">' +
                 '<div class="wizard-tile-header"><span class="wizard-tile-title">Web-Standard (80%)</span></div>' +
                 '<div class="wizard-tile-desc">Ausgezeichnete Balance für fast alle Einsätze.</div>' +
               '</div>' +
-              '<div class="wizard-tile ' + (wizardData.convert.quality === '92' ? 'active' : '') + '" onclick="selectWizConvertQuality(\'92\')">' +
+              '<div class="wizard-tile ' + (wizardData.convert.quality === '92' ? 'active' : '') + '" data-val="92" onclick="selectWizConvertQuality(this.dataset.val)">' +
                 '<div class="wizard-tile-header"><span class="wizard-tile-title">Hohe Qualität (92%)</span></div>' +
                 '<div class="wizard-tile-desc">Kaum sichtbare Kompression für Portfolios.</div>' +
               '</div>' +
-              '<div class="wizard-tile ' + (wizardData.convert.quality === '60' ? 'active' : '') + '" onclick="selectWizConvertQuality(\'60\')">' +
+              '<div class="wizard-tile ' + (wizardData.convert.quality === '60' ? 'active' : '') + '" data-val="60" onclick="selectWizConvertQuality(this.dataset.val)">' +
                 '<div class="wizard-tile-header"><span class="wizard-tile-title">Kompakt (60%)</span></div>' +
                 '<div class="wizard-tile-desc">Minimale Dateigröße für schnelles Laden.</div>' +
               '</div>' +
-              '<div class="wizard-tile ' + (wizardData.convert.quality === '100' ? 'active' : '') + '" onclick="selectWizConvertQuality(\'100\')">' +
+              '<div class="wizard-tile ' + (wizardData.convert.quality === '100' ? 'active' : '') + '" data-val="100" onclick="selectWizConvertQuality(this.dataset.val)">' +
                 '<div class="wizard-tile-header"><span class="wizard-tile-title">Maximal (100%)</span></div>' +
                 '<div class="wizard-tile-desc">Verlustfrei ohne Qualitätsabstriche.</div>' +
               '</div>' +
@@ -4116,19 +4159,19 @@ export function generateStudioHtml(initialFile?: string): string {
               '<div class="wizard-step-subtitle">Wähle die gewünschte Analysetiefe.</div>' +
             '</div>' +
             '<div class="wizard-tiles-grid" style="grid-template-columns: repeat(2, 1fr);">' +
-              '<div class="wizard-tile ' + (wizardData.report.mode === 'fixes' ? 'active' : '') + '" onclick="selectWizReportMode(\'fixes\')">' +
+              '<div class="wizard-tile ' + (wizardData.report.mode === 'fixes' ? 'active' : '') + '" data-val="fixes" onclick="selectWizReportMode(this.dataset.val)">' +
                 '<div class="wizard-tile-header"><i class="fa-solid fa-wrench wizard-tile-icon" style="color: var(--accent);"></i><span class="wizard-tile-title">Mit Auto-Fixes (--fixes)</span></div>' +
                 '<div class="wizard-tile-desc">Zeigt direkte Lösungsvorschläge und Korrekturen für jeden Befund.</div>' +
               '</div>' +
-              '<div class="wizard-tile ' + (wizardData.report.mode === 'standard' ? 'active' : '') + '" onclick="selectWizReportMode(\'standard\')">' +
+              '<div class="wizard-tile ' + (wizardData.report.mode === 'standard' ? 'active' : '') + '" data-val="standard" onclick="selectWizReportMode(this.dataset.val)">' +
                 '<div class="wizard-tile-header"><i class="fa-solid fa-chart-simple wizard-tile-icon" style="color: var(--cyan);"></i><span class="wizard-tile-title">Standard-Audit</span></div>' +
                 '<div class="wizard-tile-desc">Vollständiger Gesamtbericht über WCAG, Typo und Layout.</div>' +
               '</div>' +
-              '<div class="wizard-tile ' + (wizardData.report.mode === 'slop' ? 'active' : '') + '" onclick="selectWizReportMode(\'slop\')">' +
+              '<div class="wizard-tile ' + (wizardData.report.mode === 'slop' ? 'active' : '') + '" data-val="slop" onclick="selectWizReportMode(this.dataset.val)">' +
                 '<div class="wizard-tile-header"><i class="fa-solid fa-shield-halved wizard-tile-icon" style="color: var(--amber);"></i><span class="wizard-tile-title">Anti-AI-Slop Only (--slop-only)</span></div>' +
                 '<div class="wizard-tile-desc">Fokus ausschließlich auf generische KI-Slop-Muster und Kitsch.</div>' +
               '</div>' +
-              '<div class="wizard-tile ' + (wizardData.report.mode === 'strict' ? 'active' : '') + '" onclick="selectWizReportMode(\'strict\')">' +
+              '<div class="wizard-tile ' + (wizardData.report.mode === 'strict' ? 'active' : '') + '" data-val="strict" onclick="selectWizReportMode(this.dataset.val)">' +
                 '<div class="wizard-tile-header"><i class="fa-solid fa-triangle-exclamation wizard-tile-icon" style="color: var(--rose);"></i><span class="wizard-tile-title">Strenge Prüfung (--strict)</span></div>' +
                 '<div class="wizard-tile-desc">Bricht mit Fehlercode ab, falls auch nur eine Warnung existiert.</div>' +
               '</div>' +
@@ -4183,6 +4226,19 @@ export function generateStudioHtml(initialFile?: string): string {
       renderWizardStep();
     }
 
+    function triggerWizBgrFileInput() {
+      var el = document.getElementById('wiz-bgr-file-input');
+      if (el) el.click();
+    }
+    function triggerWizBgrFolderInput() {
+      var el = document.getElementById('wiz-bgr-folder-input');
+      if (el) el.click();
+    }
+    function triggerWizConvertInput() {
+      var el = document.getElementById('wiz-convert-input');
+      if (el) el.click();
+    }
+
     function setupWizDropzone(id, callback) {
       setTimeout(function() {
         var dropzone = document.getElementById(id);
@@ -4234,21 +4290,27 @@ export function generateStudioHtml(initialFile?: string): string {
 
     // Tab Navigation
     function switchTab(tabId) {
-      document.querySelectorAll('.nav-btn').forEach(function(b) { b.classList.remove('active'); });
       document.querySelectorAll('.tab-view').forEach(function(v) { v.classList.remove('active'); });
-
-      var btn = document.getElementById('nav-btn-' + tabId) || Array.from(document.querySelectorAll('.nav-btn')).find(function(b) { return (b.getAttribute('onclick') || '').indexOf(tabId) !== -1; });
-      if (btn) btn.classList.add('active');
 
       var target = document.getElementById('tab-' + tabId);
       if (target) target.classList.add('active');
 
-      // Sidebar visibility: visible in Graphic, Animation, Report
+      var header = document.getElementById('studio-header');
       var sidebar = document.getElementById('global-sidebar');
-      if (['graphic', 'animation', 'report'].indexOf(tabId) !== -1) {
-        sidebar.style.display = 'flex';
+
+      if (tabId === 'hub') {
+        if (header) header.style.display = 'none';
+        if (sidebar) sidebar.style.display = 'none';
+        closeWizard();
       } else {
-        sidebar.style.display = 'none';
+        if (header) header.style.display = 'flex';
+        if (sidebar) {
+          if (['graphic', 'animation', 'report'].indexOf(tabId) !== -1) {
+            sidebar.style.display = 'flex';
+          } else {
+            sidebar.style.display = 'none';
+          }
+        }
       }
 
       if (tabId === 'report' && selectedFilePath) {
