@@ -66,8 +66,10 @@ export async function compileMotion(
   const scene = await loadMotionScene(scenePath, dir);
   const solver = new MotionSolver(doc, scene);
 
-  const fps = options.fps ?? doc.motion.fps ?? 60;
-  const duration = doc.motion.duration ?? 3.0;
+  const fpsRaw = options.fps ?? doc.motion.fps ?? 60;
+  const fps = Number.isFinite(fpsRaw) && fpsRaw > 0 ? fpsRaw : 60;
+  const durationRaw = doc.motion.duration ?? 3.0;
+  const duration = Number.isFinite(durationRaw) && durationRaw > 0 ? durationRaw : 3.0;
   const ext =
     options.format === 'gif'
       ? '.gif'

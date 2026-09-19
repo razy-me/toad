@@ -47,9 +47,26 @@ export class TextMeasurementCache {
   }
 
   public static makeKey(content: string, style: Record<string, any>): string {
+    // F-040: Escape delimiter | and backslash \ to avoid cache key collisions
+    const escapeField = (val: any) => String(val ?? '').replace(/\\/g, '\\\\').replace(/\|/g, '\\|');
     const ff = style.fontFeatures ? JSON.stringify(style.fontFeatures) : '';
     const fv = style.fontVariation ? JSON.stringify(style.fontVariation) : '';
-    return `${content}|${style.fontFamily || ''}|${style.fontSize || 16}|${style.fontWeight || ''}|${style.fontStyle || ''}|${style.lineHeight || ''}|${style.letterSpacing || 0}|${style.textTransform || ''}|${style.explicitWidth || ''}|${style.maxLines || ''}|${style.overflow || ''}|${style.trim || ''}|${ff}|${fv}`;
+    return [
+      escapeField(content),
+      escapeField(style.fontFamily || ''),
+      escapeField(style.fontSize || 16),
+      escapeField(style.fontWeight || ''),
+      escapeField(style.fontStyle || ''),
+      escapeField(style.lineHeight || ''),
+      escapeField(style.letterSpacing || 0),
+      escapeField(style.textTransform || ''),
+      escapeField(style.explicitWidth || ''),
+      escapeField(style.maxLines || ''),
+      escapeField(style.overflow || ''),
+      escapeField(style.trim || ''),
+      escapeField(ff),
+      escapeField(fv)
+    ].join('|');
   }
 
   public get(key: string): TextLayoutResult | undefined {

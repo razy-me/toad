@@ -8,7 +8,7 @@ import path from 'path';
 describe('Gruppe 5 Review Verification Tests', () => {
   it('F-026: barcode generation handles invalid characters gracefully with placeholder', () => {
     // Character outside ASCII 32-126 for Code 128 (e.g. \u0000 or invalid EAN)
-    const res = generateBarcode('invalid \u0001 char', { format: 'code128' });
+    const res = generateBarcode('invalid \u0001 char', { format: 'code128', fallback: true });
     expect(res).toBeDefined();
     expect(res.bars.length).toBeGreaterThan(0);
     expect(res.totalModules).toBeGreaterThan(0);

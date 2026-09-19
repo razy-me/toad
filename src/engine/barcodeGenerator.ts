@@ -17,6 +17,7 @@ export interface BarcodeOptions {
   showText?: boolean;
   quietZone?: number;
   sanitize?: boolean;
+  fallback?: boolean;
 }
 
 export interface BarcodeResult {
@@ -352,12 +353,16 @@ export function generateBarcode(value: string, options: BarcodeOptions = {}): Ba
         break;
       }
     }
-  } catch {
-    // F-026: Safe fallback placeholder barcode on malformed inputs instead of crashing
-    totalModules = 60;
-    bars = [];
-    for (let i = 10; i < 50; i += 2) {
-      bars.push({ x: i, width: 1 });
+  } catch (err) {
+    if (options.fallback) {
+      // F-026: Safe fallback placeholder barcode on malformed inputs when fallback is requested
+      totalModules = 60;
+      bars = [];
+      for (let i = 10; i < 50; i += 2) {
+        bars.push({ x: i, width: 1 });
+      }
+    } else {
+      throw err;
     }
   }
 

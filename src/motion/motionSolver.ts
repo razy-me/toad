@@ -45,7 +45,12 @@ export class MotionSolver {
     const segments = this.scene.getBorderSegments(cleanId);
     if (segments.length === 0) return undefined;
 
-    const sampler = new ParametricPath(segments);
+    // F-106: Determine if path is closed by comparing start of first segment and end of last segment
+    const first = segments[0]!.p0;
+    const last = segments[segments.length - 1]!.p1;
+    const isClosed = Math.hypot(first.x - last.x, first.y - last.y) < 1.0;
+
+    const sampler = new ParametricPath(segments, 20, !isClosed);
     this.pathSamplers.set(cleanId, sampler);
     return sampler;
   }
@@ -72,9 +77,40 @@ export class MotionSolver {
     }
     visited.add(element.id);
 
-    const timeline = this.doc.motion.timelines.find(
-      tl => tl.targetId === element.id || tl.targetId === element.id.replace(/^#/, '')
+    const parentId = element.layoutNode?.parentId || (element.layoutNode as any)?.parent;
+
+    // F-098: Find direct timeline or child selector from parent
+    let timeline = this.doc.motion.timelines.find(
+      tl => !tl.isChildrenSelector && (tl.targetId === element.id || tl.targetId === element.id.replace(/^#/, ''))
     );
+
+    if (!timeline && parentId) {
+      const cleanParentId = parentId.startsWith('#') ? parentId : '#' + parentId;
+      const rawParentId = parentId.replace(/^#/, '');
+      timeline = this.doc.motion.timelines.find(tl => {
+        if (!tl.isChildrenSelector) return false;
+        const base = tl.targetId.replace(/\s*>\s*\*$/, '').trim();
+        return base === cleanParentId || base === rawParentId;
+      });
+    }
+
+    // F-099: Apply stagger definition delay
+    let effectiveTime = time;
+    if (timeline && timeline.stagger) {
+      let childIndex = 0;
+      if (parentId) {
+        const siblings = this.scene.order
+          .map(id => this.scene.elements.get(id))
+          .filter(el => el && (el.layoutNode?.parentId === parentId || (el.layoutNode as any)?.parent === parentId));
+        const idx = siblings.findIndex(el => el?.id === element.id);
+        if (idx >= 0) {
+          childIndex = idx;
+        }
+      }
+      const staggerDelay = (timeline.stagger.delay ?? 0) * childIndex;
+      const staggerFrom = timeline.stagger.from ?? 0;
+      effectiveTime = Math.max(0, time - staggerDelay - staggerFrom);
+    }
 
     if (timeline && timeline.keyframes.length > 0) {
       // Stably sort keyframes by timestamp
@@ -84,24 +120,24 @@ export class MotionSolver {
       let k2: KeyframeNode;
       let alpha = 0;
 
-      if (time <= kfs[0]!.time) {
+      if (effectiveTime <= kfs[0]!.time) {
         let startIdx = 0;
-        while (startIdx + 1 < kfs.length && kfs[startIdx + 1]!.time <= time) {
+        while (startIdx + 1 < kfs.length && kfs[startIdx + 1]!.time <= effectiveTime) {
           startIdx++;
         }
         k1 = kfs[startIdx]!;
         k2 = kfs[startIdx]!;
         alpha = 0;
-      } else if (time >= kfs[kfs.length - 1]!.time) {
+      } else if (effectiveTime >= kfs[kfs.length - 1]!.time) {
         k1 = kfs[kfs.length - 1]!;
         k2 = kfs[kfs.length - 1]!;
         alpha = 1;
       } else {
         let idx = 0;
         for (let i = 0; i < kfs.length - 1; i++) {
-          if (time >= kfs[i]!.time && time <= kfs[i + 1]!.time) {
+          if (effectiveTime >= kfs[i]!.time && effectiveTime <= kfs[i + 1]!.time) {
             idx = i;
-            if (time === kfs[i + 1]!.time && i + 2 < kfs.length && kfs[i + 1]!.time === kfs[i + 2]!.time) {
+            if (effectiveTime === kfs[i + 1]!.time && i + 2 < kfs.length && kfs[i + 1]!.time === kfs[i + 2]!.time) {
               continue;
             }
             break;
@@ -110,7 +146,7 @@ export class MotionSolver {
         k1 = kfs[idx]!;
         k2 = kfs[idx + 1]!;
         const span = k2.time - k1.time;
-        alpha = span > 1e-6 ? (time - k1.time) / span : 1;
+        alpha = span > 1e-6 ? (effectiveTime - k1.time) / span : 1;
       }
 
       // Apply easing
@@ -210,7 +246,6 @@ export class MotionSolver {
     }
 
     // 7. Inherit parent container transform and opacity
-    const parentId = element.layoutNode?.parentId || (element.layoutNode as any)?.parent;
     if (parentId) {
       const parentEl = this.scene.getElement(parentId);
       if (parentEl && parentEl !== element) {
@@ -222,9 +257,28 @@ export class MotionSolver {
         state.y += pDeltaY;
         state.scaleX *= parentState.scaleX;
         state.scaleY *= parentState.scaleY;
+
+        // F-100: Orbital rotation around parent center
+        if (parentState.rotateDeg !== 0) {
+          const pCenterX = parentEl.box.x + parentEl.box.width / 2;
+          const pCenterY = parentEl.box.y + parentEl.box.height / 2;
+          const elCenterX = element.box.x + element.box.width / 2;
+          const elCenterY = element.box.y + element.box.height / 2;
+          const dx = elCenterX - pCenterX;
+          const dy = elCenterY - pCenterY;
+          const rad = (parentState.rotateDeg * Math.PI) / 180;
+          const rotatedDx = dx * Math.cos(rad) - dy * Math.sin(rad);
+          const rotatedDy = dx * Math.sin(rad) + dy * Math.cos(rad);
+          state.x += (rotatedDx - dx);
+          state.y += (rotatedDy - dy);
+        }
+
         state.rotateDeg += parentState.rotateDeg;
       }
     }
+
+    // F-100: Clean up visited set to prevent cache pollution for subsequent evaluations
+    visited.delete(element.id);
 
     return state;
   }
@@ -232,12 +286,15 @@ export class MotionSolver {
   /**
    * Renders a single frame at time t onto a Canvas.
    */
-  public renderFrame(time: number): Canvas {
+  public renderFrame(time: number, targetCanvas?: Canvas): Canvas {
     const width = this.doc.motion.width ?? this.scene.width ?? 1920;
     const height = this.doc.motion.height ?? this.scene.height ?? 1080;
 
-    const canvas = createCanvas(width, height);
+    const canvas = targetCanvas ?? createCanvas(width, height);
     const ctx = canvas.getContext('2d');
+
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, width, height);
 
     // Background fill
     const bg = this.doc.motion.background ?? this.scene.background ?? '#000000';

@@ -313,11 +313,11 @@ export function createPreviewServer(
       // Hardening: only same-origin loopback POST requests may trigger OS actions.
       if (url.pathname === '/api/open-folder' || url.pathname === '/open-folder') {
         if (req.method !== 'POST' || !isOriginOrLoopbackSafe(req, true)) {
-          res.writeHead(403, {
+          res.writeHead(405, {
             'Content-Type': 'application/json',
             'Allow': 'POST'
           });
-          res.end(JSON.stringify({ status: 'error', message: 'Access denied: loopback origin required' }));
+          res.end(JSON.stringify({ status: 'error', message: 'Method Not Allowed or Origin Denied' }));
           return;
         }
 

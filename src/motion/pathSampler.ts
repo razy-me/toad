@@ -339,6 +339,18 @@ export class ParametricPath {
       if (progress === 1) p = 1;
     }
 
+    if (this.lut.length <= 1) {
+      const seg = this.segments[0] ?? { p0: { x: 0, y: 0 }, cp1: { x: 0, y: 0 }, cp2: { x: 0, y: 0 }, p1: { x: 0, y: 0 } };
+      return {
+        x: seg.p0.x,
+        y: seg.p0.y,
+        angleRad: 0,
+        angleDeg: 0,
+        tangent: { x: 1, y: 0 },
+        normal: { x: 0, y: -1 }
+      };
+    }
+
     const targetDist = p * this.totalLength;
 
     // Binary search in LUT
@@ -367,11 +379,21 @@ export class ParametricPath {
     const deriv = evaluateCubicDerivative(seg.p0, seg.cp1, seg.cp2, seg.p1, t);
 
     let dLen = Math.sqrt(deriv.x * deriv.x + deriv.y * deriv.y);
-    if (dLen < 1e-6) dLen = 1;
-
-    // Unit tangent vector
-    const tx = deriv.x / dLen;
-    const ty = deriv.y / dLen;
+    let tx = 1;
+    let ty = 0;
+    if (dLen >= 1e-6) {
+      tx = deriv.x / dLen;
+      ty = deriv.y / dLen;
+    } else {
+      // F-102: Fallback to chord vector seg.p1 - seg.p0 to avoid collapsing tangent and normal jump
+      const chordX = seg.p1.x - seg.p0.x;
+      const chordY = seg.p1.y - seg.p0.y;
+      const chordLen = Math.hypot(chordX, chordY);
+      if (chordLen >= 1e-6) {
+        tx = chordX / chordLen;
+        ty = chordY / chordLen;
+      }
+    }
 
     // Unit outward normal: for clockwise path, normal = (ty, -tx)
     const nx = ty;
@@ -418,6 +440,40 @@ export function trimCubicSegment(seg: CubicSegment, u0: number, u1: number): Cub
   };
 }
 
+function subSegmentLength(seg: CubicSegment, t0: number, t1: number): number {
+  const steps = 8;
+  let len = 0;
+  let prev = evaluateCubic(seg.p0, seg.cp1, seg.cp2, seg.p1, t0);
+  for (let i = 1; i <= steps; i++) {
+    const t = t0 + (i / steps) * (t1 - t0);
+    const curr = evaluateCubic(seg.p0, seg.cp1, seg.cp2, seg.p1, t);
+    const dx = curr.x - prev.x;
+    const dy = curr.y - prev.y;
+    len += Math.sqrt(dx * dx + dy * dy);
+    prev = curr;
+  }
+  return len;
+}
+
+function arcLengthToT(seg: CubicSegment, targetDist: number, totalLen: number): number {
+  if (targetDist <= 0) return 0;
+  if (targetDist >= totalLen) return 1;
+  if (totalLen <= 1e-6) return 0;
+
+  let low = 0;
+  let high = 1;
+  for (let iter = 0; iter < 10; iter++) {
+    const mid = (low + high) / 2;
+    const l = subSegmentLength(seg, 0, mid);
+    if (l < targetDist) {
+      low = mid;
+    } else {
+      high = mid;
+    }
+  }
+  return (low + high) / 2;
+}
+
 /**
  * Trims a sequence of cubic segments (a subpath) by normalized arc-length [startProgress, endProgress] in [0, 1].
  */
@@ -454,9 +510,12 @@ export function trimSegments(
 
     if (len <= 1e-6) continue;
 
-    // Local segment parameter interval
-    const u0 = Math.max(0, Math.min(1, (targetStart - segStart) / len));
-    const u1 = Math.max(0, Math.min(1, (targetEnd - segStart) / len));
+    // F-107: Map cumulative arc lengths into Bézier curve parameter space using arcLengthToT
+    const dist0 = Math.max(0, Math.min(len, targetStart - segStart));
+    const dist1 = Math.max(0, Math.min(len, targetEnd - segStart));
+
+    const u0 = arcLengthToT(seg, dist0, len);
+    const u1 = arcLengthToT(seg, dist1, len);
 
     if (u1 > u0) {
       result.push(trimCubicSegment(seg, u0, u1));

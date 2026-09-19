@@ -17,7 +17,7 @@ import {
   ResolvedFilter,
   FontDirectiveNode
 } from './ast.js';
-import { DependencyGraph } from './dependencyGraph.js';
+import { DependencyGraph, CyclicDependencyError } from './dependencyGraph.js';
 import { getIconPath } from '../engine/iconRegistry.js';
 import { generateShapePath } from '../engine/shapeGenerators.js';
 import { generateQrCode } from '../engine/qrGenerator.js';
@@ -990,6 +990,9 @@ export class LayoutSolver {
     try {
       topoOrderedElements = graph.resolveOrder();
     } catch (err: any) {
+      if (err instanceof CyclicDependencyError) {
+        throw err;
+      }
       this.warnings.push(`Cyclic or invalid dependency graph: ${err?.message || String(err)}. Falling back to document order.`);
       topoOrderedElements = [...this.doc.elements];
     }
@@ -2084,7 +2087,7 @@ export class LayoutSolver {
       };
       pathLayout = { d: qrRes.toSvgPath(box.w, box.h) };
     } else if (elem.type === 'barcode') {
-      const barRes = generateBarcode(elem.value || '', { format: elem.barcodeFormat as any, showText: elem.showText });
+      const barRes = generateBarcode(elem.value || '', { format: elem.barcodeFormat as any, showText: elem.showText, fallback: true });
       barcodeLayout = {
         value: elem.value || '',
         format: barRes.format,

@@ -6,7 +6,8 @@
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { spawn, execSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
+import { createCanvas } from '@napi-rs/canvas';
 import { MotionSolver } from './motionSolver.js';
 
 export interface VideoExportOptions {
@@ -25,8 +26,8 @@ export function resolveFfmpegBin(customPath?: string): string {
   if (customPath) return customPath;
   if (process.env.FFMPEG_PATH) return process.env.FFMPEG_PATH;
   try {
-    execSync('ffmpeg -version', { stdio: 'ignore' });
-    return 'ffmpeg';
+    const proc = spawnSync('ffmpeg', ['-version'], { stdio: 'ignore' });
+    if (proc.status === 0) return 'ffmpeg';
   } catch {}
   if (process.platform === 'win32') {
     const localAppData = process.env.LOCALAPPDATA || '';
@@ -54,8 +55,8 @@ export function resolveFfmpegBin(customPath?: string): string {
 export function isFfmpegAvailable(customPath?: string): boolean {
   const bin = resolveFfmpegBin(customPath);
   try {
-    execSync(`"${bin}" -version`, { stdio: 'ignore' });
-    return true;
+    const proc = spawnSync(bin, ['-version'], { stdio: 'ignore' });
+    return proc.status === 0;
   } catch {
     return false;
   }
@@ -69,51 +70,64 @@ const hwEncoderCache = new Map<string, { encoder: string; extraArgs: string[] } 
 export function detectFfmpegHwEncoder(ffmpegBin: string): { encoder: string; extraArgs: string[] } | null {
   if (hwEncoderCache.has(ffmpegBin)) return hwEncoderCache.get(ffmpegBin)!;
   try {
-    const encodersOut = execSync(`"${ffmpegBin}" -encoders`, { stdio: ['ignore', 'pipe', 'ignore'] }).toString();
+    const proc = spawnSync(ffmpegBin, ['-encoders'], { stdio: ['ignore', 'pipe', 'ignore'] });
+    const encodersOut = proc.stdout ? proc.stdout.toString() : '';
 
     // 1. NVIDIA NVENC (Highest performance and quality)
     if (encodersOut.includes('h264_nvenc')) {
       try {
         // Quick verification probe with a 256x256 test frame
-        execSync(`"${ffmpegBin}" -y -f lavfi -i color=c=black:s=256x256:d=0.1 -c:v h264_nvenc -preset p6 -cq 20 -f null -`, {
-          stdio: 'ignore'
-        });
-        const val = {
-          encoder: 'h264_nvenc',
-          extraArgs: ['-preset', 'p6', '-cq', '20', '-b:v', '0', '-spatial-aq', '1']
-        };
-        hwEncoderCache.set(ffmpegBin, val);
-        return val;
+        const probe = spawnSync(
+          ffmpegBin,
+          ['-y', '-f', 'lavfi', '-i', 'color=c=black:s=256x256:d=0.1', '-c:v', 'h264_nvenc', '-preset', 'p6', '-cq', '20', '-f', 'null', '-'],
+          { stdio: 'ignore' }
+        );
+        if (probe.status === 0) {
+          const val = {
+            encoder: 'h264_nvenc',
+            extraArgs: ['-preset', 'p6', '-cq', '20', '-b:v', '0', '-spatial-aq', '1']
+          };
+          hwEncoderCache.set(ffmpegBin, val);
+          return val;
+        }
       } catch {}
     }
 
     // 2. Intel QuickSync (QSV)
     if (encodersOut.includes('h264_qsv')) {
       try {
-        execSync(`"${ffmpegBin}" -y -f lavfi -i color=c=black:s=256x256:d=0.1 -c:v h264_qsv -global_quality 20 -f null -`, {
-          stdio: 'ignore'
-        });
-        const val = {
-          encoder: 'h264_qsv',
-          extraArgs: ['-global_quality', '20']
-        };
-        hwEncoderCache.set(ffmpegBin, val);
-        return val;
+        const probe = spawnSync(
+          ffmpegBin,
+          ['-y', '-f', 'lavfi', '-i', 'color=c=black:s=256x256:d=0.1', '-c:v', 'h264_qsv', '-global_quality', '20', '-f', 'null', '-'],
+          { stdio: 'ignore' }
+        );
+        if (probe.status === 0) {
+          const val = {
+            encoder: 'h264_qsv',
+            extraArgs: ['-global_quality', '20']
+          };
+          hwEncoderCache.set(ffmpegBin, val);
+          return val;
+        }
       } catch {}
     }
 
     // 3. AMD AMF
     if (encodersOut.includes('h264_amf')) {
       try {
-        execSync(`"${ffmpegBin}" -y -f lavfi -i color=c=black:s=256x256:d=0.1 -c:v h264_amf -quality quality -f null -`, {
-          stdio: 'ignore'
-        });
-        const val = {
-          encoder: 'h264_amf',
-          extraArgs: ['-quality', 'quality']
-        };
-        hwEncoderCache.set(ffmpegBin, val);
-        return val;
+        const probe = spawnSync(
+          ffmpegBin,
+          ['-y', '-f', 'lavfi', '-i', 'color=c=black:s=256x256:d=0.1', '-c:v', 'h264_amf', '-quality', 'quality', '-f', 'null', '-'],
+          { stdio: 'ignore' }
+        );
+        if (probe.status === 0) {
+          const val = {
+            encoder: 'h264_amf',
+            extraArgs: ['-quality', 'quality']
+          };
+          hwEncoderCache.set(ffmpegBin, val);
+          return val;
+        }
       } catch {}
     }
   } catch {}
@@ -138,7 +152,10 @@ export async function exportMotionVideo(
   fps: number,
   options: VideoExportOptions
 ): Promise<string> {
-  const totalFrames = Math.max(1, Math.ceil(duration * fps));
+  // F-096: Validate duration and fps against 0, negative numbers, and NaN
+  const validDuration = Number.isFinite(duration) && duration > 0 ? duration : 1.0;
+  const validFps = Number.isFinite(fps) && fps > 0 ? fps : 30;
+  const totalFrames = Math.max(1, Math.ceil(validDuration * validFps));
   const outputPath = path.resolve(options.outputPath);
   const outDir = path.dirname(outputPath);
 
@@ -156,6 +173,13 @@ export async function exportMotionVideo(
       ? 'frames'
       : 'mp4');
 
+  // Sample first frame to get exact canvas dimensions
+  const testFrame = solver.renderFrame(0);
+  const width = testFrame.width;
+  const height = testFrame.height;
+  testFrame.width = 1;
+  testFrame.height = 1;
+
   // 1. Frame sequence export
   if (format === 'frames') {
     const framesDir = outputPath.endsWith('.png')
@@ -165,16 +189,23 @@ export async function exportMotionVideo(
       fs.mkdirSync(framesDir, { recursive: true });
     }
 
-    for (let frame = 0; frame < totalFrames; frame++) {
-      const time = frame / fps;
-      const canvas = solver.renderFrame(time);
-      const frameBuffer = canvas.encodeSync('png');
-      const frameFile = path.join(framesDir, `frame_${String(frame).padStart(5, '0')}.png`);
-      fs.writeFileSync(frameFile, frameBuffer);
+    // F-097: Allocate a single reusable canvas
+    const sharedCanvas = createCanvas(width, height);
+    try {
+      for (let frame = 0; frame < totalFrames; frame++) {
+        const time = frame / validFps;
+        solver.renderFrame(time, sharedCanvas);
+        const frameBuffer = sharedCanvas.encodeSync('png');
+        const frameFile = path.join(framesDir, `frame_${String(frame).padStart(5, '0')}.png`);
+        fs.writeFileSync(frameFile, frameBuffer);
 
-      if (options.onProgress) {
-        options.onProgress(frame + 1, totalFrames);
+        if (options.onProgress) {
+          options.onProgress(frame + 1, totalFrames);
+        }
       }
+    } finally {
+      sharedCanvas.width = 1;
+      sharedCanvas.height = 1;
     }
 
     return framesDir;
@@ -188,11 +219,6 @@ export async function exportMotionVideo(
       `FFmpeg was not found in PATH or FFMPEG_PATH. To export ${format.toUpperCase()}, please install FFmpeg (e.g. 'winget install Gyan.FFmpeg') or export as frame sequence with --format frames.`
     );
   }
-
-  // Sample first frame to get exact canvas dimensions
-  const testFrame = solver.renderFrame(0);
-  const width = testFrame.width;
-  const height = testFrame.height;
 
   let extraArgs: string[] = [];
   if (format === 'gif') {
@@ -251,7 +277,7 @@ export async function exportMotionVideo(
     '-pix_fmt',
     'rgba',
     '-r',
-    `${fps}`,
+    `${validFps}`,
     '-i',
     '-',
     ...extraArgs,
@@ -311,16 +337,17 @@ export async function exportMotionVideo(
       }
     });
 
-    // Feed raw RGBA frames into stdin
+    // Feed raw RGBA frames into stdin using a single reusable canvas (F-097)
     (async () => {
+      const sharedCanvas = createCanvas(width, height);
       try {
         for (let frame = 0; frame < totalFrames; frame++) {
           if (ffmpeg.stdin?.destroyed || !ffmpeg.stdin?.writable || isSettled) {
             break;
           }
-          const time = frame / fps;
-          const canvas = solver.renderFrame(time);
-          const rawRgba = canvas.data();
+          const time = frame / validFps;
+          solver.renderFrame(time, sharedCanvas);
+          const rawRgba = sharedCanvas.data();
 
           const canWrite = ffmpeg.stdin.write(rawRgba);
           if (!canWrite && !ffmpeg.stdin.destroyed) {
@@ -355,6 +382,9 @@ export async function exportMotionVideo(
           isSettled = true;
           reject(err);
         }
+      } finally {
+        sharedCanvas.width = 1;
+        sharedCanvas.height = 1;
       }
     })();
   });

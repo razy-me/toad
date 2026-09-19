@@ -536,11 +536,8 @@ function evaluatePenalty(matrix: boolean[][], size: number): number {
  */
 export function generateQrCode(text: string, options: QrCodeOptions = {}): QrCodeResult {
   const hasLogo = Boolean(options.hasLogo || options.logo);
-  // If a logo is embedded, default to 'H' error correction (30% recovery)
-  let ecl = options.ecl;
-  if (!ecl) {
-    ecl = hasLogo ? 'H' : 'M';
-  }
+  // F-039: If a logo is embedded, enforce 'H' error correction (30% recovery) to prevent unreadable QR codes
+  const ecl = hasLogo ? 'H' : (options.ecl ?? 'M');
 
   const version = selectVersion(new TextEncoder().encode(text).length, ecl);
   const size = 17 + version * 4;
@@ -719,16 +716,20 @@ export function generateQrCode(text: string, options: QrCodeOptions = {}): QrCod
     ecl,
     logoBox,
     toSvgPath: (widthPx: number, heightPx: number, marginModules = 0) => {
-      const totalModules = size + marginModules * 2;
-      const modW = widthPx / totalModules;
-      const modH = heightPx / totalModules;
+      // F-038: NaN and non-finite guards for SVG path generation
+      const validW = Number.isFinite(widthPx) && widthPx > 0 ? widthPx : 100;
+      const validH = Number.isFinite(heightPx) && heightPx > 0 ? heightPx : 100;
+      const validMargin = Number.isFinite(marginModules) && marginModules >= 0 ? marginModules : 0;
+      const totalModules = size + validMargin * 2;
+      const modW = validW / totalModules;
+      const modH = validH / totalModules;
 
       let d = '';
       for (let r = 0; r < size; r++) {
         for (let c = 0; c < size; c++) {
           if (bestMatrix[r]![c]) {
-            const x = (c + marginModules) * modW;
-            const y = (r + marginModules) * modH;
+            const x = (c + validMargin) * modW;
+            const y = (r + validMargin) * modH;
             // Compound rectangle subpath
             d += `M ${x.toFixed(2)} ${y.toFixed(2)} h ${modW.toFixed(2)} v ${modH.toFixed(2)} h ${(-modW).toFixed(2)} Z `;
           }

@@ -26,15 +26,21 @@ export const ease: Easer = cubicBezier(0.25, 0.1, 0.25, 1.0);
  * Solves x(t) = target via Newton-Raphson with bisection fallback, then evaluates y(t).
  */
 export function cubicBezier(x1: number, y1: number, x2: number, y2: number): Easer {
-  // If linear
-  if (x1 === y1 && x2 === y2) return (t: number) => t;
+  // Clamp control point x values to [0, 1] per CSS cubic-bezier specification
+  const cx1 = Math.max(0, Math.min(1, Number.isFinite(x1) ? x1 : 0));
+  const cx2 = Math.max(0, Math.min(1, Number.isFinite(x2) ? x2 : 1));
+  const cy1 = Number.isFinite(y1) ? y1 : 0;
+  const cy2 = Number.isFinite(y2) ? y2 : 1;
 
-  const cx = 3 * x1;
-  const bx = 3 * (x2 - x1) - cx;
+  // If linear
+  if (cx1 === cy1 && cx2 === cy2) return (t: number) => t;
+
+  const cx = 3 * cx1;
+  const bx = 3 * (cx2 - cx1) - cx;
   const ax = 1 - cx - bx;
 
-  const cy = 3 * y1;
-  const by = 3 * (y2 - y1) - cy;
+  const cy = 3 * cy1;
+  const by = 3 * (cy2 - cy1) - cy;
   const ay = 1 - cy - by;
 
   function sampleCurveX(t: number) {
@@ -63,12 +69,13 @@ export function cubicBezier(x1: number, y1: number, x2: number, y2: number): Eas
       t -= currentX / dX;
     }
 
-    // Fallback: Bisection
+    // Fallback: Bisection with max iteration limit
     let t0 = 0;
     let t1 = 1;
     t = x;
+    let iter = 0;
 
-    while (t0 < t1) {
+    while (t0 < t1 && iter++ < 32) {
       const currentX = sampleCurveX(t);
       if (Math.abs(currentX - x) < 1e-6) return t;
       if (x > currentX) {
@@ -105,28 +112,34 @@ export function spring(stiffness = 100, damping = 10, mass = 1): Easer {
     return raw * (1 - s) + s;
   };
 
-  if (zeta < 1) {
-    // Underdamped (oscillates and overshoots)
-    const wd = w0 * Math.sqrt(1 - zeta * zeta);
-    return (t: number) => {
-      const decay = Math.exp(-zeta * w0 * t * 5); // scale t to feel natural over [0, 1]
-      const envelope = Math.cos(wd * t * 5) + ((zeta * w0) / wd) * Math.sin(wd * t * 5);
-      return blendSettle(1 - decay * envelope, t);
-    };
-  } else if (Math.abs(zeta - 1) < 1e-4) {
+  // F-092: Check critically damped FIRST before underdamped to prevent division by 0 when zeta ~ 1
+  if (Math.abs(zeta - 1) < 1e-4) {
     // Critically damped (fastest return without oscillation)
     return (t: number) => {
       const decay = Math.exp(-w0 * t * 5);
       return blendSettle(1 - decay * (1 + w0 * t * 5), t);
     };
+  } else if (zeta < 1) {
+    // Underdamped (oscillates and overshoots)
+    const wd = Math.max(1e-6, w0 * Math.sqrt(Math.max(0, 1 - zeta * zeta)));
+    return (t: number) => {
+      const decay = Math.exp(-zeta * w0 * t * 5); // scale t to feel natural over [0, 1]
+      const envelope = Math.cos(wd * t * 5) + ((zeta * w0) / wd) * Math.sin(wd * t * 5);
+      return blendSettle(1 - decay * envelope, t);
+    };
   } else {
     // Overdamped
-    const s = w0 * Math.sqrt(zeta * zeta - 1);
+    const s = w0 * Math.sqrt(Math.max(0, zeta * zeta - 1));
     return (t: number) => {
       const gamma1 = -zeta * w0 + s;
       const gamma2 = -zeta * w0 - s;
-      const c1 = gamma2 / (gamma2 - gamma1);
-      const c2 = -gamma1 / (gamma2 - gamma1);
+      const diff = gamma2 - gamma1;
+      if (Math.abs(diff) < 1e-6) {
+        const decay = Math.exp(-w0 * t * 5);
+        return blendSettle(1 - decay * (1 + w0 * t * 5), t);
+      }
+      const c1 = gamma2 / diff;
+      const c2 = -gamma1 / diff;
       return blendSettle(1 - (c1 * Math.exp(gamma1 * t * 5) + c2 * Math.exp(gamma2 * t * 5)), t);
     };
   }
@@ -190,22 +203,54 @@ function linearToSRgb(v: number): number {
  * Interpolates two color strings (Hex, RGB, RGBA, Named) smoothly in linear sRGB space.
  */
 export function lerpColor(c1: string, c2: string, t: number): string {
-  const r1 = parseColorToRgba(c1);
-  const r2 = parseColorToRgba(c2);
+  if (!c1 && !c2) return '#000000';
+  if (!c1) return c2;
+  if (!c2) return c1;
+
+  const validT = Number.isFinite(t) ? Math.max(0, Math.min(1, t)) : 0;
+
+  let r1: { r: number; g: number; b: number; a: number };
+  let r2: { r: number; g: number; b: number; a: number };
+
+  try {
+    r1 = parseColorToRgba(c1);
+  } catch {
+    r1 = { r: 0, g: 0, b: 0, a: 1 };
+  }
+
+  try {
+    r2 = parseColorToRgba(c2);
+  } catch {
+    r2 = { r: 0, g: 0, b: 0, a: 1 };
+  }
+
+  // Ensure all channels are finite
+  const safeR1 = {
+    r: Number.isFinite(r1.r) ? Math.max(0, Math.min(255, r1.r)) : 0,
+    g: Number.isFinite(r1.g) ? Math.max(0, Math.min(255, r1.g)) : 0,
+    b: Number.isFinite(r1.b) ? Math.max(0, Math.min(255, r1.b)) : 0,
+    a: Number.isFinite(r1.a) ? Math.max(0, Math.min(1, r1.a)) : 1,
+  };
+  const safeR2 = {
+    r: Number.isFinite(r2.r) ? Math.max(0, Math.min(255, r2.r)) : 0,
+    g: Number.isFinite(r2.g) ? Math.max(0, Math.min(255, r2.g)) : 0,
+    b: Number.isFinite(r2.b) ? Math.max(0, Math.min(255, r2.b)) : 0,
+    a: Number.isFinite(r2.a) ? Math.max(0, Math.min(1, r2.a)) : 1,
+  };
 
   // Linearize color channels for natural luminance preservation
-  const linR1 = sRgbToLinear(r1.r);
-  const linG1 = sRgbToLinear(r1.g);
-  const linB1 = sRgbToLinear(r1.b);
+  const linR1 = sRgbToLinear(safeR1.r);
+  const linG1 = sRgbToLinear(safeR1.g);
+  const linB1 = sRgbToLinear(safeR1.b);
 
-  const linR2 = sRgbToLinear(r2.r);
-  const linG2 = sRgbToLinear(r2.g);
-  const linB2 = sRgbToLinear(r2.b);
+  const linR2 = sRgbToLinear(safeR2.r);
+  const linG2 = sRgbToLinear(safeR2.g);
+  const linB2 = sRgbToLinear(safeR2.b);
 
-  const outR = linearToSRgb(lerp(linR1, linR2, t));
-  const outG = linearToSRgb(lerp(linG1, linG2, t));
-  const outB = linearToSRgb(lerp(linB1, linB2, t));
-  const outA = Math.max(0, Math.min(1, lerp(r1.a, r2.a, t)));
+  const outR = linearToSRgb(lerp(linR1, linR2, validT));
+  const outG = linearToSRgb(lerp(linG1, linG2, validT));
+  const outB = linearToSRgb(lerp(linB1, linB2, validT));
+  const outA = Math.max(0, Math.min(1, lerp(safeR1.a, safeR2.a, validT)));
 
   if (outA >= 0.999) {
     const toHex = (n: number) => n.toString(16).padStart(2, '0');

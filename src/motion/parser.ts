@@ -20,6 +20,7 @@ export class MotionParser {
   private tokens: MotionToken[];
   private current = 0;
   private file?: string;
+  private currentDuration = 1.0;
 
   constructor(tokens: MotionToken[], file?: string) {
     this.tokens = tokens;
@@ -140,6 +141,7 @@ export class MotionParser {
         this.consume(MotionTokenType.COLON, "Expected ':' after 'duration'");
         const durTok = this.advance();
         duration = durTok.numValue ?? parseFloat(durTok.value);
+        this.currentDuration = duration;
         this.match(MotionTokenType.SEMICOLON);
       } else if (this.match(MotionTokenType.KW_FPS)) {
         this.consume(MotionTokenType.COLON, "Expected ':' after 'fps'");
@@ -181,6 +183,17 @@ export class MotionParser {
 
     this.consume(MotionTokenType.RBRACE, "Expected '}' at end of motion declaration");
 
+    // F-095: Update any 'to' keyframes with final duration if duration was specified after timeline
+    for (const tl of timelines) {
+      for (const kf of tl.keyframes) {
+        if ((kf as any)._isToKeyframe) {
+          kf.time = duration;
+          delete (kf as any)._isToKeyframe;
+        }
+      }
+      tl.keyframes.sort((a, b) => a.time - b.time);
+    }
+
     return {
       type: 'MotionDeclaration',
       name: nameTok.value,
@@ -220,7 +233,10 @@ export class MotionParser {
       } else if (
         this.check(MotionTokenType.TIME) ||
         this.check(MotionTokenType.NUMBER) ||
-        this.check(MotionTokenType.IDENTIFIER)
+        this.check(MotionTokenType.IDENTIFIER) ||
+        this.check(MotionTokenType.PERCENT) ||
+        this.check(MotionTokenType.KW_FROM) ||
+        this.check(MotionTokenType.KW_TO)
       ) {
         keyframes.push(this.parseKeyframe());
       } else {
@@ -246,7 +262,16 @@ export class MotionParser {
   private parseKeyframe(): KeyframeNode {
     const timeTok = this.advance();
     let time = 0;
-    if (timeTok.type === MotionTokenType.TIME && timeTok.numValue !== undefined) {
+    let isTo = false;
+
+    if (timeTok.type === MotionTokenType.KW_FROM || timeTok.value.toLowerCase() === 'from') {
+      time = 0;
+    } else if (timeTok.type === MotionTokenType.KW_TO || timeTok.value.toLowerCase() === 'to') {
+      time = this.currentDuration;
+      isTo = true;
+    } else if (timeTok.type === MotionTokenType.PERCENT && timeTok.numValue !== undefined) {
+      time = (timeTok.numValue / 100) * this.currentDuration;
+    } else if (timeTok.type === MotionTokenType.TIME && timeTok.numValue !== undefined) {
       time = timeTok.numValue;
     } else if (timeTok.value === '0s' || timeTok.value === '0') {
       time = 0;
@@ -256,19 +281,25 @@ export class MotionParser {
       time = parseFloat(timeTok.value) || 0;
     }
 
-    this.consume(MotionTokenType.COLON, `Expected ':' after time '${timeTok.value}'`);
-    this.consume(MotionTokenType.LBRACE, `Expected '{' after time '${timeTok.value}:'`);
+    if (this.check(MotionTokenType.COLON)) {
+      this.advance();
+    }
+    this.consume(MotionTokenType.LBRACE, `Expected '{' after time '${timeTok.value}'`);
 
     const properties = this.parseKeyframeProperties();
 
     this.consume(MotionTokenType.RBRACE, `Expected '}' at end of keyframe '${timeTok.value}'`);
 
-    return {
+    const kf: KeyframeNode = {
       type: 'Keyframe',
       time,
       properties,
       loc: { start: timeTok.loc.start, end: this.tokens[this.current - 1]!.loc.end, file: this.file }
     };
+    if (isTo) {
+      (kf as any)._isToKeyframe = true;
+    }
+    return kf;
   }
 
   private parseKeyframeProperties(): KeyframeProperties {

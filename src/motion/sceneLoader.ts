@@ -97,7 +97,12 @@ async function loadToadScene(filePath: string): Promise<MotionScene> {
   const sceneDir = path.dirname(filePath);
   const nodesToProcess = layout.nodes || [];
   for (const node of nodesToProcess) {
-    const id = node.id ? (node.id.startsWith('#') ? node.id : '#' + node.id) : '#' + node.name;
+    const rawId = node.id ? (node.id.startsWith('#') ? node.id : '#' + node.id) : '#' + (node.name || 'node');
+    let id = rawId;
+    let counter = 1;
+    while (elements.has(id)) {
+      id = `${rawId}_${counter++}`;
+    }
 
     const nodeW = Math.max(1, node.box.w);
     const nodeH = Math.max(1, node.box.h);
@@ -291,7 +296,12 @@ async function loadPsdScene(filePath: string): Promise<MotionScene> {
 
       const layerName = layer.name?.trim() || 'Layer';
       const cleanName = layerName.replace(/[^a-zA-Z0-9_-]/g, '_');
-      const id = '#' + cleanName;
+      const rawId = '#' + (cleanName || 'layer');
+      let id = rawId;
+      let counter = 1;
+      while (elements.has(id)) {
+        id = `${rawId}_${counter++}`;
+      }
 
       const left = layer.left ?? 0;
       const top = layer.top ?? 0;
@@ -358,6 +368,34 @@ async function loadPsdScene(filePath: string): Promise<MotionScene> {
   return scene;
 }
 
+function computeSvgPathBBox(d: string): { x: number; y: number; width: number; height: number } | null {
+  const nums = d.match(/[-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?/g);
+  if (!nums || nums.length < 2) return null;
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (let i = 0; i < nums.length - 1; i += 2) {
+    const x = parseFloat(nums[i]!);
+    const y = parseFloat(nums[i + 1]!);
+    if (Number.isFinite(x) && Number.isFinite(y)) {
+      minX = Math.min(minX, x);
+      minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x);
+      maxY = Math.max(maxY, y);
+    }
+  }
+  if (Number.isFinite(minX) && Number.isFinite(minY) && maxX >= minX && maxY >= minY) {
+    return {
+      x: minX,
+      y: minY,
+      width: Math.max(1, maxX - minX),
+      height: Math.max(1, maxY - minY)
+    };
+  }
+  return null;
+}
+
 /**
  * Loads Scalable Vector Graphics .svg file
  */
@@ -384,12 +422,26 @@ async function loadSvgScene(filePath: string): Promise<MotionScene> {
   while ((match = elementRegex.exec(content)) !== null) {
     const tag = match[1]!.toLowerCase();
     const attrs = match[2]! + ' ' + match[4]!;
-    const id = '#' + match[3]!;
+
+    // F-109: Ensure unique element IDs across SVG elements
+    const rawId = '#' + (match[3] || 'elem');
+    let id = rawId;
+    let counter = 1;
+    while (elements.has(id)) {
+      id = `${rawId}_${counter++}`;
+    }
 
     let d: string | undefined;
+    // F-108: Compute local element bounding box
+    let elemBox = { x: 0, y: 0, width, height };
+
     if (tag === 'path') {
       const dMatch = attrs.match(/\bd=["']([^"']+)["']/i);
-      if (dMatch) d = dMatch[1];
+      if (dMatch) {
+        d = dMatch[1];
+        const bbox = computeSvgPathBBox(d);
+        if (bbox) elemBox = bbox;
+      }
     } else if (tag === 'rect') {
       const x = parseFloat(attrs.match(/\bx=["']([^"']+)["']/i)?.[1] || '0');
       const y = parseFloat(attrs.match(/\by=["']([^"']+)["']/i)?.[1] || '0');
@@ -397,6 +449,7 @@ async function loadSvgScene(filePath: string): Promise<MotionScene> {
       const h = parseFloat(attrs.match(/\bheight=["']([^"']+)["']/i)?.[1] || '0');
       if (w > 0 && h > 0) {
         d = `M ${x} ${y} h ${w} v ${h} h ${-w} Z`;
+        elemBox = { x, y, width: w, height: h };
       }
     } else if (tag === 'circle') {
       const cx = parseFloat(attrs.match(/\bcx=["']([^"']+)["']/i)?.[1] || '0');
@@ -404,6 +457,16 @@ async function loadSvgScene(filePath: string): Promise<MotionScene> {
       const r = parseFloat(attrs.match(/\br=["']([^"']+)["']/i)?.[1] || '0');
       if (r > 0) {
         d = `M ${cx - r} ${cy} a ${r} ${r} 0 1 0 ${r * 2} 0 a ${r} ${r} 0 1 0 ${-r * 2} 0 Z`;
+        elemBox = { x: cx - r, y: cy - r, width: r * 2, height: r * 2 };
+      }
+    } else if (tag === 'ellipse') {
+      const cx = parseFloat(attrs.match(/\bcx=["']([^"']+)["']/i)?.[1] || '0');
+      const cy = parseFloat(attrs.match(/\bcy=["']([^"']+)["']/i)?.[1] || '0');
+      const rx = parseFloat(attrs.match(/\brx=["']([^"']+)["']/i)?.[1] || '0');
+      const ry = parseFloat(attrs.match(/\bry=["']([^"']+)["']/i)?.[1] || '0');
+      if (rx > 0 && ry > 0) {
+        d = `M ${cx - rx} ${cy} a ${rx} ${ry} 0 1 0 ${rx * 2} 0 a ${rx} ${ry} 0 1 0 ${-rx * 2} 0 Z`;
+        elemBox = { x: cx - rx, y: cy - ry, width: rx * 2, height: ry * 2 };
       }
     }
 
@@ -411,25 +474,29 @@ async function loadSvgScene(filePath: string): Promise<MotionScene> {
       id,
       name: match[3]!,
       sourceType: 'svg',
-      box: { x: 0, y: 0, width, height },
+      box: elemBox,
       style: { opacity: 1 },
       svgPath: d,
       layoutNode: tag === 'path' && d ? {
         name: match[3]!,
         type: 'path',
-        box: { x: 0, y: 0, w: width, h: height },
+        box: { x: elemBox.x, y: elemBox.y, w: elemBox.width, h: elemBox.height },
         style: { color: '#000000' },
         d
       } as any : {
         name: match[3]!,
         type: 'rect',
-        box: { x: 0, y: 0, w: width, h: height },
+        box: { x: elemBox.x, y: elemBox.y, w: elemBox.width, h: elemBox.height },
         style: { color: '#000000' }
       } as any,
       render: (ctx, opacityMultiplier, state) => {
         const prevAlpha = ctx.globalAlpha;
         ctx.globalAlpha *= opacityMultiplier;
         if (d) {
+          ctx.save();
+          // Translate to align local element origin
+          ctx.translate(-elemBox.x, -elemBox.y);
+
           const isTrimming =
             state &&
             (state.strokeEnd !== undefined || state.strokeStart !== undefined);
@@ -439,6 +506,7 @@ async function loadSvgScene(filePath: string): Promise<MotionScene> {
             const start = state.strokeStart ?? 0;
             const end = state.strokeEnd ?? 1;
             if (end <= start || end <= 0) {
+              ctx.restore();
               ctx.globalAlpha = prevAlpha;
               return;
             }
@@ -463,6 +531,7 @@ async function loadSvgScene(filePath: string): Promise<MotionScene> {
               ctx.stroke(p2d);
             }
           }
+          ctx.restore();
         }
         ctx.globalAlpha = prevAlpha;
       }
