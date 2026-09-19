@@ -161,7 +161,14 @@ export class MotionParser {
       } else if (this.match(MotionTokenType.KW_TIMELINE)) {
         this.consume(MotionTokenType.LBRACE, "Expected '{' after 'timeline'");
         while (!this.check(MotionTokenType.RBRACE) && !this.isAtEnd()) {
+          while (this.match(MotionTokenType.SEMICOLON)) {
+            // F-103: Skip leading or standalone semicolons
+          }
+          if (this.check(MotionTokenType.RBRACE) || this.isAtEnd()) break;
           timelines.push(this.parseTimelineNode());
+          while (this.match(MotionTokenType.SEMICOLON)) {
+            // F-103: Tolerate trailing semicolons after target blocks
+          }
         }
         this.consume(MotionTokenType.RBRACE, "Expected '}' after timeline block");
       } else {
@@ -397,6 +404,25 @@ export class MotionParser {
       targetId,
       progress: 0
     };
+
+    // F-104: Consume optional inline along parameters (e.g. offset 10px, auto-rotate true)
+    while (!this.check(MotionTokenType.SEMICOLON) && !this.check(MotionTokenType.RBRACE) && !this.isAtEnd()) {
+      if (this.match(MotionTokenType.KW_OFFSET) || this.peek().value.toLowerCase() === 'offset') {
+        if (!this.check(MotionTokenType.KW_OFFSET) && this.peek().value.toLowerCase() === 'offset') this.advance();
+        const offTok = this.advance();
+        def.offset = offTok.numValue ?? parseFloat(offTok.value);
+      } else if (this.match(MotionTokenType.KW_AUTO_ROTATE) || this.peek().value.toLowerCase() === 'auto-rotate' || this.peek().value.toLowerCase() === 'autorotate') {
+        if (!this.check(MotionTokenType.KW_AUTO_ROTATE) && (this.peek().value.toLowerCase() === 'auto-rotate' || this.peek().value.toLowerCase() === 'autorotate')) this.advance();
+        const autoTok = this.advance();
+        def.autoRotate = autoTok.value === 'true' || autoTok.value === '1';
+      } else if (this.match(MotionTokenType.KW_PROGRESS) || this.peek().value.toLowerCase() === 'progress') {
+        if (!this.check(MotionTokenType.KW_PROGRESS) && this.peek().value.toLowerCase() === 'progress') this.advance();
+        const progTok = this.advance();
+        def.progress = progTok.numValue ?? parseFloat(progTok.value);
+      } else {
+        break;
+      }
+    }
 
     return def;
   }

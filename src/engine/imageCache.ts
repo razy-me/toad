@@ -18,8 +18,11 @@ export function getImageCacheSize(): number {
   return imageCache.size;
 }
 
+const pendingLoads = new Map<string, Promise<Image | null>>();
+
 export function clearImageCache(): void {
   imageCache.clear();
+  pendingLoads.clear();
   currentCacheBytes = 0;
 }
 
@@ -55,27 +58,48 @@ export async function resolveSharedImage(imgSrc: string, basePath?: string): Pro
         return cached.img;
       } else {
         // Stale entry: remove from cache and adjust budget
-        currentCacheBytes -= cached.bytes || 0;
+        currentCacheBytes = Math.max(0, currentCacheBytes - (cached.bytes || 0));
         imageCache.delete(resolvedPath);
       }
     }
 
-    const buf = fs.readFileSync(resolvedPath);
-    const img = await loadImage(buf);
-    const estimatedBytes = Math.max(buf.length, (img.width || 1) * (img.height || 1) * 4);
-
-    while (imageCache.size >= MAX_CACHE_ENTRIES || (currentCacheBytes + estimatedBytes > MAX_CACHE_BYTES && imageCache.size > 0)) {
-      const firstEntry = imageCache.entries().next().value;
-      if (!firstEntry) break;
-      const [oldKey, oldVal] = firstEntry;
-      currentCacheBytes -= oldVal.bytes || 0;
-      imageCache.delete(oldKey);
+    // F-027: Deduplicate concurrent in-flight loads for the same path
+    const pending = pendingLoads.get(resolvedPath);
+    if (pending) {
+      return await pending;
     }
 
-    currentCacheBytes += estimatedBytes;
-    imageCache.set(resolvedPath, { img, mtime, bytes: estimatedBytes });
+    const loadPromise = (async () => {
+      const buf = fs.readFileSync(resolvedPath);
+      const img = await loadImage(buf);
+      const estimatedBytes = Math.max(buf.length, (img.width || 1) * (img.height || 1) * 4);
 
-    return img;
+      // In case another load completed while this one was running
+      const existing = imageCache.get(resolvedPath);
+      if (existing) {
+        currentCacheBytes = Math.max(0, currentCacheBytes - (existing.bytes || 0));
+        imageCache.delete(resolvedPath);
+      }
+
+      while (imageCache.size >= MAX_CACHE_ENTRIES || (currentCacheBytes + estimatedBytes > MAX_CACHE_BYTES && imageCache.size > 0)) {
+        const firstEntry = imageCache.entries().next().value;
+        if (!firstEntry) break;
+        const [oldKey, oldVal] = firstEntry;
+        currentCacheBytes = Math.max(0, currentCacheBytes - (oldVal.bytes || 0));
+        imageCache.delete(oldKey);
+      }
+
+      currentCacheBytes += estimatedBytes;
+      imageCache.set(resolvedPath, { img, mtime, bytes: estimatedBytes });
+      return img;
+    })();
+
+    pendingLoads.set(resolvedPath, loadPromise);
+    try {
+      return await loadPromise;
+    } finally {
+      pendingLoads.delete(resolvedPath);
+    }
   } catch {
     return null;
   }

@@ -142,13 +142,17 @@ function arcToCubicSegments(
   const x1p2 = x1p * x1p;
   const y1p2 = y1p * y1p;
 
-  let sq = (rx2 * ry2 - rx2 * y1p2 - ry2 * x1p2) / (rx2 * y1p2 + ry2 * x1p2);
-  if (sq < 0) sq = 0;
+  const denom = rx2 * y1p2 + ry2 * x1p2;
+  let sq = 0;
+  if (denom > 0) {
+    sq = (rx2 * ry2 - rx2 * y1p2 - ry2 * x1p2) / denom;
+    if (sq < 0 || !Number.isFinite(sq)) sq = 0;
+  }
   let factor = Math.sqrt(sq);
   if (largeArcFlag === sweepFlag) factor = -factor;
 
-  const cxp = factor * ((rx * y1p) / ry);
-  const cyp = factor * (-(ry * x1p) / rx);
+  const cxp = ry !== 0 ? factor * ((rx * y1p) / ry) : 0;
+  const cyp = rx !== 0 ? factor * (-(ry * x1p) / rx) : 0;
 
   // Step 3: Compute center (cx, cy) from (cx', cy')
   const cx = cosPhi * cxp - sinPhi * cyp + (x1 + x2) / 2;
@@ -158,18 +162,23 @@ function arcToCubicSegments(
   const angle = (ux: number, uy: number, vx: number, vy: number): number => {
     const dot = ux * vx + uy * vy;
     const len = Math.sqrt(ux * ux + uy * uy) * Math.sqrt(vx * vx + vy * vy);
-    let ang = Math.acos(Math.max(-1, Math.min(1, dot / len)));
+    if (len === 0 || !Number.isFinite(len)) return 0;
+    const ratio = Math.max(-1, Math.min(1, dot / len));
+    let ang = Math.acos(ratio);
     if (ux * vy - uy * vx < 0) ang = -ang;
-    return ang;
+    return Number.isFinite(ang) ? ang : 0;
   };
 
-  const theta1 = angle(1, 0, (x1p - cxp) / rx, (y1p - cyp) / ry);
+  let theta1 = angle(1, 0, (x1p - cxp) / rx, (y1p - cyp) / ry);
   let deltaTheta = angle(
     (x1p - cxp) / rx,
     (y1p - cyp) / ry,
     (-x1p - cxp) / rx,
     (-y1p - cyp) / ry
   );
+
+  if (!Number.isFinite(deltaTheta)) deltaTheta = 0;
+  if (!Number.isFinite(theta1)) theta1 = 0;
 
   if (!sweepFlag && deltaTheta > 0) {
     deltaTheta -= 2 * Math.PI;
@@ -178,7 +187,8 @@ function arcToCubicSegments(
   }
 
   // Step 5: Split the arc into segments of at most PI / 2
-  const segmentsCount = Math.max(1, Math.ceil(Math.abs(deltaTheta) / (Math.PI / 2)));
+  const absDelta = Math.abs(deltaTheta);
+  const segmentsCount = Math.max(1, Number.isFinite(absDelta) ? Math.ceil(absDelta / (Math.PI / 2)) : 1);
   const dTheta = deltaTheta / segmentsCount;
 
   const segments: CubicSegment[] = [];
@@ -473,6 +483,13 @@ export function svgPathToSubpaths(d: string): Array<{ closed: boolean; segments:
           curY = startY;
           lastCpX = null;
           lastCpY = null;
+
+          // F-035: In SVG path spec, 'Z' closes the current subpath.
+          // Isolate closed subpath so subsequent commands start a new independent subpath.
+          if (currentSubpath.segments.length > 0) {
+            subpaths.push(currentSubpath);
+            currentSubpath = { segments: [], closed: false };
+          }
           break;
         }
         default:
@@ -660,6 +677,7 @@ export function polygonToRoundedSvgPath(
   const starts: Array<{ x: number; y: number }> = [];
   const ends: Array<{ x: number; y: number }> = [];
   const radii: number[] = [];
+  const cornerSweeps: number[] = [];
 
   for (let i = 0; i < n; i++) {
     const prev = points[(i - 1 + n) % n]!;
@@ -679,6 +697,7 @@ export function polygonToRoundedSvgPath(
       starts.push(curr);
       ends.push(curr);
       radii.push(0);
+      cornerSweeps.push(sweep);
       continue;
     }
 
@@ -686,6 +705,11 @@ export function polygonToRoundedSvgPath(
     const u1y = v1y / len1;
     const u2x = v2x / len2;
     const u2y = v2y / len2;
+
+    // F-036: Compute local corner curvature (turn direction) for convex vs reflex corners
+    const crossZ = u1y * u2x - u1x * u2y;
+    const cornerSweep = crossZ > 0 ? 1 : 0;
+    cornerSweeps.push(cornerSweep);
 
     const dot = Math.max(-1, Math.min(1, u1x * u2x + u1y * u2y));
     const angle = Math.acos(dot);
@@ -718,7 +742,7 @@ export function polygonToRoundedSvgPath(
   for (let i = 0; i < n; i++) {
     dStr += `L ${starts[i]!.x} ${starts[i]!.y} `;
     if (radii[i]! > 0) {
-      dStr += `A ${radii[i]} ${radii[i]} 0 0 ${sweep} ${ends[i]!.x} ${ends[i]!.y} `;
+      dStr += `A ${radii[i]} ${radii[i]} 0 0 ${cornerSweeps[i]} ${ends[i]!.x} ${ends[i]!.y} `;
     }
   }
   dStr += 'Z';

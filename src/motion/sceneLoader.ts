@@ -377,8 +377,8 @@ async function loadSvgScene(filePath: string): Promise<MotionScene> {
   const elements = new Map<string, MotionSceneElement>();
   const order: string[] = [];
 
-  // Parse elements with IDs from SVG (path, g, rect, circle)
-  const elementRegex = /<(path|rect|circle|g)\s+([^>]*?)id=["']([^"']+)["']([^>]*?)(\/?>|>.*?<\/\1>)/gis;
+  // F-105: Parse elements with IDs from SVG (including nested inside <g>), without skipping siblings
+  const elementRegex = /<(path|rect|circle|ellipse|line|polygon|polyline|g)\b([^>]*?)id=["']([^"']+)["']([^>]*?)>/gis;
   let match: RegExpExecArray | null;
 
   while ((match = elementRegex.exec(content)) !== null) {
@@ -388,8 +388,23 @@ async function loadSvgScene(filePath: string): Promise<MotionScene> {
 
     let d: string | undefined;
     if (tag === 'path') {
-      const dMatch = attrs.match(/d=["']([^"']+)["']/i);
+      const dMatch = attrs.match(/\bd=["']([^"']+)["']/i);
       if (dMatch) d = dMatch[1];
+    } else if (tag === 'rect') {
+      const x = parseFloat(attrs.match(/\bx=["']([^"']+)["']/i)?.[1] || '0');
+      const y = parseFloat(attrs.match(/\by=["']([^"']+)["']/i)?.[1] || '0');
+      const w = parseFloat(attrs.match(/\bwidth=["']([^"']+)["']/i)?.[1] || '0');
+      const h = parseFloat(attrs.match(/\bheight=["']([^"']+)["']/i)?.[1] || '0');
+      if (w > 0 && h > 0) {
+        d = `M ${x} ${y} h ${w} v ${h} h ${-w} Z`;
+      }
+    } else if (tag === 'circle') {
+      const cx = parseFloat(attrs.match(/\bcx=["']([^"']+)["']/i)?.[1] || '0');
+      const cy = parseFloat(attrs.match(/\bcy=["']([^"']+)["']/i)?.[1] || '0');
+      const r = parseFloat(attrs.match(/\br=["']([^"']+)["']/i)?.[1] || '0');
+      if (r > 0) {
+        d = `M ${cx - r} ${cy} a ${r} ${r} 0 1 0 ${r * 2} 0 a ${r} ${r} 0 1 0 ${-r * 2} 0 Z`;
+      }
     }
 
     const element: MotionSceneElement = {
@@ -432,24 +447,22 @@ async function loadSvgScene(filePath: string): Promise<MotionScene> {
 
           if (activeD) {
             const p2d = new Path2D(activeD);
-            const fillMatch = attrs.match(/fill=["']([^"']+)["']/i);
-            const fill = fillMatch ? fillMatch[1] : '#000000';
+            const fillMatch = attrs.match(/\bfill=["']([^"']+)["']/i);
+            const fill = fillMatch ? fillMatch[1] : (tag === 'path' ? '#000000' : 'none');
             if (fill !== 'none' && !isTrimming) {
               ctx.fillStyle = fill;
               ctx.fill(p2d);
             }
-            const strokeMatch = attrs.match(/stroke=["']([^"']+)["']/i);
+            const strokeMatch = attrs.match(/\bstroke=["']([^"']+)["']/i);
             if (strokeMatch && strokeMatch[1] !== 'none') {
               ctx.strokeStyle = state?.stroke || strokeMatch[1]!;
-              const swMatch = attrs.match(/stroke-width=["']([^"']+)["']/i);
+              const swMatch = attrs.match(/\bstroke-width=["']([^"']+)["']/i);
               ctx.lineWidth = state?.strokeWidth ?? (swMatch ? parseFloat(swMatch[1]!) : 1);
               ctx.lineCap = 'round';
               ctx.lineJoin = 'round';
               ctx.stroke(p2d);
             }
           }
-        } else {
-          (ctx as any).drawImage(img, 0, 0);
         }
         ctx.globalAlpha = prevAlpha;
       }

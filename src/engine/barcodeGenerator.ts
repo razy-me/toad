@@ -306,67 +306,83 @@ export function generateBarcode(value: string, options: BarcodeOptions = {}): Ba
   const showText = Boolean(options.showText);
   let bars: BarcodeBar[] = [];
   let totalModules = 100;
-  let text = value;
+  let text = typeof value === 'string' ? value : String(value ?? '');
 
-  switch (format) {
-    case 'ean13': {
-      const res = generateEan13(value, options.quietZone);
-      bars = res.bars;
-      totalModules = res.totalModules;
-      text = res.formattedText;
-      break;
-    }
-    case 'upc': {
-      // UPC-A is EAN-13 with leading zero
-      const upcDigits = value.replace(/[^0-9]/g, '');
-      if (upcDigits.length < 11) {
-        throw new Error(`UPC requires at least 11 digits, received ${upcDigits.length} digits ('${value}').`);
+  try {
+    switch (format) {
+      case 'ean13': {
+        const res = generateEan13(text, options.quietZone);
+        bars = res.bars;
+        totalModules = res.totalModules;
+        text = res.formattedText;
+        break;
       }
-      let upcVal = upcDigits;
-      if (upcVal.length === 11) {
-        const check = calculateEan13Checksum(`0${upcVal}`);
-        upcVal = `0${upcVal}${check}`;
-      } else {
-        upcVal = `0${upcVal.slice(0, 12)}`;
+      case 'upc': {
+        // UPC-A is EAN-13 with leading zero
+        const upcDigits = text.replace(/[^0-9]/g, '');
+        if (upcDigits.length < 11) {
+          throw new Error(`UPC requires at least 11 digits, received ${upcDigits.length} digits ('${text}').`);
+        }
+        let upcVal = upcDigits;
+        if (upcVal.length === 11) {
+          const check = calculateEan13Checksum(`0${upcVal}`);
+          upcVal = `0${upcVal}${check}`;
+        } else {
+          upcVal = `0${upcVal.slice(0, 12)}`;
+        }
+        const res = generateEan13(upcVal, options.quietZone);
+        bars = res.bars;
+        totalModules = res.totalModules;
+        text = res.formattedText;
+        break;
       }
-      const res = generateEan13(upcVal, options.quietZone);
-      bars = res.bars;
-      totalModules = res.totalModules;
-      text = res.formattedText;
-      break;
+      case 'code39': {
+        const res = generateCode39(text, options.quietZone);
+        bars = res.bars;
+        totalModules = res.totalModules;
+        break;
+      }
+      case 'code128':
+      default: {
+        const codeVal = options.sanitize ? sanitizeCode128(text) : text;
+        text = codeVal;
+        const res = generateCode128(codeVal, options.quietZone);
+        bars = res.bars;
+        totalModules = res.totalModules;
+        break;
+      }
     }
-    case 'code39': {
-      const res = generateCode39(value, options.quietZone);
-      bars = res.bars;
-      totalModules = res.totalModules;
-      break;
-    }
-    case 'code128':
-    default: {
-      const codeVal = options.sanitize ? sanitizeCode128(value) : value;
-      text = codeVal;
-      const res = generateCode128(codeVal, options.quietZone);
-      bars = res.bars;
-      totalModules = res.totalModules;
-      break;
+  } catch {
+    // F-026: Safe fallback placeholder barcode on malformed inputs instead of crashing
+    totalModules = 60;
+    bars = [];
+    for (let i = 10; i < 50; i += 2) {
+      bars.push({ x: i, width: 1 });
     }
   }
+
+  const validTotalModules = Number.isFinite(totalModules) && totalModules > 0 ? totalModules : 60;
 
   return {
     format,
     text,
-    totalModules,
+    totalModules: validTotalModules,
     bars,
     showText: !!showText,
     toSvgPath: (widthPx: number, heightPx: number, barHeightRatio?: number) => {
-      const ratio = barHeightRatio !== undefined ? barHeightRatio : (showText ? 0.8 : 1.0);
-      const modW = widthPx / totalModules;
-      const effectiveH = heightPx * ratio;
+      const validW = Number.isFinite(widthPx) && widthPx > 0 ? widthPx : 100;
+      const validH = Number.isFinite(heightPx) && heightPx > 0 ? heightPx : 50;
+      const rawRatio = barHeightRatio !== undefined ? barHeightRatio : (showText ? 0.8 : 1.0);
+      const ratio = Number.isFinite(rawRatio) ? Math.max(0, Math.min(1, rawRatio)) : (showText ? 0.8 : 1.0);
+      const modW = validW / validTotalModules;
+      const effectiveH = validH * ratio;
 
       let d = '';
       for (const b of bars) {
-        const x = b.x * modW;
-        const w = b.width * modW;
+        const bx = Number.isFinite(b.x) ? b.x : 0;
+        const bw = Number.isFinite(b.width) ? b.width : 1;
+        const x = bx * modW;
+        const w = bw * modW;
         d += `M ${x.toFixed(2)} 0 h ${w.toFixed(2)} v ${effectiveH.toFixed(2)} h ${(-w).toFixed(2)} Z `;
       }
       return d.trim();

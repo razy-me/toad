@@ -252,7 +252,9 @@ export class PsdExporter {
         } else if (node.style?.clip === false || (node as any).clip === false) {
           isCurrentRootMaskActive = false;
         } else if (isCurrentRootMaskActive) {
-          layer.clipping = true;
+          if (!layer.children || layer.children.length === 0) {
+            layer.clipping = true;
+          }
         }
         psdChildren.push(layer);
       }
@@ -368,9 +370,14 @@ export class PsdExporter {
     psd.canvas = compositeCanvas as unknown as HTMLCanvasElement;
 
     // 5. Encode PSD buffer
+    const isPsb = docWidth > 30000 || docHeight > 30000 || Boolean((psd as any).psb);
+    if (isPsb) {
+      (psd as any).psb = true;
+    }
     const buffer = writePsdBuffer(psd, {
-      generateThumbnail: options.generateThumbnail ?? true
-    });
+      generateThumbnail: options.generateThumbnail ?? true,
+      ...(isPsb ? { psb: true } : {})
+    } as any);
 
     return this.enforcePsdFourBytePadding(buffer);
   }
@@ -723,7 +730,9 @@ export class PsdExporter {
             } else if (childNode.style?.clip === false || (childNode as any).clip === false) {
               isCurrentMaskActive = false;
             } else if (isCurrentMaskActive) {
-              childLayer.clipping = true;  // Clipped to base mask layer
+              if (!childLayer.children || childLayer.children.length === 0) {
+                childLayer.clipping = true;  // Clipped to base mask layer
+              }
             }
             childLayers.push(childLayer);
           }

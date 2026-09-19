@@ -247,11 +247,26 @@ export class PdfExporter {
     const catalogObjId = this.allocId();
     const pagesObjId = this.allocId();
 
+    const customFontEntries: string[] = [];
+    for (const [psName, tag] of this.customFontMap.entries()) {
+      const fontDescId = this.allocId();
+      const fontObjId = this.allocId();
+      this.objects.push({
+        id: fontDescId,
+        content: `<< /Type /FontDescriptor /FontName /${psName} /Flags 32 /ItalicAngle 0 /Ascent 750 /Descent -250 /CapHeight 700 /StemV 80 >>`
+      });
+      const widths = Array(224).fill(600).join(' ');
+      this.objects.push({
+        id: fontObjId,
+        content: `<< /Type /Font /Subtype /TrueType /BaseFont /${psName} /FirstChar 32 /LastChar 255 /Widths [${widths}] /FontDescriptor ${fontDescId} 0 R /Encoding /WinAnsiEncoding >>`
+      });
+      customFontEntries.push(`${tag} ${fontObjId} 0 R`);
+    }
+
     const fontEntries = [
       ...Object.entries(STANDARD_PDF_FONTS)
         .map(([tag, name]) => `/${tag} << /Type /Font /Subtype /Type1 /BaseFont /${name} /Encoding /WinAnsiEncoding >>`),
-      ...Array.from(this.customFontMap.entries())
-        .map(([psName, tag]) => `${tag} << /Type /Font /Subtype /TrueType /BaseFont /${psName} /Encoding /WinAnsiEncoding >>`)
+      ...customFontEntries
     ].join(' ');
 
     const xObjectEntries: string[] = [];
@@ -588,29 +603,74 @@ export class PdfExporter {
     const imgKey = imgSrc;
     let imgInfo = this.images.get(imgKey);
     if (!imgInfo) {
-      const imgW = img.width;
-      const imgH = img.height;
+      let imgW = img.width;
+      let imgH = img.height;
+      // F-066: Limit maximum image dimension to avoid gigabyte memory explosions
+      const MAX_PDF_IMG_DIM = 4096;
+      if (imgW > MAX_PDF_IMG_DIM || imgH > MAX_PDF_IMG_DIM) {
+        const scale = Math.min(MAX_PDF_IMG_DIM / imgW, MAX_PDF_IMG_DIM / imgH);
+        imgW = Math.max(1, Math.round(imgW * scale));
+        imgH = Math.max(1, Math.round(imgH * scale));
+      }
+
       const imgCanvas = createCanvas(imgW, imgH);
       const ictx = imgCanvas.getContext('2d');
-      ictx.drawImage(img, 0, 0);
+      ictx.drawImage(img, 0, 0, imgW, imgH);
       const imgData = ictx.getImageData(0, 0, imgW, imgH).data;
 
-      const rgbBuf = Buffer.alloc(imgW * imgH * 3);
-      for (let i = 0, j = 0; i < imgData.length; i += 4, j += 3) {
+      // Free native Skia surface memory
+      imgCanvas.width = 1;
+      imgCanvas.height = 1;
+
+      const totalPixels = imgW * imgH;
+      const rgbBuf = Buffer.alloc(totalPixels * 3);
+      let alphaBuf: Buffer | null = null;
+      let hasAlpha = false;
+
+      for (let i = 0, j = 0, a = 0; i < imgData.length; i += 4, j += 3, a++) {
         rgbBuf[j] = imgData[i]!;
         rgbBuf[j + 1] = imgData[i + 1]!;
         rgbBuf[j + 2] = imgData[i + 2]!;
+        const alphaVal = imgData[i + 3]!;
+        if (alphaVal < 255) {
+          if (!hasAlpha) {
+            hasAlpha = true;
+            alphaBuf = Buffer.alloc(totalPixels, 255);
+          }
+          alphaBuf![a] = alphaVal;
+        }
       }
-      const compressed = zlib.deflateSync(rgbBuf);
+
+      const compressedRgb = zlib.deflateSync(rgbBuf);
+      let sMaskRef = '';
+
+      // F-076: Generate /SMask for images with transparency
+      if (hasAlpha && alphaBuf) {
+        const compressedAlpha = zlib.deflateSync(alphaBuf);
+        const sMaskObjId = this.allocId();
+        this.objects.push({
+          id: sMaskObjId,
+          content: Buffer.concat([
+            Buffer.from(
+              `<< /Type /XObject /Subtype /Image /Width ${imgW} /Height ${imgH} /ColorSpace /DeviceGray /BitsPerComponent 8 /Length ${compressedAlpha.length} /Filter /FlateDecode >>\nstream\n`,
+              'ascii'
+            ),
+            compressedAlpha,
+            Buffer.from('\nendstream', 'ascii')
+          ])
+        });
+        sMaskRef = ` /SMask ${sMaskObjId} 0 R`;
+      }
+
       const imgObjId = this.allocId();
       this.objects.push({
         id: imgObjId,
         content: Buffer.concat([
           Buffer.from(
-            `<< /Type /XObject /Subtype /Image /Width ${imgW} /Height ${imgH} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Length ${compressed.length} /Filter /FlateDecode >>\nstream\n`,
+            `<< /Type /XObject /Subtype /Image /Width ${imgW} /Height ${imgH} /ColorSpace /DeviceRGB /BitsPerComponent 8${sMaskRef} /Length ${compressedRgb.length} /Filter /FlateDecode >>\nstream\n`,
             'ascii'
           ),
-          compressed,
+          compressedRgb,
           Buffer.from('\nendstream', 'ascii')
         ])
       });

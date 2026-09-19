@@ -331,7 +331,12 @@ function escapeDslString(str: string): string {
 
   let psd: Psd;
   try {
-    psd = readPsd(buffer as any, { skipThumbnail: true });
+    psd = readPsd(buffer as any, {
+      skipThumbnail: true,
+      skipCompositeImageData: true,
+      skipLinkedFilesData: true,
+      skipLayerImageData: options.extractImages === false
+    });
   } catch (err: any) {
     throw new Error(`Failed to parse PSD file (file may be corrupted or invalid): ${err?.message || String(err)}`);
   }
@@ -703,29 +708,38 @@ function escapeDslString(str: string): string {
         ? (relDir.startsWith('.') ? `${relDir}/${assetFileName}` : `./${relDir}/${assetFileName}`)
         : `./${assetFileName}`;
 
-      try {
-        const pngBuf = (layer.canvas as any).toBuffer('image/png');
-        fs.writeFileSync(assetDiskPath, pngBuf);
-        assets.push({
-          layerName,
-          filePath: assetDiskPath,
-          relativePath: relAssetPath,
-          width: w,
-          height: h
-        });
+        try {
+          const pngBuf = (layer.canvas as any).toBuffer('image/png');
+          fs.writeFileSync(assetDiskPath, pngBuf);
+          assets.push({
+            layerName,
+            filePath: assetDiskPath,
+            relativePath: relAssetPath,
+            width: w,
+            height: h
+          });
 
-        lines.push(`${indent}image #${id} "${escapeDslString(layerName)}" {`);
-        lines.push(`${indent}  src: "${relAssetPath}";`);
-        lines.push(`${indent}  at: ${localLeft}px ${localTop}px;`);
-        lines.push(`${indent}  size: ${w}px ${h}px;`);
-        lines.push(`${indent}  fit: cover;`);
-        if (maskTargetId) lines.push(`${indent}  mask: #${maskTargetId};`);
-        for (const prop of commonProps) lines.push(`${indent}  ${prop}`);
-        lines.push(`${indent}}`);
-        lines.push('');
-      } catch (err: any) {
-        warnings.push(`Failed to export raster layer '${layerName}': ${err.message}`);
-      }
+          // Free canvas memory immediately after saving to disk
+          if (layer.canvas) {
+            try {
+              (layer.canvas as any).width = 1;
+              (layer.canvas as any).height = 1;
+            } catch {}
+            layer.canvas = undefined as any;
+          }
+
+          lines.push(`${indent}image #${id} "${escapeDslString(layerName)}" {`);
+          lines.push(`${indent}  src: "${relAssetPath}";`);
+          lines.push(`${indent}  at: ${localLeft}px ${localTop}px;`);
+          lines.push(`${indent}  size: ${w}px ${h}px;`);
+          lines.push(`${indent}  fit: cover;`);
+          if (maskTargetId) lines.push(`${indent}  mask: #${maskTargetId};`);
+          for (const prop of commonProps) lines.push(`${indent}  ${prop}`);
+          lines.push(`${indent}}`);
+          lines.push('');
+        } catch (err: any) {
+          warnings.push(`Failed to export raster layer '${layerName}': ${err.message}`);
+        }
       return id;
     }
 

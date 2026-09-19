@@ -201,7 +201,16 @@ export async function exportMotionVideo(
       'split[s0][s1];[s0]palettegen=max_colors=128[p];[s1][p]paletteuse=dither=bayer'
     ];
   } else if (format === 'webm') {
-    extraArgs = ['-c:v', 'libvpx-vp9', '-pix_fmt', 'yuva420p', '-auto-alt-ref', '0'];
+    extraArgs = [
+      '-c:v',
+      'libvpx-vp9',
+      '-vf',
+      'pad=ceil(iw/2)*2:ceil(ih/2)*2',
+      '-pix_fmt',
+      'yuva420p',
+      '-auto-alt-ref',
+      '0'
+    ];
   } else {
     // Hardware acceleration (NVIDIA NVENC, Intel QSV, AMD AMF) with CPU fallback
     const hw = detectFfmpegHwEncoder(ffmpegBin);
@@ -252,20 +261,53 @@ export async function exportMotionVideo(
   return new Promise<string>((resolve, reject) => {
     const ffmpeg = spawn(ffmpegBin, args, { stdio: ['pipe', 'ignore', 'pipe'] });
 
+    let isSettled = false;
+    const cleanupHandler = () => {
+      try {
+        if (!ffmpeg.killed) {
+          ffmpeg.kill('SIGKILL');
+        }
+      } catch {}
+    };
+    process.once('exit', cleanupHandler);
+    process.once('SIGINT', cleanupHandler);
+    process.once('SIGTERM', cleanupHandler);
+
+    const removeListeners = () => {
+      process.removeListener('exit', cleanupHandler);
+      process.removeListener('SIGINT', cleanupHandler);
+      process.removeListener('SIGTERM', cleanupHandler);
+    };
+
     let stderr = '';
     ffmpeg.stderr?.on('data', (data) => {
       stderr += data.toString();
     });
 
+    ffmpeg.stdin?.on('error', (err: any) => {
+      // F-065: EPIPE occurs when FFmpeg exits before all frames are written; handled in close event
+      if (err.code !== 'EPIPE') {
+        // ignore or let close handler reject with stderr
+      }
+    });
+
     ffmpeg.on('error', (err) => {
-      reject(new Error(`Failed to spawn FFmpeg process: ${err.message}`));
+      removeListeners();
+      if (!isSettled) {
+        isSettled = true;
+        reject(new Error(`Failed to spawn FFmpeg process: ${err.message}`));
+      }
     });
 
     ffmpeg.on('close', (code) => {
-      if (code === 0) {
-        resolve(outputPath);
-      } else {
-        reject(new Error(`FFmpeg exited with error code ${code}: ${stderr}`));
+      removeListeners();
+      if (!isSettled) {
+        isSettled = true;
+        if (code === 0) {
+          resolve(outputPath);
+        } else {
+          reject(new Error(`FFmpeg exited with error code ${code}: ${stderr}`));
+        }
       }
     });
 
@@ -273,23 +315,46 @@ export async function exportMotionVideo(
     (async () => {
       try {
         for (let frame = 0; frame < totalFrames; frame++) {
+          if (ffmpeg.stdin?.destroyed || !ffmpeg.stdin?.writable || isSettled) {
+            break;
+          }
           const time = frame / fps;
           const canvas = solver.renderFrame(time);
           const rawRgba = canvas.data();
 
           const canWrite = ffmpeg.stdin.write(rawRgba);
-          if (!canWrite) {
-            await new Promise<void>((drainResolve) => ffmpeg.stdin.once('drain', drainResolve));
+          if (!canWrite && !ffmpeg.stdin.destroyed) {
+            await new Promise<void>((drainResolve, drainReject) => {
+              const timer = setTimeout(() => {
+                drainReject(new Error('FFmpeg stdin drain timed out'));
+              }, 10000);
+              ffmpeg.stdin.once('drain', () => {
+                clearTimeout(timer);
+                drainResolve();
+              });
+              ffmpeg.stdin.once('error', () => {
+                clearTimeout(timer);
+                drainResolve(); // Handled by close event
+              });
+            });
           }
 
           if (options.onProgress) {
             options.onProgress(frame + 1, totalFrames);
           }
         }
-        ffmpeg.stdin.end();
+        if (!ffmpeg.stdin?.destroyed && ffmpeg.stdin?.writable) {
+          ffmpeg.stdin.end();
+        }
       } catch (err) {
-        ffmpeg.kill();
-        reject(err);
+        try {
+          ffmpeg.kill();
+        } catch {}
+        removeListeners();
+        if (!isSettled) {
+          isSettled = true;
+          reject(err);
+        }
       }
     })();
   });

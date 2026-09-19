@@ -122,8 +122,10 @@ export class SvgExporter {
             const ext = path.extname(resolvedPath).toLowerCase();
             const mime = ext === '.woff2' ? 'font/woff2' : ext === '.woff' ? 'font/woff' : ext === '.otf' ? 'font/otf' : 'font/ttf';
             const base64 = fs.readFileSync(resolvedPath).toString('base64');
-            const weightProp = f.weight ? `font-weight: ${f.weight}; ` : '';
-            const styleProp = f.style ? `font-style: ${f.style}; ` : '';
+            const safeWeight = f.weight ? String(f.weight).replace(/[^a-zA-Z0-9_-]/g, '') : '';
+            const safeStyle = f.style ? String(f.style).replace(/[^a-zA-Z0-9_-]/g, '') : '';
+            const weightProp = safeWeight ? `font-weight: ${safeWeight}; ` : '';
+            const styleProp = safeStyle ? `font-style: ${safeStyle}; ` : '';
             fontFaces.push(`@font-face { font-family: "${this.escapeAttr(f.family)}"; ${weightProp}${styleProp}src: url("data:${mime};base64,${base64}"); }`);
             const psName = FontLoader.resolvePostScriptName(f.family, f.weight, f.style);
             if (psName && psName.toLowerCase() !== f.family.toLowerCase()) {
