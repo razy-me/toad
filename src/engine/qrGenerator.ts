@@ -13,6 +13,7 @@ export interface QrCodeOptions {
   hasLogo?: boolean;
   logo?: string;
   logoRatio?: number; // Ratio of logo to QR width (0.15 - 0.30, default 0.22)
+  fallback?: boolean;
 }
 
 export interface QrCodeResult {
@@ -536,10 +537,48 @@ function evaluatePenalty(matrix: boolean[][], size: number): number {
  */
 export function generateQrCode(text: string, options: QrCodeOptions = {}): QrCodeResult {
   const hasLogo = Boolean(options.hasLogo || options.logo);
-  // F-039: If a logo is embedded, enforce 'H' error correction (30% recovery) to prevent unreadable QR codes
-  const ecl = hasLogo ? 'H' : (options.ecl ?? 'M');
+  const dataBytes = new TextEncoder().encode(text);
+  const dataLen = dataBytes.length;
 
-  const version = selectVersion(new TextEncoder().encode(text).length, ecl);
+  let ecl: QrErrorCorrectionLevel = options.ecl ?? (hasLogo ? 'H' : 'M');
+  let version = 1;
+
+  if (hasLogo && !options.ecl) {
+    // Try highest ECL down to L so large payloads don't throw capacity error (REG-06)
+    const candidateEcls: QrErrorCorrectionLevel[] = ['H', 'Q', 'M', 'L'];
+    let found = false;
+    for (const cand of candidateEcls) {
+      try {
+        version = selectVersion(dataLen, cand);
+        ecl = cand;
+        found = true;
+        break;
+      } catch {
+        // payload too large for this ECL, try lower
+      }
+    }
+    if (!found) {
+      if (options.fallback) {
+        version = 40;
+        ecl = 'L';
+      } else {
+        version = selectVersion(dataLen, 'L');
+        ecl = 'L';
+      }
+    }
+  } else {
+    try {
+      version = selectVersion(dataLen, ecl);
+    } catch (err) {
+      if (options.fallback) {
+        version = 40;
+        ecl = 'L';
+      } else {
+        throw err;
+      }
+    }
+  }
+
   const size = 17 + version * 4;
 
   const matrix: boolean[][] = Array.from({ length: size }, () => Array(size).fill(false));
@@ -644,6 +683,28 @@ export function generateQrCode(text: string, options: QrCodeOptions = {}): QrCod
     upwards = !upwards;
   }
 
+  // Calculate Logo Quiet Zone Box in module units if requested (REG-26)
+  let logoBox: QrCodeResult['logoBox'] = undefined;
+  if (hasLogo) {
+    const ratio = Math.max(0.15, Math.min(0.30, options.logoRatio || 0.22));
+    const logoModuleW = Math.round(size * ratio);
+    const logoModuleH = Math.round(size * ratio);
+    const logoModuleX = Math.floor((size - logoModuleW) / 2);
+    const logoModuleY = Math.floor((size - logoModuleH) / 2);
+    // Quiet padding around logo (1 module)
+    const pad = 1;
+    logoBox = {
+      x: logoModuleX,
+      y: logoModuleY,
+      width: logoModuleW,
+      height: logoModuleH,
+      padX: Math.max(0, logoModuleX - pad),
+      padY: Math.max(0, logoModuleY - pad),
+      padWidth: Math.min(size - Math.max(0, logoModuleX - pad), logoModuleW + pad * 2),
+      padHeight: Math.min(size - Math.max(0, logoModuleY - pad), logoModuleH + pad * 2)
+    };
+  }
+
   // 8. Mask Evaluation: test all 8 masks and pick the lowest penalty
   let bestMask = 0;
   let minPenalty = Infinity;
@@ -672,40 +733,21 @@ export function generateQrCode(text: string, options: QrCodeOptions = {}): QrCod
     };
 
     writeFormat(candidate);
+
+    // Blank out entire quiet zone padding in candidate before penalty evaluation (REG-26)
+    if (logoBox) {
+      for (let r = logoBox.padY; r < logoBox.padY + logoBox.padHeight; r++) {
+        for (let c = logoBox.padX; c < logoBox.padX + logoBox.padWidth; c++) {
+          if (candidate[r]) candidate[r]![c] = false;
+        }
+      }
+    }
+
     const penalty = evaluatePenalty(candidate, size);
     if (penalty < minPenalty) {
       minPenalty = penalty;
       bestMask = m;
       bestMatrix = candidate;
-    }
-  }
-
-  // Calculate Logo Quiet Zone Box in module units if requested
-  let logoBox: QrCodeResult['logoBox'] = undefined;
-  if (hasLogo) {
-    const ratio = Math.max(0.15, Math.min(0.30, options.logoRatio || 0.22));
-    const logoModuleW = Math.round(size * ratio);
-    const logoModuleH = Math.round(size * ratio);
-    const logoModuleX = Math.floor((size - logoModuleW) / 2);
-    const logoModuleY = Math.floor((size - logoModuleH) / 2);
-    // Quiet padding around logo (1-2 modules)
-    const pad = 1;
-    logoBox = {
-      x: logoModuleX,
-      y: logoModuleY,
-      width: logoModuleW,
-      height: logoModuleH,
-      padX: Math.max(0, logoModuleX - pad),
-      padY: Math.max(0, logoModuleY - pad),
-      padWidth: logoModuleW + pad * 2,
-      padHeight: logoModuleH + pad * 2
-    };
-
-    // Blank out modules under the center logo quiet zone
-    for (let r = logoModuleY; r < logoModuleY + logoModuleH; r++) {
-      for (let c = logoModuleX; c < logoModuleX + logoModuleW; c++) {
-        if (bestMatrix[r]) bestMatrix[r]![c] = false;
-      }
     }
   }
 

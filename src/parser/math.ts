@@ -2082,15 +2082,27 @@ export class LayoutSolver {
     let barcodeLayout: LayoutNode['barcodeLayout'] | undefined;
 
     if (elem.type === 'qrcode') {
-      const qrRes = generateQrCode(elem.value || '', { ecl: elem.ecl, logo: elem.logo });
-      qrcodeLayout = {
-        value: elem.value || '',
-        ecl: qrRes.ecl,
-        logo: elem.logo,
-        matrix: qrRes.matrix,
-        logoBox: qrRes.logoBox
-      };
-      pathLayout = { d: qrRes.toSvgPath(box.w, box.h) };
+      try {
+        const qrRes = generateQrCode(elem.value || '', { ecl: elem.ecl, logo: elem.logo, fallback: true });
+        qrcodeLayout = {
+          value: elem.value || '',
+          ecl: qrRes.ecl,
+          logo: elem.logo,
+          matrix: qrRes.matrix,
+          logoBox: qrRes.logoBox
+        };
+        pathLayout = { d: qrRes.toSvgPath(box.w, box.h) };
+      } catch {
+        const fallbackRes = generateQrCode('ERROR', { ecl: 'L' });
+        qrcodeLayout = {
+          value: elem.value || '',
+          ecl: 'L',
+          logo: undefined,
+          matrix: fallbackRes.matrix,
+          logoBox: undefined
+        };
+        pathLayout = { d: fallbackRes.toSvgPath(box.w, box.h) };
+      }
     } else if (elem.type === 'barcode') {
       const barRes = generateBarcode(elem.value || '', { format: elem.barcodeFormat as any, showText: elem.showText, fallback: true });
       barcodeLayout = {

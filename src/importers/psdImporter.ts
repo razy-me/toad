@@ -191,8 +191,8 @@ export function bezierPathToSvgD(path: BezierPath): string {
     const currAnchorX = Number(currKnot.points[2]!.toFixed(2));
     const currAnchorY = Number(currKnot.points[3]!.toFixed(2));
 
-    const isLinear = Math.abs(cp1x - currAnchorX) < 0.2 && Math.abs(cp1y - currAnchorY) < 0.2 &&
-                     Math.abs(cp2x - endX) < 0.2 && Math.abs(cp2y - endY) < 0.2;
+    const isLinear = Math.abs(cp1x - currAnchorX) < 0.5 && Math.abs(cp1y - currAnchorY) < 0.5 &&
+                     Math.abs(cp2x - endX) < 0.5 && Math.abs(cp2y - endY) < 0.5;
 
     if (isLinear) {
       d += ` L ${endX} ${endY}`;
@@ -338,6 +338,7 @@ export async function importPsd(
         skipThumbnail: true,
         skipCompositeImageData: true,
         skipLinkedFilesData: true,
+        useImageData: true,
         skipLayerImageData: options.extractImages === false
       });
     } catch (err: any) {
@@ -729,7 +730,24 @@ export async function importPsd(
         : `./${assetFileName}`;
 
         try {
-          const pngBuf = (layer.canvas as any).toBuffer('image/png');
+          let pngBuf: Buffer;
+          const imgData = (layer as any).imageData;
+          if (imgData) {
+            const tempCanvas = createCanvas(w, h);
+            const tctx = tempCanvas.getContext('2d');
+            const skiaImgData = tctx.createImageData(w, h);
+            skiaImgData.data.set(imgData.data || imgData);
+            tctx.putImageData(skiaImgData, 0, 0);
+            pngBuf = tempCanvas.toBuffer('image/png');
+            try {
+              (tempCanvas as any).width = 1;
+              (tempCanvas as any).height = 1;
+            } catch {}
+          } else if (layer.canvas) {
+            pngBuf = (layer.canvas as any).toBuffer('image/png');
+          } else {
+            throw new Error('No image data found on layer');
+          }
           fs.writeFileSync(assetDiskPath, pngBuf);
           assets.push({
             layerName,
@@ -747,6 +765,7 @@ export async function importPsd(
             } catch {}
             layer.canvas = undefined as any;
           }
+          (layer as any).imageData = undefined;
 
           lines.push(`${indent}image #${id} "${escapeDslString(layerName)}" {`);
           lines.push(`${indent}  src: "${relAssetPath}";`);
@@ -784,11 +803,14 @@ export async function importPsd(
     let lastBaseId: string | undefined;
 
     for (const layer of layers) {
+      const isClipped = Boolean(layer.clipping || (layer as any).clipped);
       if (layer.hidden && !options.includeHidden) {
+        if (!isClipped) {
+          lastBaseId = undefined;
+        }
         continue;
       }
 
-      const isClipped = Boolean(layer.clipping || (layer as any).clipped);
       const layerId = processLayer(layer, indent, parentLeft, parentTop, isClipped ? lastBaseId : undefined);
       if (!isClipped && layerId) {
         lastBaseId = layerId;

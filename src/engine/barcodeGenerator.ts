@@ -90,20 +90,48 @@ export function sanitizeCode128(text: string): string {
 }
 
 function generateCode128(text: string, quietZoneModules?: number): { bars: BarcodeBar[]; totalModules: number } {
-  // Use Code Set B (standard ASCII 32 to 126)
-  const codes: number[] = [104]; // Start B
-  let checksum = 104;
+  const isAllDigits = /^\d+$/.test(text);
+  const codes: number[] = [];
+  let checksum = 0;
 
-  for (let i = 0; i < text.length; i++) {
-    const ascii = text.charCodeAt(i);
-    if (ascii < 32 || ascii > 126) {
-      throw new Error(
-        `Code 128 character at index ${i} ('${text[i]}', ASCII ${ascii}) is outside valid ASCII range (32-126).`
-      );
+  if (isAllDigits && text.length >= 4) {
+    // Mode C: start with 105
+    codes.push(105);
+    checksum = 105;
+    let weight = 1;
+    let i = 0;
+    while (i + 1 < text.length) {
+      const pairVal = parseInt(text.slice(i, i + 2), 10);
+      codes.push(pairVal);
+      checksum += pairVal * weight;
+      weight++;
+      i += 2;
     }
-    const code = ascii - 32;
-    codes.push(code);
-    checksum += code * (i + 1);
+    // If odd number of digits, switch to Code B for the final single digit (REG-41)
+    if (i < text.length) {
+      codes.push(100); // Code B switch
+      checksum += 100 * weight;
+      weight++;
+      const lastCode = text.charCodeAt(i) - 32;
+      codes.push(lastCode);
+      checksum += lastCode * weight;
+    }
+  } else {
+    // Use Code Set B (standard ASCII 32 to 126)
+    codes.push(104); // Start B
+    checksum = 104;
+
+    for (let i = 0; i < text.length; i++) {
+      const ascii = text.charCodeAt(i);
+      if (ascii < 32 || ascii > 126) {
+        throw new Error(
+          `Code 128 character at index ${i} ('${text[i]}', ASCII ${ascii}) is outside valid ASCII range (32-126).`
+        );
+      }
+      const code = ascii - 32;
+      codes.push(code);
+      checksum += code * (i + 1);
+    }
   }
 
   codes.push(checksum % 103);

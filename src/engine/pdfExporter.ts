@@ -544,10 +544,11 @@ export class PdfExporter {
     const lineHeight = tLayout.lineHeight || fontSize * 1.2;
     const capOffset = tLayout.opticalCenterOffset || 0;
 
+    const halfLeading = Math.max(0, (lineHeight - fontSize) / 2);
     const isMiddle = node.style.verticalAlign === 'middle';
     const startY = isMiddle
       ? node.y + (node.height - (tLayout.lines.length - 1) * lineHeight) / 2 + capOffset
-      : node.y + fontSize * 0.85;
+      : node.y + halfLeading + fontSize * 0.85;
 
     const fontTag = this.resolveFontTag(tLayout.fontFamily || (node.style as any).fontFamily, (node.style as any).fontWeight, (node.style as any).fontStyle);
     ops.push('BT');

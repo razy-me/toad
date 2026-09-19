@@ -259,8 +259,9 @@ export class PsdExporter {
         } else if (node.style?.clip === false || (node as any).clip === false) {
           isCurrentRootMaskActive = false;
         } else if (isCurrentRootMaskActive) {
-          if (!layer.children || layer.children.length === 0) {
-            layer.clipping = true;
+          layer.clipping = true;
+          if (layer.children && layer.children.length > 0) {
+            layer.children[0]!.clipping = true;
           }
         }
         psdChildren.push(layer);
@@ -488,9 +489,9 @@ export class PsdExporter {
         const aliBlock = Buffer.alloc(totalBlockLen);
         aliSig.copy(aliBlock, 0);
         aliKey.copy(aliBlock, 4);
-        // Both Photopea (which aligns to 4-byte boundaries) and ag-psd (which reads 2-byte aligned
-        // lengths) require alignedLen in the header so neither reader desynchronizes signatures.
-        aliBlock.writeUInt32BE(alignedLen, 8);
+        // Adobe Photoshop specification: Length header must be the exact unpadded data length (aliLen),
+        // while the block in the stream is padded to 4-byte boundary.
+        aliBlock.writeUInt32BE(aliLen, 8);
         aliData.copy(aliBlock, 12);
         // remaining pad bytes are initialized to 0 by Buffer.alloc
 
@@ -737,8 +738,9 @@ export class PsdExporter {
             } else if (childNode.style?.clip === false || (childNode as any).clip === false) {
               isCurrentMaskActive = false;
             } else if (isCurrentMaskActive) {
-              if (!childLayer.children || childLayer.children.length === 0) {
-                childLayer.clipping = true;  // Clipped to base mask layer
+              childLayer.clipping = true;
+              if (childLayer.children && childLayer.children.length > 0) {
+                childLayer.children[0]!.clipping = true;
               }
             }
             childLayers.push(childLayer);
@@ -1920,6 +1922,8 @@ export class PsdExporter {
           let py = knot.points[i + 1];
           if (typeof px !== 'number' || !Number.isFinite(px)) px = 0;
           if (typeof py !== 'number' || !Number.isFinite(py)) py = 0;
+          px = Math.round(px * 10000) / 10000;
+          py = Math.round(py * 10000) / 10000;
           knot.points[i] = Math.max(minX, Math.min(maxX, px));
           knot.points[i + 1] = Math.max(minY, Math.min(maxY, py));
         }
