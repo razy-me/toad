@@ -1,6 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { execSync, spawn } from 'node:child_process';
+import { execSync, execFileSync, spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { c } from '../cli.js';
 
@@ -259,8 +259,8 @@ export async function updateToad(options: UpdateOptions = {}): Promise<UpdateRes
     const tarFilePath = path.join(tempDir, 'toad.tar.gz');
     fs.writeFileSync(tarFilePath, Buffer.from(arrayBuffer));
 
-    // Extract using tar command
-    execSync(`tar -xzf "${tarFilePath}" -C "${tempDir}"`);
+    // Extract using tar command safely without shell interpretation
+    execFileSync('tar', ['-xzf', tarFilePath, '-C', tempDir]);
 
     // Find extracted directory
     const entries = fs.readdirSync(tempDir, { withFileTypes: true });
@@ -288,7 +288,7 @@ export async function updateToad(options: UpdateOptions = {}): Promise<UpdateRes
         'echo [toad] Update completed successfully.',
         'exit 0'
       ].join('\r\n');
-      fs.writeFileSync(swapScript, batContent, 'ascii');
+      fs.writeFileSync(swapScript, batContent, 'utf-8');
 
       const child = spawn('cmd.exe', ['/c', swapScript], {
         detached: true,

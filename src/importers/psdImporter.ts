@@ -119,9 +119,36 @@ export function psdColorToToad(color?: Color, defaultHex = '#000000'): string {
     r = Math.round(color.fr * 255);
     g = Math.round(color.fg * 255);
     b = Math.round(color.fb * 255);
+    if ('a' in color && typeof color.a === 'number') a = color.a;
+  } else if ('c' in color && 'm' in color && 'y' in color && 'k' in color) {
+    const c = typeof color.c === 'number' ? (color.c > 1 ? color.c / 100 : color.c) : 0;
+    const m = typeof color.m === 'number' ? (color.m > 1 ? color.m / 100 : color.m) : 0;
+    const y = typeof color.y === 'number' ? (color.y > 1 ? color.y / 100 : color.y) : 0;
+    const k = typeof color.k === 'number' ? (color.k > 1 ? color.k / 100 : color.k) : 0;
+    r = Math.round(255 * (1 - c) * (1 - k));
+    g = Math.round(255 * (1 - m) * (1 - k));
+    b = Math.round(255 * (1 - y) * (1 - k));
+    if ('a' in color && typeof color.a === 'number') a = color.a;
+  } else if ('l' in color && 'a' in color && 'b' in color && typeof color.l === 'number' && typeof color.a === 'number' && typeof color.b === 'number') {
+    const l = color.l;
+    const la = color.a;
+    const lb = color.b;
+    const yVal = (l + 16) / 116;
+    const xVal = la / 500 + yVal;
+    const zVal = yVal - lb / 200;
+    const x3 = xVal * xVal * xVal;
+    const y3 = yVal * yVal * yVal;
+    const z3 = zVal * zVal * zVal;
+    const x = (x3 > 0.008856 ? x3 : (xVal - 16 / 116) / 7.787) * 95.047;
+    const y = (y3 > 0.008856 ? y3 : (yVal - 16 / 116) / 7.787) * 100.0;
+    const z = (z3 > 0.008856 ? z3 : (zVal - 16 / 116) / 7.787) * 108.883;
+    r = Math.round((x * 3.2406 + y * -1.5372 + z * -0.4986) * 2.55);
+    g = Math.round((x * -0.9689 + y * 1.8758 + z * 0.0415) * 2.55);
+    b = Math.round((x * 0.0557 + y * -0.2040 + z * 1.0570) * 2.55);
   } else if ('k' in color && typeof color.k === 'number') {
-    const val = Math.round((1 - color.k / 100) * 255);
+    const val = Math.round((1 - (color.k > 1 ? color.k / 100 : color.k)) * 255);
     r = val; g = val; b = val;
+    if ('a' in color && typeof color.a === 'number') a = color.a;
   }
 
   const hex = '#' + [r, g, b].map(x => Math.max(0, Math.min(255, x)).toString(16).padStart(2, '0')).join('');
@@ -137,6 +164,9 @@ export function psdColorToToad(color?: Color, defaultHex = '#000000'): string {
 export function bezierPathToSvgD(path: BezierPath): string {
   const knots = path.knots;
   if (!knots || knots.length === 0) return '';
+  for (const k of knots) {
+    if (!k || !k.points || k.points.length < 6) return '';
+  }
 
   let d = '';
   const first = knots[0]!;
@@ -183,6 +213,9 @@ export function bezierPathToSvgD(path: BezierPath): string {
  */
 function isAxisAlignedRect(path: BezierPath): { isRect: boolean; x: number; y: number; w: number; h: number } | null {
   if (path.open || !path.knots || path.knots.length !== 4) return null;
+  for (const k of path.knots) {
+    if (!k || !k.points || k.points.length < 6) return null;
+  }
 
   const pts = path.knots.map(k => ({
     x: Number(k.points[2]!.toFixed(2)),
@@ -539,8 +572,9 @@ export async function importPsd(
     // C. Vector Shape Layer
     if (layer.vectorMask?.paths && layer.vectorMask.paths.length > 0) {
       stats.vectorCount++;
-      const firstPath = layer.vectorMask.paths[0]!;
-      const rectCheck = isAxisAlignedRect(firstPath);
+      const allPaths = layer.vectorMask.paths;
+      const firstPath = allPaths[0]!;
+      const rectCheck = allPaths.length === 1 ? isAxisAlignedRect(firstPath) : null;
 
       // Resolve shape fill color
       let fillColor = '#000000';
@@ -573,35 +607,44 @@ export async function importPsd(
         lines.push('');
         return id;
       } else {
-        // Compute path bounds from knots
+        // Compute path bounds across all subpaths
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-        for (const k of firstPath.knots || []) {
-          const kx = k.points[2]!;
-          const ky = k.points[3]!;
-          minX = Math.min(minX, kx);
-          minY = Math.min(minY, ky);
-          maxX = Math.max(maxX, kx);
-          maxY = Math.max(maxY, ky);
+        for (const subpath of allPaths) {
+          for (const k of subpath.knots || []) {
+            if (!k || !k.points || k.points.length < 6) continue;
+            const kx = k.points[2]!;
+            const ky = k.points[3]!;
+            minX = Math.min(minX, kx);
+            minY = Math.min(minY, ky);
+            maxX = Math.max(maxX, kx);
+            maxY = Math.max(maxY, ky);
+          }
         }
+        if (!isFinite(minX)) { minX = 0; minY = 0; maxX = 100; maxY = 100; }
         const pathW = Math.max(1, Math.round(maxX - minX));
         const pathH = Math.max(1, Math.round(maxY - minY));
         const localPathX = Math.round(minX - parentLeft);
         const localPathY = Math.round(minY - parentTop);
 
-        // Normalize firstPath knots relative to (minX, minY)
-        const normalizedPath: BezierPath = {
-          ...firstPath,
-          knots: (firstPath.knots || []).map(k => ({
-            ...k,
-            points: [
-              k.points[0]! - minX, k.points[1]! - minY,
-              k.points[2]! - minX, k.points[3]! - minY,
-              k.points[4]! - minX, k.points[5]! - minY,
-            ]
-          }))
-        };
+        // Normalize all subpaths relative to (minX, minY) and join SVG 'd' commands
+        const subDList: string[] = [];
+        for (const subpath of allPaths) {
+          const normalizedPath: BezierPath = {
+            ...subpath,
+            knots: (subpath.knots || []).filter(k => k && k.points && k.points.length >= 6).map(k => ({
+              ...k,
+              points: [
+                k.points[0]! - minX, k.points[1]! - minY,
+                k.points[2]! - minX, k.points[3]! - minY,
+                k.points[4]! - minX, k.points[5]! - minY,
+              ]
+            }))
+          };
+          const subD = bezierPathToSvgD(normalizedPath);
+          if (subD) subDList.push(subD);
+        }
 
-        const d = bezierPathToSvgD(normalizedPath);
+        const d = subDList.join(' ');
         lines.push(`${indent}path #${id} "${layerName}" {`);
         lines.push(`${indent}  at: ${localPathX}px ${localPathY}px;`);
         lines.push(`${indent}  size: ${pathW}px ${pathH}px;`);

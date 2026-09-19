@@ -51,7 +51,8 @@ import {
   ColorTransformNode,
   Diagnostic,
   SourceLocation,
-  UnitType
+  UnitType,
+  ParseError
 } from './ast.js';
 import { Lexer, Token, TokenType } from './lexer.js';
 
@@ -60,6 +61,9 @@ export class Parser {
   private current = 0;
   private filename: string;
   public diagnostics: Diagnostic[] = [];
+  private recursionDepth = 0;
+  private currentProperty: string | null = null;
+  private static readonly MAX_DEPTH = 250;
 
   constructor(tokensOrSource: Token[] | string, filename = 'inline.toad') {
     if (typeof tokensOrSource === 'string') {
@@ -372,6 +376,18 @@ export class Parser {
   // ==========================================================================
 
   private parseElementDeclaration(): ElementNode {
+    if (this.recursionDepth > Parser.MAX_DEPTH) {
+      throw new ParseError('Maximum parser nesting depth exceeded', this.peek().loc);
+    }
+    this.recursionDepth++;
+    try {
+      return this.doParseElementDeclaration();
+    } finally {
+      this.recursionDepth--;
+    }
+  }
+
+  private doParseElementDeclaration(): ElementNode {
     const startLoc = this.peek().loc.start;
     const typeTok = this.advance();
     let elemType = typeTok.value;
@@ -547,7 +563,14 @@ export class Parser {
     const nameTok = this.advance();
     const startLoc = nameTok.loc.start;
     this.consume(TokenType.COLON, `Expected ':' after property '${nameTok.value}'`);
-    const value = this.parsePropertyValue(nameTok.value);
+    const prevProp = this.currentProperty;
+    this.currentProperty = nameTok.value;
+    let value: ValueNode;
+    try {
+      value = this.parsePropertyValue(nameTok.value);
+    } finally {
+      this.currentProperty = prevProp;
+    }
     this.consume(TokenType.SEMICOLON, `Expected ';' after property '${nameTok.value}'`);
     return {
       type: 'Property',
@@ -1000,6 +1023,18 @@ export class Parser {
   }
 
   public parseValue(): ValueNode {
+    if (this.recursionDepth > Parser.MAX_DEPTH) {
+      throw new ParseError('Maximum parser nesting depth exceeded', this.peek().loc);
+    }
+    this.recursionDepth++;
+    try {
+      return this.doParseValue();
+    } finally {
+      this.recursionDepth--;
+    }
+  }
+
+  private doParseValue(): ValueNode {
     const startLoc = this.peek().loc.start;
 
     // Object literal: { colors: { ... }, spacing: ... }
@@ -1142,8 +1177,21 @@ export class Parser {
       };
     }
 
-    // Hex Color
+    // Hex Color vs Element Reference (F-057)
     if (tok.type === TokenType.HEX_COLOR) {
+      const elementRefProperties = [
+        'target', 'mask', 'clip', 'clip-path', 'clipPath',
+        'relative-to', 'relativeTo', 'align-with', 'alignWith',
+        'after', 'before', 'follow', 'link', 'anchor', 'align'
+      ];
+      if (this.currentProperty && elementRefProperties.includes(this.currentProperty)) {
+        this.advance();
+        return {
+          type: 'ElementReference',
+          targetId: tok.value.replace(/^#/, ''),
+          loc: { start: startLoc, end: this.previous().loc.end, file: this.filename }
+        };
+      }
       this.advance();
       return {
         type: 'ColorLiteral',
@@ -1249,6 +1297,9 @@ export class Parser {
     
     while (!this.isAtEnd()) {
       const tok = this.peek();
+      if (tok.type === TokenType.SEMICOLON || tok.type === TokenType.RBRACE) {
+        break;
+      }
       if (tok.type === TokenType.LPAREN) parenCount++;
       if (tok.type === TokenType.RPAREN) {
         parenCount--;

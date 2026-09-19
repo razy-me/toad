@@ -1712,12 +1712,12 @@ export class PsdExporter {
         rTL = rTR = rBR = rBL = radiusVal * scale;
       }
 
-      // Clamp radii to prevent self-intersection
-      const maxR = Math.min(w / 2, h / 2);
-      rTL = Math.min(rTL, maxR);
-      rTR = Math.min(rTR, maxR);
-      rBR = Math.min(rBR, maxR);
-      rBL = Math.min(rBL, maxR);
+      // Clamp radii to prevent self-intersection and negative dimensions (F-083)
+      const maxR = Math.max(0, Math.min(w / 2, h / 2));
+      rTL = Math.max(0, Math.min(Number.isFinite(rTL) ? rTL : 0, maxR));
+      rTR = Math.max(0, Math.min(Number.isFinite(rTR) ? rTR : 0, maxR));
+      rBR = Math.max(0, Math.min(Number.isFinite(rBR) ? rBR : 0, maxR));
+      rBL = Math.max(0, Math.min(Number.isFinite(rBL) ? rBL : 0, maxR));
 
       if (rTL > 0 || rTR > 0 || rBR > 0 || rBL > 0) {
         // Clockwise 8-knot rounded rectangle
@@ -1872,6 +1872,25 @@ export class PsdExporter {
 
     let vectorMask: LayerVectorMask | undefined;
 
+    // Clamp knot points to 32-bit fixed point (8.24) bounds: [-127.99, 127.99] * docDim (F-082)
+    const clampKnotPoints = (knotList: BezierKnot[]) => {
+      const minX = -127.99 * Math.max(1, docW);
+      const maxX = 127.99 * Math.max(1, docW);
+      const minY = -127.99 * Math.max(1, docH);
+      const maxY = 127.99 * Math.max(1, docH);
+      for (const knot of knotList) {
+        if (!knot.points) continue;
+        for (let i = 0; i < knot.points.length; i += 2) {
+          let px = knot.points[i];
+          let py = knot.points[i + 1];
+          if (typeof px !== 'number' || !Number.isFinite(px)) px = 0;
+          if (typeof py !== 'number' || !Number.isFinite(py)) py = 0;
+          knot.points[i] = Math.max(minX, Math.min(maxX, px));
+          knot.points[i + 1] = Math.max(minY, Math.min(maxY, py));
+        }
+      }
+    };
+
     if (customPaths && customPaths.length > 0) {
       const hasTransform = !isMatrixIdentity(matrix);
       if (hasTransform) {
@@ -1884,6 +1903,9 @@ export class PsdExporter {
             knot.points = [p0.x * scale, p0.y * scale, p1.x * scale, p1.y * scale, p2.x * scale, p2.y * scale];
           }
         }
+      }
+      for (const bp of customPaths) {
+        if (bp.knots) clampKnotPoints(bp.knots);
       }
       vectorMask = {
         paths: customPaths,
@@ -1900,6 +1922,7 @@ export class PsdExporter {
           knot.points = [p0.x * scale, p0.y * scale, p1.x * scale, p1.y * scale, p2.x * scale, p2.y * scale];
         }
       }
+      clampKnotPoints(knots);
 
       vectorMask = {
         paths: [

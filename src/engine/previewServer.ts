@@ -66,28 +66,39 @@ export function createPreviewServer(
       return previewable.length > 0 && fs.existsSync(previewable[0]) ? previewable[0] : null;
     };
 
-    const isOriginOrLoopbackSafe = (req: http.IncomingMessage): boolean => {
+    const isOriginOrLoopbackSafe = (req: http.IncomingMessage, strictLoopbackOnly = false): boolean => {
       const origin = req.headers.origin;
       const reqHost = req.headers.host || '';
       const hostHostname = reqHost.split(':')[0]!.toLowerCase();
-      const isLoopbackHost = ['localhost', '127.0.0.1', '::1', '[::1]', host.toLowerCase()].includes(hostHostname);
-      if (!isLoopbackHost) return false;
+      const validLoopbackHosts = ['localhost', '127.0.0.1', '::1', '[::1]'];
+      const isLoopbackHost = validLoopbackHosts.includes(hostHostname);
+      if (strictLoopbackOnly) {
+        if (!isLoopbackHost) return false;
+      } else {
+        if (!isLoopbackHost && hostHostname !== host.toLowerCase()) return false;
+      }
       if (req.headers['sec-fetch-site'] === 'cross-site') return false;
+
+      const remote = req.socket.remoteAddress || '';
+      const isRemoteLoopback = ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(remote);
 
       if (origin) {
         try {
           const parsedOrigin = new URL(origin);
-          const isLoopbackOrigin = ['localhost', '127.0.0.1', '::1', '[::1]', host.toLowerCase()].includes(parsedOrigin.hostname.toLowerCase());
-          if (!isLoopbackOrigin || parsedOrigin.host.toLowerCase() !== reqHost.toLowerCase()) {
+          const isLoopbackOrigin = validLoopbackHosts.includes(parsedOrigin.hostname.toLowerCase());
+          if (strictLoopbackOnly) {
+            if (!isLoopbackOrigin) return false;
+          } else {
+            if (!isLoopbackOrigin && parsedOrigin.hostname.toLowerCase() !== host.toLowerCase()) return false;
+          }
+          if (parsedOrigin.host.toLowerCase() !== reqHost.toLowerCase()) {
             return false;
           }
         } catch {
           return false;
         }
       } else {
-        const remote = req.socket.remoteAddress || '';
-        const isRemoteLoopback = ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(remote);
-        if (!isRemoteLoopback && !isLoopbackHost) return false;
+        if (!isRemoteLoopback) return false;
       }
       return true;
     };
@@ -263,17 +274,37 @@ export function createPreviewServer(
         return;
       }
 
-      // Helper for reading JSON body
-      const parseJsonBody = (callback: (body: any) => void) => {
+      // Helper for reading JSON body with size-limit and async error handling (F-011)
+      const parseJsonBody = (callback: (body: any) => void | Promise<void>, maxBytes = 10 * 1024 * 1024) => {
         let raw = '';
-        req.on('data', chunk => { raw += chunk; });
-        req.on('end', () => {
+        let bytesCount = 0;
+        let aborted = false;
+
+        req.on('data', chunk => {
+          if (aborted) return;
+          bytesCount += chunk.length;
+          if (bytesCount > maxBytes) {
+            aborted = true;
+            req.destroy();
+            if (!res.headersSent) {
+              res.writeHead(413, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'Payload Too Large' }));
+            }
+            return;
+          }
+          raw += chunk;
+        });
+
+        req.on('end', async () => {
+          if (aborted) return;
           try {
             const parsed = raw ? JSON.parse(raw) : {};
-            callback(parsed);
-          } catch {
-            res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'Invalid JSON payload' }));
+            await callback(parsed);
+          } catch (err: any) {
+            if (!res.headersSent) {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: err?.message || 'Invalid request payload' }));
+            }
           }
         });
       };
@@ -281,36 +312,12 @@ export function createPreviewServer(
       // 3. Open Folder API Endpoint
       // Hardening: only same-origin loopback POST requests may trigger OS actions.
       if (url.pathname === '/api/open-folder' || url.pathname === '/open-folder') {
-        const origin = req.headers.origin;
-        const reqHost = req.headers.host || '';
-        let originOk = true;
-
-        // Verify Host header cannot be rebound to external domain
-        const hostHostname = reqHost.split(':')[0]!.toLowerCase();
-        const isLoopbackHost = ['localhost', '127.0.0.1', '::1', '[::1]', host.toLowerCase()].includes(hostHostname);
-        if (!isLoopbackHost) {
-          originOk = false;
-        }
-
-        if (origin) {
-          try {
-            const parsedOrigin = new URL(origin);
-            const isLoopbackOrigin = ['localhost', '127.0.0.1', '::1', '[::1]', host.toLowerCase()].includes(parsedOrigin.hostname.toLowerCase());
-            originOk = originOk && isLoopbackOrigin && Boolean(parsedOrigin.host.toLowerCase() === reqHost.toLowerCase());
-          } catch {
-            originOk = false;
-          }
-        }
-        const secFetchSite = req.headers['sec-fetch-site'];
-        if (secFetchSite === 'cross-site') {
-          originOk = false;
-        }
-        if (req.method !== 'POST' || !originOk) {
-          res.writeHead(405, {
+        if (req.method !== 'POST' || !isOriginOrLoopbackSafe(req, true)) {
+          res.writeHead(403, {
             'Content-Type': 'application/json',
             'Allow': 'POST'
           });
-          res.end(JSON.stringify({ status: 'error', message: 'Method Not Allowed. Use POST from the preview page.' }));
+          res.end(JSON.stringify({ status: 'error', message: 'Access denied: loopback origin required' }));
           return;
         }
 
@@ -335,24 +342,7 @@ export function createPreviewServer(
 
       // 3b. Persistent Live Terminal Execution Endpoint
       if (url.pathname === '/api/run-cmd' && req.method === 'POST') {
-        const origin = req.headers.origin;
-        const reqHost = req.headers.host || '';
-        let originOk = true;
-        const hostHostname = reqHost.split(':')[0]!.toLowerCase();
-        const isLoopbackHost = ['localhost', '127.0.0.1', '::1', '[::1]', host.toLowerCase()].includes(hostHostname);
-        if (!isLoopbackHost) originOk = false;
-        if (origin) {
-          try {
-            const parsedOrigin = new URL(origin);
-            const isLoopbackOrigin = ['localhost', '127.0.0.1', '::1', '[::1]', host.toLowerCase()].includes(parsedOrigin.hostname.toLowerCase());
-            originOk = originOk && isLoopbackOrigin && Boolean(parsedOrigin.host.toLowerCase() === reqHost.toLowerCase());
-          } catch {
-            originOk = false;
-          }
-        }
-        if (req.headers['sec-fetch-site'] === 'cross-site') originOk = false;
-
-        if (!originOk) {
+        if (!isOriginOrLoopbackSafe(req, true)) {
           res.writeHead(403, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'Access denied: loopback origin required' }));
           return;
@@ -384,24 +374,7 @@ export function createPreviewServer(
 
       // 3c. Cancel Live Terminal Command Endpoint
       if (url.pathname === '/api/cancel-cmd' && req.method === 'POST') {
-        const origin = req.headers.origin;
-        const reqHost = req.headers.host || '';
-        let originOk = true;
-        const hostHostname = reqHost.split(':')[0]!.toLowerCase();
-        const isLoopbackHost = ['localhost', '127.0.0.1', '::1', '[::1]', host.toLowerCase()].includes(hostHostname);
-        if (!isLoopbackHost) originOk = false;
-        if (origin) {
-          try {
-            const parsedOrigin = new URL(origin);
-            const isLoopbackOrigin = ['localhost', '127.0.0.1', '::1', '[::1]', host.toLowerCase()].includes(parsedOrigin.hostname.toLowerCase());
-            originOk = originOk && isLoopbackOrigin && Boolean(parsedOrigin.host.toLowerCase() === reqHost.toLowerCase());
-          } catch {
-            originOk = false;
-          }
-        }
-        if (req.headers['sec-fetch-site'] === 'cross-site') originOk = false;
-
-        if (!originOk) {
+        if (!isOriginOrLoopbackSafe(req, true)) {
           res.writeHead(403, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'Access denied: loopback origin required' }));
           return;

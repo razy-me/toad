@@ -117,7 +117,7 @@ export class PdfExporter {
   private customFontMap = new Map<string, string>(); // psName -> tag
   private basePath?: string;
 
-  private static measureCtx: any = null;
+  private measureCtx: any = null;
 
   constructor(options: PdfExportOptions = {}) {
     this.basePath = options.basePath;
@@ -125,11 +125,11 @@ export class PdfExporter {
 
   private measureLineWidth(line: string, fontSize: number, fontFamily?: string): number {
     try {
-      if (!PdfExporter.measureCtx) {
-        PdfExporter.measureCtx = createCanvas(10, 10).getContext('2d');
+      if (!this.measureCtx) {
+        this.measureCtx = createCanvas(10, 10).getContext('2d');
       }
-      PdfExporter.measureCtx.font = `${fontSize}px ${fontFamily || 'sans-serif'}`;
-      return PdfExporter.measureCtx.measureText(line).width;
+      this.measureCtx.font = `${fontSize}px ${fontFamily || 'sans-serif'}`;
+      return this.measureCtx.measureText(line).width;
     } catch {
       const fam = (fontFamily || '').toLowerCase();
       const isMono = fam.includes('courier') || fam.includes('mono') || fam.includes('code') || fam.includes('consolas');
@@ -628,26 +628,38 @@ export class PdfExporter {
 
   private encodePdfString(text: string): string {
     const SYMBOL_TRANSLITERATIONS: Record<string, string> = {
-      '→': '->',
-      '←': '<-',
-      '↔': '<->',
-      '⇒': '=>',
-      '⇐': '<=',
-      '≤': '<=',
-      '≥': '>=',
-      '≠': '!=',
-      '≈': '~=',
-      '✓': '[v]',
-      '✔': '[v]',
-      '✗': '[x]',
-      '✘': '[x]',
-      '★': '*',
-      '☆': '*',
-      '♥': '<3',
-      'ł': 'l',
-      'Ł': 'L',
-      'đ': 'd',
-      'Đ': 'D'
+      // Arrows & Math
+      '→': '->', '←': '<-', '↔': '<->', '⇒': '=>', '⇐': '<=', '≤': '<=', '≥': '>=', '≠': '!=', '≈': '~=', '±': '+/-',
+      '×': 'x', '÷': '/', '√': 'sqrt', '∞': 'inf', '°': ' deg', 'µ': 'u',
+      // Checkmarks & Icons
+      '✓': '[v]', '✔': '[v]', '✗': '[x]', '✘': '[x]', '★': '*', '☆': '*', '♥': '<3',
+      // Punctuation & Quotes
+      '—': '--', '–': '-', '―': '--', '…': '...', '“': '"', '”': '"', '‘': "'", '’': "'", '«': '<<', '»': '>>',
+      '•': '*', '·': '.',
+      // Spaces
+      '\u00A0': ' ', '\u2002': ' ', '\u2003': ' ', '\u2009': ' ', '\u200B': '',
+      // Extended Latin
+      'ł': 'l', 'Ł': 'L', 'đ': 'd', 'Đ': 'D', 'ß': 'ss', 'ğ': 'g', 'Ğ': 'G', 'ı': 'i', 'İ': 'I', 'ş': 's', 'Ş': 'S',
+      'č': 'c', 'Č': 'C', 'ć': 'c', 'Ć': 'C', 'ř': 'r', 'Ř': 'R', 'šť': 'st', 'ť': 't', 'Ť': 'T', 'ď': 'd', 'Ď': 'D',
+      'ň': 'n', 'Ň': 'N', 'ő': 'o', 'Ő': 'O', 'ű': 'u', 'Ű': 'U', 'ą': 'a', 'Ą': 'A', 'ę': 'e', 'Ę': 'E',
+      'ż': 'z', 'Ż': 'Z', 'ź': 'z', 'Ź': 'Z', 'ń': 'n', 'Ń': 'N', 'ś': 's', 'Ś': 'S',
+      // Cyrillic
+      'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Е': 'E', 'Ё': 'Yo', 'Ж': 'Zh', 'З': 'Z', 'И': 'I',
+      'Й': 'Y', 'К': 'K', 'Л': 'L', 'М': 'M', 'Н': 'N', 'О': 'O', 'П': 'P', 'Р': 'R', 'С': 'S', 'Т': 'T',
+      'У': 'U', 'Ф': 'F', 'Х': 'Kh', 'Ц': 'Ts', 'Ч': 'Ch', 'Ш': 'Sh', 'Щ': 'Shch', 'Ъ': '', 'Ы': 'Y', 'Ь': '',
+      'Э': 'E', 'Ю': 'Yu', 'Я': 'Ya',
+      'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo', 'ж': 'zh', 'з': 'z', 'и': 'i',
+      'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't',
+      'у': 'u', 'ф': 'f', 'х': 'kh', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'shch', 'ъ': '', 'ы': 'y', 'ь': '',
+      'э': 'e', 'ю': 'yu', 'я': 'ya',
+      'І': 'I', 'і': 'i', 'Ї': 'Yi', 'ї': 'yi', 'Є': 'Ye', 'є': 'ye', 'Ґ': 'G', 'ґ': 'g',
+      // Greek
+      'Α': 'A', 'Β': 'B', 'Γ': 'G', 'Δ': 'D', 'Ε': 'E', 'Ζ': 'Z', 'Η': 'E', 'Θ': 'Th', 'Ι': 'I', 'Κ': 'K',
+      'Λ': 'L', 'Μ': 'M', 'Ν': 'N', 'Ξ': 'X', 'Ο': 'O', 'Π': 'P', 'Ρ': 'R', 'Σ': 'S', 'Τ': 'T', 'Υ': 'Y',
+      'Φ': 'Ph', 'Χ': 'Ch', 'Ψ': 'Ps', 'Ω': 'O',
+      'α': 'a', 'β': 'b', 'γ': 'g', 'δ': 'd', 'ε': 'e', 'ζ': 'z', 'η': 'e', 'θ': 'th', 'ι': 'i', 'κ': 'k',
+      'λ': 'l', 'μ': 'm', 'ν': 'n', 'ξ': 'x', 'ο': 'o', 'π': 'p', 'ρ': 'r', 'σ': 's', 'ς': 's', 'τ': 't',
+      'υ': 'y', 'φ': 'ph', 'χ': 'ch', 'ψ': 'ps', 'ω': 'o'
     };
 
     const WIN_ANSI_MAP: Record<string, number> = {

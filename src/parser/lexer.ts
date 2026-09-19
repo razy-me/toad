@@ -516,7 +516,7 @@ export class Lexer {
             }
             if (this.peek() === '}') this.advance();
             const code = parseInt(hex, 16);
-            str += Number.isFinite(code) && code >= 0 ? String.fromCodePoint(code) : '\uFFFD';
+            str += Number.isFinite(code) && code >= 0 && code <= 0x10ffff ? String.fromCodePoint(code) : '\uFFFD';
           } else {
             let hex = '';
             for (let i = 0; i < 4 && this.offset < this.source.length; i++) {
@@ -524,7 +524,9 @@ export class Lexer {
               if (!/[0-9a-fA-F]/.test(c)) break;
               hex += this.advance();
             }
-            if (hex.length === 0 && this.offset < this.source.length) this.advance();
+            if (hex.length === 0 && this.offset < this.source.length && this.peek() !== quoteChar && this.peek() !== '\n' && this.peek() !== '\r') {
+              this.advance();
+            }
             const code = parseInt(hex, 16);
             str += Number.isFinite(code) && code >= 0 && hex.length > 0 ? String.fromCharCode(code) : '\uFFFD';
           }

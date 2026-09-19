@@ -117,6 +117,10 @@ export class DependencyGraph {
         return;
       }
 
+      if (recursionStack.length > 1000) {
+        throw new CyclicDependencyError(`Dependency chain depth limit (1000) exceeded at '#${id}'`);
+      }
+
       state.set(id, VisitState.GRAY);
       recursionStack.push(id);
 

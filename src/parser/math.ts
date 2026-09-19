@@ -457,11 +457,21 @@ export function safeEvaluateMath(expr: string, warnings?: string[]): number {
     }
     if (str[pos] === '+') {
       pos++;
-      return parseFactor();
+      depth++;
+      try {
+        return parseFactor();
+      } finally {
+        depth--;
+      }
     }
     if (str[pos] === '-') {
       pos++;
-      return -parseFactor();
+      depth++;
+      try {
+        return -parseFactor();
+      } finally {
+        depth--;
+      }
     }
     if (str[pos] === '*' || str[pos] === '/') {
       reportError(`Syntax error in math expression '${expr}': unexpected operator '${str[pos]}' at position ${pos}`);

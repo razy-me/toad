@@ -453,7 +453,8 @@ export function createCli(): Command {
     .option('--assets <dir>', 'Directory for extracted raster image assets (PSD mode, default: ./assets)')
     .option('--no-extract-images', 'Do not extract raster image layers as PNG files (PSD mode)')
     .option('--include-hidden', 'Include hidden Photoshop layers (PSD mode)')
-    .option('--no-format', 'Do not format generated TOAD code (PSD mode)')
+    .option('--no-format-code', 'Do not format generated TOAD code (PSD mode)')
+    .option('--no-fmt', 'Alias for --no-format-code')
     .option('--dpi <number>', 'Resolution in DPI for font size and unit conversion (default: 72)')
     .action(async (file, opts) => {
       const startTime = Date.now();
@@ -466,18 +467,20 @@ export function createCli(): Command {
 
         const ext = path.extname(resolvedPath).toLowerCase();
         const isPsd = ext === '.psd';
+        const targetFormat = typeof opts.format === 'string' ? opts.format.toLowerCase() : undefined;
 
         // If it's a PSD and NO image format flag is given, run PSD to TOAD DSL import
-        if (isPsd && !opts.format) {
+        if (isPsd && !targetFormat) {
           const { importPsd } = await import('./importers/psdImporter.js');
           console.log(`\n  ${c.cyan('➜')}  Importing PSD: ${c.bold(path.basename(resolvedPath))}...`);
 
+          const shouldFormat = opts.formatCode !== false && (opts as any).fmt !== false;
           const result = await importPsd(resolvedPath, {
             outPath: opts.out,
             assetsDir: opts.assets,
             extractImages: opts.extractImages,
             includeHidden: opts.includeHidden,
-            formatCode: opts.format,
+            formatCode: shouldFormat,
             dpi: opts.dpi ? parseFloat(opts.dpi) : undefined
           });
 
@@ -506,10 +509,10 @@ export function createCli(): Command {
         // Image Conversion, Scaling & Compression mode!
         console.log(`\n  ${c.cyan('➜')}  Converting Image: ${c.bold(path.basename(resolvedPath))}...`);
         const { convertImage } = await import('./tools/imageConverter.js');
-        const targetFormat = (opts.format || (opts.compress ? 'webp' : 'png')).toLowerCase();
+        const finalFormat = (targetFormat || (opts.compress ? 'webp' : 'png')).toLowerCase();
 
         const result = await convertImage(resolvedPath, {
-          format: targetFormat as any,
+          format: finalFormat as any,
           quality: opts.quality ? parseInt(opts.quality, 10) : undefined,
           scale: opts.scale ? parseFloat(opts.scale) : undefined,
           width: opts.width ? parseInt(opts.width, 10) : undefined,
