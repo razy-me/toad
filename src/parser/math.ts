@@ -602,39 +602,47 @@ export function resolveDimension(
   const cw = canvasWidth !== undefined ? canvasWidth : parentSize;
   const ch = canvasHeight !== undefined ? canvasHeight : parentSize;
 
-  if (val === undefined) return intrinsicSize;
-  if (typeof val === 'number') return val;
-  if (val === 'hug' || val === 'auto' || val === 'fit' || val === 'fit-content') return intrinsicSize;
-  if (val === 'fill') return parentSize; // For stack layout, this will be overridden
+  const sanitize = (n: number) => {
+    if (!Number.isFinite(n) || isNaN(n)) {
+      warnings?.push(`Invalid dimension resolved: ${val} -> ${n}`);
+      return 0;
+    }
+    return n;
+  };
+
+  if (val === undefined) return sanitize(intrinsicSize);
+  if (typeof val === 'number') return sanitize(val);
+  if (val === 'hug' || val === 'auto' || val === 'fit' || val === 'fit-content') return sanitize(intrinsicSize);
+  if (val === 'fill') return sanitize(parentSize); // For stack layout, this will be overridden
   if (typeof val === 'string') {
     const trimmed = val.trim();
     if (trimmed.endsWith('%')) {
       const pct = parseFloat(trimmed) / 100;
-      return isNaN(pct) ? 0 : parentSize * pct;
+      return isNaN(pct) ? 0 : sanitize(parentSize * pct);
     }
     if (trimmed.startsWith('calc(')) {
-      return evaluateCalc(trimmed, parentSize, dpi, cw, ch, warnings);
+      return sanitize(evaluateCalc(trimmed, parentSize, dpi, cw, ch, warnings));
     }
     if (trimmed.endsWith('vw')) {
       const v = parseFloat(trimmed);
-      return isNaN(v) ? 0 : cw * (v / 100);
+      return isNaN(v) ? 0 : sanitize(cw * (v / 100));
     }
     if (trimmed.endsWith('vh')) {
       const v = parseFloat(trimmed);
-      return isNaN(v) ? 0 : ch * (v / 100);
+      return isNaN(v) ? 0 : sanitize(ch * (v / 100));
     }
     if (trimmed.endsWith('em') || trimmed.endsWith('rem')) {
       const v = parseFloat(trimmed);
-      return isNaN(v) ? 0 : v * 16;
+      return isNaN(v) ? 0 : sanitize(v * 16);
     }
-    if (trimmed.endsWith('in')) return (parseFloat(trimmed) || 0) * dpi;
-    if (trimmed.endsWith('mm')) return (parseFloat(trimmed) || 0) * (dpi / 25.4);
-    if (trimmed.endsWith('cm')) return (parseFloat(trimmed) || 0) * (dpi / 2.54);
-    if (trimmed.endsWith('pt')) return (parseFloat(trimmed) || 0) * (dpi / 72);
-    if (trimmed.endsWith('px')) return parseFloat(trimmed) || 0;
+    if (trimmed.endsWith('in')) return sanitize((parseFloat(trimmed) || 0) * dpi);
+    if (trimmed.endsWith('mm')) return sanitize((parseFloat(trimmed) || 0) * (dpi / 25.4));
+    if (trimmed.endsWith('cm')) return sanitize((parseFloat(trimmed) || 0) * (dpi / 2.54));
+    if (trimmed.endsWith('pt')) return sanitize((parseFloat(trimmed) || 0) * (dpi / 72));
+    if (trimmed.endsWith('px')) return sanitize(parseFloat(trimmed) || 0);
 
     const num = parseFloat(trimmed);
-    return isNaN(num) ? 0 : num;
+    return isNaN(num) ? 0 : sanitize(num);
   }
   return 0;
 }
@@ -978,7 +986,13 @@ export class LayoutSolver {
       prevTopLevelId = elem.id;
     }
 
-    const topoOrderedElements = graph.resolveOrder();
+    let topoOrderedElements: ResolvedElementNode[];
+    try {
+      topoOrderedElements = graph.resolveOrder();
+    } catch (err: any) {
+      this.warnings.push(`Cyclic or invalid dependency graph: ${err?.message || String(err)}. Falling back to document order.`);
+      topoOrderedElements = [...this.doc.elements];
+    }
     this.warnings.push(...graph.warnings);
 
     // 3. Resolve Dimensions & Positions for all elements in topological order
@@ -1618,7 +1632,8 @@ export class LayoutSolver {
 
     // If grid, position children in tile matrix
     if (elem.type === 'grid' && elem.children && elem.children.length > 0) {
-      const cols = elem.columns || 1;
+      let cols = typeof elem.columns === 'number' && Number.isFinite(elem.columns) && elem.columns > 0 ? Math.floor(elem.columns) : 1;
+      if (cols < 1) cols = 1;
       const gap = elem.gap || 0;
       const colGap = elem.columnGap ?? gap;
       const rowGap = elem.rowGap ?? gap;

@@ -170,7 +170,7 @@ describe('Layout Solver, Math Engine & Relational DAG', () => {
       expect(avatar.box.y).toBe(20);
     });
 
-    it('detects cyclical relational dependencies and throws CyclicDependencyError', async () => {
+    it('detects cyclical relational dependencies, records warning and falls back to document order without crashing', async () => {
       const src = `
         rect #a {
           at: right of #b;
@@ -184,7 +184,9 @@ describe('Layout Solver, Math Engine & Relational DAG', () => {
       `;
       const doc = parseToad(src);
       const resolved = await resolveImportsAndComponents(doc, 'main.toad');
-      await expect(solveLayout(resolved)).rejects.toThrow(CyclicDependencyError);
+      const layout = await solveLayout(resolved);
+      expect(layout.warnings.some(w => w.includes('Cyclic layout dependency cycle detected'))).toBe(true);
+      expect(layout.nodes).toHaveLength(2);
     });
 
     it('falls back to (0, 0) and records warning on missing relational target', async () => {

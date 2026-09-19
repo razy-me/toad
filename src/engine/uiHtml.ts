@@ -4758,7 +4758,7 @@ export function generateStudioHtml(initialFile?: string): string {
           const isActive = f.path === selectedFilePath ? 'active' : '';
 
           html += \`
-            <div class="tree-file \${isActive}" data-path="\${escapeHtml(f.path)}" onclick="selectFile(decodeURIComponent('\${encodeURIComponent(f.path)}'))">
+            <div class="tree-file \${isActive}" data-path="\${escapeHtml(f.path)}" onclick="selectFile(this.getAttribute('data-path'))">
               <span class="file-badge \${badgeClass}">\${badgeText}</span>
               <span class="file-title" title="\${escapeHtml(f.name)}">\${escapeHtml(f.name)}</span>
             </div>

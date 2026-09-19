@@ -158,7 +158,9 @@ export async function exportMotionVideo(
 
   // 1. Frame sequence export
   if (format === 'frames') {
-    const framesDir = outputPath.endsWith('.png') ? path.dirname(outputPath) : outputPath;
+    const framesDir = outputPath.endsWith('.png')
+      ? path.join(path.dirname(outputPath), `${path.basename(outputPath, '.png')}_frames`)
+      : outputPath;
     if (!fs.existsSync(framesDir)) {
       fs.mkdirSync(framesDir, { recursive: true });
     }

@@ -77,15 +77,20 @@ export class MotionSolver {
     );
 
     if (timeline && timeline.keyframes.length > 0) {
-      const kfs = timeline.keyframes;
+      // Stably sort keyframes by timestamp
+      const kfs = [...timeline.keyframes].sort((a, b) => a.time - b.time);
 
       let k1: KeyframeNode;
       let k2: KeyframeNode;
       let alpha = 0;
 
       if (time <= kfs[0]!.time) {
-        k1 = kfs[0]!;
-        k2 = kfs[0]!;
+        let startIdx = 0;
+        while (startIdx + 1 < kfs.length && kfs[startIdx + 1]!.time <= time) {
+          startIdx++;
+        }
+        k1 = kfs[startIdx]!;
+        k2 = kfs[startIdx]!;
         alpha = 0;
       } else if (time >= kfs[kfs.length - 1]!.time) {
         k1 = kfs[kfs.length - 1]!;
@@ -96,13 +101,16 @@ export class MotionSolver {
         for (let i = 0; i < kfs.length - 1; i++) {
           if (time >= kfs[i]!.time && time <= kfs[i + 1]!.time) {
             idx = i;
+            if (time === kfs[i + 1]!.time && i + 2 < kfs.length && kfs[i + 1]!.time === kfs[i + 2]!.time) {
+              continue;
+            }
             break;
           }
         }
         k1 = kfs[idx]!;
         k2 = kfs[idx + 1]!;
         const span = k2.time - k1.time;
-        alpha = span > 1e-6 ? (time - k1.time) / span : 0;
+        alpha = span > 1e-6 ? (time - k1.time) / span : 1;
       }
 
       // Apply easing

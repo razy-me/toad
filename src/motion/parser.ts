@@ -274,7 +274,14 @@ export class MotionParser {
       this.consume(MotionTokenType.COLON, `Expected ':' after property '${key}'`);
 
       if (key === 'along') {
-        props.along = this.parseAlongPath();
+        const parsedAlong = this.parseAlongPath();
+        const prevAlong = props.along;
+        props.along = parsedAlong;
+        if (prevAlong) {
+          if (prevAlong.offset !== undefined) props.along.offset = prevAlong.offset;
+          if (prevAlong.autoRotate !== undefined) props.along.autoRotate = prevAlong.autoRotate;
+          if (prevAlong.progress !== undefined && prevAlong.progress !== 0) props.along.progress = prevAlong.progress;
+        }
       } else if (key === 'ease') {
         props.ease = this.parseEasing();
       } else if (key === 'opacity') {
@@ -347,11 +354,19 @@ export class MotionParser {
       } else if (key === 'offset') {
         const val = this.advance();
         const off = val.numValue ?? parseFloat(val.value);
-        if (props.along) props.along.offset = off;
+        if (!props.along) {
+          props.along = { targetType: 'border', targetId: '', progress: 0, offset: off };
+        } else {
+          props.along.offset = off;
+        }
       } else if (key === 'auto-rotate' || key === 'autorotate') {
         const val = this.advance();
         const auto = val.value === 'true' || val.value === '1';
-        if (props.along) props.along.autoRotate = auto;
+        if (!props.along) {
+          props.along = { targetType: 'border', targetId: '', progress: 0, autoRotate: auto };
+        } else {
+          props.along.autoRotate = auto;
+        }
       } else {
         const val = this.advance();
         props[key] = val.numValue ?? val.value;

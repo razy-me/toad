@@ -483,16 +483,29 @@ export class PsdExporter {
         newAlis.push(aliBlock);
         extraAlisLength += totalBlockLen;
 
-        const origPad = (2 - (aliLen % 2)) % 2;
-        offset += 12 + aliLen + origPad;
+        // In ag-psd, next block starts with '8BIM' or '8B64'.
+        // Scan forward from offset + 12 + aliLen to find the next signature and avoid drifting.
+        let nextOffset = offset + 12 + aliLen;
+        while (nextOffset <= extraStart + extraLen - 4) {
+          const sig = buf.subarray(nextOffset, nextOffset + 4).toString('ascii');
+          if (sig === '8BIM' || sig === '8B64') {
+            break;
+          }
+          nextOffset++;
+        }
+        if (nextOffset > extraStart + extraLen - 4) {
+          nextOffset = extraStart + extraLen;
+        }
+        offset = nextOffset;
       }
 
       // If unicodeName is available, heal any '?' replacement characters in the legacy Pascal string
       if (unicodeName && nameLen > 0) {
+        const uChars = Array.from(unicodeName);
         const nameBytes = extraFixed.subarray(nameOffsetInExtra + 1, nameOffsetInExtra + 1 + nameLen);
         for (let j = 0; j < nameBytes.length; j++) {
           if (nameBytes[j] === 0x3F) { // '?'
-            const uChar = unicodeName[j] || '';
+            const uChar = uChars[j] || '';
             if (uChar === '·' || uChar === '•' || uChar === '–' || uChar === '—') {
               nameBytes[j] = 0x2D; // '-'
             } else if (uChar === 'ä') {
@@ -509,7 +522,7 @@ export class PsdExporter {
               nameBytes[j] = 0x55; // 'U'
             } else if (uChar === 'ß') {
               nameBytes[j] = 0x73; // 's'
-            } else if (uChar.charCodeAt(0) > 127) {
+            } else if (uChar.codePointAt(0) && uChar.codePointAt(0)! > 127) {
               nameBytes[j] = 0x2D; // '-'
             }
           }
@@ -616,6 +629,8 @@ export class PsdExporter {
       bottom = Math.round(maxY * scale);
       width = Math.max(1, right - left);
       height = Math.max(1, bottom - top);
+      if (right <= left) right = left + width;
+      if (bottom <= top) bottom = top + height;
     }
 
     if (!node.style) {

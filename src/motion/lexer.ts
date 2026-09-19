@@ -136,12 +136,13 @@ export class MotionLexer {
         // Block comment
         this.advance(); // /
         this.advance(); // *
-        while (this.pos + 1 < this.len && !(this.src[this.pos] === '*' && this.src[this.pos + 1] === '/')) {
+        while (this.pos < this.len) {
+          if (this.src[this.pos] === '*' && this.pos + 1 < this.len && this.src[this.pos + 1] === '/') {
+            this.advance(); // *
+            this.advance(); // /
+            break;
+          }
           this.advance();
-        }
-        if (this.pos + 1 < this.len) {
-          this.advance(); // *
-          this.advance(); // /
         }
       } else {
         break;

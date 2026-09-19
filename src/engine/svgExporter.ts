@@ -39,16 +39,26 @@ function formatColorForSvg(color: string): string {
   return parseSvgColorAndOpacity(color).color;
 }
 
+function escapeSvgAttrGlobal(str: string): string {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
 function formatStopAttributes(color: string): string {
   if (!color) return 'stop-color="#000000"';
   const parsed = parseSvgColorAndOpacity(color);
   if (parsed.color === 'none') {
     return 'stop-color="#000000" stop-opacity="0"';
   }
+  const safeColor = escapeSvgAttrGlobal(parsed.color);
   if (parsed.opacity !== undefined && parsed.opacity < 1) {
-    return `stop-color="${parsed.color}" stop-opacity="${parsed.opacity}"`;
+    return `stop-color="${safeColor}" stop-opacity="${parsed.opacity}"`;
   }
-  return `stop-color="${parsed.color}"`;
+  return `stop-color="${safeColor}"`;
 }
 
 function rgbStr(c: { r: number; g: number; b: number }): string {
@@ -141,7 +151,7 @@ export class SvgExporter {
       const parsedBg = parseSvgColorAndOpacity(bgFill);
       if (parsedBg.color !== 'none') {
         const op = parsedBg.opacity !== undefined && parsedBg.opacity < 1 ? ` fill-opacity="${parsedBg.opacity}"` : '';
-        elementsMarkup.push(`  <rect width="100%" height="100%" fill="${parsedBg.color}"${op} />`);
+        elementsMarkup.push(`  <rect width="100%" height="100%" fill="${this.escapeAttr(parsedBg.color)}"${op} />`);
       }
     }
 
@@ -998,11 +1008,27 @@ export class SvgExporter {
 
   private resolveAndEncodeImage(src: string): string {
     try {
-      const targetPath = this.basePath
-        ? path.resolve(path.dirname(this.basePath), src)
-        : path.resolve(src);
+      if (src.startsWith('data:') || src.startsWith('http://') || src.startsWith('https://')) {
+        return src;
+      }
+      const baseDir = this.basePath ? path.dirname(path.resolve(this.basePath)) : process.cwd();
+      const targetPath = path.resolve(baseDir, src);
+
+      // Boundary check: ensure targetPath is within baseDir or process.cwd()
+      const allowedRoots = [baseDir, process.cwd()];
+      const isAllowed = allowedRoots.some(root => {
+        const rel = path.relative(root, targetPath);
+        return !rel.startsWith('..') && !path.isAbsolute(rel);
+      });
+      if (!isAllowed) {
+        return src;
+      }
 
       if (fs.existsSync(targetPath)) {
+        const stat = fs.statSync(targetPath);
+        if (stat.size > 50 * 1024 * 1024) {
+          return src;
+        }
         const buf = fs.readFileSync(targetPath);
         const ext = path.extname(targetPath).toLowerCase();
         let mime = 'image/png';

@@ -321,7 +321,20 @@ export async function importPsd(
     buffer = input;
   }
 
-  const psd: Psd = readPsd(buffer as any, { skipThumbnail: true });
+function escapeDslString(str: string): string {
+  return String(str)
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r');
+}
+
+  let psd: Psd;
+  try {
+    psd = readPsd(buffer as any, { skipThumbnail: true });
+  } catch (err: any) {
+    throw new Error(`Failed to parse PSD file (file may be corrupted or invalid): ${err?.message || String(err)}`);
+  }
   const dpi = options.dpi || (psd as any).resolution || 72;
 
   const docWidth = Math.round(psd.width);
@@ -378,7 +391,7 @@ export async function importPsd(
 
   // 1. Canvas Definition
   const canvasName = psd.name || inputBaseName;
-  lines.push(`canvas "${canvasName}" {`);
+  lines.push(`canvas "${escapeDslString(canvasName)}" {`);
   lines.push(`  size: ${docWidth}px ${docHeight}px;`);
 
   // Detect canvas background fill if layer 0 is a full-bleed solid background
@@ -396,18 +409,35 @@ export async function importPsd(
         const ctx = (firstLayer.canvas as any).getContext('2d');
         const cW = firstLayer.canvas.width;
         const cH = firstLayer.canvas.height;
-        // Multi-point probe to check if canvas is uniform solid or complex photo/artwork
-        const p1 = ctx.getImageData(0, 0, 1, 1).data;
-        const p2 = ctx.getImageData(Math.floor(cW / 2), Math.floor(cH / 2), 1, 1).data;
-        const p3 = ctx.getImageData(Math.max(0, cW - 1), Math.max(0, cH - 1), 1, 1).data;
-        const p4 = ctx.getImageData(0, Math.max(0, cH - 1), 1, 1).data;
+        // 13-point distributed grid probe to verify if canvas is uniform solid background
+        const probeCoords: [number, number][] = [
+          [0, 0],
+          [Math.max(0, cW - 1), 0],
+          [0, Math.max(0, cH - 1)],
+          [Math.max(0, cW - 1), Math.max(0, cH - 1)],
+          [Math.floor(cW / 2), Math.floor(cH / 2)],
+          [Math.floor(cW / 2), 0],
+          [Math.floor(cW / 2), Math.max(0, cH - 1)],
+          [0, Math.floor(cH / 2)],
+          [Math.max(0, cW - 1), Math.floor(cH / 2)],
+          [Math.floor(cW / 4), Math.floor(cH / 4)],
+          [Math.floor((3 * cW) / 4), Math.floor(cH / 4)],
+          [Math.floor(cW / 4), Math.floor((3 * cH) / 4)],
+          [Math.floor((3 * cW) / 4), Math.floor((3 * cH) / 4)],
+        ];
 
-        const isUniform = p1[0] === p2[0] && p1[1] === p2[1] && p1[2] === p2[2] && p1[3] === p2[3] &&
-                          p1[0] === p3[0] && p1[1] === p3[1] && p1[2] === p3[2] && p1[3] === p3[3] &&
-                          p1[0] === p4[0] && p1[1] === p4[1] && p1[2] === p4[2] && p1[3] === p4[3];
+        const p0 = ctx.getImageData(probeCoords[0][0], probeCoords[0][1], 1, 1).data;
+        let isUniform = true;
+        for (let i = 1; i < probeCoords.length; i++) {
+          const pt = ctx.getImageData(probeCoords[i][0], probeCoords[i][1], 1, 1).data;
+          if (pt[0] !== p0[0] || pt[1] !== p0[1] || pt[2] !== p0[2] || pt[3] !== p0[3]) {
+            isUniform = false;
+            break;
+          }
+        }
 
         if (isUniform) {
-          const hex = psdColorToToad({ r: p1[0], g: p1[1], b: p1[2], a: p1[3] / 255 });
+          const hex = psdColorToToad({ r: p0[0], g: p0[1], b: p0[2], a: p0[3] / 255 });
           lines.push(`  fill: ${hex};`);
           startIndex = 1; // Handled cleanly as solid canvas background
         } else {
@@ -491,7 +521,7 @@ export async function importPsd(
       const groupLocalLeft = gLeft - parentLeft;
       const groupLocalTop = gTop - parentTop;
 
-      lines.push(`${indent}group #${id} "${layerName}" {`);
+      lines.push(`${indent}group #${id} "${escapeDslString(layerName)}" {`);
       lines.push(`${indent}  at: ${groupLocalLeft}px ${groupLocalTop}px;`);
       lines.push(`${indent}  size: ${gW}px ${gH}px;`);
       if (maskTargetId) {
@@ -596,7 +626,7 @@ export async function importPsd(
 
       if (rectCheck && rectCheck.isRect) {
         // Output clean rect
-        lines.push(`${indent}rect #${id} "${layerName}" {`);
+        lines.push(`${indent}rect #${id} "${escapeDslString(layerName)}" {`);
         lines.push(`${indent}  at: ${Math.round(rectCheck.x - parentLeft)}px ${Math.round(rectCheck.y - parentTop)}px;`);
         lines.push(`${indent}  size: ${Math.round(rectCheck.w)}px ${Math.round(rectCheck.h)}px;`);
         lines.push(`${indent}  fill: ${fillColor};`);
@@ -645,7 +675,7 @@ export async function importPsd(
         }
 
         const d = subDList.join(' ');
-        lines.push(`${indent}path #${id} "${layerName}" {`);
+        lines.push(`${indent}path #${id} "${escapeDslString(layerName)}" {`);
         lines.push(`${indent}  at: ${localPathX}px ${localPathY}px;`);
         lines.push(`${indent}  size: ${pathW}px ${pathH}px;`);
         lines.push(`${indent}  d: "${d}";`);
@@ -684,7 +714,7 @@ export async function importPsd(
           height: h
         });
 
-        lines.push(`${indent}image #${id} "${layerName}" {`);
+        lines.push(`${indent}image #${id} "${escapeDslString(layerName)}" {`);
         lines.push(`${indent}  src: "${relAssetPath}";`);
         lines.push(`${indent}  at: ${localLeft}px ${localTop}px;`);
         lines.push(`${indent}  size: ${w}px ${h}px;`);
@@ -701,7 +731,7 @@ export async function importPsd(
 
     // Fallback: Empty container or unknown layer
     if (w > 0 && h > 0) {
-      lines.push(`${indent}rect #${id} "${layerName}" {`);
+      lines.push(`${indent}rect #${id} "${escapeDslString(layerName)}" {`);
       lines.push(`${indent}  at: ${localLeft}px ${localTop}px;`);
       lines.push(`${indent}  size: ${w}px ${h}px;`);
       lines.push(`${indent}  fill: transparent;`);

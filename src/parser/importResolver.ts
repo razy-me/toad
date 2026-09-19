@@ -124,6 +124,18 @@ export class ImportResolver {
     this.maxComponentDepth = options.maxComponentDepth || 32;
   }
 
+  private isSafePath(targetPath: string): boolean {
+    const resolved = path.resolve(targetPath);
+    const roots = [
+      path.resolve(process.cwd()),
+      path.resolve(path.dirname(this.entryPath))
+    ];
+    return roots.some(root => {
+      const rel = path.relative(root, resolved);
+      return !rel.startsWith('..') && !path.isAbsolute(rel);
+    });
+  }
+
   public async resolve(): Promise<ResolvedDocumentNode> {
     const canonEntry = process.platform === 'win32' ? this.entryPath.toLowerCase() : this.entryPath;
     this.loadedDocs.set(canonEntry, this.entryDoc);
@@ -151,6 +163,10 @@ export class ImportResolver {
           if (!seenFonts.has(key)) {
             seenFonts.add(key);
             const resolvedPath = path.isAbsolute(dir.path) ? dir.path : path.resolve(docDir, dir.path);
+            if (!this.isSafePath(resolvedPath)) {
+              this.warnings.push(`Security warning: @font path '${dir.path}' resolves outside workspace boundary; skipped.`);
+              continue;
+            }
             fontDirectives.push({
               ...dir,
               path: resolvedPath
@@ -264,6 +280,9 @@ export class ImportResolver {
           importPath += '.toad';
         }
         const resolvedPath = path.resolve(currentDir, importPath);
+        if (!this.isSafePath(resolvedPath)) {
+          throw new Error(`Security violation: Import path '${importPath}' resolves outside workspace boundary.`);
+        }
         const canonPath = process.platform === 'win32' ? resolvedPath.toLowerCase() : resolvedPath;
         const canonCurrent = process.platform === 'win32' ? currentFilePath.toLowerCase() : currentFilePath;
 
@@ -336,22 +355,30 @@ export class ImportResolver {
 
   private substituteVariablesInValue(
     value: ValueNode,
-    lookup: (name: string) => ValueNode | undefined
+    lookup: (name: string) => ValueNode | undefined,
+    visited = new Set<string>(),
+    depth = 0
   ): ValueNode {
     if (!value) return value;
+    if (depth > 50) return value;
 
     switch (value.type) {
       case 'VariableReference': {
+        if (visited.has(value.name)) {
+          return value;
+        }
         const resolved = lookup(value.name);
         if (resolved) {
-          return this.substituteVariablesInValue(resolved, lookup);
+          const nextVisited = new Set(visited);
+          nextVisited.add(value.name);
+          return this.substituteVariablesInValue(resolved, lookup, nextVisited, depth + 1);
         }
         return value;
       }
       case 'ColorLiteral': {
         if (typeof value.value === 'string' && value.value.includes('>')) {
           let str = value.value;
-          str = str.replace(/>([a-zA-Z_][a-zA-Z0-9_-]*)/g, (match, varName) => {
+          str = str.replace(/>([a-zA-Z_][a-zA-Z0-9_.-]*)/g, (match, varName) => {
             const resolved = lookup(varName);
             if (resolved) {
               if (resolved.type === 'NumberLiteral') return String(resolved.value);
@@ -367,24 +394,24 @@ export class ImportResolver {
       case 'CoordinateValue': {
         return {
           ...value,
-          x: this.substituteVariablesInValue(value.x, lookup),
-          y: this.substituteVariablesInValue(value.y, lookup)
+          x: this.substituteVariablesInValue(value.x, lookup, visited, depth + 1),
+          y: this.substituteVariablesInValue(value.y, lookup, visited, depth + 1)
         };
       }
       case 'RelationalPosition': {
         return {
           ...value,
-          offset: value.offset ? this.substituteVariablesInValue(value.offset, lookup) : undefined
+          offset: value.offset ? this.substituteVariablesInValue(value.offset, lookup, visited, depth + 1) : undefined
         };
       }
       case 'LinearGradient': {
         return {
           ...value,
-          direction: value.direction ? this.substituteVariablesInValue(value.direction, lookup) : undefined,
+          direction: value.direction ? this.substituteVariablesInValue(value.direction, lookup, visited, depth + 1) : undefined,
           stops: value.stops.map(s => ({
             ...s,
-            color: this.substituteVariablesInValue(s.color, lookup),
-            position: s.position ? this.substituteVariablesInValue(s.position, lookup) : undefined
+            color: this.substituteVariablesInValue(s.color, lookup, visited, depth + 1),
+            position: s.position ? this.substituteVariablesInValue(s.position, lookup, visited, depth + 1) : undefined
           }))
         };
       }
@@ -393,25 +420,25 @@ export class ImportResolver {
           ...value,
           stops: value.stops.map(s => ({
             ...s,
-            color: this.substituteVariablesInValue(s.color, lookup),
-            position: s.position ? this.substituteVariablesInValue(s.position, lookup) : undefined
+            color: this.substituteVariablesInValue(s.color, lookup, visited, depth + 1),
+            position: s.position ? this.substituteVariablesInValue(s.position, lookup, visited, depth + 1) : undefined
           }))
         };
       }
       case 'ConicGradient': {
         return {
           ...value,
-          angle: value.angle ? this.substituteVariablesInValue(value.angle, lookup) : undefined,
+          angle: value.angle ? this.substituteVariablesInValue(value.angle, lookup, visited, depth + 1) : undefined,
           stops: value.stops.map(s => ({
             ...s,
-            color: this.substituteVariablesInValue(s.color, lookup),
-            position: s.position ? this.substituteVariablesInValue(s.position, lookup) : undefined
+            color: this.substituteVariablesInValue(s.color, lookup, visited, depth + 1),
+            position: s.position ? this.substituteVariablesInValue(s.position, lookup, visited, depth + 1) : undefined
           }))
         };
       }
       case 'CalcValue': {
         let expr = value.expression;
-        expr = expr.replace(/>([a-zA-Z_][a-zA-Z0-9_-]*)/g, (match, varName) => {
+        expr = expr.replace(/>([a-zA-Z_][a-zA-Z0-9_.-]*)/g, (match, varName) => {
           const resolved = lookup(varName);
           if (resolved) {
             if (resolved.type === 'NumberLiteral' || resolved.type === 'DimensionLiteral') {
@@ -427,15 +454,15 @@ export class ImportResolver {
           ...value,
           filters: value.filters.map(f => ({
             ...f,
-            arguments: f.arguments.map(arg => this.substituteVariablesInValue(arg, lookup))
+            arguments: f.arguments.map(arg => this.substituteVariablesInValue(arg, lookup, visited, depth + 1))
           }))
         };
       }
       case 'StrokeValue': {
         return {
           ...value,
-          color: value.color ? this.substituteVariablesInValue(value.color, lookup) : undefined,
-          width: value.width ? this.substituteVariablesInValue(value.width, lookup) : undefined
+          color: value.color ? this.substituteVariablesInValue(value.color, lookup, visited, depth + 1) : undefined,
+          width: value.width ? this.substituteVariablesInValue(value.width, lookup, visited, depth + 1) : undefined
         };
       }
       case 'FontValue': {
@@ -450,7 +477,7 @@ export class ImportResolver {
         return {
           ...value,
           family: fam,
-          size: value.size ? this.substituteVariablesInValue(value.size, lookup) : undefined
+          size: value.size ? this.substituteVariablesInValue(value.size, lookup, visited, depth + 1) : undefined
         };
       }
       case 'PointsValue': {
@@ -458,21 +485,21 @@ export class ImportResolver {
           ...value,
           points: value.points.map(p => ({
             ...p,
-            x: this.substituteVariablesInValue(p.x, lookup),
-            y: this.substituteVariablesInValue(p.y, lookup)
+            x: this.substituteVariablesInValue(p.x, lookup, visited, depth + 1),
+            y: this.substituteVariablesInValue(p.y, lookup, visited, depth + 1)
           }))
         };
       }
       case 'ArrayLiteral': {
         return {
           ...value,
-          elements: value.elements.map(e => this.substituteVariablesInValue(e, lookup))
+          elements: value.elements.map(e => this.substituteVariablesInValue(e, lookup, visited, depth + 1))
         };
       }
       case 'ObjectLiteral': {
         const substitutedProps: Record<string, ValueNode> = {};
         for (const [k, v] of Object.entries((value as any).properties || {})) {
-          substitutedProps[k] = this.substituteVariablesInValue(v as ValueNode, lookup);
+          substitutedProps[k] = this.substituteVariablesInValue(v as ValueNode, lookup, visited, depth + 1);
         }
         return {
           ...value,
@@ -482,12 +509,12 @@ export class ImportResolver {
       case 'ExpressionList': {
         return {
           ...value,
-          expressions: value.expressions.map(e => this.substituteVariablesInValue(e, lookup))
+          expressions: value.expressions.map(e => this.substituteVariablesInValue(e, lookup, visited, depth + 1))
         };
       }
       case 'ColorTransform': {
-        const resColor = this.substituteVariablesInValue(value.color, lookup);
-        const resAmt = this.substituteVariablesInValue(value.amount, lookup);
+        const resColor = this.substituteVariablesInValue(value.color, lookup, visited, depth + 1);
+        const resAmt = this.substituteVariablesInValue(value.amount, lookup, visited, depth + 1);
         const colorStr = this.extractColorString(resColor) || '#000000';
         const amtNum = this.extractNumber(resAmt) ?? 0.2;
         let transformed = colorStr;
@@ -547,8 +574,21 @@ export class ImportResolver {
         const propName = prop.name;
 
         if (propName === 'src' || propName === 'photo-src' || propName === 'photoSrc' || propName === 'photo') {
-          photoSrc = this.extractString(val) || photoSrc;
-          mode = 'photo';
+          const rawPhoto = this.extractString(val);
+          if (rawPhoto) {
+            if (!rawPhoto.startsWith('data:') && !rawPhoto.startsWith('http://') && !rawPhoto.startsWith('https://')) {
+              const docDir = this.entryPath ? path.dirname(this.entryPath) : process.cwd();
+              const fullPhoto = path.resolve(docDir, rawPhoto);
+              if (!this.isSafePath(fullPhoto)) {
+                this.warnings.push(`Security warning: photo-src path '${rawPhoto}' resolves outside workspace boundary; blocked.`);
+              } else {
+                photoSrc = rawPhoto;
+              }
+            } else {
+              photoSrc = rawPhoto;
+            }
+            mode = 'photo';
+          }
         } else if (propName === 'size' || propName === 'dimensions') {
           const dims = this.extractDimensions(val);
           if (dims) {
