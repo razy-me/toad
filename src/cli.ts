@@ -1162,7 +1162,7 @@ export function createCli(): Command {
     .option('-p, --port <number>', 'Port for the studio server (default: 3000)')
     .option('-f, --foreground', 'Run in foreground (attached to current terminal)')
     .option('--no-browser', 'Do not open browser automatically')
-    .option('--delay-browser', 'Delay browser launch by 3 seconds while checking for updates')
+    .option('--delay-browser', 'Delay browser launch by 6 seconds with progress bar while checking for updates')
     .action(async (actionOrEntry?: string, options?: any) => {
       const port = options?.port ? parseInt(options.port, 10) : 3000;
 
@@ -1191,9 +1191,29 @@ export function createCli(): Command {
         if (!openBrowserEnabled) return;
 
         if (shouldDelayBrowser) {
-          console.log(`  ${c.cyan('🔄')}  ${c.dim('Prüfe auf Updates...')}`);
+          const TOTAL_DELAY_MS = 6000;
           const startCheck = Date.now();
-          const updateInfo = await checkForUpdatesSummary();
+
+          // 1. Animated Spinner for update search
+          const spinnerFrames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+          let frameIndex = 0;
+          let checking = true;
+
+          const spinnerInterval = setInterval(() => {
+            if (!checking) return;
+            const frame = c.cyan(spinnerFrames[frameIndex % spinnerFrames.length]!);
+            frameIndex++;
+            process.stdout.write(`\r  ${frame}  ${c.dim('Suche nach Updates...')}`);
+          }, 80);
+
+          let updateInfo;
+          try {
+            updateInfo = await checkForUpdatesSummary();
+          } finally {
+            checking = false;
+            clearInterval(spinnerInterval);
+            process.stdout.write('\r\x1b[K'); // clear line
+          }
 
           if (updateInfo.hasUpdates) {
             console.log(`  ${c.yellow('⭐')}  ${c.bold(c.yellow(`${updateInfo.count} neue ${updateInfo.count === 1 ? 'Update verfügbar' : 'Updates verfügbar'}!`))} ${c.dim('(toad update)')}`);
@@ -1201,10 +1221,32 @@ export function createCli(): Command {
             console.log(`  ${c.green('✔')}  ${c.dim(updateInfo.message)}`);
           }
 
-          const elapsed = Date.now() - startCheck;
-          const remainingDelay = Math.max(0, 3000 - elapsed);
+          // 2. Animated Progress Bar for the 6-second delay
+          const elapsedSoFar = Date.now() - startCheck;
+          const remainingDelay = Math.max(0, TOTAL_DELAY_MS - elapsedSoFar);
+
           if (remainingDelay > 0) {
-            await new Promise((resolve) => setTimeout(resolve, remainingDelay));
+            const barWidth = 24;
+            const progressStart = Date.now();
+
+            await new Promise<void>((resolve) => {
+              const progressInterval = setInterval(() => {
+                const pElapsed = Date.now() - progressStart;
+                const percent = Math.min(1, pElapsed / remainingDelay);
+                const filled = Math.round(barWidth * percent);
+                const empty = barWidth - filled;
+                const remainingSecs = Math.max(0, Math.ceil((remainingDelay - pElapsed) / 1000));
+
+                const barStr = c.green('█'.repeat(filled)) + c.dim('░'.repeat(empty));
+                process.stdout.write(`\r  ${c.dim('🚀')}  [${barStr}] ${c.dim(`${Math.round(percent * 100)}%`)} ${c.dim('• Browser öffnet in')} ${c.bold(c.cyan(`${remainingSecs}s`))}...`);
+
+                if (percent >= 1) {
+                  clearInterval(progressInterval);
+                  process.stdout.write(`\r\x1b[K  ${c.green('✔')}  ${c.dim('Browser wird geöffnet...')}\n\n`);
+                  resolve();
+                }
+              }, 60);
+            });
           }
         }
         openBrowser(targetUrl);
@@ -1249,7 +1291,7 @@ export function createCli(): Command {
 
           console.log(`  ${c.green('➜')}  ${c.bold('Studio URL:')}     ${c.cyan(serverInstance.url)}`);
           if (openBrowserEnabled) {
-            console.log(`  ${c.dim('➜')}  ${c.dim('Browser:')}        ${c.green(shouldDelayBrowser ? 'Öffnet in 3 Sekunden...' : 'Opening automatically...')}`);
+            console.log(`  ${c.dim('➜')}  ${c.dim('Browser:')}        ${c.green(shouldDelayBrowser ? 'Öffnet in 6 Sekunden...' : 'Opening automatically...')}`);
             await handleBrowserOpening(serverInstance.url);
           }
 
@@ -1274,7 +1316,7 @@ export function createCli(): Command {
           console.log(`  ${c.dim('➜')}  ${c.dim('Status:')}         ${c.green('Läuft als Hintergrund-Dienst (PID: ' + daemon.pid + ')')}`);
           console.log(`  ${c.dim('➜')}  ${c.dim('Terminal:')}       ${c.yellow('Dieses CMD-Fenster kann jetzt geschlossen werden.')}`);
           console.log(`  ${c.dim('➜')}  ${c.dim('Beenden:')}        ${c.dim('toad studio stop (oder direkt im Web-GUI)')}`);
-          console.log(`  ${c.dim('➜')}  ${c.dim('Browser:')}        ${c.green(shouldDelayBrowser ? 'Öffnet in 3 Sekunden...' : 'Opening automatically...')}\n`);
+          console.log(`  ${c.dim('➜')}  ${c.dim('Browser:')}        ${c.green(shouldDelayBrowser ? 'Öffnet in 6 Sekunden...' : 'Opening automatically...')}\n`);
 
           await handleBrowserOpening(daemon.url);
           process.exit(0);
