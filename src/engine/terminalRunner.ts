@@ -45,28 +45,37 @@ export function abortLiveTerminalCommand(): { aborted: boolean; message: string 
     return { aborted: false, message: 'Kein aktives Terminal-Fenster gefunden.' };
   }
 
-  // 1. If child PID file exists, kill process tree immediately
+  // 1. Write cancel flag first so worker knows the impending termination is intentional
+  try {
+    fs.writeFileSync(cancelFile, '1', 'utf-8');
+  } catch {}
+
+  // 2. If child PID file exists, kill process tree safely
   if (fs.existsSync(childPidFile)) {
     try {
       const childPid = parseInt(fs.readFileSync(childPidFile, 'utf-8').trim(), 10);
       if (childPid && !isNaN(childPid)) {
-        if (process.platform === 'win32') {
-          spawn('taskkill', ['/pid', String(childPid), '/T', '/F'], { stdio: 'ignore' });
-        } else {
-          try {
-            process.kill(-childPid, 'SIGINT');
-          } catch {
-            try { process.kill(childPid, 'SIGINT'); } catch {}
+        // Verify process is still alive before terminating to prevent killing recycled PID
+        let isAlive = false;
+        try {
+          process.kill(childPid, 0);
+          isAlive = true;
+        } catch {}
+
+        if (isAlive) {
+          if (process.platform === 'win32') {
+            spawn('taskkill', ['/pid', String(childPid), '/T', '/F'], { stdio: 'ignore' });
+          } else {
+            try {
+              process.kill(-childPid, 'SIGINT');
+            } catch {
+              try { process.kill(childPid, 'SIGINT'); } catch {}
+            }
           }
         }
       }
     } catch {}
   }
-
-  // 2. Write cancel flag for worker
-  try {
-    fs.writeFileSync(cancelFile, '1', 'utf-8');
-  } catch {}
 
   return { aborted: true, message: 'Befehl im Terminal abgebrochen.' };
 }

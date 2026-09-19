@@ -406,8 +406,21 @@ export function createCanvasGradient(
   },
   box: ShapeBoundingBox
 ): CanvasGradient {
-  const distributedStops = distributeGradientStops(grad.stops).sort((a, b) => a.position - b.position);
+  const rawStops = distributeGradientStops(grad.stops);
+  let maxPos = 0;
+  const distributedStops = rawStops.map(s => {
+    const pos = typeof s.position === 'number' && Number.isFinite(s.position) ? s.position : maxPos;
+    const clampedPos = Math.max(maxPos, Math.min(1, Math.max(0, pos)));
+    maxPos = clampedPos;
+    return { ...s, position: clampedPos };
+  });
   const angle = typeof grad.angleDeg === 'number' ? grad.angleDeg : typeof (grad as any).angle === 'number' ? (grad as any).angle : undefined;
+
+  const bx = Number.isFinite(box?.x) ? box.x : 0;
+  const by = Number.isFinite(box?.y) ? box.y : 0;
+  const bw = Number.isFinite(box?.w) && box.w > 0 ? box.w : 1;
+  const bh = Number.isFinite(box?.h) && box.h > 0 ? box.h : 1;
+  const cleanBox = { x: bx, y: by, w: bw, h: bh };
 
   const safeAddColorStop = (gradient: CanvasGradient, pos: number, col: string) => {
     let offset = typeof pos === 'number' && Number.isFinite(pos) && !isNaN(pos) ? Math.min(1, Math.max(0, pos)) : 0;
@@ -417,8 +430,8 @@ export function createCanvasGradient(
   };
 
   if (grad.type === 'conic') {
-    const cx = box.x + box.w / 2;
-    const cy = box.y + box.h / 2;
+    const cx = cleanBox.x + cleanBox.w / 2;
+    const cy = cleanBox.y + cleanBox.h / 2;
     // @napi-rs/canvas supports createConicGradient(startAngle, x, y)
     // startAngle is in radians. CSS conic-gradient starts at 12 o'clock, which is -PI/2.
     // CSS angle increases clockwise.
@@ -434,12 +447,10 @@ export function createCanvasGradient(
   }
 
   if (grad.type === 'radial') {
-    const cx = box.x + box.w / 2;
-    const cy = box.y + box.h / 2;
-    const bw = Math.max(1, Math.abs(box.w || 1));
-    const bh = Math.max(1, Math.abs(box.h || 1));
-    const rx = bw / 2;
-    const ry = bh / 2;
+    const cx = cleanBox.x + cleanBox.w / 2;
+    const cy = cleanBox.y + cleanBox.h / 2;
+    const rx = cleanBox.w / 2;
+    const ry = cleanBox.h / 2;
     let radius: number;
     if (grad.shape === 'circle') {
       // Explicit circle shape: use closest-side radius so circle stays contained in element
@@ -461,42 +472,47 @@ export function createCanvasGradient(
 
   // Linear Gradient. Per CSS, a linear-gradient without angle or direction
   // defaults to "to bottom" (matches the SVG exporter's default).
-  let x0 = box.x;
-  let y0 = box.y;
-  let x1 = box.x;
-  let y1 = box.y + box.h;
+  let x0 = cleanBox.x;
+  let y0 = cleanBox.y;
+  let x1 = cleanBox.x;
+  let y1 = cleanBox.y + cleanBox.h;
 
   if (grad.direction) {
     const dir = grad.direction.toLowerCase().trim();
     if (dir === 'to right') {
-      x0 = box.x; y0 = box.y; x1 = box.x + box.w; y1 = box.y;
+      x0 = cleanBox.x; y0 = cleanBox.y; x1 = cleanBox.x + cleanBox.w; y1 = cleanBox.y;
     } else if (dir === 'to bottom') {
-      x0 = box.x; y0 = box.y; x1 = box.x; y1 = box.y + box.h;
+      x0 = cleanBox.x; y0 = cleanBox.y; x1 = cleanBox.x; y1 = cleanBox.y + cleanBox.h;
     } else if (dir === 'to left') {
-      x0 = box.x + box.w; y0 = box.y; x1 = box.x; y1 = box.y;
+      x0 = cleanBox.x + cleanBox.w; y0 = cleanBox.y; x1 = cleanBox.x; y1 = cleanBox.y;
     } else if (dir === 'to top') {
-      x0 = box.x; y0 = box.y + box.h; x1 = box.x; y1 = box.y;
+      x0 = cleanBox.x; y0 = cleanBox.y + cleanBox.h; x1 = cleanBox.x; y1 = cleanBox.y;
     } else if (dir === 'to bottom right' || dir === 'to right bottom') {
-      x0 = box.x; y0 = box.y; x1 = box.x + box.w; y1 = box.y + box.h;
+      x0 = cleanBox.x; y0 = cleanBox.y; x1 = cleanBox.x + cleanBox.w; y1 = cleanBox.y + cleanBox.h;
     } else if (dir === 'to top right' || dir === 'to right top') {
-      x0 = box.x; y0 = box.y + box.h; x1 = box.x + box.w; y1 = box.y;
+      x0 = cleanBox.x; y0 = cleanBox.y + cleanBox.h; x1 = cleanBox.x + cleanBox.w; y1 = cleanBox.y;
     } else if (dir === 'to bottom left' || dir === 'to left bottom') {
-      x0 = box.x + box.w; y0 = box.y; x1 = box.x; y1 = box.y + box.h;
+      x0 = cleanBox.x + cleanBox.w; y0 = cleanBox.y; x1 = cleanBox.x; y1 = cleanBox.y + cleanBox.h;
     } else if (dir === 'to top left' || dir === 'to left top') {
-      x0 = box.x + box.w; y0 = box.y + box.h; x1 = box.x; y1 = box.y;
+      x0 = cleanBox.x + cleanBox.w; y0 = cleanBox.y + cleanBox.h; x1 = cleanBox.x; y1 = cleanBox.y;
     }
   } else if (typeof angle === 'number') {
     // CSS gradient angle: 0deg = to top, 90deg = to right, 180deg = to bottom
     const angleRad = ((angle - 90) * Math.PI) / 180;
-    const cx = box.x + box.w / 2;
-    const cy = box.y + box.h / 2;
-    const len = (Math.abs(box.w * Math.cos(angleRad)) + Math.abs(box.h * Math.sin(angleRad))) / 2;
+    const cx = cleanBox.x + cleanBox.w / 2;
+    const cy = cleanBox.y + cleanBox.h / 2;
+    const len = (Math.abs(cleanBox.w * Math.cos(angleRad)) + Math.abs(cleanBox.h * Math.sin(angleRad))) / 2;
 
     x0 = cx - Math.cos(angleRad) * len;
     y0 = cy - Math.sin(angleRad) * len;
     x1 = cx + Math.cos(angleRad) * len;
     y1 = cy + Math.sin(angleRad) * len;
   }
+
+  if (!Number.isFinite(x0)) x0 = cleanBox.x;
+  if (!Number.isFinite(y0)) y0 = cleanBox.y;
+  if (!Number.isFinite(x1)) x1 = cleanBox.x;
+  if (!Number.isFinite(y1)) y1 = cleanBox.y + cleanBox.h;
 
   const canvasGrad = ctx.createLinearGradient(x0, y0, x1, y1);
   for (const s of distributedStops) {
@@ -1023,9 +1039,9 @@ export function applyPhotographicGrading(data: Uint8ClampedArray, params: PhotoA
       b = gray + (b - gray) * saturation;
     }
 
-    data[i] = !Number.isFinite(r) || isNaN(r) ? data[i]! : r < 0 ? 0 : r > 255 ? 255 : (r | 0);
-    data[i + 1] = !Number.isFinite(g) || isNaN(g) ? data[i + 1]! : g < 0 ? 0 : g > 255 ? 255 : (g | 0);
-    data[i + 2] = !Number.isFinite(b) || isNaN(b) ? data[i + 2]! : b < 0 ? 0 : b > 255 ? 255 : (b | 0);
+    data[i] = !Number.isFinite(r) || isNaN(r) ? data[i]! : Math.round(Math.max(0, Math.min(255, r)));
+    data[i + 1] = !Number.isFinite(g) || isNaN(g) ? data[i + 1]! : Math.round(Math.max(0, Math.min(255, g)));
+    data[i + 2] = !Number.isFinite(b) || isNaN(b) ? data[i + 2]! : Math.round(Math.max(0, Math.min(255, b)));
   }
 }
 

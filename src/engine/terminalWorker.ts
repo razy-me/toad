@@ -165,6 +165,17 @@ async function checkQueue() {
       // Already aborted
       return;
     }
+
+    const wasCancelled = fs.existsSync(cancelFile);
+    if (wasCancelled) {
+      try { fs.unlinkSync(cancelFile); } catch {}
+      isExecuting = false;
+      console.log('\n\x1b[33m\x1b[1m⚠ Vorgang abgebrochen.\x1b[0m');
+      console.log('\x1b[90m--------------------------------------------------------\x1b[0m');
+      console.log('\x1b[36m➜ Bereit.\x1b[0m Warten auf nächsten Befehl aus dem Dashboard...\n');
+      return;
+    }
+
     isExecuting = false;
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(1);

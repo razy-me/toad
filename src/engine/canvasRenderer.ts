@@ -22,6 +22,7 @@ import {
 } from './drawUtils.js';
 import { FontLoader } from './fontLoader.js';
 import { resolveSharedImage, detectCanvasFilterSupport, estimateFilterPad, normalizeFilterCss, splitUnsafeFilterFns, sanitizeFilterCss } from './imageCache.js';
+import { polygonToRoundedSvgPath } from './vectorPathParser.js';
 
 export interface RenderOptions {
   scale?: number;
@@ -301,8 +302,8 @@ export class CanvasRenderer {
         const prevTransform = (ctx as any).getTransform();
         ctx.translate(node.maskNode.x, node.maskNode.y);
         if (node.maskNode.type === 'icon') {
-          const sx = node.maskNode.width > 0 ? node.maskNode.width / 24 : 1;
-          const sy = node.maskNode.height > 0 ? node.maskNode.height / 24 : 1;
+          const sx = node.maskNode.width > 0 ? node.maskNode.width / 24 : 0;
+          const sy = node.maskNode.height > 0 ? node.maskNode.height / 24 : 0;
           ctx.scale(sx, sy);
         }
         ctx.clip(p2d);
@@ -648,11 +649,14 @@ export class CanvasRenderer {
               patchCanvas = createCanvas(spotW, spotH);
               const pctx = patchCanvas.getContext('2d');
 
-              // Draw full image shifted so (cx, cy) is at center of patchCanvas
-              const imgW = layoutCanvas.width;
-              const imgH = layoutCanvas.height;
-              const drawX = rad - cx;
-              const drawY = rad - cy;
+              // Draw full image shifted so (cx, cy) is at center of patchCanvas (accounting for bleed)
+              const bleed = layoutCanvas.bleed || 0;
+              const bgX = -bleed;
+              const bgY = -bleed;
+              const imgW = layoutCanvas.width + (bleed > 0 ? 2 * bleed : 0);
+              const imgH = layoutCanvas.height + (bleed > 0 ? 2 * bleed : 0);
+              const drawX = rad - (cx - bgX);
+              const drawY = rad - (cy - bgY);
               drawImageWithFit(pctx, img, 'cover', drawX, drawY, imgW, imgH);
 
               // Apply photoParams + local adjustParams
@@ -929,11 +933,26 @@ export class CanvasRenderer {
       p.ellipse(cx, cy, Math.max(0, node.width / 2), Math.max(0, node.height / 2), 0, 0, Math.PI * 2);
     } else if (node.type === 'polygon' && node.polygonLayout?.canvasPoints && node.polygonLayout.canvasPoints.length > 0) {
       const pts = node.polygonLayout.canvasPoints;
-      p.moveTo(pts[0]!.x, pts[0]!.y);
-      for (let i = 1; i < pts.length; i++) {
-        p.lineTo(pts[i]!.x, pts[i]!.y);
+      const r = typeof node.style.borderRadius === 'number' ? node.style.borderRadius : 0;
+      if (r > 0) {
+        const d = polygonToRoundedSvgPath(pts, r);
+        return new Path2D(d);
+      } else {
+        p.moveTo(pts[0]!.x, pts[0]!.y);
+        for (let i = 1; i < pts.length; i++) {
+          p.lineTo(pts[i]!.x, pts[i]!.y);
+        }
+        p.closePath();
       }
-      p.closePath();
+    } else if ((node.type === 'path' || node.type === 'shape' || node.type === 'icon' || ['star', 'triangle', 'arrow', 'cross'].includes(node.type)) && node.pathLayout?.d) {
+      const p2d = new Path2D(node.pathLayout.d);
+      if (node.type === 'icon') {
+        const sx = node.width > 0 ? node.width / 24 : 0;
+        const sy = node.height > 0 ? node.height / 24 : 0;
+        p.addPath(p2d, { a: sx, b: 0, c: 0, d: sy, e: node.x, f: node.y });
+      } else {
+        p.addPath(p2d, { a: 1, b: 0, c: 0, d: 1, e: node.x, f: node.y });
+      }
     } else {
       const r = node.style.borderRadius;
       if (typeof r === 'number' && r > 0) {
@@ -1175,10 +1194,19 @@ export class CanvasRenderer {
     if (!Number.isFinite(dw) || dw < 1) dw = 1;
     if (!Number.isFinite(dh) || dh < 1) dh = 1;
 
-    // F-021: Cap MAX_OFFSCREEN_DIMENSION to 4096
+    // F-021 / REG-03: Cap MAX_OFFSCREEN_DIMENSION to 4096 with proportional scale reduction
     const MAX_OFFSCREEN_DIMENSION = 4096;
-    dw = Math.min(MAX_OFFSCREEN_DIMENSION, Math.max(1, dw));
-    dh = Math.min(MAX_OFFSCREEN_DIMENSION, Math.max(1, dh));
+    const rawDw = dw;
+    const rawDh = dh;
+    let scaleReduction = 1;
+    if (dw > MAX_OFFSCREEN_DIMENSION || dh > MAX_OFFSCREEN_DIMENSION) {
+      scaleReduction = Math.min(MAX_OFFSCREEN_DIMENSION / dw, MAX_OFFSCREEN_DIMENSION / dh);
+      dw = Math.max(1, Math.round(dw * scaleReduction));
+      dh = Math.max(1, Math.round(dh * scaleReduction));
+    } else {
+      dw = Math.max(1, Math.round(dw));
+      dh = Math.max(1, Math.round(dh));
+    }
 
     let oc: any = null;
     let sil: any = null;
@@ -1188,9 +1216,20 @@ export class CanvasRenderer {
       oc = createCanvas(dw, dh);
       const octx = oc.getContext('2d');
       if (mat) {
-        octx.setTransform(mat.a, mat.b, mat.c, mat.d, mat.e - dx, mat.f - dy);
+        if (scaleReduction !== 1) {
+          octx.setTransform(
+            mat.a * scaleReduction,
+            mat.b * scaleReduction,
+            mat.c * scaleReduction,
+            mat.d * scaleReduction,
+            (mat.e - dx) * scaleReduction,
+            (mat.f - dy) * scaleReduction
+          );
+        } else {
+          octx.setTransform(mat.a, mat.b, mat.c, mat.d, mat.e - dx, mat.f - dy);
+        }
       } else {
-        const s = this.currentZoomScale(ctx);
+        const s = this.currentZoomScale(ctx) * scaleReduction;
         octx.setTransform(s, 0, 0, s, -ox * s, -oy * s);
       }
       try {
@@ -1211,7 +1250,7 @@ export class CanvasRenderer {
           const z = mat ? (Math.hypot(mat.a, mat.b) || 1) : this.currentZoomScale(ctx);
           const dOffX = mat ? mat.a * shadowSpec.offsetX + mat.c * shadowSpec.offsetY : shadowSpec.offsetX * z;
           const dOffY = mat ? mat.b * shadowSpec.offsetX + mat.d * shadowSpec.offsetY : shadowSpec.offsetY * z;
-          const devBlur = shadowSpec.blur * z;
+          const devBlur = shadowSpec.blur * z * scaleReduction;
 
           sil = createCanvas(dw, dh);
           const silCtx = sil.getContext('2d');
@@ -1224,7 +1263,7 @@ export class CanvasRenderer {
           if (devBlur > 0.3) {
             bl = createCanvas(dw, dh);
             const bctx = bl.getContext('2d');
-            try { (bctx as any).filter = sanitizeFilterCss(`blur(${(devBlur / 2).toFixed(2)}px)`); } catch { /* keep sharp */ }
+            try { (bctx as any).filter = sanitizeFilterCss(`blur(${devBlur.toFixed(2)}px)`); } catch { /* keep sharp */ }
             bctx.drawImage(sil, 0, 0);
             layer = bl;
           }
@@ -1232,7 +1271,11 @@ export class CanvasRenderer {
           ctx.save();
           try {
             if (mat) anyCtx.setTransform(1, 0, 0, 1, 0, 0);
-            anyCtx.drawImage(layer, dx + dOffX, dy + dOffY);
+            if (scaleReduction !== 1) {
+              anyCtx.drawImage(layer, dx + dOffX, dy + dOffY, rawDw, rawDh);
+            } else {
+              anyCtx.drawImage(layer, dx + dOffX, dy + dOffY);
+            }
           } finally {
             if (mat) anyCtx.setTransform(mat.a, mat.b, mat.c, mat.d, mat.e, mat.f);
             ctx.restore();
@@ -1245,7 +1288,11 @@ export class CanvasRenderer {
           if (mat) {
             anyCtx.setTransform(1, 0, 0, 1, 0, 0);
             try {
-              anyCtx.drawImage(oc, dx, dy);
+              if (scaleReduction !== 1) {
+                anyCtx.drawImage(oc, dx, dy, rawDw, rawDh);
+              } else {
+                anyCtx.drawImage(oc, dx, dy);
+              }
             } finally {
               anyCtx.setTransform(mat.a, mat.b, mat.c, mat.d, mat.e, mat.f);
             }

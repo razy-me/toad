@@ -151,7 +151,10 @@ export async function convertImage(
         // 'contain' or 'scale-down'
         const scaleW = options.width / srcWidth;
         const scaleH = options.height / srcHeight;
-        const s = Math.min(scaleW, scaleH);
+        let s = Math.min(scaleW, scaleH);
+        if (fit === 'scale-down') {
+          s = Math.min(1.0, s);
+        }
         targetWidth = Math.max(1, Math.round(srcWidth * s));
         targetHeight = Math.max(1, Math.round(srcHeight * s));
       }
@@ -160,11 +163,15 @@ export async function convertImage(
       targetHeight = Math.max(1, Math.round(options.height));
     }
   } else if (options.width && !options.height) {
-    targetWidth = Math.max(1, Math.round(options.width));
-    targetHeight = maintainAspect ? Math.max(1, Math.round(srcHeight * (options.width / srcWidth))) : srcHeight;
+    let s = options.width / srcWidth;
+    if (fit === 'scale-down') s = Math.min(1.0, s);
+    targetWidth = Math.max(1, Math.round(srcWidth * s));
+    targetHeight = maintainAspect ? Math.max(1, Math.round(srcHeight * s)) : srcHeight;
   } else if (!options.width && options.height) {
-    targetHeight = Math.max(1, Math.round(options.height));
-    targetWidth = maintainAspect ? Math.max(1, Math.round(srcWidth * (options.height / srcHeight))) : srcWidth;
+    let s = options.height / srcHeight;
+    if (fit === 'scale-down') s = Math.min(1.0, s);
+    targetHeight = Math.max(1, Math.round(srcHeight * s));
+    targetWidth = maintainAspect ? Math.max(1, Math.round(srcWidth * s)) : srcWidth;
   }
 
   // Clamping
