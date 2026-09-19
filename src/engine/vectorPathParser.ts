@@ -91,7 +91,7 @@ function tokenizeSvgPath(d: string): Array<{ command: string; args: number[] }> 
 /**
  * Converts an SVG Elliptical Arc to one or more cubic Bézier segments.
  */
-function arcToCubicSegments(
+export function arcToCubicSegments(
   x1: number,
   y1: number,
   rx: number,
@@ -102,7 +102,7 @@ function arcToCubicSegments(
   x2: number,
   y2: number
 ): CubicSegment[] {
-  if (x1 === x2 && y1 === y2) return [];
+  if (Math.abs(x1 - x2) < 1e-7 && Math.abs(y1 - y2) < 1e-7) return [];
 
   // Zero radii -> straight line
   rx = Math.abs(rx);
@@ -180,6 +180,8 @@ function arcToCubicSegments(
   if (!Number.isFinite(deltaTheta)) deltaTheta = 0;
   if (!Number.isFinite(theta1)) theta1 = 0;
 
+  if (Math.abs(deltaTheta) < 1e-7) return [];
+
   if (!sweepFlag && deltaTheta > 0) {
     deltaTheta -= 2 * Math.PI;
   } else if (sweepFlag && deltaTheta < 0) {
@@ -224,6 +226,11 @@ function arcToCubicSegments(
     });
 
     t = tEnd;
+  }
+
+  // Strictly anchor final segment endpoint to avoid trigonometric drift
+  if (segments.length > 0) {
+    segments[segments.length - 1]!.p1 = { x: x2, y: y2 };
   }
 
   return segments;
@@ -716,7 +723,14 @@ export function polygonToRoundedSvgPath(
     const halfAngle = angle / 2;
 
     const tanHalf = Math.tan(halfAngle);
-    if (Math.sin(halfAngle) < 1e-4 || Math.abs(tanHalf) < 1e-4 || !Number.isFinite(tanHalf)) {
+    if (
+      Math.sin(halfAngle) < 1e-4 ||
+      Math.abs(tanHalf) < 1e-4 ||
+      !Number.isFinite(tanHalf) ||
+      Math.abs(angle - Math.PI) < 1e-4 ||
+      tanHalf > 1e4 ||
+      Math.abs(crossZ) < 1e-4
+    ) {
       starts.push(curr);
       ends.push(curr);
       radii.push(0);

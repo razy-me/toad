@@ -209,13 +209,22 @@ export class SvgExporter {
         const textRegex = /<text\b([^>]*)>([\s\S]*?)<\/text>/g;
         return rawSvg.replace(textRegex, (match, attrs) => {
           try {
-            const idMatch = attrs.match(/\bid="([^"]+)"/);
-            const dataNameMatch = attrs.match(/\bdata-name="([^"]+)"/);
-            const labelMatch = attrs.match(/\binkscape:label="([^"]+)"/);
-
-            const idAttr = idMatch ? ` id="${idMatch[1]}"` : '';
-            const dataNameAttr = dataNameMatch ? ` data-name="${dataNameMatch[1]}"` : '';
-            const labelAttr = labelMatch ? ` inkscape:label="${labelMatch[1]}"` : '';
+            const textAttrsToStrip = new Set([
+              'x', 'y', 'dx', 'dy', 'text-anchor',
+              'font-family', 'font-size', 'font-weight', 'font-style',
+              'letter-spacing', 'word-spacing', 'text-decoration',
+              'dominant-baseline', 'alignment-baseline'
+            ]);
+            let gAttrs = '';
+            const attrRegex = /([a-zA-Z0-9_:-]+)="([^"]*)"/g;
+            let m: RegExpExecArray | null;
+            while ((m = attrRegex.exec(attrs)) !== null) {
+              const attrName = m[1]!;
+              const attrVal = m[2]!;
+              if (!textAttrsToStrip.has(attrName)) {
+                gAttrs += ` ${attrName}="${attrVal}"`;
+              }
+            }
 
             const miniSvg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">${match}</svg>`;
             const convertedMini = convertSVGTextToPath(Buffer.from(miniSvg)).toString('utf-8');
@@ -225,7 +234,7 @@ export class SvgExporter {
               return match;
             }
 
-            return `<g${idAttr}${dataNameAttr}${labelAttr}>\n        ${paths.join('\n        ')}\n      </g>`;
+            return `<g${gAttrs}>\n        ${paths.join('\n        ')}\n      </g>`;
           } catch (itemErr: any) {
             console.warn(`[SvgExporter] text-to-path conversion failed for text element: ${itemErr?.message || String(itemErr)}`);
             return match;
@@ -315,10 +324,12 @@ export class SvgExporter {
         attrs.push(`clip-path="url(#${chained})"`);
       }
       this.pendingClipByParent.set(parentKey, ownClipId);
+    } else if (node.style.clip === false) {
+      // Explicit clip: false breaks the clipping chain
+      this.pendingClipByParent.delete(parentKey);
     } else {
       const pendingClip = this.pendingClipByParent.get(parentKey);
       let effectiveClip = pendingClip;
-      this.pendingClipByParent.delete(parentKey);
 
       if (node.maskNode) {
         const maskClipId = this.createClipPathDef(node.maskNode);
@@ -353,7 +364,7 @@ export class SvgExporter {
           const w = node.width;
           const h = node.height;
           const pathD = `M ${x + tl} ${y} H ${x + w - tr} A ${tr} ${tr} 0 0 1 ${x + w} ${y + tr} V ${y + h - br} A ${br} ${br} 0 0 1 ${x + w - br} ${y + h} H ${x + bl} A ${bl} ${bl} 0 0 1 ${x} ${y + h - bl} V ${y + tl} A ${tl} ${tl} 0 0 1 ${x + tl} ${y} Z`;
-          return `${indent}<path d="${pathD}" ${fillAttr} ${strokeAttrs} ${attrs.join(' ')} />`.replace(/\s+/g, ' ');
+          return `${indent}<path d="${this.escapeAttr(pathD)}" ${fillAttr} ${strokeAttrs} ${attrs.join(' ')} />`.replace(/\s+/g, ' ');
         } else {
           return `${indent}<rect x="${node.x}" y="${node.y}" width="${node.width}" height="${node.height}" ${fillAttr} ${strokeAttrs} ${attrs.join(' ')} />`.replace(/\s+/g, ' ');
         }
@@ -387,7 +398,7 @@ export class SvgExporter {
           return `${indent}<polygon points="${ptsStr}" ${fillAttr} ${strokeAttrs} ${attrs.join(' ')} />`.replace(/\s+/g, ' ');
         } else {
           const pathD = this.buildRoundedPolygonSvgPath(points, radius);
-          return `${indent}<path d="${pathD}" ${fillAttr} ${strokeAttrs} ${attrs.join(' ')} />`.replace(/\s+/g, ' ');
+          return `${indent}<path d="${this.escapeAttr(pathD)}" ${fillAttr} ${strokeAttrs} ${attrs.join(' ')} />`.replace(/\s+/g, ' ');
         }
       }
 
@@ -871,11 +882,11 @@ export class SvgExporter {
         const y1 = (ccy + Math.sin(a1) * radius).toFixed(2);
         wedges.push(`<path d="M ${ccx} ${ccy} L ${x0} ${y0} A ${radius.toFixed(2)} ${radius.toFixed(2)} 0 0 1 ${x1} ${y1} Z" fill="${colAt((d + SEG / 2) / 360)}" />`);
       }
-      const pw = Math.max(1, box.w);
-      const ph = Math.max(1, box.h);
+      const pw = Math.max(1, b.w);
+      const ph = Math.max(1, b.h);
       this.defs.push(
-        `<pattern id="${patId}" patternUnits="userSpaceOnUse" x="${box.x}" y="${box.y}" width="${pw}" height="${ph}">
-      <rect x="${box.x}" y="${box.y}" width="${pw}" height="${ph}" fill-opacity="0" />
+        `<pattern id="${patId}" patternUnits="userSpaceOnUse" x="${b.x}" y="${b.y}" width="${pw}" height="${ph}">
+      <rect x="${b.x}" y="${b.y}" width="${pw}" height="${ph}" fill-opacity="0" />
       ${wedges.join('\n      ')}
     </pattern>`
       );

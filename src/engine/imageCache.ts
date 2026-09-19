@@ -18,9 +18,11 @@ export function getImageCacheSize(): number {
   return imageCache.size;
 }
 
+let cacheEpoch = 0;
 const pendingLoads = new Map<string, Promise<Image | null>>();
 
 export function clearImageCache(): void {
+  cacheEpoch++;
   imageCache.clear();
   pendingLoads.clear();
   currentCacheBytes = 0;
@@ -63,16 +65,23 @@ export async function resolveSharedImage(imgSrc: string, basePath?: string): Pro
       }
     }
 
-    // F-027: Deduplicate concurrent in-flight loads for the same path
-    const pending = pendingLoads.get(resolvedPath);
+    // F-027 / REG-30: Deduplicate concurrent in-flight loads for the same path and mtime
+    const pendingKey = `${resolvedPath}::${mtime}`;
+    const pending = pendingLoads.get(pendingKey);
     if (pending) {
       return await pending;
     }
 
+    const currentEpoch = cacheEpoch;
     const loadPromise = (async () => {
       const buf = fs.readFileSync(resolvedPath);
       const img = await loadImage(buf);
       const estimatedBytes = Math.max(buf.length, (img.width || 1) * (img.height || 1) * 4);
+
+      // If clearImageCache was called during load, do not populate stale cache
+      if (cacheEpoch !== currentEpoch) {
+        return img;
+      }
 
       // In case another load completed while this one was running
       const existing = imageCache.get(resolvedPath);
@@ -94,11 +103,11 @@ export async function resolveSharedImage(imgSrc: string, basePath?: string): Pro
       return img;
     })();
 
-    pendingLoads.set(resolvedPath, loadPromise);
+    pendingLoads.set(pendingKey, loadPromise);
     try {
       return await loadPromise;
     } finally {
-      pendingLoads.delete(resolvedPath);
+      pendingLoads.delete(pendingKey);
     }
   } catch {
     return null;

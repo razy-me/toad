@@ -117,19 +117,35 @@ export class ImportResolver {
   private currentVariables = new Map<string, ValueNode>();
   public warnings: string[] = [];
 
+  private hasCustomFileLoader = false;
+
   constructor(entryDoc: DocumentNode, entryPath: string, options: ImportResolverOptions = {}) {
     this.entryDoc = entryDoc;
     this.entryPath = path.resolve(entryPath);
+    this.hasCustomFileLoader = !!options.fileLoader;
     this.fileLoader = options.fileLoader || ((p: string) => fs.readFileSync(p, 'utf-8'));
     this.maxComponentDepth = options.maxComponentDepth || 32;
   }
 
   private isSafePath(targetPath: string): boolean {
+    if (this.hasCustomFileLoader) {
+      return true;
+    }
     const resolved = path.resolve(targetPath);
     const roots = [
       path.resolve(process.cwd()),
       path.resolve(path.dirname(this.entryPath))
     ];
+    let cur = path.dirname(this.entryPath);
+    for (let i = 0; i < 5; i++) {
+      const parent = path.dirname(cur);
+      if (parent === cur) break;
+      if (fs.existsSync(path.join(cur, 'package.json')) || fs.existsSync(path.join(cur, '.git'))) {
+        roots.push(path.resolve(cur));
+        break;
+      }
+      cur = parent;
+    }
     return roots.some(root => {
       const rel = path.relative(root, resolved);
       return !rel.startsWith('..') && !path.isAbsolute(rel);
@@ -283,8 +299,8 @@ export class ImportResolver {
         if (!this.isSafePath(resolvedPath)) {
           throw new Error(`Security violation: Import path '${importPath}' resolves outside workspace boundary.`);
         }
-        const canonPath = process.platform === 'win32' ? resolvedPath.toLowerCase() : resolvedPath;
-        const canonCurrent = process.platform === 'win32' ? currentFilePath.toLowerCase() : currentFilePath;
+        const canonPath = process.platform === 'win32' ? path.normalize(resolvedPath).toLowerCase() : path.normalize(resolvedPath);
+        const canonCurrent = process.platform === 'win32' ? path.normalize(currentFilePath).toLowerCase() : path.normalize(currentFilePath);
 
         if (chain.some(p => (process.platform === 'win32' ? p.toLowerCase() : p) === canonPath)) {
           // Direct two-file mutual imports (entry <-> A) are tolerated by

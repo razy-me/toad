@@ -326,7 +326,17 @@ export async function bundleAssets(
       const s16 = Math.min(16 / cropW, 16 / cropH);
       const dw16 = Math.round(cropW * s16);
       const dh16 = Math.round(cropH * s16);
-      ctx16.drawImage(masterCanvas, cropX * renderScale, cropY * renderScale, cropW * renderScale, cropH * renderScale, Math.round((16 - dw16) / 2), Math.round((16 - dh16) / 2), dw16, dh16);
+      ctx16.drawImage(
+        masterCanvas,
+        (cropX + margin) * renderScale,
+        (cropY + margin) * renderScale,
+        cropW * renderScale,
+        cropH * renderScale,
+        Math.round((16 - dw16) / 2),
+        Math.round((16 - dh16) / 2),
+        dw16,
+        dh16
+      );
       const imgData16 = ctx16.getImageData(0, 0, 16, 16).data;
       icoCandidates.push({ width: 16, height: 16, buffer: rgbaToDib(16, 16, imgData16) });
     }
@@ -337,7 +347,17 @@ export async function bundleAssets(
       const s32 = Math.min(32 / cropW, 32 / cropH);
       const dw32 = Math.round(cropW * s32);
       const dh32 = Math.round(cropH * s32);
-      ctx32.drawImage(masterCanvas, cropX * renderScale, cropY * renderScale, cropW * renderScale, cropH * renderScale, Math.round((32 - dw32) / 2), Math.round((32 - dh32) / 2), dw32, dh32);
+      ctx32.drawImage(
+        masterCanvas,
+        (cropX + margin) * renderScale,
+        (cropY + margin) * renderScale,
+        cropW * renderScale,
+        cropH * renderScale,
+        Math.round((32 - dw32) / 2),
+        Math.round((32 - dh32) / 2),
+        dw32,
+        dh32
+      );
       const imgData32 = ctx32.getImageData(0, 0, 32, 32).data;
       icoCandidates.push({ width: 32, height: 32, buffer: rgbaToDib(32, 32, imgData32) });
     }
