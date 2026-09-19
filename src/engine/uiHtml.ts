@@ -2142,6 +2142,125 @@ export function generateStudioHtml(initialFile?: string): string {
       border-top: 1px solid var(--border);
     }
 
+    /* Wizard Autocomplete Search Control */
+    .wiz-search-wrap {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .wiz-search-input-box {
+      position: relative;
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+
+    .wiz-search-input-box i.wiz-search-icon {
+      position: absolute;
+      left: 14px;
+      color: var(--text-dim);
+      font-size: 14px;
+      pointer-events: none;
+    }
+
+    .wiz-search-input {
+      width: 100%;
+      background: #040814;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px 12px 38px;
+      color: var(--text);
+      font-size: 14px;
+      font-family: var(--font-mono);
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .wiz-search-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+    }
+
+    .wiz-search-hints {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-dim);
+      padding: 0 4px;
+    }
+
+    .wiz-search-hints kbd {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 3px;
+      padding: 1px 5px;
+      font-size: 10px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+    }
+
+    .wiz-suggestions-menu {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      max-height: 280px;
+      overflow-y: auto;
+      background: #080d1a;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
+      z-index: 150;
+      display: none;
+      flex-direction: column;
+      padding: 4px;
+    }
+
+    .wiz-suggestions-menu.open {
+      display: flex;
+    }
+
+    .wiz-suggestion-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 9px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.12s ease;
+    }
+
+    .wiz-suggestion-item:hover,
+    .wiz-suggestion-item.active {
+      background: rgba(16, 185, 129, 0.15);
+    }
+
+    .wiz-suggestion-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .wiz-suggestion-item.active .wiz-suggestion-name {
+      color: var(--accent);
+    }
+
+    .wiz-suggestion-path {
+      font-size: 11px;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
     .terminal-cmd-box {
       background: #020617;
       border: 1px solid rgba(16, 185, 129, 0.35);
@@ -3863,25 +3982,19 @@ export function generateStudioHtml(initialFile?: string): string {
       // Steps for Build
       if (currentWizard === 'build') {
         if (currentStep === 1) {
-          var toadFiles = allFiles.filter(function(f) { return f.path.endsWith('.toad'); });
-          var optionsHtml = toadFiles.map(function(f) {
-            return '<option value="' + f.path + '" ' + (f.path === wizardData.build.file ? 'selected' : '') + '>' + f.name + ' (' + f.path + ')</option>';
-          }).join('');
           body.innerHTML = 
             '<div class="wizard-step-header">' +
               '<div class="wizard-step-title">Welches Design möchtest du bauen?</div>' +
-              '<div class="wizard-step-subtitle">Wähle eine .toad Datei aus deinem Projekt oder gib den Pfad direkt ein.</div>' +
+              '<div class="wizard-step-subtitle">Tippe den Namen oder Pfad der .toad Datei ein. Nutze Pfeiltasten oder Tab zur Autovervollständigung.</div>' +
             '</div>' +
-            '<div style="display: flex; flex-direction: column; gap: 10px;">' +
-              (toadFiles.length > 0 ? '<select class="select-control" onchange="wizardData.build.file = this.value">' + optionsHtml + '</select>' : '') +
-              '<input type="text" class="input-control" value="' + wizardData.build.file + '" oninput="wizardData.build.file = this.value" placeholder="dateiname.toad">' +
-            '</div>' +
+            renderWizFileSearchControl('build', '.toad', 'design.toad') +
             '<div class="wizard-footer-nav">' +
               '<div></div>' +
               '<button type="button" class="btn-primary" style="width: auto; padding: 10px 24px;" onclick="nextWizardStep()">' +
                 'Weiter <i class="fa-solid fa-chevron-right"></i>' +
               '</button>' +
             '</div>';
+          attachWizFileSearch('build', '.toad');
           return;
         }
         if (currentStep === 2) {
@@ -3949,23 +4062,17 @@ export function generateStudioHtml(initialFile?: string): string {
       // Steps for Motion
       if (currentWizard === 'motion') {
         if (currentStep === 1) {
-          var toadmFiles = allFiles.filter(function(f) { return f.path.endsWith('.toadm'); });
-          var optionsHtml = toadmFiles.map(function(f) {
-            return '<option value="' + f.path + '" ' + (f.path === wizardData.motion.file ? 'selected' : '') + '>' + f.name + ' (' + f.path + ')</option>';
-          }).join('');
           body.innerHTML = 
             '<div class="wizard-step-header">' +
               '<div class="wizard-step-title">Welche Motion-Datei möchtest du rendern?</div>' +
-              '<div class="wizard-step-subtitle">Wähle eine .toadm Keyframe-Animationsdatei.</div>' +
+              '<div class="wizard-step-subtitle">Tippe den Namen oder Pfad der .toadm Datei ein. Nutze Pfeiltasten oder Tab zur Autovervollständigung.</div>' +
             '</div>' +
-            '<div style="display: flex; flex-direction: column; gap: 10px;">' +
-              (toadmFiles.length > 0 ? '<select class="select-control" onchange="wizardData.motion.file = this.value">' + optionsHtml + '</select>' : '') +
-              '<input type="text" class="input-control" value="' + wizardData.motion.file + '" oninput="wizardData.motion.file = this.value" placeholder="animation.toadm">' +
-            '</div>' +
+            renderWizFileSearchControl('motion', '.toadm', 'animation.toadm') +
             '<div class="wizard-footer-nav">' +
               '<div></div>' +
               '<button type="button" class="btn-primary" style="width: auto; padding: 10px 24px;" onclick="nextWizardStep()">Weiter <i class="fa-solid fa-chevron-right"></i></button>' +
             '</div>';
+          attachWizFileSearch('motion', '.toadm');
           return;
         }
         if (currentStep === 2) {
@@ -4001,21 +4108,21 @@ export function generateStudioHtml(initialFile?: string): string {
         if (currentStep === 3) {
           body.innerHTML = 
             '<div class="wizard-step-header">' +
-              '<div class="wizard-step-title">Mit welcher Framerate rendern?</div>' +
+              '<div class="wizard-step-title">Mit wie vielen Bildern pro Sekunde (FPS)?</div>' +
               '<div class="wizard-step-subtitle">Höhere Frameraten erzeugen ultra-flüssige Bewegungen.</div>' +
             '</div>' +
             '<div class="wizard-tiles-grid" style="grid-template-columns: repeat(3, 1fr);">' +
               '<div class="wizard-tile ' + (wizardData.motion.fps === '30' ? 'active' : '') + '" data-val="30" onclick="selectWizMotionFps(this.dataset.val)">' +
                 '<div class="wizard-tile-header"><span class="wizard-tile-title">30 FPS</span></div>' +
-                '<div class="wizard-tile-desc">Standard für Web &amp; kompakte Dateigrößen.</div>' +
+                '<div class="wizard-tile-desc">Standard-Webanimation, kleine Dateigröße.</div>' +
               '</div>' +
               '<div class="wizard-tile ' + (wizardData.motion.fps === '60' ? 'active' : '') + '" data-val="60" onclick="selectWizMotionFps(this.dataset.val)">' +
                 '<div class="wizard-tile-header"><span class="wizard-tile-title">60 FPS (Flüssig)</span></div>' +
-                '<div class="wizard-tile-desc">Empfohlen für moderne UI- &amp; Motion-Designs.</div>' +
+                '<div class="wizard-tile-desc">Empfohlen für moderne Displays und UI-Showcases.</div>' +
               '</div>' +
               '<div class="wizard-tile ' + (wizardData.motion.fps === '120' ? 'active' : '') + '" data-val="120" onclick="selectWizMotionFps(this.dataset.val)">' +
-                '<div class="wizard-tile-header"><span class="wizard-tile-title">120 FPS</span></div>' +
-                '<div class="wizard-tile-desc">Ultra-Smooth für High-Refresh Displays.</div>' +
+                '<div class="wizard-tile-header"><span class="wizard-tile-title">120 FPS (Ultra Smooth)</span></div>' +
+                '<div class="wizard-tile-desc">Höchste Geschmeidigkeit für ProMotion / Gaming-Panels.</div>' +
               '</div>' +
             '</div>' +
             '<div class="wizard-footer-nav">' +
@@ -4133,23 +4240,17 @@ export function generateStudioHtml(initialFile?: string): string {
       // Steps for Report
       if (currentWizard === 'report') {
         if (currentStep === 1) {
-          var toadFiles = allFiles.filter(function(f) { return f.path.endsWith('.toad'); });
-          var optionsHtml = toadFiles.map(function(f) {
-            return '<option value="' + f.path + '" ' + (f.path === wizardData.report.file ? 'selected' : '') + '>' + f.name + ' (' + f.path + ')</option>';
-          }).join('');
           body.innerHTML = 
             '<div class="wizard-step-header">' +
               '<div class="wizard-step-title">Welches Design soll analysiert werden?</div>' +
-              '<div class="wizard-step-subtitle">Wähle eine .toad Datei für den Tiefen-Audit.</div>' +
+              '<div class="wizard-step-subtitle">Tippe den Namen oder Pfad der .toad Datei ein. Nutze Pfeiltasten oder Tab zur Autovervollständigung.</div>' +
             '</div>' +
-            '<div style="display: flex; flex-direction: column; gap: 10px;">' +
-              (toadFiles.length > 0 ? '<select class="select-control" onchange="wizardData.report.file = this.value">' + optionsHtml + '</select>' : '') +
-              '<input type="text" class="input-control" value="' + wizardData.report.file + '" oninput="wizardData.report.file = this.value" placeholder="design.toad">' +
-            '</div>' +
+            renderWizFileSearchControl('report', '.toad', 'design.toad') +
             '<div class="wizard-footer-nav">' +
               '<div></div>' +
               '<button type="button" class="btn-primary" style="width: auto; padding: 10px 24px;" onclick="nextWizardStep()">Weiter <i class="fa-solid fa-chevron-right"></i></button>' +
             '</div>';
+          attachWizFileSearch('report', '.toad');
           return;
         }
         if (currentStep === 2) {
@@ -4237,6 +4338,142 @@ export function generateStudioHtml(initialFile?: string): string {
     function triggerWizConvertInput() {
       var el = document.getElementById('wiz-convert-input');
       if (el) el.click();
+    }
+
+    function renderWizFileSearchControl(wizKey, ext, placeholder) {
+      var currentVal = wizardData[wizKey].file || '';
+      return '' +
+        '<div class="wiz-search-wrap" id="wiz-search-wrap-' + wizKey + '">' +
+          '<div class="wiz-search-input-box">' +
+            '<i class="fa-solid fa-file-code wiz-search-icon"></i>' +
+            '<input type="text" class="wiz-search-input" id="wiz-file-input-' + wizKey + '" ' +
+              'value="' + currentVal + '" autocomplete="off" spellcheck="false" ' +
+              'placeholder="' + placeholder + '">' +
+          '</div>' +
+          '<div class="wiz-search-hints">' +
+            '<span><kbd>Tab</kbd> oder <kbd>Enter</kbd> zum Übernehmen</span>' +
+            '<span><kbd>↑</kbd> <kbd>↓</kbd> zum Navigieren &bull; <kbd>Esc</kbd> zum Schließen</span>' +
+          '</div>' +
+          '<div class="wiz-suggestions-menu" id="wiz-suggestions-' + wizKey + '"></div>' +
+        '</div>';
+    }
+
+    function attachWizFileSearch(wizKey, ext) {
+      setTimeout(function() {
+        var input = document.getElementById('wiz-file-input-' + wizKey);
+        var menu = document.getElementById('wiz-suggestions-' + wizKey);
+        if (!input || !menu) return;
+
+        var matchingFiles = allFiles.filter(function(f) { return f.path.endsWith(ext); });
+        var activeIdx = -1;
+        var currentItems = [];
+
+        function renderSuggestions(query) {
+          query = (query || '').toLowerCase().trim();
+          currentItems = matchingFiles.filter(function(f) {
+            if (!query) return true;
+            return f.name.toLowerCase().includes(query) || f.path.toLowerCase().includes(query);
+          });
+
+          if (currentItems.length === 0) {
+            menu.innerHTML = '<div style="padding: 10px 12px; font-size: 12px; color: var(--text-dim);">Keine passenden ' + ext + ' Dateien gefunden</div>';
+            menu.classList.add('open');
+            activeIdx = -1;
+            return;
+          }
+
+          var html = currentItems.map(function(f, idx) {
+            var isSel = (f.path === wizardData[wizKey].file);
+            return '<div class="wiz-suggestion-item ' + (isSel ? 'active' : '') + '" data-idx="' + idx + '">' +
+              '<div class="wiz-suggestion-name"><i class="fa-solid fa-file" style="color: var(--accent); font-size: 11px;"></i> ' + f.name + '</div>' +
+              '<div class="wiz-suggestion-path">' + f.path + '</div>' +
+            '</div>';
+          }).join('');
+
+          menu.innerHTML = html;
+          menu.classList.add('open');
+          activeIdx = -1;
+
+          // Click listener for items
+          var itemEls = menu.querySelectorAll('.wiz-suggestion-item');
+          itemEls.forEach(function(el) {
+            el.addEventListener('mousedown', function(e) {
+              e.preventDefault();
+              var idx = parseInt(el.dataset.idx, 10);
+              if (currentItems[idx]) {
+                selectItem(currentItems[idx].path);
+              }
+            });
+          });
+        }
+
+        function selectItem(path) {
+          wizardData[wizKey].file = path;
+          input.value = path;
+          menu.classList.remove('open');
+        }
+
+        function highlightItem(idx) {
+          var itemEls = menu.querySelectorAll('.wiz-suggestion-item');
+          itemEls.forEach(function(el, i) {
+            if (i === idx) {
+              el.classList.add('active');
+              el.scrollIntoView({ block: 'nearest' });
+            } else {
+              el.classList.remove('active');
+            }
+          });
+        }
+
+        input.addEventListener('input', function() {
+          wizardData[wizKey].file = input.value;
+          renderSuggestions(input.value);
+        });
+
+        input.addEventListener('focus', function() {
+          renderSuggestions(input.value);
+        });
+
+        input.addEventListener('blur', function() {
+          setTimeout(function() { menu.classList.remove('open'); }, 150);
+        });
+
+        input.addEventListener('keydown', function(e) {
+          if (!menu.classList.contains('open')) {
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+              renderSuggestions(input.value);
+              e.preventDefault();
+              return;
+            }
+          }
+
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (currentItems.length > 0) {
+              activeIdx = (activeIdx + 1) % currentItems.length;
+              highlightItem(activeIdx);
+            }
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (currentItems.length > 0) {
+              activeIdx = (activeIdx - 1 + currentItems.length) % currentItems.length;
+              highlightItem(activeIdx);
+            }
+          } else if (e.key === 'Tab' || e.key === 'Enter') {
+            if (menu.classList.contains('open') && currentItems.length > 0) {
+              e.preventDefault();
+              var chosenIdx = activeIdx >= 0 ? activeIdx : 0;
+              if (currentItems[chosenIdx]) {
+                selectItem(currentItems[chosenIdx].path);
+              }
+            } else if (e.key === 'Enter') {
+              nextWizardStep();
+            }
+          } else if (e.key === 'Escape') {
+            menu.classList.remove('open');
+          }
+        });
+      }, 50);
     }
 
     function setupWizDropzone(id, callback) {
