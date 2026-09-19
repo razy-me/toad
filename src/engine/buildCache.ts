@@ -172,7 +172,7 @@ export class AstCache {
           }
           const depMtime = fs.statSync(dep).mtimeMs;
           const recordedMtime = entry.dependencyMtimes?.[dep];
-          if (recordedMtime !== undefined ? depMtime > recordedMtime : depMtime > entry.mtimeMs) {
+          if (recordedMtime !== undefined ? depMtime !== recordedMtime : depMtime !== entry.mtimeMs) {
             this.cache.delete(key);
             this.misses++;
             return null;

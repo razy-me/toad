@@ -82,6 +82,10 @@ export function createPreviewServer(
       const remote = req.socket.remoteAddress || '';
       const isRemoteLoopback = ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(remote);
 
+      if (strictLoopbackOnly && !isRemoteLoopback) {
+        return false;
+      }
+
       if (origin) {
         try {
           const parsedOrigin = new URL(origin);
@@ -92,6 +96,9 @@ export function createPreviewServer(
             if (!isLoopbackOrigin && parsedOrigin.hostname.toLowerCase() !== host.toLowerCase()) return false;
           }
           if (parsedOrigin.host.toLowerCase() !== reqHost.toLowerCase()) {
+            return false;
+          }
+          if (isLoopbackOrigin && !isRemoteLoopback) {
             return false;
           }
         } catch {
@@ -295,6 +302,15 @@ export function createPreviewServer(
           raw += chunk;
         });
 
+        req.on('error', (err: any) => {
+          if (aborted) return;
+          aborted = true;
+          if (!res.headersSent) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: err?.message || 'Request connection error' }));
+          }
+        });
+
         req.on('end', async () => {
           if (aborted) return;
           try {
@@ -312,12 +328,19 @@ export function createPreviewServer(
       // 3. Open Folder API Endpoint
       // Hardening: only same-origin loopback POST requests may trigger OS actions.
       if (url.pathname === '/api/open-folder' || url.pathname === '/open-folder') {
-        if (req.method !== 'POST' || !isOriginOrLoopbackSafe(req, true)) {
+        if (req.method !== 'POST') {
           res.writeHead(405, {
             'Content-Type': 'application/json',
             'Allow': 'POST'
           });
-          res.end(JSON.stringify({ status: 'error', message: 'Method Not Allowed or Origin Denied' }));
+          res.end(JSON.stringify({ status: 'error', message: 'Method Not Allowed' }));
+          return;
+        }
+        if (!isOriginOrLoopbackSafe(req, true)) {
+          res.writeHead(403, {
+            'Content-Type': 'application/json'
+          });
+          res.end(JSON.stringify({ status: 'error', message: 'Access denied: loopback origin required' }));
           return;
         }
 
@@ -326,7 +349,7 @@ export function createPreviewServer(
           const reqPath = body?.dir || body?.path || url.searchParams.get('dir') || url.searchParams.get('path');
           if (reqPath && typeof reqPath === 'string') {
             const candidate = path.resolve(process.cwd(), reqPath);
-            if (fs.existsSync(candidate)) {
+            if (isPathWithinWorkspace(candidate) && fs.existsSync(candidate)) {
               const stat = fs.statSync(candidate);
               folderPath = stat.isDirectory() ? candidate : path.dirname(candidate);
             }
@@ -946,7 +969,7 @@ export function createPreviewServer(
               filename: path.basename(entryFilePath),
               audit: computeAuditSafe(result)
             });
-            for (const client of sseClients) {
+            for (const client of Array.from(sseClients)) {
               try {
                 client.write(`data: ${payload}\n\n`);
               } catch {
@@ -962,7 +985,7 @@ export function createPreviewServer(
               message: errorMessage,
               filename: path.basename(entryFilePath)
             });
-            for (const client of sseClients) {
+            for (const client of Array.from(sseClients)) {
               try {
                 client.write(`data: ${payload}\n\n`);
               } catch {
@@ -972,14 +995,22 @@ export function createPreviewServer(
           },
           close() {
             return new Promise(resClose => {
-              for (const client of sseClients) {
-                try { client.end(); } catch {}
+              for (const client of Array.from(sseClients)) {
+                try {
+                  client.end();
+                } catch {
+                  // ignored
+                }
+                sseClients.delete(client);
               }
               sseClients.clear();
               if (typeof (server as any).closeAllConnections === 'function') {
                 (server as any).closeAllConnections();
               }
-              server.close(() => resClose());
+              server.close(() => {
+                sseClients.clear();
+                resClose();
+              });
             });
           }
         };

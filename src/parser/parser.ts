@@ -350,7 +350,7 @@ export class Parser {
         } else if (this.isPropertyStart()) {
           properties.push(this.parseProperty());
         } else {
-          const tok = this.advance();
+          const tok = this.peek();
           this.reportError(`Unexpected token '${tok.value}' in canvas block`, tok.loc);
           this.synchronizeStatement();
         }
@@ -1726,6 +1726,7 @@ export class Parser {
       }
       const tok = this.peek();
       if (
+        tok.type === TokenType.RBRACE ||
         tok.type === TokenType.KW_CANVAS ||
         tok.type === TokenType.KW_COMPONENT ||
         tok.type === TokenType.DIRECTIVE_IMPORT ||

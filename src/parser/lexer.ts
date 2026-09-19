@@ -528,7 +528,7 @@ export class Lexer {
               this.advance();
             }
             const code = parseInt(hex, 16);
-            str += Number.isFinite(code) && code >= 0 && hex.length > 0 ? String.fromCharCode(code) : '\uFFFD';
+            str += Number.isFinite(code) && code >= 0 && hex.length === 4 ? String.fromCharCode(code) : '\uFFFD';
           }
         } else if (esc === 'x') {
           let hex = '';
@@ -538,7 +538,7 @@ export class Lexer {
             hex += this.advance();
           }
           const code = parseInt(hex, 16);
-          str += Number.isFinite(code) && code >= 0 && hex.length > 0 ? String.fromCharCode(code) : '\uFFFD';
+          str += Number.isFinite(code) && code >= 0 && hex.length === 2 ? String.fromCharCode(code) : '\uFFFD';
         } else if (esc) {
           str += esc;
         }

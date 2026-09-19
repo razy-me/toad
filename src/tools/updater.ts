@@ -23,7 +23,7 @@ export function getToadRootDir(): string {
   const currentFile = fileURLToPath(import.meta.url);
   // Current file is in dist/tools/updater.js or src/tools/updater.ts
   // Two levels up brings us to project root
-  return path.resolve(path.dirname(currentFile), '..', '..');
+  return path.resolve(path.dirname(currentFile), '..', '..').replace(/[/\\]+$/, '');
 }
 
 /**
@@ -278,13 +278,15 @@ export async function updateToad(options: UpdateOptions = {}): Promise<UpdateRes
       // We spawn an independent, detached runner (cmd.exe) that waits 500ms for this node
       // process to exit, then copies files into place and removes temp files.
       const swapScript = path.join(tempDir, 'toad_swap.bat');
-      const targetDir = rootDir;
+      const targetDir = rootDir.replace(/[/\\]+$/, '');
+      const cleanSourcePath = sourcePath.replace(/[/\\]+$/, '');
+      const cleanTempDir = tempDir.replace(/[/\\]+$/, '');
       const batContent = [
         '@echo off',
         'chcp 65001 >nul',
         'timeout /t 1 /nobreak >nul',
-        `xcopy "${sourcePath}\\*" "${targetDir}\\" /s /e /y /q >nul`,
-        `rd /s /q "${tempDir}" >nul 2>&1`,
+        `xcopy "${cleanSourcePath}\\*" "${targetDir}\\" /s /e /y /q >nul`,
+        `rd /s /q "${cleanTempDir}" >nul 2>&1`,
         'echo [toad] Update completed successfully.',
         'exit 0'
       ].join('\r\n');

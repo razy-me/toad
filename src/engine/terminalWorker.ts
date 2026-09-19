@@ -19,6 +19,12 @@ if (!fs.existsSync(toadTerminalDir)) {
   } catch {}
 }
 const pidFile = path.join(toadTerminalDir, 'toad_terminal.pid');
+const queueDir = path.join(toadTerminalDir, 'queue');
+if (!fs.existsSync(queueDir)) {
+  try {
+    fs.mkdirSync(queueDir, { recursive: true, mode: 0o700 });
+  } catch {}
+}
 const queueFile = path.join(toadTerminalDir, 'toad_terminal_cmd.json');
 const cancelFile = path.join(toadTerminalDir, 'toad_terminal_cancel.flag');
 const childPidFile = path.join(toadTerminalDir, 'toad_terminal_child.pid');
@@ -95,14 +101,31 @@ if (process.platform === 'win32') {
 
 async function checkQueue() {
   if (isExecuting) return;
-  if (!fs.existsSync(queueFile)) return;
 
+  let targetFile: string | null = null;
   let cmdData: { command: string; cwd?: string } | null = null;
+
   try {
-    const content = fs.readFileSync(queueFile, 'utf-8');
-    fs.unlinkSync(queueFile);
+    if (fs.existsSync(queueDir)) {
+      const files = fs.readdirSync(queueDir).filter(f => f.endsWith('.json')).sort();
+      if (files.length > 0) {
+        targetFile = path.join(queueDir, files[0]!);
+      }
+    }
+    if (!targetFile && fs.existsSync(queueFile)) {
+      targetFile = queueFile;
+    }
+    if (!targetFile) return;
+
+    const content = fs.readFileSync(targetFile, 'utf-8');
     cmdData = JSON.parse(content);
+    // Unlink only after successful JSON parsing
+    try { fs.unlinkSync(targetFile); } catch {}
+    if (targetFile !== queueFile && fs.existsSync(queueFile)) {
+      try { fs.unlinkSync(queueFile); } catch {}
+    }
   } catch {
+    // If parse failed (e.g. file is still being written), do not delete yet; retry on next tick
     return;
   }
 

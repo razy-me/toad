@@ -17,6 +17,12 @@ if (!fs.existsSync(toadTerminalDir)) {
   } catch {}
 }
 const pidFile = path.join(toadTerminalDir, 'toad_terminal.pid');
+export const terminalQueueDir = path.join(toadTerminalDir, 'queue');
+if (!fs.existsSync(terminalQueueDir)) {
+  try {
+    fs.mkdirSync(terminalQueueDir, { recursive: true, mode: 0o700 });
+  } catch {}
+}
 const queueFile = path.join(toadTerminalDir, 'toad_terminal_cmd.json');
 const cancelFile = path.join(toadTerminalDir, 'toad_terminal_cancel.flag');
 const childPidFile = path.join(toadTerminalDir, 'toad_terminal_child.pid');
@@ -110,16 +116,18 @@ export function executeInLiveTerminal(command: string, cwd?: string): { success:
     }
   }
 
-  // Write command to queue file for the worker to execute
-  fs.writeFileSync(
-    queueFile,
-    JSON.stringify({
-      command,
-      cwd: targetCwd,
-      timestamp: Date.now()
-    }),
-    'utf-8'
-  );
+  // Write command to queue directory (FIFO) and legacy file
+  const cmdFileName = `${Date.now()}_${process.hrtime.bigint()}.json`;
+  const cmdFilePath = path.join(terminalQueueDir, cmdFileName);
+  const payload = JSON.stringify({
+    command,
+    cwd: targetCwd,
+    timestamp: Date.now()
+  });
+  fs.writeFileSync(cmdFilePath, payload, 'utf-8');
+  try {
+    fs.writeFileSync(queueFile, payload, 'utf-8');
+  } catch {}
 
   return { success: true, reused: active };
 }

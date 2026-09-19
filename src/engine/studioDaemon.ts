@@ -121,16 +121,19 @@ export async function stopStudioDaemon(): Promise<{ success: boolean; message: s
   } catch {}
 
   // 2. Kill PID if still alive
-  if (pid) {
-    try {
-      if (process.platform === 'win32') {
-        try {
-          execSync(`taskkill /pid ${pid} /f /t`, { stdio: 'ignore' });
-        } catch {}
-      } else {
-        process.kill(pid, 'SIGTERM');
-      }
-    } catch {}
+  if (pid !== undefined && pid !== null) {
+    const numPid = typeof pid === 'number' ? pid : parseInt(String(pid).trim(), 10);
+    if (Number.isInteger(numPid) && numPid > 0 && /^[0-9]+$/.test(String(numPid))) {
+      try {
+        if (process.platform === 'win32') {
+          try {
+            execSync(`taskkill /pid ${numPid} /f /t`, { stdio: 'ignore' });
+          } catch {}
+        } else {
+          process.kill(numPid, 'SIGTERM');
+        }
+      } catch {}
+    }
   }
 
   clearDaemonInfo();
