@@ -1006,9 +1006,14 @@ export function createCli(): Command {
     .option('-r, --recursive', 'Recursively search subdirectories when source is a folder')
     .action(async (source: string, target: string, options: any) => {
       const abortController = new AbortController();
+      let winRl: any = null;
+
       const terminateNow = () => {
         try {
           process.stdout.write(`\n\n  ${c.yellow('⚠ Vorgang durch Benutzer mit Strg+C abgebrochen. Beende sofort...')}\n\n`);
+        } catch {}
+        try {
+          winRl?.close();
         } catch {}
         try {
           abortController.abort();
@@ -1018,6 +1023,17 @@ export function createCli(): Command {
 
       process.once('SIGINT', terminateNow);
       process.once('SIGBREAK', terminateNow);
+
+      if (process.platform === 'win32' && process.stdin.isTTY) {
+        try {
+          const readline = await import('node:readline');
+          winRl = readline.createInterface({
+            input: process.stdin,
+            output: process.stdout,
+          });
+          winRl.on('SIGINT', terminateNow);
+        } catch {}
+      }
 
       try {
         const resolvedSource = path.resolve(source);
@@ -1140,6 +1156,9 @@ export function createCli(): Command {
         console.error(`\n${c.bgRed(' ERROR ')} ${c.bold(c.red(`Failed to remove background:`))} ${err.message || String(err)}\n`);
         process.exit(1);
       } finally {
+        try {
+          winRl?.close();
+        } catch {}
         process.removeListener('SIGINT', terminateNow);
         process.removeListener('SIGBREAK', terminateNow);
       }

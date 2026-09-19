@@ -12,6 +12,8 @@ import { fileURLToPath } from 'node:url';
 const tmpDir = os.tmpdir();
 const pidFile = path.join(tmpDir, 'toad_terminal.pid');
 const queueFile = path.join(tmpDir, 'toad_terminal_cmd.json');
+const cancelFile = path.join(tmpDir, 'toad_terminal_cancel.flag');
+const childPidFile = path.join(tmpDir, 'toad_terminal_child.pid');
 
 export function isTerminalSessionActive(): boolean {
   if (!fs.existsSync(pidFile)) return false;
@@ -24,6 +26,33 @@ export function isTerminalSessionActive(): boolean {
   } catch {
     return false;
   }
+}
+
+export function abortLiveTerminalCommand(): { aborted: boolean; message: string } {
+  if (!isTerminalSessionActive()) {
+    return { aborted: false, message: 'Kein aktives Terminal-Fenster gefunden.' };
+  }
+
+  // 1. If child PID file exists, kill process tree immediately
+  if (fs.existsSync(childPidFile)) {
+    try {
+      const childPid = parseInt(fs.readFileSync(childPidFile, 'utf-8').trim(), 10);
+      if (childPid && !isNaN(childPid)) {
+        if (process.platform === 'win32') {
+          spawn('taskkill', ['/pid', String(childPid), '/T', '/F'], { stdio: 'ignore' });
+        } else {
+          try { process.kill(childPid, 'SIGINT'); } catch {}
+        }
+      }
+    } catch {}
+  }
+
+  // 2. Write cancel flag for worker
+  try {
+    fs.writeFileSync(cancelFile, '1', 'utf-8');
+  } catch {}
+
+  return { aborted: true, message: 'Befehl im Terminal abgebrochen.' };
 }
 
 export function executeInLiveTerminal(command: string, cwd?: string): { success: boolean; reused: boolean } {
