@@ -313,10 +313,14 @@ export function computeAspectRatio(width: number, height: number): { ratioX: num
 export function readImageDimensions(filePath: string): { width: number; height: number } | null {
   try {
     if (!fs.existsSync(filePath)) return null;
-    const fd = fs.openSync(filePath, 'r');
+    let bytesRead = 0;
     const buffer = Buffer.alloc(131072);
-    const bytesRead = fs.readSync(fd, buffer, 0, buffer.length, 0);
-    fs.closeSync(fd);
+    const fd = fs.openSync(filePath, 'r');
+    try {
+      bytesRead = fs.readSync(fd, buffer, 0, buffer.length, 0);
+    } finally {
+      try { fs.closeSync(fd); } catch {}
+    }
     if (bytesRead < 16) return null;
     const buf = buffer.subarray(0, bytesRead);
 

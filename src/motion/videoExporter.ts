@@ -64,10 +64,10 @@ export function isFfmpegAvailable(customPath?: string): boolean {
 /**
  * Detects supported hardware-accelerated video encoders for the current FFmpeg binary.
  */
-let cachedHwEncoder: { encoder: string; extraArgs: string[] } | null | undefined = undefined;
+const hwEncoderCache = new Map<string, { encoder: string; extraArgs: string[] } | null>();
 
 export function detectFfmpegHwEncoder(ffmpegBin: string): { encoder: string; extraArgs: string[] } | null {
-  if (cachedHwEncoder !== undefined) return cachedHwEncoder;
+  if (hwEncoderCache.has(ffmpegBin)) return hwEncoderCache.get(ffmpegBin)!;
   try {
     const encodersOut = execSync(`"${ffmpegBin}" -encoders`, { stdio: ['ignore', 'pipe', 'ignore'] }).toString();
 
@@ -78,11 +78,12 @@ export function detectFfmpegHwEncoder(ffmpegBin: string): { encoder: string; ext
         execSync(`"${ffmpegBin}" -y -f lavfi -i color=c=black:s=256x256:d=0.1 -c:v h264_nvenc -preset p6 -cq 20 -f null -`, {
           stdio: 'ignore'
         });
-        cachedHwEncoder = {
+        const val = {
           encoder: 'h264_nvenc',
           extraArgs: ['-preset', 'p6', '-cq', '20', '-b:v', '0', '-spatial-aq', '1']
         };
-        return cachedHwEncoder;
+        hwEncoderCache.set(ffmpegBin, val);
+        return val;
       } catch {}
     }
 
@@ -92,11 +93,12 @@ export function detectFfmpegHwEncoder(ffmpegBin: string): { encoder: string; ext
         execSync(`"${ffmpegBin}" -y -f lavfi -i color=c=black:s=256x256:d=0.1 -c:v h264_qsv -global_quality 20 -f null -`, {
           stdio: 'ignore'
         });
-        cachedHwEncoder = {
+        const val = {
           encoder: 'h264_qsv',
           extraArgs: ['-global_quality', '20']
         };
-        return cachedHwEncoder;
+        hwEncoderCache.set(ffmpegBin, val);
+        return val;
       } catch {}
     }
 
@@ -106,16 +108,17 @@ export function detectFfmpegHwEncoder(ffmpegBin: string): { encoder: string; ext
         execSync(`"${ffmpegBin}" -y -f lavfi -i color=c=black:s=256x256:d=0.1 -c:v h264_amf -quality quality -f null -`, {
           stdio: 'ignore'
         });
-        cachedHwEncoder = {
+        const val = {
           encoder: 'h264_amf',
           extraArgs: ['-quality', 'quality']
         };
-        return cachedHwEncoder;
+        hwEncoderCache.set(ffmpegBin, val);
+        return val;
       } catch {}
     }
   } catch {}
 
-  cachedHwEncoder = null;
+  hwEncoderCache.set(ffmpegBin, null);
   return null;
 }
 
@@ -123,7 +126,7 @@ export function detectFfmpegHwEncoder(ffmpegBin: string): { encoder: string; ext
  * Resets the cached hardware encoder detection (primarily for unit tests).
  */
 export function resetFfmpegHwEncoderCache(): void {
-  cachedHwEncoder = undefined;
+  hwEncoderCache.clear();
 }
 
 /**

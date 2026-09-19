@@ -9,11 +9,17 @@ import * as os from 'node:os';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-const tmpDir = os.tmpdir();
-const pidFile = path.join(tmpDir, 'toad_terminal.pid');
-const queueFile = path.join(tmpDir, 'toad_terminal_cmd.json');
-const cancelFile = path.join(tmpDir, 'toad_terminal_cancel.flag');
-const childPidFile = path.join(tmpDir, 'toad_terminal_child.pid');
+const userKey = (process.env.USER || process.env.USERNAME || 'toad_user').replace(/[^a-zA-Z0-9_-]/g, '_');
+export const toadTerminalDir = path.join(os.tmpdir(), `toad_term_${userKey}`);
+if (!fs.existsSync(toadTerminalDir)) {
+  try {
+    fs.mkdirSync(toadTerminalDir, { recursive: true, mode: 0o700 });
+  } catch {}
+}
+const pidFile = path.join(toadTerminalDir, 'toad_terminal.pid');
+const queueFile = path.join(toadTerminalDir, 'toad_terminal_cmd.json');
+const cancelFile = path.join(toadTerminalDir, 'toad_terminal_cancel.flag');
+const childPidFile = path.join(toadTerminalDir, 'toad_terminal_child.pid');
 
 export function isTerminalSessionActive(): boolean {
   if (!fs.existsSync(pidFile)) return false;
@@ -41,7 +47,11 @@ export function abortLiveTerminalCommand(): { aborted: boolean; message: string 
         if (process.platform === 'win32') {
           spawn('taskkill', ['/pid', String(childPid), '/T', '/F'], { stdio: 'ignore' });
         } else {
-          try { process.kill(childPid, 'SIGINT'); } catch {}
+          try {
+            process.kill(-childPid, 'SIGINT');
+          } catch {
+            try { process.kill(childPid, 'SIGINT'); } catch {}
+          }
         }
       }
     } catch {}
@@ -73,21 +83,22 @@ export function executeInLiveTerminal(command: string, cwd?: string): { success:
     }
 
     if (process.platform === 'win32') {
-      // In Windows, 'start' launches a visible, detached console window
-      const startCmd = `start "TOAD Studio - Live Terminal" "${process.execPath}" "${workerScript}" "${targetCwd}"`;
-      const child = spawn(startCmd, {
-        shell: true,
+      // In Windows, 'cmd.exe /c start' launches a visible console window without raw shell interpolation
+      const child = spawn('cmd.exe', ['/c', 'start', 'TOAD Studio - Live Terminal', process.execPath, workerScript, targetCwd], {
         detached: true,
         stdio: 'ignore',
         cwd: targetCwd
       });
       child.unref();
     } else if (process.platform === 'darwin') {
+      const safeScript = workerScript.replace(/["\\]/g, '\\$&');
+      const safeCwd = targetCwd.replace(/["\\]/g, '\\$&');
+      const safeExec = process.execPath.replace(/["\\]/g, '\\$&');
       spawn(
         'osascript',
         [
           '-e',
-          `tell application "Terminal" to do script "${process.execPath} \\"${workerScript}\\" \\"${targetCwd}\\""`
+          `tell application "Terminal" to do script "\\"${safeExec}\\" \\"${safeScript}\\" \\"${safeCwd}\\""`
         ],
         { detached: true, stdio: 'ignore' }
       );

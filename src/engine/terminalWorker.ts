@@ -11,11 +11,17 @@ import * as os from 'node:os';
 import * as readline from 'node:readline';
 import { spawn, ChildProcess } from 'node:child_process';
 
-const tmpDir = os.tmpdir();
-const pidFile = path.join(tmpDir, 'toad_terminal.pid');
-const queueFile = path.join(tmpDir, 'toad_terminal_cmd.json');
-const cancelFile = path.join(tmpDir, 'toad_terminal_cancel.flag');
-const childPidFile = path.join(tmpDir, 'toad_terminal_child.pid');
+const userKey = (process.env.USER || process.env.USERNAME || 'toad_user').replace(/[^a-zA-Z0-9_-]/g, '_');
+const toadTerminalDir = path.join(os.tmpdir(), `toad_term_${userKey}`);
+if (!fs.existsSync(toadTerminalDir)) {
+  try {
+    fs.mkdirSync(toadTerminalDir, { recursive: true, mode: 0o700 });
+  } catch {}
+}
+const pidFile = path.join(toadTerminalDir, 'toad_terminal.pid');
+const queueFile = path.join(toadTerminalDir, 'toad_terminal_cmd.json');
+const cancelFile = path.join(toadTerminalDir, 'toad_terminal_cancel.flag');
+const childPidFile = path.join(toadTerminalDir, 'toad_terminal_child.pid');
 
 // Write worker PID so server knows this window is active
 try {
@@ -55,8 +61,12 @@ function abortCurrentCommand(): boolean {
         } catch {}
       } else {
         try {
-          childRef.kill('SIGINT');
-        } catch {}
+          process.kill(-pid, 'SIGINT');
+        } catch {
+          try {
+            childRef.kill('SIGINT');
+          } catch {}
+        }
       }
     }
 
@@ -113,7 +123,8 @@ async function checkQueue() {
   const child = spawn(cmdStr, {
     cwd: targetCwd,
     shell: true,
-    stdio: 'inherit'
+    stdio: 'inherit',
+    detached: process.platform !== 'win32'
   });
   currentChild = child;
 

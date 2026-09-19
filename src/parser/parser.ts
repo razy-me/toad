@@ -343,8 +343,12 @@ export class Parser {
       try {
         if (this.isElementStart()) {
           elements.push(this.parseElementDeclaration());
-        } else {
+        } else if (this.isPropertyStart()) {
           properties.push(this.parseProperty());
+        } else {
+          const tok = this.advance();
+          this.reportError(`Unexpected token '${tok.value}' in canvas block`, tok.loc);
+          this.synchronizeStatement();
         }
       } catch (err) {
         this.synchronizeStatement();
@@ -1001,13 +1005,15 @@ export class Parser {
     // Object literal: { colors: { ... }, spacing: ... }
     if (this.check(TokenType.LBRACE)) {
       this.advance();
-      const properties: Record<string, ValueNode> = {};
+      const properties: Record<string, ValueNode> = Object.create(null);
       while (!this.check(TokenType.RBRACE) && !this.isAtEnd()) {
         const keyTok = this.consumeStringOrIdentifier("Expected property key in object literal");
         const key = keyTok.value;
         this.consume(TokenType.COLON, "Expected ':' after property key");
         const value = this.parseValue();
-        properties[key] = value;
+        if (key !== '__proto__') {
+          properties[key] = value;
+        }
         if (this.check(TokenType.COMMA)) {
           this.advance();
         }

@@ -539,7 +539,7 @@ export class ImportResolver {
     let dpi = 96;
     let colorMode: 'rgb' | 'cmyk' = 'rgb';
     let appliedPreset: string | undefined;
-    const properties: Record<string, any> = {};
+    const properties: Record<string, any> = Object.create(null);
 
     if (canvasNode) {
       for (const prop of canvasNode.properties) {
@@ -728,7 +728,9 @@ export class ImportResolver {
             properties.vignette = num !== undefined ? (num > 1 ? num / 100 : num) : undefined;
           }
         } else {
-          properties[prop.name] = this.extractRawValue(val);
+          if (prop.name !== '__proto__' && prop.name !== 'constructor' && prop.name !== 'prototype') {
+            properties[prop.name] = this.extractRawValue(val);
+          }
         }
       }
     }

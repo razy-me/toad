@@ -837,8 +837,19 @@ export async function removeBackgroundFromFile(
     throw new Error(`Input image file exceeds safe size limit of 150 MB (${(stat.size / 1024 / 1024).toFixed(1)} MB). Downscale before processing.`);
   }
 
-  // Detect in-place overwrite and buffer original file to prevent data loss on error (F-04)
-  const isSameFile = resolvedSource === resolvedTarget;
+  // Detect in-place overwrite and buffer original file to prevent data loss on error (F-04, F-016)
+  let isSameFile = false;
+  try {
+    const realSource = fs.existsSync(resolvedSource) ? fs.realpathSync(resolvedSource) : resolvedSource;
+    const realTarget = fs.existsSync(resolvedTarget) ? fs.realpathSync(resolvedTarget) : resolvedTarget;
+    isSameFile = process.platform === 'win32'
+      ? realSource.toLowerCase() === realTarget.toLowerCase()
+      : realSource === realTarget;
+  } catch {
+    isSameFile = process.platform === 'win32'
+      ? resolvedSource.toLowerCase() === resolvedTarget.toLowerCase()
+      : resolvedSource === resolvedTarget;
+  }
   let backupBuffer: Buffer | null = null;
   if (isSameFile) {
     backupBuffer = fs.readFileSync(resolvedSource);
@@ -1075,11 +1086,20 @@ export function findImagesInDir(dirPath: string, recursive = false, visited = ne
   const entries = fs.readdirSync(dirPath, { withFileTypes: true });
   for (const entry of entries) {
     const full = path.join(dirPath, entry.name);
-    if (entry.isDirectory()) {
+    let isDir = entry.isDirectory();
+    let isFile = entry.isFile();
+    if (entry.isSymbolicLink()) {
+      try {
+        const stat = fs.statSync(full);
+        isDir = stat.isDirectory();
+        isFile = stat.isFile();
+      } catch {}
+    }
+    if (isDir) {
       if (recursive) {
         results.push(...findImagesInDir(full, true, visited));
       }
-    } else if (entry.isFile()) {
+    } else if (isFile) {
       const ext = path.extname(entry.name).toLowerCase();
       if (SUPPORTED_BG_EXTENSIONS.has(ext)) {
         results.push(full);

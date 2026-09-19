@@ -66,6 +66,48 @@ export function createPreviewServer(
       return previewable.length > 0 && fs.existsSync(previewable[0]) ? previewable[0] : null;
     };
 
+    const isOriginOrLoopbackSafe = (req: http.IncomingMessage): boolean => {
+      const origin = req.headers.origin;
+      const reqHost = req.headers.host || '';
+      const hostHostname = reqHost.split(':')[0]!.toLowerCase();
+      const isLoopbackHost = ['localhost', '127.0.0.1', '::1', '[::1]', host.toLowerCase()].includes(hostHostname);
+      if (!isLoopbackHost) return false;
+      if (req.headers['sec-fetch-site'] === 'cross-site') return false;
+
+      if (origin) {
+        try {
+          const parsedOrigin = new URL(origin);
+          const isLoopbackOrigin = ['localhost', '127.0.0.1', '::1', '[::1]', host.toLowerCase()].includes(parsedOrigin.hostname.toLowerCase());
+          if (!isLoopbackOrigin || parsedOrigin.host.toLowerCase() !== reqHost.toLowerCase()) {
+            return false;
+          }
+        } catch {
+          return false;
+        }
+      } else {
+        const remote = req.socket.remoteAddress || '';
+        const isRemoteLoopback = ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(remote);
+        if (!isRemoteLoopback && !isLoopbackHost) return false;
+      }
+      return true;
+    };
+
+    const isPathWithinWorkspace = (targetPath: string): boolean => {
+      try {
+        const resolved = path.resolve(targetPath);
+        const allowedRoots = [
+          process.cwd(),
+          path.dirname(entryFilePath),
+          ...getWorkspaces()
+        ].map(r => path.resolve(r).toLowerCase());
+
+        const resolvedLower = resolved.toLowerCase();
+        return allowedRoots.some(root => resolvedLower === root || resolvedLower.startsWith(root + path.sep));
+      } catch {
+        return false;
+      }
+    };
+
     const server = http.createServer(async (req, res) => {
       let url: URL;
       try {
@@ -139,7 +181,7 @@ export function createPreviewServer(
 
         if (queryPath) {
           const resolvedPath = path.resolve(queryPath);
-          if (fs.existsSync(resolvedPath)) {
+          if (isPathWithinWorkspace(resolvedPath) && fs.existsSync(resolvedPath)) {
             const ext = path.extname(resolvedPath).toLowerCase();
             if (['.png', '.jpg', '.jpeg', '.webp', '.svg'].includes(ext)) {
               imgFile = resolvedPath;
@@ -415,16 +457,39 @@ export function createPreviewServer(
 
       // 4c. Studio API: Read File Content
       if (url.pathname === '/api/file' && req.method === 'GET') {
-        const filePath = url.searchParams.get('path');
-        if (!filePath || !fs.existsSync(filePath)) {
+        if (!isOriginOrLoopbackSafe(req)) {
+          res.writeHead(403, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Access denied: loopback origin required' }));
+          return;
+        }
+        const queryPath = url.searchParams.get('path');
+        if (!queryPath) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Missing path parameter' }));
+          return;
+        }
+        const resolvedPath = path.resolve(queryPath);
+        if (!isPathWithinWorkspace(resolvedPath)) {
+          res.writeHead(403, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Access denied: Path is outside workspace boundary' }));
+          return;
+        }
+        const ext = path.extname(resolvedPath).toLowerCase();
+        const allowedExts = ['.toad', '.toadm', '.json', '.svg', '.png', '.jpg', '.jpeg', '.webp'];
+        if (!allowedExts.includes(ext)) {
+          res.writeHead(403, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Access denied: File type not permitted' }));
+          return;
+        }
+        if (!fs.existsSync(resolvedPath)) {
           res.writeHead(404, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'File not found' }));
           return;
         }
         try {
-          const content = fs.readFileSync(filePath, 'utf-8');
+          const content = fs.readFileSync(resolvedPath, 'utf-8');
           res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ path: filePath, content }));
+          res.end(JSON.stringify({ path: resolvedPath, content }));
         } catch (err: any) {
           res.writeHead(500, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: err.message }));
@@ -450,6 +515,11 @@ export function createPreviewServer(
 
       // 4e. Server Graceful Shutdown
       if (url.pathname === '/api/shutdown' && req.method === 'POST') {
+        if (!isOriginOrLoopbackSafe(req)) {
+          res.writeHead(403, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Access denied: loopback origin required' }));
+          return;
+        }
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: true, message: 'TOAD Studio Server wird beendet...' }));
         setTimeout(async () => {
@@ -595,10 +665,15 @@ export function createPreviewServer(
             let savedPath: string | null = null;
             if (saveToDisk !== false) {
               const targetDir = path.resolve(process.cwd(), outDir || 'freigestellt');
+              if (!isPathWithinWorkspace(targetDir)) {
+                res.writeHead(403, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, error: 'Target directory outside workspace boundary' }));
+                return;
+              }
               if (!fs.existsSync(targetDir)) {
                 fs.mkdirSync(targetDir, { recursive: true });
               }
-              const baseStem = (filename || 'image').replace(/\.[^/.]+$/, '');
+              const baseStem = path.basename(filename || 'image').replace(/\.[^/.]+$/, '');
               const targetFile = path.join(targetDir, `${baseStem}-freigestellt${outExt}`);
               fs.writeFileSync(targetFile, outBuf);
               savedPath = targetFile;
@@ -635,7 +710,7 @@ export function createPreviewServer(
             const matches = dataUrl.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
             const base64Data = matches ? matches[2] : dataUrl.replace(/^data:[^;]+;base64,/, '');
             const buffer = Buffer.from(base64Data, 'base64');
-            const safeName = (filename || 'design.psd').replace(/[^a-zA-Z0-9._-]/g, '_');
+            const safeName = path.basename(filename || 'design.psd').replace(/[^a-zA-Z0-9._-]/g, '_');
             const tmpPsd = path.join(os.tmpdir(), `toad_psd_${Date.now()}_${safeName}`);
             fs.writeFileSync(tmpPsd, buffer);
 
@@ -696,7 +771,12 @@ export function createPreviewServer(
             let savedPath: string | null = null;
             if (body.saveToDisk) {
               const outDir = body.outDir ? path.resolve(body.outDir) : process.cwd();
-              const base = (body.filename || 'converted_image').replace(/\.[^/.]+$/, '');
+              if (!isPathWithinWorkspace(outDir)) {
+                res.writeHead(403, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, error: 'Target directory outside workspace boundary' }));
+                return;
+              }
+              const base = path.basename(body.filename || 'converted_image').replace(/\.[^/.]+$/, '');
               savedPath = path.join(outDir, `${base}.${result.format}`);
               fs.writeFileSync(savedPath, result.buffer);
             }
@@ -775,11 +855,21 @@ export function createPreviewServer(
 
       // 4l. Studio API: Project Initializer
       if (url.pathname === '/api/init' && req.method === 'POST') {
+        if (!isOriginOrLoopbackSafe(req)) {
+          res.writeHead(403, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Access denied: loopback origin required' }));
+          return;
+        }
         parseJsonBody((body) => {
           try {
             const name = (body.name || 'mein-design').replace(/[^a-zA-Z0-9_-]/g, '_');
             const template = body.template || 'poster';
             const targetDir = body.dir ? path.resolve(body.dir) : process.cwd();
+            if (!isPathWithinWorkspace(targetDir)) {
+              res.writeHead(403, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: false, error: 'Target directory outside workspace boundary' }));
+              return;
+            }
             const filePath = path.join(targetDir, name.endsWith('.toad') ? name : `${name}.toad`);
 
             if (fs.existsSync(filePath)) {
@@ -810,11 +900,16 @@ export function createPreviewServer(
 
       // 4m. Studio API: Audit Quick-Fix
       if (url.pathname === '/api/audit/fix' && req.method === 'POST') {
+        if (!isOriginOrLoopbackSafe(req)) {
+          res.writeHead(403, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Access denied: loopback origin required' }));
+          return;
+        }
         parseJsonBody(async (body) => {
           const targetPath = body.path || entryFilePath;
-          if (!targetPath || !fs.existsSync(targetPath)) {
+          if (!targetPath || !fs.existsSync(targetPath) || !isPathWithinWorkspace(targetPath)) {
             res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ success: false, error: 'Target file not found' }));
+            res.end(JSON.stringify({ success: false, error: 'Target file not found or outside workspace' }));
             return;
           }
           try {
@@ -924,7 +1019,13 @@ export function createPreviewServer(
         // Always advance: retrying the same incremented port forever would
         // spin if that port is also taken.
         portAttempts++;
-        startListen(preferredPort + portAttempts);
+        try {
+          server.close(() => {
+            startListen(preferredPort + portAttempts);
+          });
+        } catch {
+          startListen(preferredPort + portAttempts);
+        }
       } else {
         reject(err);
       }
@@ -1460,6 +1561,11 @@ export function generatePreviewHtml(rawFilename: string): string {
       }
     }
 
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    }
+
     let lastAuditData = null;
 
     function renderAudit(audit) {
@@ -1492,14 +1598,14 @@ export function generatePreviewHtml(rawFilename: string): string {
           const borderCls = isErr ? 'issue-error' : '';
           const badgeBg = isErr ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)';
           const badgeColor = isErr ? '#ef4444' : '#f59e0b';
-          const idPrefix = iss.elementId ? '<code>' + iss.elementId + '</code>: ' : '';
-          const detailsSnippet = iss.details ? '<span>' + iss.details + '</span>' : '';
-          const recoSnippet = iss.recommendation ? '<span style="display:block; margin-top:4px; color:#38bdf8;">💡 ' + iss.recommendation + '</span>' : '';
+          const idPrefix = iss.elementId ? '<code>' + escapeHtml(iss.elementId) + '</code>: ' : '';
+          const detailsSnippet = iss.details ? '<span>' + escapeHtml(iss.details) + '</span>' : '';
+          const recoSnippet = iss.recommendation ? '<span style="display:block; margin-top:4px; color:#38bdf8;">💡 ' + escapeHtml(iss.recommendation) + '</span>' : '';
 
           return '<div class="issue-item ' + borderCls + '">' +
             '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">' +
-              '<span style="font-weight:700; color:var(--text);">' + icon + ' ' + idPrefix + iss.message + '</span>' +
-              '<span style="font-size:10px; font-weight:700; text-transform:uppercase; padding:2px 6px; border-radius:4px; background:' + badgeBg + '; color:' + badgeColor + ';">' + iss.category + '</span>' +
+              '<span style="font-weight:700; color:var(--text);">' + icon + ' ' + idPrefix + escapeHtml(iss.message) + '</span>' +
+              '<span style="font-size:10px; font-weight:700; text-transform:uppercase; padding:2px 6px; border-radius:4px; background:' + badgeBg + '; color:' + badgeColor + ';">' + escapeHtml(iss.category) + '</span>' +
             '</div>' +
             '<div style="color:var(--text-dim); font-size:12px; margin-top:2px;">' +
               detailsSnippet + recoSnippet +

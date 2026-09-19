@@ -81,7 +81,27 @@ export async function stopStudioDaemon(): Promise<{ success: boolean; message: s
   }
 
   const port = info?.port || 3000;
-  const pid = info?.pid;
+  let pid = info?.pid;
+
+  // If PID not recorded, try fetching it from /api/status before shutdown
+  if (!pid) {
+    try {
+      const statusRes = await new Promise<{ pid?: number }>((resolve) => {
+        const req = http.get(`http://127.0.0.1:${port}/api/status`, { timeout: 800 }, (res) => {
+          let data = '';
+          res.on('data', chunk => { data += chunk; });
+          res.on('end', () => {
+            try { resolve(JSON.parse(data)); } catch { resolve({}); }
+          });
+        });
+        req.on('error', () => resolve({}));
+        req.on('timeout', () => { req.destroy(); resolve({}); });
+      });
+      if (typeof statusRes?.pid === 'number') {
+        pid = statusRes.pid;
+      }
+    } catch {}
+  }
 
   // 1. Try sending graceful shutdown request over HTTP
   try {

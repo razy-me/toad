@@ -32,6 +32,7 @@ import {
 
 export interface CliOptions {
   scale?: string;
+  vectorScale?: string;
   format?: string;
   out?: string;
   fonts?: string;
@@ -205,6 +206,9 @@ export async function startWatcher(
       triggerBuild();
     }, 50);
   });
+  watcher.on('error', (err) => {
+    console.error(`[toad] Watcher error: ${err instanceof Error ? err.message : String(err)}`);
+  });
 
   // Initial build
   const initialResult = await triggerBuild();
@@ -268,12 +272,14 @@ export function createCli(): Command {
     entry = resolvedPath;
 
     const scaleNum = opts.scale ? parseFloat(opts.scale) : undefined;
+    const vectorScaleNum = opts.vectorScale ? parseFloat(opts.vectorScale) : undefined;
     const qualityNum = opts.quality ? parseFloat(opts.quality) : undefined;
     const dpiNum = opts.dpi ? parseFloat(opts.dpi) : undefined;
     const formatVal = Array.isArray(opts.format) ? opts.format.join(',') : (opts.format ? String(opts.format) : undefined);
 
     const buildOptions: BuildOptions = {
       scale: scaleNum !== undefined ? (isNaN(scaleNum) || scaleNum <= 0 ? 1 : scaleNum) : undefined,
+      vectorScale: vectorScaleNum !== undefined ? (isNaN(vectorScaleNum) || vectorScaleNum <= 0 ? 2.5 : vectorScaleNum) : undefined,
       format: formatVal,
       outDir: opts.out,
       fontsDir: opts.fonts,
@@ -320,13 +326,18 @@ export function createCli(): Command {
       console.log('');
     };
 
-    if (opts.watch) {
-      await startWatcher(entry, buildOptions);
-    } else {
-      try {
+    try {
+      if (opts.watch) {
+        await startWatcher(entry, buildOptions);
+      } else {
         const result = await compileToad(entry, buildOptions);
         formatOutput(result);
-      } catch (err: any) {
+      }
+    } catch (err: any) {
+      if (err && err.isDiagnostic) {
+        console.error(err.message);
+        process.exit(1);
+      } else {
         console.error(formatCompilerError(err, entry));
         process.exit(1);
       }
@@ -337,6 +348,7 @@ export function createCli(): Command {
     .command('build [entry]', { isDefault: true })
     .description('Compile a .toad file into raster images (PNG, JPG, WebP), vector graphics (SVG), layered Photoshop document (PSD), or print-ready PDF')
     .option('-s, --scale <number>', 'Scale factor multiplier for raster rendering (e.g. 1, 2, 4)')
+    .option('--vector-scale <number>', 'Scale factor for vector/PSD exports (default: 2.5)')
     .option('-f, --format <formats...>', 'Output format(s): png | jpg | webp | psd | svg | pdf | image | all (comma or space separated)')
     .option('-o, --out <dir>', 'Output directory (defaults to entry directory)')
     .option('--fonts <dir>', 'Directory containing custom font files to register')
@@ -352,6 +364,7 @@ export function createCli(): Command {
     .command('dev [entry]')
     .description('Start live preview server with hot reload and watch mode on local port (default: 3000, Press Ctrl+C to stop)')
     .option('-s, --scale <number>', 'Scale factor multiplier for raster rendering (e.g. 1, 2, 4)')
+    .option('--vector-scale <number>', 'Scale factor for vector/PSD exports (default: 2.5)')
     .option('-f, --format <formats...>', 'Output format(s): png | jpg | webp | psd | svg | pdf | image | all (comma or space separated)')
     .option('-o, --out <dir>', 'Output directory (defaults to entry directory)')
     .option('--fonts <dir>', 'Directory containing custom font files to register')

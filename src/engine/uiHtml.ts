@@ -4707,6 +4707,16 @@ export function generateStudioHtml(initialFile?: string): string {
       }
     }
 
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
     function renderFileTree(files) {
       const container = document.getElementById('file-tree');
       if (files.length === 0) {
@@ -4730,11 +4740,11 @@ export function generateStudioHtml(initialFile?: string): string {
         const dirName = dir.split('/').pop() || dir;
 
         html += \`
-          <div class="tree-folder" data-dir="\${dir}">
+          <div class="tree-folder" data-dir="\${escapeHtml(dir)}">
             <div class="folder-header" onclick="toggleFolder(this)">
               <i class="fa-solid fa-chevron-down folder-chevron"></i>
               <i class="fa-solid fa-folder folder-icon"></i>
-              <span class="folder-name" title="\${dir}">\${dirName}</span>
+              <span class="folder-name" title="\${escapeHtml(dir)}">\${escapeHtml(dirName)}</span>
               <span class="folder-badge">\${dirFiles.length}</span>
             </div>
             <div class="folder-children">
@@ -4748,9 +4758,9 @@ export function generateStudioHtml(initialFile?: string): string {
           const isActive = f.path === selectedFilePath ? 'active' : '';
 
           html += \`
-            <div class="tree-file \${isActive}" data-path="\${f.path}" onclick="selectFile('\${f.path.replace(/\\\\/g, '\\\\\\\\')}')">
+            <div class="tree-file \${isActive}" data-path="\${escapeHtml(f.path)}" onclick="selectFile(decodeURIComponent('\${encodeURIComponent(f.path)}'))">
               <span class="file-badge \${badgeClass}">\${badgeText}</span>
-              <span class="file-title" title="\${f.name}">\${f.name}</span>
+              <span class="file-title" title="\${escapeHtml(f.name)}">\${escapeHtml(f.name)}</span>
             </div>
           \`;
         });
@@ -5991,10 +6001,10 @@ export function generateStudioHtml(initialFile?: string): string {
         return \`
           <div class="issue-card">
             <div class="issue-header">
-              <span class="issue-badge \${sev}"><i class="\${icon}"></i> \${(iss.severity || 'WARN').toUpperCase()}</span>
-              <span style="font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--text);">[\${iss.code || 'AUDIT'}] \${iss.name || iss.message}</span>
+              <span class="issue-badge \${escapeHtml(sev)}"><i class="\${icon}"></i> \${escapeHtml((iss.severity || 'WARN').toUpperCase())}</span>
+              <span style="font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--text);">[\${escapeHtml(iss.code || 'AUDIT')}] \${escapeHtml(iss.name || iss.message || '')}</span>
             </div>
-            <div class="issue-help">\${iss.help || iss.details || ''}</div>
+            <div class="issue-help">\${escapeHtml(iss.help || iss.details || '')}</div>
           </div>
         \`;
       }).join('');
