@@ -2156,6 +2156,15 @@ export function generateStudioHtml(initialFile?: string): string {
       display: flex;
       align-items: center;
       width: 100%;
+      background: #040814;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      transition: all 0.2s ease;
+    }
+
+    .wiz-search-input-box:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
     }
 
     .wiz-search-input-box i.wiz-search-icon {
@@ -2164,24 +2173,38 @@ export function generateStudioHtml(initialFile?: string): string {
       color: var(--text-dim);
       font-size: 14px;
       pointer-events: none;
+      z-index: 5;
+    }
+
+    .wiz-search-ghost {
+      position: absolute;
+      left: 38px;
+      right: 14px;
+      padding: 12px 0;
+      color: rgba(255, 255, 255, 0.28);
+      font-size: 14px;
+      font-family: var(--font-mono);
+      pointer-events: none;
+      white-space: pre;
+      overflow: hidden;
+      z-index: 1;
+      user-select: none;
+      line-height: 1.5;
     }
 
     .wiz-search-input {
+      position: relative;
       width: 100%;
-      background: #040814;
-      border: 1px solid var(--border);
+      background: transparent;
+      border: none;
       border-radius: var(--radius-sm);
       padding: 12px 14px 12px 38px;
       color: var(--text);
       font-size: 14px;
       font-family: var(--font-mono);
       outline: none;
-      transition: all 0.2s ease;
-    }
-
-    .wiz-search-input:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+      z-index: 2;
+      line-height: 1.5;
     }
 
     .wiz-search-hints {
@@ -2210,11 +2233,11 @@ export function generateStudioHtml(initialFile?: string): string {
       right: 0;
       max-height: 280px;
       overflow-y: auto;
-      background: #080d1a;
-      border: 1px solid var(--border);
+      background: #090f20;
+      border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: var(--radius-sm);
-      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
-      z-index: 150;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(16, 185, 129, 0.2);
+      z-index: 9999;
       display: none;
       flex-direction: column;
       padding: 4px;
@@ -2236,7 +2259,7 @@ export function generateStudioHtml(initialFile?: string): string {
 
     .wiz-suggestion-item:hover,
     .wiz-suggestion-item.active {
-      background: rgba(16, 185, 129, 0.15);
+      background: rgba(16, 185, 129, 0.18);
     }
 
     .wiz-suggestion-name {
@@ -4344,15 +4367,16 @@ export function generateStudioHtml(initialFile?: string): string {
       var currentVal = wizardData[wizKey].file || '';
       return '' +
         '<div class="wiz-search-wrap" id="wiz-search-wrap-' + wizKey + '">' +
-          '<div class="wiz-search-input-box">' +
+          '<div class="wiz-search-input-box" id="wiz-box-' + wizKey + '">' +
             '<i class="fa-solid fa-file-code wiz-search-icon"></i>' +
+            '<div class="wiz-search-ghost" id="wiz-ghost-' + wizKey + '"></div>' +
             '<input type="text" class="wiz-search-input" id="wiz-file-input-' + wizKey + '" ' +
               'value="' + currentVal + '" autocomplete="off" spellcheck="false" ' +
               'placeholder="' + placeholder + '">' +
           '</div>' +
           '<div class="wiz-search-hints">' +
-            '<span><kbd>Tab</kbd> oder <kbd>Enter</kbd> zum Übernehmen</span>' +
-            '<span><kbd>↑</kbd> <kbd>↓</kbd> zum Navigieren &bull; <kbd>Esc</kbd> zum Schließen</span>' +
+            '<span><kbd>Tab</kbd> oder <kbd>→</kbd> übernimmt Ghost-Text / Vorschlag &bull; <kbd>Enter</kbd> Weiter</span>' +
+            '<span><kbd>↑</kbd> <kbd>↓</kbd> Menü &bull; <kbd>Esc</kbd> Schließen</span>' +
           '</div>' +
           '<div class="wiz-suggestions-menu" id="wiz-suggestions-' + wizKey + '"></div>' +
         '</div>';
@@ -4361,32 +4385,78 @@ export function generateStudioHtml(initialFile?: string): string {
     function attachWizFileSearch(wizKey, ext) {
       setTimeout(function() {
         var input = document.getElementById('wiz-file-input-' + wizKey);
+        var ghost = document.getElementById('wiz-ghost-' + wizKey);
         var menu = document.getElementById('wiz-suggestions-' + wizKey);
         if (!input || !menu) return;
 
-        var matchingFiles = allFiles.filter(function(f) { return f.path.endsWith(ext); });
         var activeIdx = -1;
         var currentItems = [];
 
+        function getMatchingFiles() {
+          return allFiles.filter(function(f) { 
+            return f.path && f.path.toLowerCase().endsWith(ext.toLowerCase()); 
+          });
+        }
+
+        function updateInlineGhost(typed, topCandidate) {
+          if (!ghost) return;
+          if (!typed || !topCandidate) {
+            ghost.textContent = '';
+            return;
+          }
+          // Check if top candidate name or path starts with typed
+          var candText = topCandidate.name;
+          if (candText.toLowerCase().startsWith(typed.toLowerCase())) {
+            ghost.textContent = typed + candText.slice(typed.length);
+            return;
+          }
+          var candPath = topCandidate.path;
+          if (candPath.toLowerCase().startsWith(typed.toLowerCase())) {
+            ghost.textContent = typed + candPath.slice(typed.length);
+            return;
+          }
+          // If contains, show full suggestion in ghost or empty
+          ghost.textContent = '';
+        }
+
         function renderSuggestions(query) {
-          query = (query || '').toLowerCase().trim();
+          var matchingFiles = getMatchingFiles();
+          var rawQuery = query || '';
+          var q = rawQuery.toLowerCase().trim();
+
           currentItems = matchingFiles.filter(function(f) {
-            if (!query) return true;
-            return f.name.toLowerCase().includes(query) || f.path.toLowerCase().includes(query);
+            if (!q) return true;
+            return f.name.toLowerCase().includes(q) || f.path.toLowerCase().includes(q);
           });
 
+          // Sort exact/prefix matches first
+          currentItems.sort(function(a, b) {
+            var aPrefix = a.name.toLowerCase().startsWith(q) || a.path.toLowerCase().startsWith(q);
+            var bPrefix = b.name.toLowerCase().startsWith(q) || b.path.toLowerCase().startsWith(q);
+            if (aPrefix && !bPrefix) return -1;
+            if (!aPrefix && bPrefix) return 1;
+            return a.name.localeCompare(b.name);
+          });
+
+          // Update inline ghost text with top candidate
+          var topMatch = currentItems.length > 0 ? currentItems[0] : null;
+          updateInlineGhost(rawQuery, topMatch);
+
           if (currentItems.length === 0) {
-            menu.innerHTML = '<div style="padding: 10px 12px; font-size: 12px; color: var(--text-dim);">Keine passenden ' + ext + ' Dateien gefunden</div>';
+            menu.innerHTML = '<div style="padding: 12px 14px; font-size: 12px; color: var(--text-dim); text-align: center;"><i class="fa-solid fa-magnifying-glass" style="margin-right: 6px;"></i> Keine Datei gefunden für "' + rawQuery + '"</div>';
             menu.classList.add('open');
             activeIdx = -1;
             return;
           }
 
-          var html = currentItems.map(function(f, idx) {
+          var html = currentItems.slice(0, 15).map(function(f, idx) {
             var isSel = (f.path === wizardData[wizKey].file);
-            return '<div class="wiz-suggestion-item ' + (isSel ? 'active' : '') + '" data-idx="' + idx + '">' +
-              '<div class="wiz-suggestion-name"><i class="fa-solid fa-file" style="color: var(--accent); font-size: 11px;"></i> ' + f.name + '</div>' +
-              '<div class="wiz-suggestion-path">' + f.path + '</div>' +
+            return '<div class="wiz-suggestion-item ' + (isSel ? 'active' : '') + '" data-idx="' + idx + '" data-path="' + f.path + '">' +
+              '<div class="wiz-suggestion-name">' +
+                '<i class="fa-solid fa-file-lines" style="color: var(--accent); font-size: 11px;"></i> ' +
+                highlightMatches(f.name, q) +
+              '</div>' +
+              '<div class="wiz-suggestion-path">' + highlightMatches(f.path, q) + '</div>' +
             '</div>';
           }).join('');
 
@@ -4394,22 +4464,31 @@ export function generateStudioHtml(initialFile?: string): string {
           menu.classList.add('open');
           activeIdx = -1;
 
-          // Click listener for items
+          // Click listeners
           var itemEls = menu.querySelectorAll('.wiz-suggestion-item');
           itemEls.forEach(function(el) {
             el.addEventListener('mousedown', function(e) {
               e.preventDefault();
-              var idx = parseInt(el.dataset.idx, 10);
-              if (currentItems[idx]) {
-                selectItem(currentItems[idx].path);
-              }
+              var p = el.getAttribute('data-path');
+              if (p) selectItem(p);
             });
           });
+        }
+
+        function highlightMatches(text, query) {
+          if (!query) return text;
+          var idx = text.toLowerCase().indexOf(query.toLowerCase());
+          if (idx === -1) return text;
+          var before = text.substring(0, idx);
+          var match = text.substring(idx, idx + query.length);
+          var after = text.substring(idx + query.length);
+          return before + '<span style="color: var(--accent); font-weight: 800; text-decoration: underline;">' + match + '</span>' + after;
         }
 
         function selectItem(path) {
           wizardData[wizKey].file = path;
           input.value = path;
+          if (ghost) ghost.textContent = '';
           menu.classList.remove('open');
         }
 
@@ -4419,61 +4498,116 @@ export function generateStudioHtml(initialFile?: string): string {
             if (i === idx) {
               el.classList.add('active');
               el.scrollIntoView({ block: 'nearest' });
+              // Also update ghost text based on active item
+              var p = el.getAttribute('data-path');
+              if (p && input.value && p.toLowerCase().startsWith(input.value.toLowerCase())) {
+                if (ghost) ghost.textContent = input.value + p.slice(input.value.length);
+              }
             } else {
               el.classList.remove('active');
             }
           });
         }
 
+        // Live input event: updates dynamically with every single character typed
         input.addEventListener('input', function() {
           wizardData[wizKey].file = input.value;
           renderSuggestions(input.value);
         });
 
+        // Focus & Click: instantly open dropdown
         input.addEventListener('focus', function() {
           renderSuggestions(input.value);
         });
 
-        input.addEventListener('blur', function() {
-          setTimeout(function() { menu.classList.remove('open'); }, 150);
+        input.addEventListener('click', function() {
+          renderSuggestions(input.value);
         });
 
+        // Close on blur with safe delay
+        input.addEventListener('blur', function() {
+          setTimeout(function() {
+            menu.classList.remove('open');
+            if (ghost) ghost.textContent = '';
+          }, 200);
+        });
+
+        // Keyboard control
         input.addEventListener('keydown', function(e) {
-          if (!menu.classList.contains('open')) {
-            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-              renderSuggestions(input.value);
-              e.preventDefault();
-              return;
-            }
+          if (e.key === 'Escape') {
+            menu.classList.remove('open');
+            if (ghost) ghost.textContent = '';
+            return;
+          }
+
+          if (!menu.classList.contains('open') && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+            renderSuggestions(input.value);
+            e.preventDefault();
+            return;
           }
 
           if (e.key === 'ArrowDown') {
             e.preventDefault();
-            if (currentItems.length > 0) {
-              activeIdx = (activeIdx + 1) % currentItems.length;
+            var itemEls = menu.querySelectorAll('.wiz-suggestion-item');
+            if (itemEls.length > 0) {
+              activeIdx = (activeIdx + 1) % itemEls.length;
               highlightItem(activeIdx);
             }
-          } else if (e.key === 'ArrowUp') {
+            return;
+          }
+
+          if (e.key === 'ArrowUp') {
             e.preventDefault();
-            if (currentItems.length > 0) {
-              activeIdx = (activeIdx - 1 + currentItems.length) % currentItems.length;
+            var itemEls = menu.querySelectorAll('.wiz-suggestion-item');
+            if (itemEls.length > 0) {
+              activeIdx = (activeIdx - 1 + itemEls.length) % itemEls.length;
               highlightItem(activeIdx);
             }
-          } else if (e.key === 'Tab' || e.key === 'Enter') {
+            return;
+          }
+
+          // Tab or ArrowRight to accept inline ghost or active item
+          if (e.key === 'Tab' || (e.key === 'ArrowRight' && input.selectionStart === input.value.length)) {
+            if (ghost && ghost.textContent && ghost.textContent.length > input.value.length) {
+              e.preventDefault();
+              var completedText = ghost.textContent;
+              // find matching item
+              var match = currentItems.find(function(item) {
+                return item.name.toLowerCase() === completedText.toLowerCase() || item.path.toLowerCase() === completedText.toLowerCase();
+              });
+              selectItem(match ? match.path : completedText);
+              return;
+            }
+
             if (menu.classList.contains('open') && currentItems.length > 0) {
               e.preventDefault();
-              var chosenIdx = activeIdx >= 0 ? activeIdx : 0;
-              if (currentItems[chosenIdx]) {
-                selectItem(currentItems[chosenIdx].path);
+              var targetIdx = activeIdx >= 0 ? activeIdx : 0;
+              if (currentItems[targetIdx]) {
+                selectItem(currentItems[targetIdx].path);
               }
-            } else if (e.key === 'Enter') {
+              return;
+            }
+          }
+
+          // Enter: accept selected item or go to next step
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            if (menu.classList.contains('open') && activeIdx >= 0 && currentItems[activeIdx]) {
+              selectItem(currentItems[activeIdx].path);
+            } else if (menu.classList.contains('open') && currentItems.length > 0 && (!input.value || input.value.trim() === '')) {
+              selectItem(currentItems[0].path);
+            } else {
+              menu.classList.remove('open');
               nextWizardStep();
             }
-          } else if (e.key === 'Escape') {
-            menu.classList.remove('open');
           }
         });
-      }, 50);
+
+        // Trigger immediate suggestions render if input is focused or initially opened
+        if (document.activeElement === input || !input.value) {
+          renderSuggestions(input.value);
+        }
+      }, 30);
     }
 
     function setupWizDropzone(id, callback) {
