@@ -13,6 +13,7 @@ import { auditDesign } from '../tools/designAuditor.js';
 import { listAllToadFiles, getWorkspaces, addWorkspace, removeWorkspace } from '../utils/fileFinder.js';
 import { formatToad } from '../tools/formatter.js';
 import { generateStudioHtml } from './uiHtml.js';
+import { executeInLiveTerminal } from './terminalRunner.js';
 
 export interface PreviewServerInstance {
   server: http.Server;
@@ -286,6 +287,55 @@ export function createPreviewServer(
             'Content-Type': 'application/json'
           });
           res.end(JSON.stringify({ status: 'ok', folder: folderPath }));
+        });
+        return;
+      }
+
+      // 3b. Persistent Live Terminal Execution Endpoint
+      if (url.pathname === '/api/run-cmd' && req.method === 'POST') {
+        const origin = req.headers.origin;
+        const reqHost = req.headers.host || '';
+        let originOk = true;
+        const hostHostname = reqHost.split(':')[0]!.toLowerCase();
+        const isLoopbackHost = ['localhost', '127.0.0.1', '::1', '[::1]', host.toLowerCase()].includes(hostHostname);
+        if (!isLoopbackHost) originOk = false;
+        if (origin) {
+          try {
+            const parsedOrigin = new URL(origin);
+            const isLoopbackOrigin = ['localhost', '127.0.0.1', '::1', '[::1]', host.toLowerCase()].includes(parsedOrigin.hostname.toLowerCase());
+            originOk = originOk && isLoopbackOrigin && Boolean(parsedOrigin.host.toLowerCase() === reqHost.toLowerCase());
+          } catch {
+            originOk = false;
+          }
+        }
+        if (req.headers['sec-fetch-site'] === 'cross-site') originOk = false;
+
+        if (!originOk) {
+          res.writeHead(403, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Access denied: loopback origin required' }));
+          return;
+        }
+
+        parseJsonBody((body) => {
+          const command = body?.command;
+          if (!command || typeof command !== 'string') {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Missing or invalid command parameter' }));
+            return;
+          }
+
+          try {
+            const result = executeInLiveTerminal(command.trim(), body.cwd);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+              success: true,
+              reused: result.reused,
+              command: command.trim()
+            }));
+          } catch (err: any) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: err.message || String(err) }));
+          }
         });
         return;
       }

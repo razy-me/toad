@@ -1738,6 +1738,443 @@ export function generateStudioHtml(initialFile?: string): string {
       max-width: 380px;
       line-height: 1.5;
     }
+
+    /* Hub & Command Builder Deck */
+    .hub-viewport {
+      flex: 1;
+      overflow-y: auto;
+      padding: 36px 32px 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
+
+    .hub-container {
+      max-width: 1440px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    .hub-header-wrap {
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .hub-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: var(--accent-dim);
+      color: var(--accent);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      margin-bottom: 12px;
+    }
+
+    .hub-title {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .hub-subtitle {
+      font-size: 14px;
+      color: var(--text-dim);
+      max-width: 680px;
+      margin: 0 auto;
+      line-height: 1.5;
+    }
+
+    /* 5 Vertical Cards Grid */
+    .hub-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    @media (max-width: 1280px) {
+      .hub-cards-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 860px) {
+      .hub-cards-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .hub-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 18px;
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .hub-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: transparent;
+      transition: background 0.2s;
+    }
+
+    .hub-card:hover {
+      transform: translateY(-4px);
+      border-color: #334155;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4);
+      background: #111827;
+    }
+
+    .hub-card.card-bgr:hover::before { background: var(--accent); }
+    .hub-card.card-build:hover::before { background: var(--cyan); }
+    .hub-card.card-motion:hover::before { background: var(--violet); }
+    .hub-card.card-convert:hover::before { background: var(--amber); }
+    .hub-card.card-report:hover::before { background: var(--rose); }
+
+    .hub-card-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      margin-bottom: 16px;
+      transition: transform 0.2s ease;
+    }
+
+    .hub-card:hover .hub-card-icon {
+      transform: scale(1.08);
+    }
+
+    .card-bgr .hub-card-icon { background: rgba(16, 185, 129, 0.15); color: var(--accent); border: 1px solid rgba(16, 185, 129, 0.3); }
+    .card-build .hub-card-icon { background: rgba(6, 182, 212, 0.15); color: var(--cyan); border: 1px solid rgba(6, 182, 212, 0.3); }
+    .card-motion .hub-card-icon { background: rgba(168, 85, 247, 0.15); color: var(--violet); border: 1px solid rgba(168, 85, 247, 0.3); }
+    .card-convert .hub-card-icon { background: rgba(245, 158, 11, 0.15); color: var(--amber); border: 1px solid rgba(245, 158, 11, 0.3); }
+    .card-report .hub-card-icon { background: rgba(244, 63, 94, 0.15); color: var(--rose); border: 1px solid rgba(244, 63, 94, 0.3); }
+
+    .hub-card-cmd {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+      display: inline-block;
+    }
+
+    .hub-card-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .hub-card-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.45;
+      margin-bottom: 16px;
+      min-height: 36px;
+    }
+
+    .hub-card-features {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 20px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+    }
+
+    .hub-card-features li {
+      font-size: 11px;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .hub-card-features li i {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .hub-card-action {
+      margin-top: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .hub-card-action i {
+      transition: transform 0.15s ease;
+      color: var(--text-dim);
+    }
+
+    .hub-card:hover .hub-card-action i {
+      transform: translateX(4px);
+      color: var(--text);
+    }
+
+    /* Wizard Container & Step Deck */
+    .wizard-deck {
+      display: none;
+      flex-direction: column;
+      gap: 22px;
+      max-width: 900px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .wizard-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .btn-wizard-back {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 7px 14px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.15s;
+    }
+
+    .btn-wizard-back:hover {
+      background: var(--bg-hover);
+      color: var(--text);
+      border-color: #334155;
+    }
+
+    .wizard-progress-bar {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .wizard-step-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+      transition: all 0.15s;
+    }
+
+    .wizard-step-badge.active {
+      background: var(--accent-dim);
+      color: var(--accent);
+      border-color: rgba(16, 185, 129, 0.35);
+    }
+
+    .wizard-step-badge.completed {
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--accent);
+      border-color: rgba(16, 185, 129, 0.2);
+    }
+
+    .wizard-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .wizard-step-header {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .wizard-step-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.02em;
+    }
+
+    .wizard-step-subtitle {
+      font-size: 13px;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+
+    .wizard-tiles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+
+    .wizard-tile {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+
+    .wizard-tile:hover {
+      border-color: #334155;
+      background: var(--bg-hover);
+    }
+
+    .wizard-tile.active {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+
+    .wizard-tile-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .wizard-tile-icon {
+      font-size: 16px;
+      color: var(--accent);
+    }
+
+    .wizard-tile-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .wizard-tile-desc {
+      font-size: 11px;
+      color: var(--text-dim);
+      line-height: 1.4;
+    }
+
+    .wizard-footer-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 10px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .terminal-cmd-box {
+      background: #020617;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      border-radius: var(--radius-sm);
+      padding: 18px 20px;
+      position: relative;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      color: #38bdf8;
+      overflow-x: auto;
+      line-height: 1.6;
+      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.6);
+      word-break: break-all;
+    }
+
+    .terminal-cmd-prompt {
+      color: var(--accent);
+      user-select: none;
+      margin-right: 10px;
+      font-weight: 700;
+    }
+
+    .btn-run-cmd {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 14px;
+      padding: 12px 24px;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+      transition: all 0.15s ease;
+    }
+
+    .btn-run-cmd:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+      background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+    }
+
+    /* Toast Notification Banner */
+    .studio-toast {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      background: #0f172a;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #f8fafc;
+      padding: 12px 20px;
+      border-radius: var(--radius);
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      z-index: 2000;
+      opacity: 0;
+      transform: translateY(20px);
+      pointer-events: none;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .studio-toast.show {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
   </style>
 </head>
 <body>
@@ -1758,23 +2195,27 @@ export function generateStudioHtml(initialFile?: string): string {
     </div>
 
     <nav>
-      <button class="nav-btn active" onclick="switchTab('graphic')">
+      <button class="nav-btn active" id="nav-btn-hub" onclick="switchTab('hub')">
+        <i class="fa-solid fa-compass"></i>
+        <span>Command Builder</span>
+      </button>
+      <button class="nav-btn" id="nav-btn-graphic" onclick="switchTab('graphic')">
         <i class="fa-solid fa-image"></i>
         <span>Grafik &amp; Build</span>
       </button>
-      <button class="nav-btn" onclick="switchTab('animation')">
+      <button class="nav-btn" id="nav-btn-animation" onclick="switchTab('animation')">
         <i class="fa-solid fa-film"></i>
         <span>Animation</span>
       </button>
-      <button class="nav-btn" onclick="switchTab('bg-remover')">
+      <button class="nav-btn" id="nav-btn-bg-remover" onclick="switchTab('bg-remover')">
         <i class="fa-solid fa-wand-magic-sparkles"></i>
         <span>Freistellen</span>
       </button>
-      <button class="nav-btn" onclick="switchTab('convert')">
+      <button class="nav-btn" id="nav-btn-convert" onclick="switchTab('convert')">
         <i class="fa-solid fa-arrows-rotate"></i>
         <span>Konvertieren</span>
       </button>
-      <button class="nav-btn" onclick="switchTab('report')">
+      <button class="nav-btn" id="nav-btn-report" onclick="switchTab('report')">
         <i class="fa-solid fa-chart-simple"></i>
         <span>Qualitäts-Audit</span>
       </button>
@@ -1824,8 +2265,138 @@ export function generateStudioHtml(initialFile?: string): string {
 
     <main class="content">
 
+      <!-- Tab 0: Command Builder Hub -->
+      <div class="tab-view active" id="tab-hub">
+        <div class="hub-viewport">
+          <div class="hub-container">
+            
+            <!-- MAIN MENU: 5 Vertical Category Columns -->
+            <div id="hub-main-menu">
+              <div class="hub-header-wrap">
+                <div class="hub-badge"><i class="fa-solid fa-compass"></i> Interaktiver Command Builder</div>
+                <h1 class="hub-title">Was möchtest du heute tun?</h1>
+                <p class="hub-subtitle">
+                  Wähle einen der 5 Bereiche. Der Assistent führt dich Schritt für Schritt zum schlüsselfertigen Terminal-Befehl – mit Direkt-Ausführung im CMD oder Copy &amp; Paste.
+                </p>
+              </div>
+
+              <div class="hub-cards-grid">
+                <!-- Card 1: Freistellen -->
+                <div class="hub-card card-bgr" onclick="openWizard('bgr')">
+                  <div class="hub-card-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                  <span class="hub-card-cmd">toad remove-bg</span>
+                  <div class="hub-card-title">Freistellen</div>
+                  <div class="hub-card-desc">Lokale KI-Hintergrundentfernung für Bilder &amp; Bilderserien ohne Cloud.</div>
+                  <ul class="hub-card-features">
+                    <li><i class="fa-solid fa-check"></i> Schnell, Standard &amp; DYB</li>
+                    <li><i class="fa-solid fa-check"></i> Einzelne Bilder &amp; ganze Ordner</li>
+                    <li><i class="fa-solid fa-check"></i> Verlustfreies PNG oder WebP</li>
+                    <li><i class="fa-solid fa-check"></i> Automatisches Speichern</li>
+                  </ul>
+                  <div class="hub-card-action">
+                    <span>Assistent starten</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                  </div>
+                </div>
+
+                <!-- Card 2: Grafik & Build -->
+                <div class="hub-card card-build" onclick="openWizard('build')">
+                  <div class="hub-card-icon"><i class="fa-solid fa-image"></i></div>
+                  <span class="hub-card-cmd">toad build</span>
+                  <div class="hub-card-title">Grafik &amp; Build</div>
+                  <div class="hub-card-desc">Kompiliere deklarative .toad Layouts in gestochen scharfe Grafiken.</div>
+                  <ul class="hub-card-features">
+                    <li><i class="fa-solid fa-check"></i> PNG, WebP, JPG, PSD</li>
+                    <li><i class="fa-solid fa-check"></i> Alle Formate auf einmal (-f all)</li>
+                    <li><i class="fa-solid fa-check"></i> Skalierung 1x, 2x, 4x Retina</li>
+                    <li><i class="fa-solid fa-check"></i> Millisekunden-schnell</li>
+                  </ul>
+                  <div class="hub-card-action">
+                    <span>Assistent starten</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                  </div>
+                </div>
+
+                <!-- Card 3: Animation -->
+                <div class="hub-card card-motion" onclick="openWizard('motion')">
+                  <div class="hub-card-icon"><i class="fa-solid fa-film"></i></div>
+                  <span class="hub-card-cmd">toad motion</span>
+                  <div class="hub-card-title">Animation</div>
+                  <div class="hub-card-desc">Rendere flüssige Keyframe-Animationen aus .toadm Dateien.</div>
+                  <ul class="hub-card-features">
+                    <li><i class="fa-solid fa-check"></i> MP4, WebM, GIF, Frames</li>
+                    <li><i class="fa-solid fa-check"></i> 30, 60 oder 120 FPS</li>
+                    <li><i class="fa-solid fa-check"></i> Hardware-Encoding &amp; Easing</li>
+                    <li><i class="fa-solid fa-check"></i> Live-Player Vorschau</li>
+                  </ul>
+                  <div class="hub-card-action">
+                    <span>Assistent starten</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                  </div>
+                </div>
+
+                <!-- Card 4: Konvertieren -->
+                <div class="hub-card card-convert" onclick="openWizard('convert')">
+                  <div class="hub-card-icon"><i class="fa-solid fa-arrows-rotate"></i></div>
+                  <span class="hub-card-cmd">toad convert</span>
+                  <div class="hub-card-title">Konvertieren</div>
+                  <div class="hub-card-desc">Universeller Bildkonverter, Skalierer und Photoshop-Importer.</div>
+                  <ul class="hub-card-features">
+                    <li><i class="fa-solid fa-check"></i> WebP, AVIF, PNG, SVG, PDF</li>
+                    <li><i class="fa-solid fa-check"></i> PSD zu .toad Code &amp; Assets</li>
+                    <li><i class="fa-solid fa-check"></i> Freie Zielskalierung (px / mult)</li>
+                    <li><i class="fa-solid fa-check"></i> Intelligente Web-Kompression</li>
+                  </ul>
+                  <div class="hub-card-action">
+                    <span>Assistent starten</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                  </div>
+                </div>
+
+                <!-- Card 5: Qualitäts-Audit -->
+                <div class="hub-card card-report" onclick="openWizard('report')">
+                  <div class="hub-card-icon"><i class="fa-solid fa-chart-simple"></i></div>
+                  <span class="hub-card-cmd">toad report</span>
+                  <div class="hub-card-title">Qualitäts-Audit</div>
+                  <div class="hub-card-desc">Tiefenanalyse für Barrierefreiheit, Kontraste &amp; Anti-AI-Slop.</div>
+                  <ul class="hub-card-features">
+                    <li><i class="fa-solid fa-check"></i> WCAG 2.2 Farbkontraste</li>
+                    <li><i class="fa-solid fa-check"></i> 13 TOAD-Syntaxregeln Check</li>
+                    <li><i class="fa-solid fa-check"></i> Anti-AI-Slop Heuristiken</li>
+                    <li><i class="fa-solid fa-check"></i> 1-Klick Auto-Reparatur (--fixes)</li>
+                  </ul>
+                  <div class="hub-card-action">
+                    <span>Assistent starten</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- INTERACTIVE WIZARD DECK -->
+            <div id="hub-wizard-deck" class="wizard-deck">
+              <div class="wizard-topbar">
+                <button type="button" class="btn-wizard-back" onclick="closeWizard()">
+                  <i class="fa-solid fa-arrow-left"></i>
+                  <span>Zurück zum Hauptmenü</span>
+                </button>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <span id="wizard-title-badge" class="hub-badge" style="margin-bottom: 0;">Assistent</span>
+                  <span id="wizard-header-title" style="font-weight: 700; font-size: 15px; color: var(--text);">Freistellen</span>
+                </div>
+                <div class="wizard-progress-bar" id="wizard-step-indicators"></div>
+              </div>
+
+              <!-- Wizard Dynamic Card Content -->
+              <div class="wizard-card" id="wizard-card-body"></div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
       <!-- Tab 1: Grafik & Build Deck -->
-      <div class="tab-view active" id="tab-graphic">
+      <div class="tab-view" id="tab-graphic">
         <div class="deck-container">
           <!-- Parameter Control Deck -->
           <div class="deck-controls">
@@ -2780,30 +3351,901 @@ export function generateStudioHtml(initialFile?: string): string {
     // Split Slider Dragging State
     let isDraggingSplit = false;
 
+    // Toast Notification
+    var toastTimeout = null;
+    function showToast(msg, type) {
+      var toast = document.getElementById('studio-toast');
+      var icon = document.getElementById('studio-toast-icon');
+      var text = document.getElementById('studio-toast-msg');
+      if (!toast || !text) return;
+
+      text.textContent = msg;
+      if (type === 'error') {
+        icon.className = 'fa-solid fa-triangle-exclamation';
+        icon.style.color = 'var(--rose)';
+        toast.style.borderColor = 'rgba(244, 63, 94, 0.5)';
+      } else {
+        icon.className = 'fa-solid fa-circle-check';
+        icon.style.color = 'var(--accent)';
+        toast.style.borderColor = 'rgba(16, 185, 129, 0.5)';
+      }
+
+      toast.classList.add('show');
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(function() {
+        toast.classList.remove('show');
+      }, 4000);
+    }
+
+    // Command Builder Hub & Wizard State
+    var currentWizard = null;
+    var currentStep = 1;
+    var wizardData = {
+      bgr: {
+        sourcePath: './bilder',
+        sourceName: 'Ordner: ./bilder',
+        preset: 'dyb',
+        format: 'png',
+        targetDir: './freigestellt'
+      },
+      build: {
+        file: '',
+        format: 'png',
+        scale: '2'
+      },
+      motion: {
+        file: '',
+        format: 'mp4',
+        fps: '60'
+      },
+      convert: {
+        file: '',
+        format: 'webp',
+        quality: '80'
+      },
+      report: {
+        file: '',
+        mode: 'fixes'
+      }
+    };
+
+    var wizardConfig = {
+      bgr: {
+        title: 'Freistellen',
+        badge: 'toad remove-bg',
+        totalSteps: 5,
+        stepNames: ['1. Motiv', '2. Modus', '3. Format', '4. Zielordner', '5. Ausführen']
+      },
+      build: {
+        title: 'Grafik & Build',
+        badge: 'toad build',
+        totalSteps: 4,
+        stepNames: ['1. Design', '2. Format', '3. Skalierung', '4. Ausführen']
+      },
+      motion: {
+        title: 'Animation',
+        badge: 'toad motion',
+        totalSteps: 4,
+        stepNames: ['1. Motion-Datei', '2. Video-Format', '3. Framerate', '4. Ausführen']
+      },
+      convert: {
+        title: 'Konvertieren',
+        badge: 'toad convert',
+        totalSteps: 4,
+        stepNames: ['1. Quellbild', '2. Zielformat', '3. Qualität', '4. Ausführen']
+      },
+      report: {
+        title: 'Qualitäts-Audit',
+        badge: 'toad report',
+        totalSteps: 3,
+        stepNames: ['1. Design', '2. Prüfungs-Tiefe', '3. Ausführen']
+      }
+    };
+
+    function openWizard(type) {
+      currentWizard = type;
+      currentStep = 1;
+
+      if (type === 'build' && !wizardData.build.file) {
+        var firstToad = allFiles.find(function(f) { return f.path.endsWith('.toad'); });
+        if (firstToad) wizardData.build.file = firstToad.path;
+      }
+      if (type === 'motion' && !wizardData.motion.file) {
+        var firstToadm = allFiles.find(function(f) { return f.path.endsWith('.toadm'); });
+        if (firstToadm) wizardData.motion.file = firstToadm.path;
+      }
+      if (type === 'report' && !wizardData.report.file) {
+        var firstToad = allFiles.find(function(f) { return f.path.endsWith('.toad'); });
+        if (firstToad) wizardData.report.file = firstToad.path;
+      }
+
+      document.getElementById('hub-main-menu').style.display = 'none';
+      var deck = document.getElementById('hub-wizard-deck');
+      deck.style.display = 'flex';
+
+      var cfg = wizardConfig[type];
+      document.getElementById('wizard-title-badge').textContent = cfg.badge;
+      document.getElementById('wizard-header-title').textContent = cfg.title;
+
+      renderWizardStep();
+    }
+
+    function closeWizard() {
+      currentWizard = null;
+      document.getElementById('hub-wizard-deck').style.display = 'none';
+      document.getElementById('hub-main-menu').style.display = 'block';
+    }
+
+    function nextWizardStep() {
+      var cfg = wizardConfig[currentWizard];
+      if (currentStep < cfg.totalSteps) {
+        currentStep++;
+        renderWizardStep();
+      }
+    }
+
+    function prevWizardStep() {
+      if (currentStep > 1) {
+        currentStep--;
+        renderWizardStep();
+      }
+    }
+
+    function getGeneratedCommand(type) {
+      if (type === 'bgr') {
+        var d = wizardData.bgr;
+        var src = (d.sourcePath || './bilder').replace(/\\/g, '/');
+        var tgt = (d.targetDir || './freigestellt').replace(/\\/g, '/');
+        var flag = d.preset === 'dyb' ? ' --dyb' : (d.preset === 'fast' ? ' --fast' : '');
+        return 'toad remove-bg "' + src + '" "' + tgt + '"' + flag + ' -f ' + d.format;
+      }
+      if (type === 'build') {
+        var d = wizardData.build;
+        var f = (d.file || (allFiles.find(function(x) { return x.path.endsWith('.toad'); }) || {}).path || 'design.toad').replace(/\\/g, '/');
+        return 'toad build "' + f + '" -f ' + d.format + ' -s ' + d.scale;
+      }
+      if (type === 'motion') {
+        var d = wizardData.motion;
+        var f = (d.file || (allFiles.find(function(x) { return x.path.endsWith('.toadm'); }) || {}).path || 'animation.toadm').replace(/\\/g, '/');
+        return 'toad motion "' + f + '" -f ' + d.format + ' --fps ' + d.fps;
+      }
+      if (type === 'convert') {
+        var d = wizardData.convert;
+        var f = (d.file || 'bild.png').replace(/\\/g, '/');
+        return 'toad convert "' + f + '" -f ' + d.format + ' -q ' + d.quality;
+      }
+      if (type === 'report') {
+        var d = wizardData.report;
+        var f = (d.file || (allFiles.find(function(x) { return x.path.endsWith('.toad'); }) || {}).path || 'design.toad').replace(/\\/g, '/');
+        if (d.mode === 'fixes') return 'toad report "' + f + '" --fixes';
+        if (d.mode === 'slop') return 'toad report "' + f + '" --slop-only';
+        if (d.mode === 'strict') return 'toad report "' + f + '" --strict';
+        return 'toad report "' + f + '"';
+      }
+      return '';
+    }
+
+    async function runWizardInCmd() {
+      var cmd = getGeneratedCommand(currentWizard);
+      if (!cmd) return;
+
+      var btn = document.getElementById('btn-wizard-run-cmd');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Starte Terminal...</span>';
+      }
+
+      try {
+        var res = await fetch('/api/run-cmd', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ command: cmd })
+        });
+        var data = await res.json();
+        if (data.success) {
+          showToast(data.reused 
+            ? 'Befehl im aktiven CMD-Terminal gestartet!' 
+            : 'Neues CMD-Terminal geöffnet und Befehl gestartet!', 'success');
+        } else {
+          showToast('Fehler beim Ausführen: ' + (data.error || 'Unbekannt'), 'error');
+        }
+      } catch (err) {
+        showToast('Verbindungsfehler: ' + err.message, 'error');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-terminal"></i> <span>Jetzt im CMD ausführen</span>';
+        }
+      }
+    }
+
+    async function copyWizardCmd() {
+      var cmd = getGeneratedCommand(currentWizard);
+      if (!cmd) return;
+      try {
+        await navigator.clipboard.writeText(cmd);
+        showToast('Befehl in die Zwischenablage kopiert!', 'success');
+      } catch (e) {
+        var ta = document.createElement('textarea');
+        ta.value = cmd;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('Befehl in die Zwischenablage kopiert!', 'success');
+      }
+    }
+
+    function openWizardInStudio() {
+      var wiz = currentWizard;
+      if (wiz === 'bgr') {
+        switchTab('bg-remover');
+        setBgrFormat(wizardData.bgr.format);
+        var radio = document.querySelector('input[name="bgr-preset"][value="' + wizardData.bgr.preset + '"]');
+        if (radio) {
+          radio.checked = true;
+          updateBgrPreset();
+        }
+        var dirEl = document.getElementById('bgr-out-dir');
+        if (dirEl) dirEl.value = wizardData.bgr.targetDir;
+      } else if (wiz === 'build') {
+        switchTab('graphic');
+        if (wizardData.build.file) selectFile(wizardData.build.file);
+      } else if (wiz === 'motion') {
+        switchTab('animation');
+        if (wizardData.motion.file) selectFile(wizardData.motion.file);
+      } else if (wiz === 'convert') {
+        switchTab('convert');
+        selectConvertFormat(wizardData.convert.format);
+      } else if (wiz === 'report') {
+        switchTab('report');
+        if (wizardData.report.file) {
+          selectFile(wizardData.report.file);
+          runAuditForActiveFile();
+        }
+      }
+    }
+
+    function renderWizardStep() {
+      var cfg = wizardConfig[currentWizard];
+      var indicators = document.getElementById('wizard-step-indicators');
+      indicators.innerHTML = cfg.stepNames.map(function(name, idx) {
+        var stepNum = idx + 1;
+        var cls = 'wizard-step-badge';
+        if (stepNum === currentStep) cls += ' active';
+        else if (stepNum < currentStep) cls += ' completed';
+        return '<span class="' + cls + '">' + name + '</span>';
+      }).join('');
+
+      var body = document.getElementById('wizard-card-body');
+
+      // Final Step: Render Generated Terminal Command Box
+      if (currentStep === cfg.totalSteps) {
+        var cmd = getGeneratedCommand(currentWizard);
+        body.innerHTML = 
+          '<div class="wizard-step-header">' +
+            '<div class="wizard-step-title"><i class="fa-solid fa-circle-check" style="color: var(--accent); margin-right: 8px;"></i> Dein Terminal-Befehl ist bereit!</div>' +
+            '<div class="wizard-step-subtitle">Führe den Befehl direkt im interaktiven CMD-Terminal aus oder kopiere ihn mit einem Klick.</div>' +
+          '</div>' +
+
+          '<div class="terminal-cmd-box" id="wiz-cmd-box">' +
+            '<span class="terminal-cmd-prompt">C:\\&gt;</span><span>' + cmd + '</span>' +
+          '</div>' +
+
+          '<div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px;">' +
+            '<button type="button" class="btn-run-cmd" id="btn-wizard-run-cmd" onclick="runWizardInCmd()">' +
+              '<i class="fa-solid fa-terminal"></i>' +
+              '<span>Jetzt im CMD ausführen</span>' +
+            '</button>' +
+            '<button type="button" class="btn-secondary" style="padding: 12px 20px; font-size: 14px;" onclick="copyWizardCmd()">' +
+              '<i class="fa-solid fa-copy"></i>' +
+              '<span>Befehl kopieren</span>' +
+            '</button>' +
+            '<button type="button" class="btn-secondary" style="padding: 12px 20px; font-size: 14px;" onclick="openWizardInStudio()">' +
+              '<i class="fa-solid fa-arrow-up-right-from-square"></i>' +
+              '<span>Im Web-GUI öffnen</span>' +
+            '</button>' +
+          '</div>' +
+
+          '<div class="wizard-footer-nav">' +
+            '<button type="button" class="btn-secondary" onclick="prevWizardStep()">' +
+              '<i class="fa-solid fa-chevron-left"></i> Zurück' +
+            '</button>' +
+            '<button type="button" class="btn-secondary" onclick="closeWizard()">' +
+              '<i class="fa-solid fa-rotate-left"></i> Zum Hauptmenü' +
+            '</button>' +
+          '</div>';
+        return;
+      }
+
+      // Steps for BGR
+      if (currentWizard === 'bgr') {
+        if (currentStep === 1) {
+          body.innerHTML = 
+            '<div class="wizard-step-header">' +
+              '<div class="wizard-step-title">Was möchtest du freistellen?</div>' +
+              '<div class="wizard-step-subtitle">Ziehe einzelne Bilder, eine Bilderserie oder einen ganzen Ordner hinein – oder wähle sie per Dialog oder Pfad aus.</div>' +
+            '</div>' +
+
+            '<div class="dropzone" id="wiz-bgr-dropzone" style="padding: 24px;" onclick="document.getElementById(\'wiz-bgr-file-input\').click()">' +
+              '<input type="file" id="wiz-bgr-file-input" style="display:none;" accept="image/*" multiple onchange="onWizBgrFiles(this.files)">' +
+              '<input type="file" id="wiz-bgr-folder-input" style="display:none;" webkitdirectory mozdirectory directory multiple onchange="onWizBgrFolder(this.files)">' +
+              '<i class="fa-solid fa-cloud-arrow-up dropzone-icon" style="font-size: 32px;"></i>' +
+              '<div style="font-size: 14px; font-weight: 700; color: var(--text); margin-top: 6px;">Bilder oder Ordner hier ablegen</div>' +
+              '<div style="font-size: 11px; color: var(--text-dim); margin-top: 4px;">Unterstützt PNG, JPG, WebP, AVIF, TIFF</div>' +
+              '<div style="display: flex; gap: 8px; margin-top: 12px;" onclick="event.stopPropagation()">' +
+                '<button type="button" class="btn-secondary" onclick="document.getElementById(\'wiz-bgr-file-input\').click()">' +
+                  '<i class="fa-solid fa-images"></i> Einzelne Bilder wählen' +
+                '</button>' +
+                '<button type="button" class="btn-secondary" onclick="document.getElementById(\'wiz-bgr-folder-input\').click()">' +
+                  '<i class="fa-solid fa-folder-open"></i> Ganzen Ordner wählen' +
+                '</button>' +
+              '</div>' +
+            '</div>' +
+
+            '<div style="display: flex; flex-direction: column; gap: 6px;">' +
+              '<div class="param-label" style="font-size: 11px; color: var(--text-muted);">Ausgewählter Pfad / Quelle:</div>' +
+              '<input type="text" class="input-control" id="wiz-bgr-path" value="' + wizardData.bgr.sourcePath + '" oninput="wizardData.bgr.sourcePath = this.value" placeholder="./bilder oder C:\\\\Fotos">' +
+              '<div id="wiz-bgr-hint" style="font-size: 11px; color: var(--accent); font-weight: 600;">' +
+                '<i class="fa-solid fa-check"></i> ' + wizardData.bgr.sourceName +
+              '</div>' +
+            '</div>' +
+
+            '<div class="wizard-footer-nav">' +
+              '<div></div>' +
+              '<button type="button" class="btn-primary" style="width: auto; padding: 10px 24px;" onclick="nextWizardStep()">' +
+                'Weiter <i class="fa-solid fa-chevron-right"></i>' +
+              '</button>' +
+            '</div>';
+
+          setupWizDropzone('wiz-bgr-dropzone', function(name, isDir) {
+            wizardData.bgr.sourcePath = name;
+            wizardData.bgr.sourceName = (isDir ? 'Ordner: ' : 'Datei: ') + name;
+            var p = document.getElementById('wiz-bgr-path');
+            if (p) p.value = name;
+            var h = document.getElementById('wiz-bgr-hint');
+            if (h) h.innerHTML = '<i class="fa-solid fa-check"></i> ' + wizardData.bgr.sourceName;
+          });
+          return;
+        }
+
+        if (currentStep === 2) {
+          body.innerHTML = 
+            '<div class="wizard-step-header">' +
+              '<div class="wizard-step-title">In welchem Modus möchtest du freistellen?</div>' +
+              '<div class="wizard-step-subtitle">Wähle die passende KI-Präzision für deine Motive.</div>' +
+            '</div>' +
+            '<div class="wizard-tiles-grid">' +
+              '<div class="wizard-tile ' + (wizardData.bgr.preset === 'fast' ? 'active' : '') + '" onclick="selectWizPreset(\'fast\')">' +
+                '<div class="wizard-tile-header">' +
+                  '<i class="fa-solid fa-bolt wizard-tile-icon" style="color: var(--amber);"></i>' +
+                  '<span class="wizard-tile-title">Schnell</span>' +
+                '</div>' +
+                '<div class="wizard-tile-desc">BiRefNet Lite (MIT). Hohe Geschwindigkeit, optimal für schnelle Previews und Layouts.</div>' +
+                '<span style="font-size: 10px; font-family: var(--font-mono); color: var(--cyan); margin-top: auto;">--fast</span>' +
+              '</div>' +
+
+              '<div class="wizard-tile ' + (wizardData.bgr.preset === 'standard' ? 'active' : '') + '" onclick="selectWizPreset(\'standard\')">' +
+                '<div class="wizard-tile-header">' +
+                  '<i class="fa-solid fa-crosshairs wizard-tile-icon" style="color: var(--accent);"></i>' +
+                  '<span class="wizard-tile-title">Standard</span>' +
+                '</div>' +
+                '<div class="wizard-tile-desc">BiRefNet High-Res. Ausgewogene Randschärfe für fast alle Produkt- & Porträtmotive.</div>' +
+                '<span style="font-size: 10px; font-family: var(--font-mono); color: var(--accent); margin-top: auto;">Standard</span>' +
+              '</div>' +
+
+              '<div class="wizard-tile ' + (wizardData.bgr.preset === 'dyb' ? 'active' : '') + '" onclick="selectWizPreset(\'dyb\')">' +
+                '<div class="wizard-tile-header">' +
+                  '<i class="fa-solid fa-gem wizard-tile-icon" style="color: var(--violet);"></i>' +
+                  '<span class="wizard-tile-title">Höchste Präzision</span>' +
+                '</div>' +
+                '<div class="wizard-tile-desc">Multi-Modell Ensemble + Guided Matting. Höchste Detailtreue für feine Haare &amp; Texturen.</div>' +
+                '<span style="font-size: 10px; font-family: var(--font-mono); color: var(--violet); margin-top: auto;">--dyb</span>' +
+              '</div>' +
+            '</div>' +
+
+            '<div class="wizard-footer-nav">' +
+              '<button type="button" class="btn-secondary" onclick="prevWizardStep()">' +
+                '<i class="fa-solid fa-chevron-left"></i> Zurück' +
+              '</button>' +
+              '<button type="button" class="btn-primary" style="width: auto; padding: 10px 24px;" onclick="nextWizardStep()">' +
+                'Weiter <i class="fa-solid fa-chevron-right"></i>' +
+              '</button>' +
+            '</div>';
+          return;
+        }
+
+        if (currentStep === 3) {
+          body.innerHTML = 
+            '<div class="wizard-step-header">' +
+              '<div class="wizard-step-title">In welchem Format sollen die fertigen Bilder gespeichert werden?</div>' +
+              '<div class="wizard-step-subtitle">Beide Formate unterstützen vollständige Alpha-Transparenz.</div>' +
+            '</div>' +
+            '<div class="wizard-tiles-grid" style="grid-template-columns: 1fr 1fr;">' +
+              '<div class="wizard-tile ' + (wizardData.bgr.format === 'png' ? 'active' : '') + '" onclick="selectWizFormat(\'png\')">' +
+                '<div class="wizard-tile-header">' +
+                  '<i class="fa-solid fa-file-image wizard-tile-icon" style="color: var(--accent);"></i>' +
+                  '<span class="wizard-tile-title">PNG (Verlustfrei)</span>' +
+                '</div>' +
+                '<div class="wizard-tile-desc">Verlustfreie 8-Bit Alpha-Transparenz. Maximale Qualität für Print, Layouts &amp; Weiterbearbeitung.</div>' +
+              '</div>' +
+
+              '<div class="wizard-tile ' + (wizardData.bgr.format === 'webp' ? 'active' : '') + '" onclick="selectWizFormat(\'webp\')">' +
+                '<div class="wizard-tile-header">' +
+                  '<i class="fa-solid fa-globe wizard-tile-icon" style="color: var(--cyan);"></i>' +
+                  '<span class="wizard-tile-title">WebP (Kompakt)</span>' +
+                '</div>' +
+                '<div class="wizard-tile-desc">Moderne Web-Kompression mit Transparenz. Bis zu 70% kleinere Dateigröße für Webseiten.</div>' +
+              '</div>' +
+            '</div>' +
+
+            '<div class="wizard-footer-nav">' +
+              '<button type="button" class="btn-secondary" onclick="prevWizardStep()">' +
+                '<i class="fa-solid fa-chevron-left"></i> Zurück' +
+              '</button>' +
+              '<button type="button" class="btn-primary" style="width: auto; padding: 10px 24px;" onclick="nextWizardStep()">' +
+                'Weiter <i class="fa-solid fa-chevron-right"></i>' +
+              '</button>' +
+            '</div>';
+          return;
+        }
+
+        if (currentStep === 4) {
+          body.innerHTML = 
+            '<div class="wizard-step-header">' +
+              '<div class="wizard-step-title">Wo sollen die fertigen Bilder landen?</div>' +
+              '<div class="wizard-step-subtitle">Gib das gewünschte Zielverzeichnis an. Fehlende Ordner werden automatisch erstellt.</div>' +
+            '</div>' +
+            '<div style="display: flex; flex-direction: column; gap: 10px;">' +
+              '<input type="text" class="input-control" id="wiz-bgr-target" value="' + wizardData.bgr.targetDir + '" oninput="wizardData.bgr.targetDir = this.value" placeholder="./freigestellt">' +
+              '<div style="display: flex; gap: 8px;">' +
+                '<button type="button" class="btn-secondary" style="font-size: 11px; padding: 5px 10px;" onclick="setWizTargetDir(\'./freigestellt\')">./freigestellt</button>' +
+                '<button type="button" class="btn-secondary" style="font-size: 11px; padding: 5px 10px;" onclick="setWizTargetDir(\'./output\')">./output</button>' +
+                '<button type="button" class="btn-secondary" style="font-size: 11px; padding: 5px 10px;" onclick="setWizTargetDir(\'./cutouts\')">./cutouts</button>' +
+              '</div>' +
+            '</div>' +
+
+            '<div class="wizard-footer-nav">' +
+              '<button type="button" class="btn-secondary" onclick="prevWizardStep()">' +
+                '<i class="fa-solid fa-chevron-left"></i> Zurück' +
+              '</button>' +
+              '<button type="button" class="btn-primary" style="width: auto; padding: 10px 24px;" onclick="nextWizardStep()">' +
+                'Befehl erstellen <i class="fa-solid fa-chevron-right"></i>' +
+              '</button>' +
+            '</div>';
+          return;
+        }
+      }
+
+      // Steps for Build
+      if (currentWizard === 'build') {
+        if (currentStep === 1) {
+          var toadFiles = allFiles.filter(function(f) { return f.path.endsWith('.toad'); });
+          var optionsHtml = toadFiles.map(function(f) {
+            return '<option value="' + f.path + '" ' + (f.path === wizardData.build.file ? 'selected' : '') + '>' + f.name + ' (' + f.path + ')</option>';
+          }).join('');
+          body.innerHTML = 
+            '<div class="wizard-step-header">' +
+              '<div class="wizard-step-title">Welches Design möchtest du bauen?</div>' +
+              '<div class="wizard-step-subtitle">Wähle eine .toad Datei aus deinem Projekt oder gib den Pfad direkt ein.</div>' +
+            '</div>' +
+            '<div style="display: flex; flex-direction: column; gap: 10px;">' +
+              (toadFiles.length > 0 ? '<select class="select-control" onchange="wizardData.build.file = this.value">' + optionsHtml + '</select>' : '') +
+              '<input type="text" class="input-control" value="' + wizardData.build.file + '" oninput="wizardData.build.file = this.value" placeholder="dateiname.toad">' +
+            '</div>' +
+            '<div class="wizard-footer-nav">' +
+              '<div></div>' +
+              '<button type="button" class="btn-primary" style="width: auto; padding: 10px 24px;" onclick="nextWizardStep()">' +
+                'Weiter <i class="fa-solid fa-chevron-right"></i>' +
+              '</button>' +
+            '</div>';
+          return;
+        }
+        if (currentStep === 2) {
+          body.innerHTML = 
+            '<div class="wizard-step-header">' +
+              '<div class="wizard-step-title">Welche Ausgabe-Formate möchtest du generieren?</div>' +
+              '<div class="wizard-step-subtitle">TOAD kann Rastergrafiken, Vektoren und native Photoshop-Dateien ausgeben.</div>' +
+            '</div>' +
+            '<div class="wizard-tiles-grid">' +
+              '<div class="wizard-tile ' + (wizardData.build.format === 'png' ? 'active' : '') + '" onclick="selectWizBuildFormat(\'png\')">' +
+                '<div class="wizard-tile-header"><i class="fa-solid fa-file-image wizard-tile-icon"></i><span class="wizard-tile-title">PNG</span></div>' +
+                '<div class="wizard-tile-desc">Standard-Grafikformat mit Transparenz.</div>' +
+              '</div>' +
+              '<div class="wizard-tile ' + (wizardData.build.format === 'webp' ? 'active' : '') + '" onclick="selectWizBuildFormat(\'webp\')">' +
+                '<div class="wizard-tile-header"><i class="fa-solid fa-globe wizard-tile-icon" style="color: var(--cyan);"></i><span class="wizard-tile-title">WebP</span></div>' +
+                '<div class="wizard-tile-desc">Hochkomprimiert für Webseiten.</div>' +
+              '</div>' +
+              '<div class="wizard-tile ' + (wizardData.build.format === 'jpg' ? 'active' : '') + '" onclick="selectWizBuildFormat(\'jpg\')">' +
+                '<div class="wizard-tile-header"><i class="fa-solid fa-camera wizard-tile-icon" style="color: var(--amber);"></i><span class="wizard-tile-title">JPEG</span></div>' +
+                '<div class="wizard-tile-desc">Ideal für Fotocollagen ohne Alpha.</div>' +
+              '</div>' +
+              '<div class="wizard-tile ' + (wizardData.build.format === 'psd' ? 'active' : '') + '" onclick="selectWizBuildFormat(\'psd\')">' +
+                '<div class="wizard-tile-header"><i class="fa-solid fa-layer-group wizard-tile-icon" style="color: var(--violet);"></i><span class="wizard-tile-title">PSD (Photoshop)</span></div>' +
+                '<div class="wizard-tile-desc">Mit echten bearbeitbaren Ebenen.</div>' +
+              '</div>' +
+              '<div class="wizard-tile ' + (wizardData.build.format === 'all' ? 'active' : '') + '" onclick="selectWizBuildFormat(\'all\')">' +
+                '<div class="wizard-tile-header"><i class="fa-solid fa-boxes-stacked wizard-tile-icon" style="color: var(--rose);"></i><span class="wizard-tile-title">Alle Formate</span></div>' +
+                '<div class="wizard-tile-desc">PNG, WebP, JPEG und PSD synchron.</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="wizard-footer-nav">' +
+              '<button type="button" class="btn-secondary" onclick="prevWizardStep()"><i class="fa-solid fa-chevron-left"></i> Zurück</button>' +
+              '<button type="button" class="btn-primary" style="width: auto; padding: 10px 24px;" onclick="nextWizardStep()">Weiter <i class="fa-solid fa-chevron-right"></i></button>' +
+            '</div>';
+          return;
+        }
+        if (currentStep === 3) {
+          body.innerHTML = 
+            '<div class="wizard-step-header">' +
+              '<div class="wizard-step-title">In welcher Skalierung / Auflösung?</div>' +
+              '<div class="wizard-step-subtitle">Skaliere verlustfrei mit sub-pixelgenauer Vektorberechnung.</div>' +
+            '</div>' +
+            '<div class="wizard-tiles-grid" style="grid-template-columns: repeat(3, 1fr);">' +
+              '<div class="wizard-tile ' + (wizardData.build.scale === '1' ? 'active' : '') + '" onclick="selectWizBuildScale(\'1\')">' +
+                '<div class="wizard-tile-header"><span class="wizard-tile-title">1x (Original)</span></div>' +
+                '<div class="wizard-tile-desc">Standard 72 DPI für Bildschirmdarstellung.</div>' +
+              '</div>' +
+              '<div class="wizard-tile ' + (wizardData.build.scale === '2' ? 'active' : '') + '" onclick="selectWizBuildScale(\'2\')">' +
+                '<div class="wizard-tile-header"><span class="wizard-tile-title">2x (Retina)</span></div>' +
+                '<div class="wizard-tile-desc">Doppelte Auflösung für hochauflösende Displays.</div>' +
+              '</div>' +
+              '<div class="wizard-tile ' + (wizardData.build.scale === '4' ? 'active' : '') + '" onclick="selectWizBuildScale(\'4\')">' +
+                '<div class="wizard-tile-header"><span class="wizard-tile-title">4x (Ultra HD / Print)</span></div>' +
+                '<div class="wizard-tile-desc">Vierfache Auflösung (300 DPI) für Posterdruck.</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="wizard-footer-nav">' +
+              '<button type="button" class="btn-secondary" onclick="prevWizardStep()"><i class="fa-solid fa-chevron-left"></i> Zurück</button>' +
+              '<button type="button" class="btn-primary" style="width: auto; padding: 10px 24px;" onclick="nextWizardStep()">Befehl erstellen <i class="fa-solid fa-chevron-right"></i></button>' +
+            '</div>';
+          return;
+        }
+      }
+
+      // Steps for Motion
+      if (currentWizard === 'motion') {
+        if (currentStep === 1) {
+          var toadmFiles = allFiles.filter(function(f) { return f.path.endsWith('.toadm'); });
+          var optionsHtml = toadmFiles.map(function(f) {
+            return '<option value="' + f.path + '" ' + (f.path === wizardData.motion.file ? 'selected' : '') + '>' + f.name + ' (' + f.path + ')</option>';
+          }).join('');
+          body.innerHTML = 
+            '<div class="wizard-step-header">' +
+              '<div class="wizard-step-title">Welche Motion-Datei möchtest du rendern?</div>' +
+              '<div class="wizard-step-subtitle">Wähle eine .toadm Keyframe-Animationsdatei.</div>' +
+            '</div>' +
+            '<div style="display: flex; flex-direction: column; gap: 10px;">' +
+              (toadmFiles.length > 0 ? '<select class="select-control" onchange="wizardData.motion.file = this.value">' + optionsHtml + '</select>' : '') +
+              '<input type="text" class="input-control" value="' + wizardData.motion.file + '" oninput="wizardData.motion.file = this.value" placeholder="animation.toadm">' +
+            '</div>' +
+            '<div class="wizard-footer-nav">' +
+              '<div></div>' +
+              '<button type="button" class="btn-primary" style="width: auto; padding: 10px 24px;" onclick="nextWizardStep()">Weiter <i class="fa-solid fa-chevron-right"></i></button>' +
+            '</div>';
+          return;
+        }
+        if (currentStep === 2) {
+          body.innerHTML = 
+            '<div class="wizard-step-header">' +
+              '<div class="wizard-step-title">In welchem Video-Format soll exportiert werden?</div>' +
+              '<div class="wizard-step-subtitle">Wähle das Format für deinen Einsatzzweck.</div>' +
+            '</div>' +
+            '<div class="wizard-tiles-grid">' +
+              '<div class="wizard-tile ' + (wizardData.motion.format === 'mp4' ? 'active' : '') + '" onclick="selectWizMotionFormat(\'mp4\')">' +
+                '<div class="wizard-tile-header"><i class="fa-solid fa-video wizard-tile-icon"></i><span class="wizard-tile-title">MP4 (H.264)</span></div>' +
+                '<div class="wizard-tile-desc">Universell kompatibel für alle Plattformen und Player.</div>' +
+              '</div>' +
+              '<div class="wizard-tile ' + (wizardData.motion.format === 'webm' ? 'active' : '') + '" onclick="selectWizMotionFormat(\'webm\')">' +
+                '<div class="wizard-tile-header"><i class="fa-solid fa-film wizard-tile-icon" style="color: var(--cyan);"></i><span class="wizard-tile-title">WebM (VP9)</span></div>' +
+                '<div class="wizard-tile-desc">Schlank für Web-Integration mit Alpha-Kanal.</div>' +
+              '</div>' +
+              '<div class="wizard-tile ' + (wizardData.motion.format === 'gif' ? 'active' : '') + '" onclick="selectWizMotionFormat(\'gif\')">' +
+                '<div class="wizard-tile-header"><i class="fa-solid fa-play wizard-tile-icon" style="color: var(--amber);"></i><span class="wizard-tile-title">GIF (Animiert)</span></div>' +
+                '<div class="wizard-tile-desc">Perfekt für Messenger, GitHub Readmes und Social.</div>' +
+              '</div>' +
+              '<div class="wizard-tile ' + (wizardData.motion.format === 'frames' ? 'active' : '') + '" onclick="selectWizMotionFormat(\'frames\')">' +
+                '<div class="wizard-tile-header"><i class="fa-solid fa-images wizard-tile-icon" style="color: var(--violet);"></i><span class="wizard-tile-title">Frames (PNG)</span></div>' +
+                '<div class="wizard-tile-desc">Exportiert jedes Frame als einzelnes PNG.</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="wizard-footer-nav">' +
+              '<button type="button" class="btn-secondary" onclick="prevWizardStep()"><i class="fa-solid fa-chevron-left"></i> Zurück</button>' +
+              '<button type="button" class="btn-primary" style="width: auto; padding: 10px 24px;" onclick="nextWizardStep()">Weiter <i class="fa-solid fa-chevron-right"></i></button>' +
+            '</div>';
+          return;
+        }
+        if (currentStep === 3) {
+          body.innerHTML = 
+            '<div class="wizard-step-header">' +
+              '<div class="wizard-step-title">Mit welcher Framerate rendern?</div>' +
+              '<div class="wizard-step-subtitle">Höhere Frameraten erzeugen ultra-flüssige Bewegungen.</div>' +
+            '</div>' +
+            '<div class="wizard-tiles-grid" style="grid-template-columns: repeat(3, 1fr);">' +
+              '<div class="wizard-tile ' + (wizardData.motion.fps === '30' ? 'active' : '') + '" onclick="selectWizMotionFps(\'30\')">' +
+                '<div class="wizard-tile-header"><span class="wizard-tile-title">30 FPS</span></div>' +
+                '<div class="wizard-tile-desc">Standard für Web &amp; kompakte Dateigrößen.</div>' +
+              '</div>' +
+              '<div class="wizard-tile ' + (wizardData.motion.fps === '60' ? 'active' : '') + '" onclick="selectWizMotionFps(\'60\')">' +
+                '<div class="wizard-tile-header"><span class="wizard-tile-title">60 FPS (Flüssig)</span></div>' +
+                '<div class="wizard-tile-desc">Empfohlen für moderne UI- &amp; Motion-Designs.</div>' +
+              '</div>' +
+              '<div class="wizard-tile ' + (wizardData.motion.fps === '120' ? 'active' : '') + '" onclick="selectWizMotionFps(\'120\')">' +
+                '<div class="wizard-tile-header"><span class="wizard-tile-title">120 FPS</span></div>' +
+                '<div class="wizard-tile-desc">Ultra-Smooth für High-Refresh Displays.</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="wizard-footer-nav">' +
+              '<button type="button" class="btn-secondary" onclick="prevWizardStep()"><i class="fa-solid fa-chevron-left"></i> Zurück</button>' +
+              '<button type="button" class="btn-primary" style="width: auto; padding: 10px 24px;" onclick="nextWizardStep()">Befehl erstellen <i class="fa-solid fa-chevron-right"></i></button>' +
+            '</div>';
+          return;
+        }
+      }
+
+      // Steps for Convert
+      if (currentWizard === 'convert') {
+        if (currentStep === 1) {
+          body.innerHTML = 
+            '<div class="wizard-step-header">' +
+              '<div class="wizard-step-title">Was möchtest du konvertieren?</div>' +
+              '<div class="wizard-step-subtitle">Ziehe ein Bild oder eine Photoshop PSD-Datei hinein oder wähle sie aus.</div>' +
+            '</div>' +
+            '<div class="dropzone" id="wiz-convert-dropzone" style="padding: 24px;" onclick="document.getElementById(\'wiz-convert-input\').click()">' +
+              '<input type="file" id="wiz-convert-input" style="display:none;" accept="image/*,.psd,.svg,.pdf,.ico,.avif" onchange="onWizConvertFile(this.files[0])">' +
+              '<i class="fa-solid fa-cloud-arrow-up dropzone-icon" style="font-size: 32px;"></i>' +
+              '<div style="font-size: 14px; font-weight: 700; color: var(--text); margin-top: 6px;">Bild oder PSD hier ablegen</div>' +
+              '<div style="font-size: 11px; color: var(--text-dim); margin-top: 4px;">WebP, JPG, PNG, AVIF, SVG, PSD, PDF, ICO</div>' +
+              '<div style="margin-top: 12px;" onclick="event.stopPropagation()">' +
+                '<button type="button" class="btn-secondary" onclick="document.getElementById(\'wiz-convert-input\').click()">' +
+                  '<i class="fa-solid fa-file"></i> Datei auswählen' +
+                '</button>' +
+              '</div>' +
+            '</div>' +
+            '<div style="display: flex; flex-direction: column; gap: 6px;">' +
+              '<div class="param-label" style="font-size: 11px; color: var(--text-muted);">Quell-Datei:</div>' +
+              '<input type="text" class="input-control" id="wiz-convert-file" value="' + wizardData.convert.file + '" oninput="wizardData.convert.file = this.value" placeholder="bild.png oder layout.psd">' +
+            '</div>' +
+            '<div class="wizard-footer-nav">' +
+              '<div></div>' +
+              '<button type="button" class="btn-primary" style="width: auto; padding: 10px 24px;" onclick="nextWizardStep()">Weiter <i class="fa-solid fa-chevron-right"></i></button>' +
+            '</div>';
+          setupWizDropzone('wiz-convert-dropzone', function(name) {
+            wizardData.convert.file = name;
+            var el = document.getElementById('wiz-convert-file');
+            if (el) el.value = name;
+          });
+          return;
+        }
+        if (currentStep === 2) {
+          body.innerHTML = 
+            '<div class="wizard-step-header">' +
+              '<div class="wizard-step-title">In welches Zielformat konvertieren?</div>' +
+              '<div class="wizard-step-subtitle">Wähle das gewünschte Format.</div>' +
+            '</div>' +
+            '<div class="wizard-tiles-grid">' +
+              '<div class="wizard-tile ' + (wizardData.convert.format === 'webp' ? 'active' : '') + '" onclick="selectWizConvertFormat(\'webp\')">' +
+                '<div class="wizard-tile-header"><i class="fa-solid fa-bolt wizard-tile-icon" style="color: var(--accent);"></i><span class="wizard-tile-title">WebP</span></div>' +
+                '<div class="wizard-tile-desc">Moderne Web-Kompression, bis zu 70% kleiner.</div>' +
+              '</div>' +
+              '<div class="wizard-tile ' + (wizardData.convert.format === 'png' ? 'active' : '') + '" onclick="selectWizConvertFormat(\'png\')">' +
+                '<div class="wizard-tile-header"><i class="fa-solid fa-file-image wizard-tile-icon"></i><span class="wizard-tile-title">PNG</span></div>' +
+                '<div class="wizard-tile-desc">Verlustfrei mit 8-Bit Alpha-Transparenz.</div>' +
+              '</div>' +
+              '<div class="wizard-tile ' + (wizardData.convert.format === 'jpg' ? 'active' : '') + '" onclick="selectWizConvertFormat(\'jpg\')">' +
+                '<div class="wizard-tile-header"><i class="fa-solid fa-camera wizard-tile-icon" style="color: var(--amber);"></i><span class="wizard-tile-title">JPEG</span></div>' +
+                '<div class="wizard-tile-desc">Universell für Web &amp; Fotoanzeige.</div>' +
+              '</div>' +
+              '<div class="wizard-tile ' + (wizardData.convert.format === 'avif' ? 'active' : '') + '" onclick="selectWizConvertFormat(\'avif\')">' +
+                '<div class="wizard-tile-header"><i class="fa-solid fa-sparkles wizard-tile-icon" style="color: var(--cyan);"></i><span class="wizard-tile-title">AVIF</span></div>' +
+                '<div class="wizard-tile-desc">Next-Gen Ultra-Kompression für maximale Performance.</div>' +
+              '</div>' +
+              '<div class="wizard-tile ' + (wizardData.convert.format === 'svg' ? 'active' : '') + '" onclick="selectWizConvertFormat(\'svg\')">' +
+                '<div class="wizard-tile-header"><i class="fa-solid fa-bezier-curve wizard-tile-icon" style="color: var(--violet);"></i><span class="wizard-tile-title">SVG</span></div>' +
+                '<div class="wizard-tile-desc">Skalierbare Vektorgrafik.</div>' +
+              '</div>' +
+              '<div class="wizard-tile ' + (wizardData.convert.format === 'ico' ? 'active' : '') + '" onclick="selectWizConvertFormat(\'ico\')">' +
+                '<div class="wizard-tile-header"><i class="fa-solid fa-icons wizard-tile-icon"></i><span class="wizard-tile-title">Favicon (ICO)</span></div>' +
+                '<div class="wizard-tile-desc">Website-Icon in 16x16 bis 256x256.</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="wizard-footer-nav">' +
+              '<button type="button" class="btn-secondary" onclick="prevWizardStep()"><i class="fa-solid fa-chevron-left"></i> Zurück</button>' +
+              '<button type="button" class="btn-primary" style="width: auto; padding: 10px 24px;" onclick="nextWizardStep()">Weiter <i class="fa-solid fa-chevron-right"></i></button>' +
+            '</div>';
+          return;
+        }
+        if (currentStep === 3) {
+          body.innerHTML = 
+            '<div class="wizard-step-header">' +
+              '<div class="wizard-step-title">Welche Qualität &amp; Komprimierung?</div>' +
+              '<div class="wizard-step-subtitle">Wähle die Balance zwischen Dateigröße und Schärfe.</div>' +
+            '</div>' +
+            '<div class="wizard-tiles-grid" style="grid-template-columns: repeat(2, 1fr);">' +
+              '<div class="wizard-tile ' + (wizardData.convert.quality === '80' ? 'active' : '') + '" onclick="selectWizConvertQuality(\'80\')">' +
+                '<div class="wizard-tile-header"><span class="wizard-tile-title">Web-Standard (80%)</span></div>' +
+                '<div class="wizard-tile-desc">Ausgezeichnete Balance für fast alle Einsätze.</div>' +
+              '</div>' +
+              '<div class="wizard-tile ' + (wizardData.convert.quality === '92' ? 'active' : '') + '" onclick="selectWizConvertQuality(\'92\')">' +
+                '<div class="wizard-tile-header"><span class="wizard-tile-title">Hohe Qualität (92%)</span></div>' +
+                '<div class="wizard-tile-desc">Kaum sichtbare Kompression für Portfolios.</div>' +
+              '</div>' +
+              '<div class="wizard-tile ' + (wizardData.convert.quality === '60' ? 'active' : '') + '" onclick="selectWizConvertQuality(\'60\')">' +
+                '<div class="wizard-tile-header"><span class="wizard-tile-title">Kompakt (60%)</span></div>' +
+                '<div class="wizard-tile-desc">Minimale Dateigröße für schnelles Laden.</div>' +
+              '</div>' +
+              '<div class="wizard-tile ' + (wizardData.convert.quality === '100' ? 'active' : '') + '" onclick="selectWizConvertQuality(\'100\')">' +
+                '<div class="wizard-tile-header"><span class="wizard-tile-title">Maximal (100%)</span></div>' +
+                '<div class="wizard-tile-desc">Verlustfrei ohne Qualitätsabstriche.</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="wizard-footer-nav">' +
+              '<button type="button" class="btn-secondary" onclick="prevWizardStep()"><i class="fa-solid fa-chevron-left"></i> Zurück</button>' +
+              '<button type="button" class="btn-primary" style="width: auto; padding: 10px 24px;" onclick="nextWizardStep()">Befehl erstellen <i class="fa-solid fa-chevron-right"></i></button>' +
+            '</div>';
+          return;
+        }
+      }
+
+      // Steps for Report
+      if (currentWizard === 'report') {
+        if (currentStep === 1) {
+          var toadFiles = allFiles.filter(function(f) { return f.path.endsWith('.toad'); });
+          var optionsHtml = toadFiles.map(function(f) {
+            return '<option value="' + f.path + '" ' + (f.path === wizardData.report.file ? 'selected' : '') + '>' + f.name + ' (' + f.path + ')</option>';
+          }).join('');
+          body.innerHTML = 
+            '<div class="wizard-step-header">' +
+              '<div class="wizard-step-title">Welches Design soll analysiert werden?</div>' +
+              '<div class="wizard-step-subtitle">Wähle eine .toad Datei für den Tiefen-Audit.</div>' +
+            '</div>' +
+            '<div style="display: flex; flex-direction: column; gap: 10px;">' +
+              (toadFiles.length > 0 ? '<select class="select-control" onchange="wizardData.report.file = this.value">' + optionsHtml + '</select>' : '') +
+              '<input type="text" class="input-control" value="' + wizardData.report.file + '" oninput="wizardData.report.file = this.value" placeholder="design.toad">' +
+            '</div>' +
+            '<div class="wizard-footer-nav">' +
+              '<div></div>' +
+              '<button type="button" class="btn-primary" style="width: auto; padding: 10px 24px;" onclick="nextWizardStep()">Weiter <i class="fa-solid fa-chevron-right"></i></button>' +
+            '</div>';
+          return;
+        }
+        if (currentStep === 2) {
+          body.innerHTML = 
+            '<div class="wizard-step-header">' +
+              '<div class="wizard-step-title">Welche Audit-Prüfungen durchführen?</div>' +
+              '<div class="wizard-step-subtitle">Wähle die gewünschte Analysetiefe.</div>' +
+            '</div>' +
+            '<div class="wizard-tiles-grid" style="grid-template-columns: repeat(2, 1fr);">' +
+              '<div class="wizard-tile ' + (wizardData.report.mode === 'fixes' ? 'active' : '') + '" onclick="selectWizReportMode(\'fixes\')">' +
+                '<div class="wizard-tile-header"><i class="fa-solid fa-wrench wizard-tile-icon" style="color: var(--accent);"></i><span class="wizard-tile-title">Mit Auto-Fixes (--fixes)</span></div>' +
+                '<div class="wizard-tile-desc">Zeigt direkte Lösungsvorschläge und Korrekturen für jeden Befund.</div>' +
+              '</div>' +
+              '<div class="wizard-tile ' + (wizardData.report.mode === 'standard' ? 'active' : '') + '" onclick="selectWizReportMode(\'standard\')">' +
+                '<div class="wizard-tile-header"><i class="fa-solid fa-chart-simple wizard-tile-icon" style="color: var(--cyan);"></i><span class="wizard-tile-title">Standard-Audit</span></div>' +
+                '<div class="wizard-tile-desc">Vollständiger Gesamtbericht über WCAG, Typo und Layout.</div>' +
+              '</div>' +
+              '<div class="wizard-tile ' + (wizardData.report.mode === 'slop' ? 'active' : '') + '" onclick="selectWizReportMode(\'slop\')">' +
+                '<div class="wizard-tile-header"><i class="fa-solid fa-shield-halved wizard-tile-icon" style="color: var(--amber);"></i><span class="wizard-tile-title">Anti-AI-Slop Only (--slop-only)</span></div>' +
+                '<div class="wizard-tile-desc">Fokus ausschließlich auf generische KI-Slop-Muster und Kitsch.</div>' +
+              '</div>' +
+              '<div class="wizard-tile ' + (wizardData.report.mode === 'strict' ? 'active' : '') + '" onclick="selectWizReportMode(\'strict\')">' +
+                '<div class="wizard-tile-header"><i class="fa-solid fa-triangle-exclamation wizard-tile-icon" style="color: var(--rose);"></i><span class="wizard-tile-title">Strenge Prüfung (--strict)</span></div>' +
+                '<div class="wizard-tile-desc">Bricht mit Fehlercode ab, falls auch nur eine Warnung existiert.</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="wizard-footer-nav">' +
+              '<button type="button" class="btn-secondary" onclick="prevWizardStep()"><i class="fa-solid fa-chevron-left"></i> Zurück</button>' +
+              '<button type="button" class="btn-primary" style="width: auto; padding: 10px 24px;" onclick="nextWizardStep()">Befehl erstellen <i class="fa-solid fa-chevron-right"></i></button>' +
+            '</div>';
+          return;
+        }
+      }
+    }
+
+    // Helper functions for tile selections
+    function selectWizPreset(p) { wizardData.bgr.preset = p; renderWizardStep(); }
+    function selectWizFormat(f) { wizardData.bgr.format = f; renderWizardStep(); }
+    function setWizTargetDir(d) { wizardData.bgr.targetDir = d; renderWizardStep(); }
+    function selectWizBuildFormat(f) { wizardData.build.format = f; renderWizardStep(); }
+    function selectWizBuildScale(s) { wizardData.build.scale = s; renderWizardStep(); }
+    function selectWizMotionFormat(f) { wizardData.motion.format = f; renderWizardStep(); }
+    function selectWizMotionFps(f) { wizardData.motion.fps = f; renderWizardStep(); }
+    function selectWizConvertFormat(f) { wizardData.convert.format = f; renderWizardStep(); }
+    function selectWizConvertQuality(q) { wizardData.convert.quality = q; renderWizardStep(); }
+    function selectWizReportMode(m) { wizardData.report.mode = m; renderWizardStep(); }
+
+    function onWizBgrFiles(files) {
+      if (!files || files.length === 0) return;
+      if (files.length === 1) {
+        wizardData.bgr.sourcePath = files[0].name;
+        wizardData.bgr.sourceName = 'Datei: ' + files[0].name;
+      } else {
+        wizardData.bgr.sourcePath = files[0].name;
+        wizardData.bgr.sourceName = files.length + ' Dateien ausgewählt';
+      }
+      renderWizardStep();
+    }
+
+    function onWizBgrFolder(files) {
+      if (!files || files.length === 0) return;
+      var dirName = './bilder';
+      if (files[0] && files[0].webkitRelativePath) {
+        dirName = files[0].webkitRelativePath.split('/')[0];
+      }
+      wizardData.bgr.sourcePath = dirName;
+      wizardData.bgr.sourceName = 'Ordner: ' + dirName + ' (' + files.length + ' Bilder)';
+      renderWizardStep();
+    }
+
+    function onWizConvertFile(file) {
+      if (!file) return;
+      wizardData.convert.file = file.name;
+      renderWizardStep();
+    }
+
+    function setupWizDropzone(id, callback) {
+      setTimeout(function() {
+        var dropzone = document.getElementById(id);
+        if (!dropzone) return;
+        ['dragenter', 'dragover'].forEach(function(name) {
+          dropzone.addEventListener(name, function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzone.classList.add('dragover');
+          });
+        });
+        ['dragleave', 'drop'].forEach(function(name) {
+          dropzone.addEventListener(name, function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzone.classList.remove('dragover');
+          });
+        });
+        dropzone.addEventListener('drop', async function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          dropzone.classList.remove('dragover');
+          var items = e.dataTransfer.items;
+          if (items && items.length > 0) {
+            var entry = items[0].webkitGetAsEntry ? items[0].webkitGetAsEntry() : null;
+            if (entry && entry.isDirectory) {
+              callback(entry.name, true);
+              return;
+            }
+          }
+          var files = await extractFilesFromDataTransfer(e.dataTransfer);
+          if (files.length > 0) {
+            callback(files[0].name, false);
+          }
+        });
+      }, 50);
+    }
+
     // Initialization
-    window.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('DOMContentLoaded', function() {
       loadFiles();
       setupSplitSlider();
       setupSse();
       updateCliPreview();
       setupImageConverterDragDrop();
       setupBgRemoverDragDrop();
+      switchTab('hub');
     });
 
     // Tab Navigation
     function switchTab(tabId) {
-      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(function(b) { b.classList.remove('active'); });
+      document.querySelectorAll('.tab-view').forEach(function(v) { v.classList.remove('active'); });
 
-      const btn = Array.from(document.querySelectorAll('.nav-btn')).find(b => b.getAttribute('onclick')?.includes(tabId));
+      var btn = document.getElementById('nav-btn-' + tabId) || Array.from(document.querySelectorAll('.nav-btn')).find(function(b) { return (b.getAttribute('onclick') || '').indexOf(tabId) !== -1; });
       if (btn) btn.classList.add('active');
 
-      const target = document.getElementById('tab-' + tabId);
+      var target = document.getElementById('tab-' + tabId);
       if (target) target.classList.add('active');
 
       // Sidebar visibility: visible in Graphic, Animation, Report
-      const sidebar = document.getElementById('global-sidebar');
-      if (['graphic', 'animation', 'report'].includes(tabId)) {
+      var sidebar = document.getElementById('global-sidebar');
+      if (['graphic', 'animation', 'report'].indexOf(tabId) !== -1) {
         sidebar.style.display = 'flex';
       } else {
         sidebar.style.display = 'none';
@@ -4253,6 +5695,10 @@ export function generateStudioHtml(initialFile?: string): string {
       };
     }
     </script>
+    <div class="studio-toast" id="studio-toast">
+      <i id="studio-toast-icon" class="fa-solid fa-circle-check"></i>
+      <span id="studio-toast-msg">Meldung</span>
+    </div>
 </body>
 </html>`;
 }
