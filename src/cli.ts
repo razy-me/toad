@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 import chokidar, { FSWatcher } from 'chokidar';
 import { compileToad, BuildOptions, BuildResult } from './build.js';
 import { createPreviewServer, openBrowser, PreviewServerInstance } from './engine/previewServer.js';
-import { resolveEntryFile, getWorkspaces, addWorkspace, removeWorkspace, listAllToadFiles } from './utils/fileFinder.js';
+import { resolveEntryFile, resolveAnyFile, getWorkspaces, addWorkspace, removeWorkspace, listAllToadFiles, getConfigPath, getConfig, setConfigValue, resetConfig, DEFAULT_CONFIG } from './utils/fileFinder.js';
 import { auditDesign, formatTerminalReport, formatFixesSection, formatWarningsSection } from './tools/designAuditor.js';
 import { copyToClipboard } from './utils/clipboard.js';
 import { bundleAssets } from './tools/assetBundler.js';
@@ -459,10 +459,16 @@ export function createCli(): Command {
     .action(async (file, opts) => {
       const startTime = Date.now();
       try {
-        const resolvedPath = path.resolve(process.cwd(), file);
+        let resolvedPath = path.resolve(process.cwd(), file);
         if (!fs.existsSync(resolvedPath)) {
-          console.error(`${c.red('Error:')} File not found: ${resolvedPath}`);
-          process.exit(1);
+          const found = await resolveAnyFile(file, {
+            extensions: ['.png', '.jpg', '.jpeg', '.webp', '.avif', '.svg', '.psd', '.pdf', '.ico', '.bmp', '.tiff'],
+            description: 'image or PSD file'
+          });
+          if (!found) {
+            process.exit(1);
+          }
+          resolvedPath = found;
         }
 
         const ext = path.extname(resolvedPath).toLowerCase();
@@ -703,6 +709,130 @@ export function createCli(): Command {
 
       console.error(`\n${c.red('✖')} Unknown action "${action}". Allowed: list, add, remove\n`);
       process.exit(1);
+    });
+
+  // Command: config [action] [key] [value] (alias: settings)
+  program
+    .command('config [action] [key] [value]')
+    .alias('settings')
+    .description('View and modify persistent TOAD configuration (~/.toadrc.json)')
+    .action((action?: string, keyArg?: string, valArg?: string) => {
+      const act = (action || '').toLowerCase();
+
+      // Case: toad config path
+      if (act === 'path') {
+        console.log(getConfigPath());
+        return;
+      }
+
+      // Case: toad config reset
+      if (act === 'reset') {
+        resetConfig();
+        console.log(`\n${c.green('✔')} TOAD configuration reset to defaults.`);
+        console.log(`  Location: ${c.dim(getConfigPath())}\n`);
+        return;
+      }
+
+      // Case: toad config set <key> <val>
+      if (act === 'set') {
+        if (!keyArg) {
+          console.error(`\n${c.red('✖')} Please specify key and value: toad config set <key> <value>\n`);
+          process.exit(1);
+        }
+        if (valArg === undefined) {
+          console.error(`\n${c.red('✖')} Please specify a value for "${keyArg}": toad config set ${keyArg} <value>\n`);
+          process.exit(1);
+        }
+        const res = setConfigValue(keyArg, valArg);
+        if (res.success) {
+          console.log(`\n${c.green('✔')} ${res.message}\n`);
+        } else {
+          console.error(`\n${c.red('✖')} ${res.message}\n`);
+          process.exit(1);
+        }
+        return;
+      }
+
+      // Case: toad config get <key>
+      if (act === 'get') {
+        if (!keyArg) {
+          console.error(`\n${c.red('✖')} Please specify the configuration key: toad config get <key>\n`);
+          process.exit(1);
+        }
+        const cfg = getConfig();
+        if (keyArg in cfg) {
+          const val = cfg[keyArg];
+          if (typeof val === 'object') {
+            console.log(JSON.stringify(val, null, 2));
+          } else {
+            console.log(String(val));
+          }
+        } else {
+          console.error(`\n${c.yellow('⚠')} Setting "${keyArg}" is not defined.\n`);
+          process.exit(1);
+        }
+        return;
+      }
+
+      // Case: toad config <key> (direct shorthand get if key exists)
+      const currentCfg = getConfig();
+      if (action && action !== 'list' && action !== 'ls' && (action in currentCfg || action in DEFAULT_CONFIG)) {
+        const val = currentCfg[action];
+        if (typeof val === 'object') {
+          console.log(JSON.stringify(val, null, 2));
+        } else {
+          console.log(String(val));
+        }
+        return;
+      }
+
+      // Default / list: display full configuration formatted
+      console.log(`\n${c.bold('🐸 TOAD Configuration')} ${c.dim(`(${getConfigPath()})`)}`);
+      console.log(`${c.dim('─'.repeat(54))}`);
+      console.log(`  ${c.bold('General Settings:')}`);
+      console.log(`  ${c.cyan('• defaultFormat       :')} ${c.yellow(String(currentCfg.defaultFormat || 'png'))}`);
+      console.log(`  ${c.cyan('• defaultQuality      :')} ${c.yellow(String(currentCfg.defaultQuality ?? 90))}%`);
+      console.log(`  ${c.cyan('• defaultScale        :')} ${c.yellow(String(currentCfg.defaultScale || 1))}x`);
+      console.log(`  ${c.cyan('• defaultOutputDir    :')} ${c.yellow(String(currentCfg.defaultOutputDir || '(neben Quelldatei)'))}`);
+      console.log(`  ${c.cyan('• outputNamingPattern :')} ${c.yellow(String(currentCfg.outputNamingPattern || '{name}{suffix}{scale}'))}`);
+      console.log(`  ${c.cyan('• overwriteExisting   :')} ${c.yellow(String(currentCfg.overwriteExisting !== false))}`);
+      console.log(`  ${c.cyan('• searchTimeoutMs     :')} ${c.yellow(String(currentCfg.searchTimeoutMs || 5000))} ms`);
+      console.log(`  ${c.cyan('• searchIgnoreDirs    :')} ${c.yellow(JSON.stringify(currentCfg.searchIgnoreDirs || []))}`);
+      console.log(`  ${c.cyan('• defaultFps          :')} ${c.yellow(String(currentCfg.defaultFps || 60))} fps`);
+      console.log(`  ${c.cyan('• defaultMotionFormat :')} ${c.yellow(String(currentCfg.defaultMotionFormat || 'mp4'))}`);
+      console.log(`  ${c.cyan('• aiDevice            :')} ${c.yellow(String(currentCfg.aiDevice || 'auto'))}`);
+      console.log(`  ${c.cyan('• autoUpdate          :')} ${c.yellow(String(currentCfg.autoUpdate !== false))}`);
+      console.log(`  ${c.cyan('• theme               :')} ${c.yellow(String(currentCfg.theme || 'dark'))}`);
+
+      const knownKeys = [
+        'workspaces', 'searchPaths', 'searchIgnoreDirs', 'searchTimeoutMs',
+        'defaultOutputDir', 'outputNamingPattern', 'overwriteExisting',
+        'defaultFps', 'defaultMotionFormat', 'defaultFormat', 'defaultQuality',
+        'defaultScale', 'aiDevice', 'autoUpdate', 'theme'
+      ];
+      const extraKeys = Object.keys(currentCfg).filter(k => !knownKeys.includes(k));
+      if (extraKeys.length > 0) {
+        console.log(`\n  ${c.bold('Custom Settings:')}`);
+        extraKeys.forEach(k => {
+          console.log(`  ${c.cyan(`• ${k.padEnd(15)}:`)} ${c.yellow(JSON.stringify(currentCfg[k]))}`);
+        });
+      }
+
+      const ws = currentCfg.workspaces || [];
+      console.log(`\n  ${c.bold(`Preferred Workspaces (${ws.length}):`)}`);
+      if (ws.length === 0) {
+        console.log(`  ${c.dim('(No workspaces registered - add via: toad workspace add <path>)')}`);
+      } else {
+        ws.forEach((w: string, i: number) => {
+          console.log(`  ${c.green(`[${i + 1}]`)} ${w}`);
+        });
+      }
+
+      console.log(`\n${c.dim('Commands:')}`);
+      console.log(`  ${c.dim('Get value :')} ${c.cyan('toad config get <key>')}  ${c.dim('(or toad settings get <key>)')}`);
+      console.log(`  ${c.dim('Set value :')} ${c.cyan('toad config set <key> <value>')}`);
+      console.log(`  ${c.dim('Reset     :')} ${c.cyan('toad config reset')}`);
+      console.log(`  ${c.dim('Dashboard :')} ${c.cyan('toad')}${c.dim(' -> 6. Reiter "Einstellungen"')}\n`);
     });
 
   // Command: list
@@ -956,24 +1086,34 @@ export function createCli(): Command {
     .command('motion <file>')
     .description('[Beta] Compile and render a TOAD Motion animation (.toadm) to video, GIF, or frames (Early Preview).')
     .option('-o, --out <path>', 'Output video, GIF, or frames path')
-    .option('-f, --format <format>', 'Export format: mp4, webm, gif, frames', 'mp4')
+    .option('-f, --format <format>', 'Export format: mp4, webm, gif, frames')
     .option('--fps <fps>', 'Frames per second override (e.g. 30 or 60)')
     .option('--ffmpeg-path <path>', 'Path to custom FFmpeg binary')
     .action(async (file: string, options: any) => {
       try {
-        const resolvedPath = path.resolve(file);
+        let resolvedPath = path.resolve(file);
         if (!fs.existsSync(resolvedPath)) {
-          console.error(`${c.red('✖')} File not found: ${c.bold(file)}`);
-          process.exit(1);
+          const found = await resolveAnyFile(file, {
+            extensions: ['.toadm', '.toad'],
+            description: 'motion file (.toadm)'
+          });
+          if (!found) {
+            process.exit(1);
+          }
+          resolvedPath = found;
         }
 
+        const cfg = getConfig();
+        const effectiveFps = options.fps ? parseInt(options.fps, 10) : (cfg.defaultFps || 60);
+        const effectiveFormat = (options.format || cfg.defaultMotionFormat || 'mp4') as any;
+
         console.log(`${c.bold('🎬 Rendering TOAD Motion:')} ${c.cyan(resolvedPath)}`);
-        const fps = options.fps ? parseInt(options.fps, 10) : undefined;
+        const fps = effectiveFps;
 
         let lastPercent = -1;
         const outResult = await compileMotion(resolvedPath, {
           outputPath: options.out,
-          format: options.format as any,
+          format: effectiveFormat,
           fps,
           ffmpegPath: options.ffmpegPath,
           onProgress: (frame: number, total: number) => {
@@ -1052,10 +1192,16 @@ export function createCli(): Command {
       }
 
       try {
-        const resolvedSource = path.resolve(source);
+        let resolvedSource = path.resolve(source);
         if (!fs.existsSync(resolvedSource)) {
-          console.error(`\n${c.red('✖')} Source not found: ${c.bold(source)}\n`);
-          process.exit(1);
+          const found = await resolveAnyFile(source, {
+            extensions: ['.png', '.jpg', '.jpeg', '.webp', '.avif', '.svg', '.bmp', '.tiff'],
+            description: 'image file'
+          });
+          if (!found) {
+            process.exit(1);
+          }
+          resolvedSource = found;
         }
 
         const isDirectory = fs.statSync(resolvedSource).isDirectory();

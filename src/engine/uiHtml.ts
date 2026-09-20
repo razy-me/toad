@@ -13,8 +13,12 @@
  * 5. Qualitäts-Audit (toad report) - Design audit dashboard with 1-click fixes
  */
 
-export function generateStudioHtml(initialFile?: string): string {
+import type { ToadConfig } from '../utils/fileFinder.js';
+
+export function generateStudioHtml(initialFile?: string, initialConfig?: ToadConfig, configPath?: string): string {
   const defaultFile = initialFile || '';
+  const safeInitialConfigJson = JSON.stringify(initialConfig || null).replace(/</g, '\\u003c');
+  const safeConfigPathJson = JSON.stringify(configPath || '').replace(/</g, '\\u003c');
 
   return `<!DOCTYPE html>
 <html lang="de">
@@ -22,6 +26,10 @@ export function generateStudioHtml(initialFile?: string): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TOAD Studio</title>
+  <script>
+    window.__INITIAL_CONFIG__ = ${safeInitialConfigJson};
+    window.__CONFIG_PATH__ = ${safeConfigPathJson};
+  </script>
   
   <!-- FontAwesome 6 Free Vector Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -1755,7 +1763,68 @@ export function generateStudioHtml(initialFile?: string): string {
     }
 
     #tab-hub.active {
-      display: flex;
+      display: block;
+      position: relative;
+    }
+
+    .hub-hero-banner {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      text-align: center;
+      padding: 38px 24px 20px;
+      z-index: 30;
+      pointer-events: none;
+      user-select: none;
+      background: linear-gradient(180deg, rgba(6, 10, 20, 0.85) 0%, rgba(6, 10, 20, 0.4) 70%, rgba(6, 10, 20, 0) 100%);
+    }
+
+    .hub-hero-title {
+      font-size: 34px;
+      font-weight: 800;
+      letter-spacing: -0.035em;
+      color: #F8FAFC;
+      line-height: 1.2;
+      margin-bottom: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-shadow: 0 2px 14px rgba(0, 0, 0, 0.9);
+      user-select: none;
+    }
+
+    .hero-char {
+      display: inline-block;
+      color: #E2E8F0;
+      animation: charSoftWave 4.5s ease-in-out infinite;
+      animation-delay: calc(var(--char-i, 0) * 0.12s);
+      will-change: color, text-shadow, transform;
+    }
+
+    .hero-char.char-space {
+      width: 0.28em;
+    }
+
+    @keyframes charSoftWave {
+      0%, 65%, 100% {
+        color: #E2E8F0;
+        text-shadow: 0 2px 14px rgba(0, 0, 0, 0.8);
+        transform: translateY(0);
+      }
+      25% {
+        color: #FFFFFF;
+        text-shadow: 0 2px 18px rgba(0, 0, 0, 0.9), 0 0 16px rgba(56, 189, 248, 0.65), 0 0 28px rgba(16, 185, 129, 0.35);
+        transform: translateY(-2px);
+      }
+    }
+
+    .hub-hero-subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      font-weight: 500;
+      text-shadow: 0 1px 8px rgba(0, 0, 0, 0.8);
+      opacity: 0.85;
     }
 
     .hub-fullscreen-columns {
@@ -1774,8 +1843,9 @@ export function generateStudioHtml(initialFile?: string): string {
       height: 100vh;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
-      padding: 56px 36px 48px;
+      justify-content: flex-start;
+      align-items: center;
+      padding: 120px 14px 50px;
       position: relative;
       cursor: pointer;
       overflow: hidden;
@@ -1835,10 +1905,18 @@ export function generateStudioHtml(initialFile?: string): string {
     }
     .hub-col.col-report:hover::before { background: var(--rose); }
 
+    .hub-col.col-settings:hover {
+      background: radial-gradient(circle at 50% 25%, rgba(56, 189, 248, 0.18) 0%, #0a1424 100%);
+      box-shadow: 0 0 60px rgba(56, 189, 248, 0.2);
+    }
+    .hub-col.col-settings:hover::before { background: #38bdf8; }
+
     .hub-col-top {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
     }
 
     .hub-col-idx {
@@ -1848,20 +1926,22 @@ export function generateStudioHtml(initialFile?: string): string {
       text-transform: uppercase;
       color: var(--text-dim);
       font-family: var(--font-mono);
+      text-align: center;
     }
 
     .hub-col-cmd {
       display: inline-block;
-      align-self: flex-start;
+      align-self: center;
       font-family: var(--font-mono);
       font-size: 11px;
       font-weight: 600;
-      padding: 4px 10px;
+      padding: 4px 12px;
       border-radius: 6px;
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(255, 255, 255, 0.08);
       color: var(--text-dim);
       transition: all 0.2s;
+      text-align: center;
     }
 
     .hub-col:hover .hub-col-cmd {
@@ -1873,19 +1953,22 @@ export function generateStudioHtml(initialFile?: string): string {
     .hub-col-body {
       display: flex;
       flex-direction: column;
+      align-items: center;
+      text-align: center;
       margin: auto 0;
-      padding: 24px 0;
+      padding: 16px 0;
+      width: 100%;
     }
 
     .hub-col-icon {
-      width: 68px;
-      height: 68px;
-      border-radius: 18px;
+      width: 72px;
+      height: 72px;
+      border-radius: 20px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 28px;
-      margin-bottom: 24px;
+      font-size: 30px;
+      margin-bottom: 22px;
       transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
@@ -1898,65 +1981,37 @@ export function generateStudioHtml(initialFile?: string): string {
     .col-motion .hub-col-icon { background: rgba(168, 85, 247, 0.14); color: var(--violet); border: 1px solid rgba(168, 85, 247, 0.3); }
     .col-convert .hub-col-icon { background: rgba(245, 158, 11, 0.14); color: var(--amber); border: 1px solid rgba(245, 158, 11, 0.3); }
     .col-report .hub-col-icon { background: rgba(244, 63, 94, 0.14); color: var(--rose); border: 1px solid rgba(244, 63, 94, 0.3); }
+    .col-settings .hub-col-icon { background: rgba(56, 189, 248, 0.14); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
 
     .hub-col-title {
-      font-size: 28px;
+      font-size: 24px;
       font-weight: 800;
       letter-spacing: -0.03em;
       color: var(--text);
-      margin: 0 0 12px 0;
+      margin: 0 0 10px 0;
+      text-align: center;
     }
 
     .hub-col-desc {
-      font-size: 13px;
-      line-height: 1.55;
+      font-size: 12.5px;
+      line-height: 1.5;
       color: var(--text-muted);
-      margin: 0 0 24px 0;
-      min-height: 40px;
-    }
-
-    .hub-col-features {
-      list-style: none;
-      padding: 0;
       margin: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+      text-align: center;
+      max-width: 220px;
     }
-
-    .hub-col-features li {
-      font-size: 12px;
-      color: var(--text-dim);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      white-space: nowrap;
-    }
-
-    .hub-col:hover .hub-col-features li {
-      color: var(--text);
-    }
-
-    .hub-col-features li i {
-      font-size: 11px;
-      color: var(--text-dim);
-    }
-
-    .col-bgr:hover .hub-col-features li i { color: var(--accent); }
-    .col-build:hover .hub-col-features li i { color: var(--cyan); }
-    .col-motion:hover .hub-col-features li i { color: var(--violet); }
-    .col-convert:hover .hub-col-features li i { color: var(--amber); }
-    .col-report:hover .hub-col-features li i { color: var(--rose); }
 
     .hub-col-footer {
       margin-top: 16px;
+      width: 100%;
     }
 
     .hub-col-action {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 14px 20px;
+      justify-content: center;
+      gap: 10px;
+      padding: 13px 20px;
       border-radius: var(--radius-sm);
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.09);
@@ -1964,6 +2019,7 @@ export function generateStudioHtml(initialFile?: string): string {
       font-weight: 700;
       color: var(--text);
       transition: all 0.25s ease;
+      width: 100%;
     }
 
     .col-bgr:hover .hub-col-action { background: var(--accent); color: #021a10; border-color: var(--accent); box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35); }
@@ -1971,6 +2027,7 @@ export function generateStudioHtml(initialFile?: string): string {
     .col-motion:hover .hub-col-action { background: var(--violet); color: #160424; border-color: var(--violet); box-shadow: 0 8px 24px rgba(168, 85, 247, 0.35); }
     .col-convert:hover .hub-col-action { background: var(--amber); color: #211300; border-color: var(--amber); box-shadow: 0 8px 24px rgba(245, 158, 11, 0.35); }
     .col-report:hover .hub-col-action { background: var(--rose); color: #220309; border-color: var(--rose); box-shadow: 0 8px 24px rgba(244, 63, 94, 0.35); }
+    .col-settings:hover .hub-col-action { background: #38bdf8; color: #031726; border-color: #38bdf8; box-shadow: 0 8px 24px rgba(56, 189, 248, 0.35); }
 
     /* Wizard Container & Step Deck */
     .wizard-deck {
@@ -2114,6 +2171,7 @@ export function generateStudioHtml(initialFile?: string): string {
       display: flex;
       align-items: center;
       gap: 10px;
+      position: relative;
     }
 
     .wizard-tile-icon {
@@ -2125,6 +2183,28 @@ export function generateStudioHtml(initialFile?: string): string {
       font-size: 13px;
       font-weight: 700;
       color: var(--text);
+      flex: 1;
+    }
+
+    .wizard-tile-check {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: transparent;
+      transition: all 0.15s ease;
+      margin-left: auto;
+    }
+
+    .wizard-tile.active .wizard-tile-check {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #021a10;
     }
 
     .wizard-tile-desc {
@@ -2356,49 +2436,33 @@ export function generateStudioHtml(initialFile?: string): string {
       transform: translateY(0);
       pointer-events: auto;
     }
+
+    /* Settings Switch Sliders */
+    #cfg-auto-update:checked + #cfg-auto-update-slider,
+    #cfg-overwrite:checked + #cfg-overwrite-slider {
+      background-color: var(--accent) !important;
+    }
+    #cfg-auto-update:checked + #cfg-auto-update-slider::before,
+    #cfg-overwrite:checked + #cfg-overwrite-slider::before {
+      transform: translateX(20px);
+    }
+    #cfg-auto-update-slider::before,
+    #cfg-overwrite-slider::before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .2s;
+      border-radius: 50%;
+    }
   </style>
 </head>
 <body>
 
-  <!-- Top Header Deck (Visible only in sub-workspaces, hidden on Hub start page) -->
-  <header id="studio-header" style="display: none;">
-    <div style="display: flex; align-items: center; gap: 12px;">
-      <button class="btn-header" onclick="switchTab('hub')" title="Zurück zum Hauptmenü (5 Bereiche)">
-        <i class="fa-solid fa-arrow-left"></i>
-        <span>Hauptmenü</span>
-      </button>
 
-      <div class="brand">
-        <div class="brand-icon"><i class="fa-solid fa-frog"></i></div>
-        <span>TOAD Studio</span>
-        <span class="brand-badge">v1.2</span>
-      </div>
-
-      <button class="btn-header" id="btn-toggle-sidebar" onclick="toggleSidebar()" title="Dateibaum ein-/ausblenden">
-        <i class="fa-solid fa-folder-tree" id="sidebar-toggle-icon"></i>
-        <span>Dateibaum</span>
-      </button>
-    </div>
-
-    <div class="header-actions">
-      <button class="btn-header" onclick="openInitModal()" title="Neues .toad Design anlegen">
-        <i class="fa-solid fa-plus"></i>
-        <span>Neu</span>
-      </button>
-      <button class="btn-header" onclick="openBundleModal()" title="Projekt-Assets bündeln">
-        <i class="fa-solid fa-box-archive"></i>
-        <span>Bundle</span>
-      </button>
-      <button class="btn-header" onclick="openWorkspacesModal()" title="Aktive Workspaces verwalten">
-        <i class="fa-solid fa-layer-group"></i>
-        <span>Workspaces</span>
-      </button>
-      <button class="btn-header btn-header-danger" onclick="shutdownServer()" title="TOAD Studio Server stoppen">
-        <i class="fa-solid fa-power-off"></i>
-        <span>Beenden</span>
-      </button>
-    </div>
-  </header>
 
   <!-- Main Workspaces Container -->
   <div class="app-body">
@@ -2424,132 +2488,85 @@ export function generateStudioHtml(initialFile?: string): string {
 
     <main class="content" style="padding: 0; margin: 0; width: 100vw; height: 100vh; overflow: hidden;">
 
-      <!-- Tab 0: Command Builder Hub (5 Full-Height Vertical Columns) -->
+      <!-- Tab 0: Command Builder Hub (6 Full-Height Vertical Columns) -->
       <div class="tab-view active" id="tab-hub">
-        <!-- MAIN MENU: 5 Full-Height Vertical Columns -->
+        <!-- Hero Header -->
+        <div class="hub-hero-banner">
+          <h1 class="hub-hero-title" aria-label="Was möchtest du tun?"><span class="hero-char" style="--char-i: 0;">W</span><span class="hero-char" style="--char-i: 1;">a</span><span class="hero-char" style="--char-i: 2;">s</span><span class="hero-char char-space" style="--char-i: 3;">&nbsp;</span><span class="hero-char" style="--char-i: 4;">m</span><span class="hero-char" style="--char-i: 5;">ö</span><span class="hero-char" style="--char-i: 6;">c</span><span class="hero-char" style="--char-i: 7;">h</span><span class="hero-char" style="--char-i: 8;">t</span><span class="hero-char" style="--char-i: 9;">e</span><span class="hero-char" style="--char-i: 10;">s</span><span class="hero-char" style="--char-i: 11;">t</span><span class="hero-char char-space" style="--char-i: 12;">&nbsp;</span><span class="hero-char" style="--char-i: 13;">d</span><span class="hero-char" style="--char-i: 14;">u</span><span class="hero-char char-space" style="--char-i: 15;">&nbsp;</span><span class="hero-char" style="--char-i: 16;">t</span><span class="hero-char" style="--char-i: 17;">u</span><span class="hero-char" style="--char-i: 18;">n</span><span class="hero-char" style="--char-i: 19;">?</span></h1>
+          <p class="hub-hero-subtitle">Wähle ein Modul für deinen Workflow</p>
+        </div>
+
+        <!-- MAIN MENU: 6 Full-Height Vertical Columns -->
         <div id="hub-main-menu" class="hub-fullscreen-columns">
           <!-- Column 1: Freistellen -->
           <div class="hub-col col-bgr" onclick="openWizard('bgr')">
             <div class="hub-col-top">
-              <span class="hub-col-idx">01 // TOAD KI</span>
               <span class="hub-col-cmd">toad remove-bg</span>
             </div>
             <div class="hub-col-body">
               <div class="hub-col-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
               <h2 class="hub-col-title">Freistellen</h2>
-              <p class="hub-col-desc">Lokale KI-Hintergrundentfernung für Bilder &amp; Bilderserien ohne Cloud.</p>
-              <ul class="hub-col-features">
-                <li><i class="fa-solid fa-check"></i> Schnell, Standard &amp; DYB</li>
-                <li><i class="fa-solid fa-check"></i> Einzelne Bilder &amp; ganze Ordner</li>
-                <li><i class="fa-solid fa-check"></i> Verlustfreies PNG oder WebP</li>
-                <li><i class="fa-solid fa-check"></i> Automatisches Speichern</li>
-              </ul>
-            </div>
-            <div class="hub-col-footer">
-              <div class="hub-col-action">
-                <span>Assistent starten</span>
-                <i class="fa-solid fa-arrow-right"></i>
-              </div>
+              <p class="hub-col-desc">Hintergründe automatisch und lokal per KI entfernen</p>
             </div>
           </div>
 
-          <!-- Column 2: Grafik & Build -->
+          <!-- Column 2: Design exportieren -->
           <div class="hub-col col-build" onclick="openWizard('build')">
             <div class="hub-col-top">
-              <span class="hub-col-idx">02 // ENGINE</span>
               <span class="hub-col-cmd">toad build</span>
             </div>
             <div class="hub-col-body">
-              <div class="hub-col-icon"><i class="fa-solid fa-image"></i></div>
-              <h2 class="hub-col-title">Grafik &amp; Build</h2>
-              <p class="hub-col-desc">Kompiliere deklarative .toad Layouts in gestochen scharfe Grafiken.</p>
-              <ul class="hub-col-features">
-                <li><i class="fa-solid fa-check"></i> PNG, WebP, JPG, PSD</li>
-                <li><i class="fa-solid fa-check"></i> Alle Formate synchron (-f all)</li>
-                <li><i class="fa-solid fa-check"></i> Skalierung 1x, 2x, 4x Retina</li>
-                <li><i class="fa-solid fa-check"></i> Millisekunden-schnell</li>
-              </ul>
-            </div>
-            <div class="hub-col-footer">
-              <div class="hub-col-action">
-                <span>Assistent starten</span>
-                <i class="fa-solid fa-arrow-right"></i>
-              </div>
+              <div class="hub-col-icon"><i class="fa-solid fa-layer-group"></i></div>
+              <h2 class="hub-col-title">Design exportieren</h2>
+              <p class="hub-col-desc">Deklarative Layouts rendern und Grafiken exportieren</p>
             </div>
           </div>
 
-          <!-- Column 3: Animation -->
+          <!-- Column 3: Video exportieren -->
           <div class="hub-col col-motion" onclick="openWizard('motion')">
             <div class="hub-col-top">
-              <span class="hub-col-idx">03 // MOTION</span>
               <span class="hub-col-cmd">toad motion</span>
             </div>
             <div class="hub-col-body">
               <div class="hub-col-icon"><i class="fa-solid fa-film"></i></div>
-              <h2 class="hub-col-title">Animation</h2>
-              <p class="hub-col-desc">Rendere flüssige Keyframe-Animationen aus .toadm Dateien.</p>
-              <ul class="hub-col-features">
-                <li><i class="fa-solid fa-check"></i> MP4, WebM, GIF, Frames</li>
-                <li><i class="fa-solid fa-check"></i> 30, 60 oder 120 FPS</li>
-                <li><i class="fa-solid fa-check"></i> Hardware-Encoding &amp; Easing</li>
-                <li><i class="fa-solid fa-check"></i> Live-Player Vorschau</li>
-              </ul>
-            </div>
-            <div class="hub-col-footer">
-              <div class="hub-col-action">
-                <span>Assistent starten</span>
-                <i class="fa-solid fa-arrow-right"></i>
-              </div>
+              <h2 class="hub-col-title">Video exportieren</h2>
+              <p class="hub-col-desc">Keyframe-Motion-Grafiken rendern und abspielen</p>
             </div>
           </div>
 
           <!-- Column 4: Konvertieren -->
           <div class="hub-col col-convert" onclick="openWizard('convert')">
             <div class="hub-col-top">
-              <span class="hub-col-idx">04 // MEDIA</span>
               <span class="hub-col-cmd">toad convert</span>
             </div>
             <div class="hub-col-body">
               <div class="hub-col-icon"><i class="fa-solid fa-arrows-rotate"></i></div>
               <h2 class="hub-col-title">Konvertieren</h2>
-              <p class="hub-col-desc">Universeller Bildkonverter, Skalierer und Photoshop-Importer.</p>
-              <ul class="hub-col-features">
-                <li><i class="fa-solid fa-check"></i> WebP, AVIF, PNG, SVG, PDF</li>
-                <li><i class="fa-solid fa-check"></i> PSD zu .toad Code &amp; Assets</li>
-                <li><i class="fa-solid fa-check"></i> Freie Zielskalierung (px / mult)</li>
-                <li><i class="fa-solid fa-check"></i> Intelligente Web-Kompression</li>
-              </ul>
-            </div>
-            <div class="hub-col-footer">
-              <div class="hub-col-action">
-                <span>Assistent starten</span>
-                <i class="fa-solid fa-arrow-right"></i>
-              </div>
+              <p class="hub-col-desc">Formate wandeln, skalieren und komprimieren</p>
             </div>
           </div>
 
-          <!-- Column 5: Qualitäts-Audit -->
+          <!-- Column 5: Auditieren -->
           <div class="hub-col col-report" onclick="openWizard('report')">
             <div class="hub-col-top">
-              <span class="hub-col-idx">05 // AUDIT</span>
               <span class="hub-col-cmd">toad report</span>
             </div>
             <div class="hub-col-body">
-              <div class="hub-col-icon"><i class="fa-solid fa-chart-simple"></i></div>
-              <h2 class="hub-col-title">Qualitäts-Audit</h2>
-              <p class="hub-col-desc">Tiefenanalyse für Barrierefreiheit, Kontraste &amp; Anti-AI-Slop.</p>
-              <ul class="hub-col-features">
-                <li><i class="fa-solid fa-check"></i> WCAG 2.2 Farbkontraste</li>
-                <li><i class="fa-solid fa-check"></i> 13 TOAD-Syntaxregeln Check</li>
-                <li><i class="fa-solid fa-check"></i> Anti-AI-Slop Heuristiken</li>
-                <li><i class="fa-solid fa-check"></i> 1-Klick Auto-Reparatur (--fixes)</li>
-              </ul>
+              <div class="hub-col-icon"><i class="fa-solid fa-shield-halved"></i></div>
+              <h2 class="hub-col-title">Auditieren</h2>
+              <p class="hub-col-desc">Barrierefreiheit und Designregeln prüfen</p>
             </div>
-            <div class="hub-col-footer">
-              <div class="hub-col-action">
-                <span>Assistent starten</span>
-                <i class="fa-solid fa-arrow-right"></i>
-              </div>
+          </div>
+
+          <!-- Column 6: Einstellungen -->
+          <div class="hub-col col-settings" onclick="openSettingsView()">
+            <div class="hub-col-top">
+              <span class="hub-col-cmd">toad config</span>
+            </div>
+            <div class="hub-col-body">
+              <div class="hub-col-icon"><i class="fa-solid fa-gear"></i></div>
+              <h2 class="hub-col-title">Einstellungen</h2>
+              <p class="hub-col-desc">Globale Standards, Workspaces &amp; System verwalten</p>
             </div>
           </div>
         </div>
@@ -2690,7 +2707,13 @@ export function generateStudioHtml(initialFile?: string): string {
                 <span>Qualität: <span id="quality-val" style="color: var(--accent); font-family: var(--font-mono); font-weight: 700;">85</span>%</span>
                 <span class="param-sub">(-q)</span>
               </div>
-              <input type="range" class="slider-control" id="quality-slider" min="1" max="100" value="85" oninput="document.getElementById('quality-val').textContent = this.value; updateCliPreview();">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <input type="range" class="slider-control" id="quality-slider" min="1" max="100" value="85" style="flex: 1;" oninput="document.getElementById('quality-val').textContent = this.value; document.getElementById('quality-num').value = this.value; updateCliPreview();">
+                <div style="display: flex; align-items: center; gap: 4px; flex-shrink: 0;">
+                  <input type="number" class="input-control" id="quality-num" min="1" max="100" value="85" style="width: 64px; padding: 5px 8px; text-align: center; font-family: var(--font-mono); font-weight: 700;" oninput="var v = Math.min(100, Math.max(1, parseInt(this.value, 10) || 1)); document.getElementById('quality-slider').value = v; document.getElementById('quality-val').textContent = v; updateCliPreview();">
+                  <span style="font-size: 12px; color: var(--text-dim); font-weight: 600;">%</span>
+                </div>
+              </div>
             </div>
 
             <!-- Erweiterte Prepress & Build-Optionen (Standardmäßig aufgeräumt eingeklappt!) -->
@@ -2824,8 +2847,11 @@ export function generateStudioHtml(initialFile?: string): string {
               <div class="param-group" style="margin-bottom: 0;">
                 <div class="param-label"><span>Framerate</span><span class="param-sub">(--fps)</span></div>
                 <select class="select-control" id="motion-fps" onchange="updateMotionCliPreview()">
+                  <option value="24">24 FPS</option>
                   <option value="30">30 FPS</option>
+                  <option value="44">44 FPS</option>
                   <option value="60" selected>60 FPS</option>
+                  <option value="90">90 FPS</option>
                   <option value="120">120 FPS</option>
                 </select>
               </div>
@@ -2854,7 +2880,12 @@ export function generateStudioHtml(initialFile?: string): string {
                     <span>Videoqualität / CRF: <span id="motion-crf-val" style="color: var(--accent); font-family: var(--font-mono); font-weight: 700;">18</span></span>
                     <span class="param-sub">(-q, niedriger = besser)</span>
                   </div>
-                  <input type="range" class="slider-control" id="motion-crf" min="1" max="51" value="18" oninput="document.getElementById('motion-crf-val').textContent = this.value; updateMotionCliPreview();">
+                  <div style="display: flex; align-items: center; gap: 12px;">
+                    <input type="range" class="slider-control" id="motion-crf" min="1" max="51" value="18" style="flex: 1;" oninput="document.getElementById('motion-crf-val').textContent = this.value; document.getElementById('motion-crf-num').value = this.value; updateMotionCliPreview();">
+                    <div style="display: flex; align-items: center; gap: 4px; flex-shrink: 0;">
+                      <input type="number" class="input-control" id="motion-crf-num" min="1" max="51" value="18" style="width: 64px; padding: 5px 8px; text-align: center; font-family: var(--font-mono); font-weight: 700;" oninput="var v = Math.min(51, Math.max(1, parseInt(this.value, 10) || 1)); document.getElementById('motion-crf').value = v; document.getElementById('motion-crf-val').textContent = v; updateMotionCliPreview();">
+                    </div>
+                  </div>
                 </div>
 
                 <div class="param-group" style="margin-bottom: 0;">
@@ -3215,7 +3246,13 @@ export function generateStudioHtml(initialFile?: string): string {
                   </div>
 
                   <div class="param-group">
-                    <input type="range" class="slider-control" id="img-quality-slider" min="1" max="100" value="80" oninput="onQualitySliderChange(this.value)">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                      <input type="range" class="slider-control" id="img-quality-slider" min="1" max="100" value="80" style="flex: 1;" oninput="onQualitySliderChange(this.value)">
+                      <div style="display: flex; align-items: center; gap: 4px; flex-shrink: 0;">
+                        <input type="number" class="input-control" id="img-quality-num" min="1" max="100" value="80" style="width: 64px; padding: 5px 8px; text-align: center; font-family: var(--font-mono); font-weight: 700;" oninput="var v = Math.min(100, Math.max(1, parseInt(this.value, 10) || 1)); document.getElementById('img-quality-slider').value = v; onQualitySliderChange(v);">
+                        <span style="font-size: 12px; color: var(--text-dim); font-weight: 600;">%</span>
+                      </div>
+                    </div>
                   </div>
 
                   <!-- Presets -->
@@ -3429,6 +3466,361 @@ export function generateStudioHtml(initialFile?: string): string {
         </div>
       </div>
 
+      <!-- Tab 6: Einstellungen Deck (toad config / toad settings) -->
+      <div class="tab-view" id="tab-settings" style="overflow-y: auto; height: 100vh; padding: 32px 40px 80px; background: #060a14;">
+        <div style="max-width: 1040px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px;">
+
+          <!-- Top Action Bar -->
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; padding-bottom: 20px; border-bottom: 1px solid var(--border);">
+            <div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span class="hub-col-cmd" style="font-size: 11px; padding: 3px 10px; color: #38bdf8; border-color: rgba(56, 189, 248, 0.3);">toad config</span>
+                <h1 style="font-size: 24px; font-weight: 800; color: var(--text); margin: 0; display: flex; align-items: center; gap: 10px;">
+                  <i class="fa-solid fa-gear" style="color: #38bdf8;"></i> Einstellungen
+                </h1>
+              </div>
+              <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+                Globale Konfiguration &bull; Datei: <code id="settings-path-label" style="font-family: var(--font-mono); font-size: 12px; color: var(--accent); background: rgba(16, 185, 129, 0.1); padding: 2px 8px; border-radius: 4px;">~/.toadrc.json</code>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <button type="button" class="btn-secondary" onclick="switchTab('hub')">
+                <i class="fa-solid fa-arrow-left"></i> Hauptmenü
+              </button>
+              <button type="button" class="btn-run-cmd" style="padding: 10px 22px; font-size: 13px;" onclick="saveStudioSettings()">
+                <i class="fa-solid fa-floppy-disk"></i> Speichern
+              </button>
+            </div>
+          </div>
+
+          <!-- Cards Grid -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(460px, 1fr)); gap: 20px;">
+
+            <!-- Card 1: Standard-Exportvorgaben -->
+            <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; display: flex; flex-direction: column; gap: 18px;">
+              <div style="display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 700; color: var(--text);">
+                <i class="fa-solid fa-sliders" style="color: var(--cyan);"></i>
+                <span>Standard-Exportvorgaben</span>
+              </div>
+              
+              <!-- Default Format -->
+              <div>
+                <label style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; display: block;">
+                  Standard-Ausgabeformat (defaultFormat)
+                </label>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;" id="cfg-format-group">
+                  <button type="button" class="format-pill-btn active" data-fmt="png" onclick="selectConfigFormat('png')">PNG</button>
+                  <button type="button" class="format-pill-btn" data-fmt="webp" onclick="selectConfigFormat('webp')">WebP</button>
+                  <button type="button" class="format-pill-btn" data-fmt="jpg" onclick="selectConfigFormat('jpg')">JPEG</button>
+                  <button type="button" class="format-pill-btn" data-fmt="svg" onclick="selectConfigFormat('svg')">SVG</button>
+                  <button type="button" class="format-pill-btn" data-fmt="psd" onclick="selectConfigFormat('psd')">PSD</button>
+                  <button type="button" class="format-pill-btn" data-fmt="pdf" onclick="selectConfigFormat('pdf')">PDF</button>
+                </div>
+              </div>
+
+              <!-- Default Quality -->
+              <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">
+                    Standard-Kompression &amp; Bildqualität (defaultQuality)
+                  </label>
+                  <span id="cfg-quality-val" style="font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--accent);">90%</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <input type="range" class="slider-control" id="cfg-quality-slider" min="1" max="100" value="90" oninput="onConfigQualityChange(this.value)">
+                </div>
+                <div style="display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap;">
+                  <button type="button" class="preset-pill-btn" onclick="onConfigQualityChange(60)">60% Kompakt</button>
+                  <button type="button" class="preset-pill-btn" onclick="onConfigQualityChange(80)">80% Web</button>
+                  <button type="button" class="preset-pill-btn" onclick="onConfigQualityChange(90)">90% High</button>
+                  <button type="button" class="preset-pill-btn" onclick="onConfigQualityChange(100)">100% Max</button>
+                </div>
+              </div>
+
+              <!-- Default Scale -->
+              <div>
+                <label style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; display: block;">
+                  Standard-Skalierung (defaultScale)
+                </label>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;" id="cfg-scale-group">
+                  <button type="button" class="format-pill-btn active" data-scale="1" onclick="selectConfigScale(1)">1x (72 DPI)</button>
+                  <button type="button" class="format-pill-btn" data-scale="2" onclick="selectConfigScale(2)">2x (Retina)</button>
+                  <button type="button" class="format-pill-btn" data-scale="4" onclick="selectConfigScale(4)">4x (Print)</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 2: Hardware- & KI-Beschleunigung -->
+            <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; display: flex; flex-direction: column; gap: 18px;">
+              <div style="display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 700; color: var(--text);">
+                <i class="fa-solid fa-microchip" style="color: var(--violet);"></i>
+                <span>Hardware &amp; KI-Beschleunigung</span>
+              </div>
+
+              <div>
+                <label style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; display: block;">
+                  Recheneinheit für KI &amp; Freistellen (aiDevice)
+                </label>
+                <div style="display: flex; flex-direction: column; gap: 8px;" id="cfg-device-group">
+                  <div class="wizard-tile active" data-device="auto" onclick="selectConfigDevice('auto')" style="padding: 12px 14px;">
+                    <div class="wizard-tile-header">
+                      <i class="fa-solid fa-bolt wizard-tile-icon" style="color: var(--accent);"></i>
+                      <span class="wizard-tile-title">Automatisch erkennen (Auto)</span>
+                      <span class="wizard-tile-check"><i class="fa-solid fa-check"></i></span>
+                    </div>
+                    <div class="wizard-tile-desc">Nutzt DirectML-GPU falls kompatibel, ansonsten Multi-Core CPU.</div>
+                  </div>
+                  <div class="wizard-tile" data-device="dml" onclick="selectConfigDevice('dml')" style="padding: 12px 14px;">
+                    <div class="wizard-tile-header">
+                      <i class="fa-solid fa-gauge-high wizard-tile-icon" style="color: var(--cyan);"></i>
+                      <span class="wizard-tile-title">DirectML GPU (Hardware-Beschleunigung)</span>
+                      <span class="wizard-tile-check"><i class="fa-solid fa-check"></i></span>
+                    </div>
+                    <div class="wizard-tile-desc">Erzwingt Microsoft DirectML (Nvidia, AMD, Intel GPU).</div>
+                  </div>
+                  <div class="wizard-tile" data-device="cpu" onclick="selectConfigDevice('cpu')" style="padding: 12px 14px;">
+                    <div class="wizard-tile-header">
+                      <i class="fa-solid fa-server wizard-tile-icon" style="color: var(--amber);"></i>
+                      <span class="wizard-tile-title">Multi-Thread CPU</span>
+                      <span class="wizard-tile-check"><i class="fa-solid fa-check"></i></span>
+                    </div>
+                    <div class="wizard-tile-desc">Universelle Ausführung auf Prozessor-Kernen ohne GPU-Treiberabhängigkeit.</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Auto-Update Toggle -->
+              <div style="margin-top: auto; padding-top: 14px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                  <div style="font-size: 13px; font-weight: 700; color: var(--text);">Automatische Updates</div>
+                  <div style="font-size: 11px; color: var(--text-dim);">Beim Start auf neuere Versionen prüfen</div>
+                </div>
+                <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                  <input type="checkbox" id="cfg-auto-update" style="opacity: 0; width: 0; height: 0;" onchange="updateSettingsCliPreview()">
+                  <span style="position: absolute; cursor: pointer; inset: 0; background-color: rgba(255,255,255,0.15); transition: .2s; border-radius: 24px;" id="cfg-auto-update-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Card 3: Dateisuche & Ordner (Timeout, Ignorier-Ordner & Prioritätsordner) -->
+            <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; display: flex; flex-direction: column; gap: 20px; grid-column: 1 / -1;">
+              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 700; color: var(--text);">
+                  <i class="fa-solid fa-magnifying-glass-location" style="color: var(--accent);"></i>
+                  <span>Dateisuche &amp; Prioritätsordner</span>
+                </div>
+                <span id="cfg-ws-count" style="font-size: 12px; color: var(--text-dim); font-family: var(--font-mono);">0 registriert</span>
+              </div>
+
+              <div style="font-size: 12px; color: var(--text-muted); line-height: 1.5;">
+                Diese Ordner werden bei jedem Befehl (<code>toad build</code>, <code>convert</code>, <code>remove-bg</code>, <code>motion</code>, <code>report</code> etc.) als <strong>Erstes</strong> in der unten stehenden Reihenfolge nach deinen Dateien durchsucht. Die Reihenfolge kann ganz einfach per <strong>Drag &amp; Drop</strong> oder über die Pfeiltasten sortiert werden.
+              </div>
+
+              <!-- Quick-Add Chips -->
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span style="font-size: 11px; color: var(--text-dim); font-weight: 600;">Schnell hinzufügen:</span>
+                <button type="button" class="btn-secondary" onclick="addQuickSearchFolder('Downloads')" style="padding: 4px 10px; font-size: 11px; border-radius: 20px;">
+                  <i class="fa-solid fa-download" style="color: #38bdf8; margin-right: 4px;"></i> + Downloads
+                </button>
+                <button type="button" class="btn-secondary" onclick="addQuickSearchFolder('Pictures')" style="padding: 4px 10px; font-size: 11px; border-radius: 20px;">
+                  <i class="fa-solid fa-image" style="color: #a855f7; margin-right: 4px;"></i> + Bilder
+                </button>
+                <button type="button" class="btn-secondary" onclick="addQuickSearchFolder('Desktop')" style="padding: 4px 10px; font-size: 11px; border-radius: 20px;">
+                  <i class="fa-solid fa-desktop" style="color: #f59e0b; margin-right: 4px;"></i> + Desktop
+                </button>
+                <button type="button" class="btn-secondary" onclick="addQuickSearchFolder('Documents')" style="padding: 4px 10px; font-size: 11px; border-radius: 20px;">
+                  <i class="fa-solid fa-folder-open" style="color: #10b981; margin-right: 4px;"></i> + Dokumente
+                </button>
+                <button type="button" class="btn-secondary" onclick="addQuickSearchFolder('cwd')" style="padding: 4px 10px; font-size: 11px; border-radius: 20px;">
+                  <i class="fa-solid fa-location-crosshairs" style="color: var(--accent); margin-right: 4px;"></i> + Aktueller Ordner
+                </button>
+              </div>
+
+              <div id="cfg-workspaces-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 240px; overflow-y: auto;">
+                <div style="font-size: 12px; color: var(--text-dim); text-align: center; padding: 14px;">Lade Suchordner...</div>
+              </div>
+
+              <div style="display: flex; gap: 8px; margin-top: 4px;">
+                <input type="text" class="input-control" id="cfg-ws-input" placeholder="Ordnerpfad eingeben, z.B. C:\\Users\\flori\\Downloads oder D:\\Designs" style="flex: 1;">
+                <button type="button" class="btn-secondary" onclick="addStudioWorkspace()" style="padding: 10px 18px; white-space: nowrap;">
+                  <i class="fa-solid fa-plus"></i> Ordner hinzufügen
+                </button>
+              </div>
+
+              <!-- Extra Search Settings: Timeout & Custom Ignore Dirs -->
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; margin-top: 8px; padding-top: 16px; border-top: 1px solid var(--border);">
+                <!-- Dateisuche-Timeout -->
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <label style="font-size: 12px; font-weight: 600; color: var(--text);">
+                      <i class="fa-solid fa-stopwatch" style="color: var(--amber); margin-right: 6px;"></i>Dateisuche-Timeout (searchTimeoutMs)
+                    </label>
+                    <span id="cfg-timeout-val" style="font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--accent);">5000 ms</span>
+                  </div>
+                  <div style="font-size: 11px; color: var(--text-dim);">
+                    Maximale Suchdauer auf Festplatten, bevor der Scan abbricht.
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <input type="range" class="slider-control" id="cfg-timeout-slider" min="1000" max="120000" step="1000" value="5000" oninput="onConfigTimeoutChange(this.value)">
+                  </div>
+                  <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <button type="button" class="preset-pill-btn" onclick="onConfigTimeoutChange(2000)">2s</button>
+                    <button type="button" class="preset-pill-btn" onclick="onConfigTimeoutChange(5000)">5s</button>
+                    <button type="button" class="preset-pill-btn" onclick="onConfigTimeoutChange(15000)">15s</button>
+                    <button type="button" class="preset-pill-btn" onclick="onConfigTimeoutChange(30000)">30s</button>
+                    <button type="button" class="preset-pill-btn" onclick="onConfigTimeoutChange(60000)">60s</button>
+                    <button type="button" class="preset-pill-btn" onclick="onConfigTimeoutChange(120000)">120s (Max)</button>
+                  </div>
+                </div>
+
+                <!-- Zusätzliche Ignorier-Ordner -->
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <label style="font-size: 12px; font-weight: 600; color: var(--text);">
+                    <i class="fa-solid fa-ban" style="color: var(--rose); margin-right: 6px;"></i>Zusätzliche Ignorier-Ordner (searchIgnoreDirs)
+                  </label>
+                  <div style="font-size: 11px; color: var(--text-dim);">
+                    Kommagetrennte Ordnernamen, die beim Scan übersprungen werden.
+                  </div>
+                  <input type="text" class="input-control" id="cfg-ignore-dirs" placeholder="z.B. backup, archive, temp, out, exports" oninput="updateSettingsCliPreview()">
+                  <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <span style="font-size: 11px; color: var(--text-dim);">Vorschläge:</span>
+                    <button type="button" class="preset-pill-btn" onclick="appendIgnoreDir('backup')">+ backup</button>
+                    <button type="button" class="preset-pill-btn" onclick="appendIgnoreDir('archive')">+ archive</button>
+                    <button type="button" class="preset-pill-btn" onclick="appendIgnoreDir('out')">+ out</button>
+                    <button type="button" class="preset-pill-btn" onclick="appendIgnoreDir('temp')">+ temp</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 4: Zielordner & Namensschema / Suffix -->
+            <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; display: flex; flex-direction: column; gap: 18px; grid-column: 1 / -1;">
+              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 700; color: var(--text);">
+                  <i class="fa-solid fa-file-signature" style="color: #38bdf8;"></i>
+                  <span>Zielordner &amp; Namensschema / Suffix</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <span style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Vorhandene Dateien überschreiben:</span>
+                  <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                    <input type="checkbox" id="cfg-overwrite" style="opacity: 0; width: 0; height: 0;" onchange="updateSettingsCliPreview()">
+                    <span style="position: absolute; cursor: pointer; inset: 0; background-color: rgba(255,255,255,0.15); transition: .2s; border-radius: 24px;" id="cfg-overwrite-slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Standard-Zielordner -->
+              <div>
+                <label style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; display: block;">
+                  Standard-Zielordner (defaultOutputDir) &bull; Leer = neben Quelldatei
+                </label>
+                <div style="display: flex; gap: 8px;">
+                  <input type="text" class="input-control" id="cfg-default-out-dir" placeholder="z.B. ./dist oder D:\\Exports (leer lassen für Verzeichnis der Quelldatei)" oninput="updateSettingsCliPreview()">
+                  <button type="button" class="btn-secondary" onclick="document.getElementById('cfg-default-out-dir').value = './dist'; updateSettingsCliPreview();">./dist</button>
+                  <button type="button" class="btn-secondary" onclick="document.getElementById('cfg-default-out-dir').value = './output'; updateSettingsCliPreview();">./output</button>
+                  <button type="button" class="btn-secondary" onclick="document.getElementById('cfg-default-out-dir').value = ''; updateSettingsCliPreview();">Zurücksetzen</button>
+                </div>
+              </div>
+
+              <!-- Namensschema / Suffix mit interaktiven Variablen-Chips -->
+              <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">
+                    Namensschema / Suffix (outputNamingPattern)
+                  </label>
+                  <span style="font-size: 11px; color: var(--text-dim);">Klicke auf eine Variable zum Einfügen</span>
+                </div>
+                <input type="text" class="input-control" id="cfg-naming-pattern" value="{name}{suffix}{scale}" style="font-family: var(--font-mono); font-weight: 600;" oninput="updateNamingPreview(); updateSettingsCliPreview();">
+                
+                <!-- Variables Chips Bar -->
+                <div style="display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; align-items: center;">
+                  <span style="font-size: 11px; color: var(--text-dim); font-weight: 600;">Variablen:</span>
+                  <button type="button" class="preset-pill-btn" onclick="insertNamingVar('{name}')"><code>{name}</code> Basisname</button>
+                  <button type="button" class="preset-pill-btn" onclick="insertNamingVar('{suffix}')"><code>{suffix}</code> Seite/Canvas</button>
+                  <button type="button" class="preset-pill-btn" onclick="insertNamingVar('{scale}')"><code>{scale}</code> @2x/@4x</button>
+                  <button type="button" class="preset-pill-btn" onclick="insertNamingVar('_{width}x{height}')"><code>_{width}x{height}</code> Maße</button>
+                  <button type="button" class="preset-pill-btn" onclick="insertNamingVar('_{date}')"><code>_{date}</code> Aktuelles Datum</button>
+                  <button type="button" class="preset-pill-btn" onclick="insertNamingVar('_{time}')"><code>_{time}</code> Uhrzeit</button>
+                  <button type="button" class="preset-pill-btn" onclick="insertNamingVar('_{rand}')"><code>_{rand}</code> Zufälliges Zeichen</button>
+                  <button type="button" class="preset-pill-btn" onclick="insertNamingVar('_{rand4}')"><code>_{rand4}</code> 4 Zufallszeichen</button>
+                  <button type="button" class="preset-pill-btn" onclick="insertNamingVar('_{dpi}dpi')"><code>_{dpi}dpi</code> DPI</button>
+                  <button type="button" class="preset-pill-btn" onclick="insertNamingVar('_p{page}')"><code>_p{page}</code> Seite #</button>
+                  <button type="button" class="preset-pill-btn" onclick="insertNamingVar('.{ext}')"><code>.{ext}</code> Endung</button>
+                </div>
+
+                <!-- Live Naming Preview Box -->
+                <div style="background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; margin-top: 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                  <span style="font-size: 11px; color: var(--text-dim);"><i class="fa-solid fa-eye" style="margin-right: 5px;"></i>Live-Vorschau des Dateinamens:</span>
+                  <span id="cfg-naming-preview" style="font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--accent);">poster@2x.png</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 5: Motion / Video Standards (Framerate & Motion-Format) -->
+            <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; display: flex; flex-direction: column; gap: 18px; grid-column: 1 / -1;">
+              <div style="display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 700; color: var(--text);">
+                <i class="fa-solid fa-film" style="color: var(--violet);"></i>
+                <span>Animationen &amp; Motion-Standards</span>
+              </div>
+
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                <!-- Standard-Framerate -->
+                <div>
+                  <label style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; display: block;">
+                    Standard-Framerate (defaultFps)
+                  </label>
+                  <div style="display: flex; gap: 8px; flex-wrap: wrap;" id="cfg-fps-group">
+                    <button type="button" class="format-pill-btn" data-fps="24" onclick="selectConfigFps(24)">24 FPS (Kino)</button>
+                    <button type="button" class="format-pill-btn" data-fps="30" onclick="selectConfigFps(30)">30 FPS (Web)</button>
+                    <button type="button" class="format-pill-btn" data-fps="44" onclick="selectConfigFps(44)">44 FPS</button>
+                    <button type="button" class="format-pill-btn active" data-fps="60" onclick="selectConfigFps(60)">60 FPS (Flüssig)</button>
+                    <button type="button" class="format-pill-btn" data-fps="90" onclick="selectConfigFps(90)">90 FPS (High-Hz)</button>
+                    <button type="button" class="format-pill-btn" data-fps="120" onclick="selectConfigFps(120)">120 FPS (Ultra)</button>
+                  </div>
+                </div>
+
+                <!-- Standard-Motion-Format -->
+                <div>
+                  <label style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; display: block;">
+                    Standard-Motion-Format (defaultMotionFormat)
+                  </label>
+                  <div style="display: flex; gap: 8px; flex-wrap: wrap;" id="cfg-motion-fmt-group">
+                    <button type="button" class="format-pill-btn active" data-mfmt="mp4" onclick="selectConfigMotionFmt('mp4')">MP4 (Universal)</button>
+                    <button type="button" class="format-pill-btn" data-mfmt="webm" onclick="selectConfigMotionFmt('webm')">WebM (Alpha)</button>
+                    <button type="button" class="format-pill-btn" data-mfmt="gif" onclick="selectConfigMotionFmt('gif')">GIF (Animiert)</button>
+                    <button type="button" class="format-pill-btn" data-mfmt="frames" onclick="selectConfigMotionFmt('frames')">Einzelbilder (PNG)</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 6: Terminal Command Preview & Reset -->
+            <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; display: flex; flex-direction: column; gap: 16px; grid-column: 1 / -1;">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 700; color: var(--text);">
+                  <i class="fa-solid fa-terminal" style="color: #38bdf8;"></i>
+                  <span>CLI-Äquivalent &amp; Terminal-Befehle</span>
+                </div>
+                <button type="button" class="btn-secondary btn-header-danger" onclick="resetStudioSettings()" style="font-size: 12px; padding: 6px 14px;">
+                  <i class="fa-solid fa-rotate-left"></i> Standardwerte wiederherstellen
+                </button>
+              </div>
+
+              <div class="terminal-cmd-box" id="settings-cli-cmd-box" style="padding: 14px 18px; font-size: 13px;">
+                <span class="terminal-cmd-prompt">toad config:</span><span id="settings-cli-preview">toad config set defaultFormat png</span>
+              </div>
+
+              <div style="display: flex; align-items: center; justify-content: flex-end; gap: 12px;">
+                <button type="button" class="btn-run-cmd" style="padding: 10px 24px; font-size: 13px;" onclick="saveStudioSettings()">
+                  <i class="fa-solid fa-floppy-disk"></i> Einstellungen jetzt speichern
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
     </main>
   </div>
 
@@ -3568,6 +3960,7 @@ export function generateStudioHtml(initialFile?: string): string {
       },
       build: {
         file: '',
+        formats: ['png'],
         format: 'png',
         scale: '2'
       },
@@ -3595,13 +3988,13 @@ export function generateStudioHtml(initialFile?: string): string {
         stepNames: ['1. Motiv', '2. Modus', '3. Format', '4. Zielordner', '5. Ausführen']
       },
       build: {
-        title: 'Grafik & Build',
+        title: 'Design exportieren',
         badge: 'toad build',
         totalSteps: 4,
         stepNames: ['1. Design', '2. Format', '3. Skalierung', '4. Ausführen']
       },
       motion: {
-        title: 'Animation',
+        title: 'Video exportieren',
         badge: 'toad motion',
         totalSteps: 4,
         stepNames: ['1. Motion-Datei', '2. Video-Format', '3. Framerate', '4. Ausführen']
@@ -3613,14 +4006,24 @@ export function generateStudioHtml(initialFile?: string): string {
         stepNames: ['1. Quellbild', '2. Zielformat', '3. Qualität', '4. Ausführen']
       },
       report: {
-        title: 'Qualitäts-Audit',
+        title: 'Auditieren',
         badge: 'toad report',
         totalSteps: 3,
         stepNames: ['1. Design', '2. Prüfungs-Tiefe', '3. Ausführen']
+      },
+      settings: {
+        title: 'Einstellungen',
+        badge: 'toad config',
+        totalSteps: 2,
+        stepNames: ['1. Konfiguration', '2. Ausführen']
       }
     };
 
     function openWizard(type) {
+      if (type === 'settings') {
+        openSettingsView();
+        return;
+      }
       currentWizard = type;
       currentStep = 1;
 
@@ -3687,7 +4090,8 @@ export function generateStudioHtml(initialFile?: string): string {
       if (type === 'build') {
         var d = wizardData.build;
         var f = toPosix(d.file || (allFiles.find(function(x) { return x.path.endsWith('.toad'); }) || {}).path || 'design.toad');
-        return 'toad build "' + f + '" -f ' + d.format + ' -s ' + d.scale;
+        var fmtStr = (d.formats && d.formats.length > 0) ? d.formats.join(',') : (d.format || 'png');
+        return 'toad build "' + f + '" -f ' + fmtStr + ' -s ' + d.scale;
       }
       if (type === 'motion') {
         var d = wizardData.motion;
@@ -3706,6 +4110,9 @@ export function generateStudioHtml(initialFile?: string): string {
         if (d.mode === 'slop') return 'toad report "' + f + '" --slop-only';
         if (d.mode === 'strict') return 'toad report "' + f + '" --strict';
         return 'toad report "' + f + '"';
+      }
+      if (type === 'settings') {
+        return 'toad config';
       }
       return '';
     }
@@ -3776,6 +4183,16 @@ export function generateStudioHtml(initialFile?: string): string {
       } else if (wiz === 'build') {
         switchTab('graphic');
         if (wizardData.build.file) selectFile(wizardData.build.file);
+        if (wizardData.build.formats && wizardData.build.formats.length > 0) {
+          var fmts = wizardData.build.formats;
+          document.querySelectorAll('input[name="fmt"]').forEach(function(inp) {
+            var active = fmts.includes(inp.value);
+            inp.checked = active;
+            var chip = inp.closest('.format-chip');
+            if (chip) chip.classList.toggle('active', active);
+          });
+          updateCliPreview();
+        }
       } else if (wiz === 'motion') {
         switchTab('animation');
         if (wizardData.motion.file) selectFile(wizardData.motion.file);
@@ -4021,36 +4438,87 @@ export function generateStudioHtml(initialFile?: string): string {
           return;
         }
         if (currentStep === 2) {
+          var selFmts = wizardData.build.formats || ['png'];
+          var isAll = selFmts.length >= 6;
+
+          function isTileActive(val) {
+            if (val === 'all') return isAll;
+            return selFmts.includes(val);
+          }
+
           body.innerHTML = 
             '<div class="wizard-step-header">' +
-              '<div class="wizard-step-title">Welche Ausgabe-Formate möchtest du generieren?</div>' +
-              '<div class="wizard-step-subtitle">TOAD kann Rastergrafiken, Vektoren und native Photoshop-Dateien ausgeben.</div>' +
+              '<div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">' +
+                '<div>' +
+                  '<div class="wizard-step-title">Welche Ausgabe-Formate möchtest du generieren?</div>' +
+                  '<div class="wizard-step-subtitle">Wähle beliebig viele Formate per Klick aus. TOAD exportiert alle ausgewählten Formate synchron.</div>' +
+                '</div>' +
+                '<div style="display: flex; gap: 8px;">' +
+                  '<button type="button" class="btn-secondary" style="padding: 6px 12px; font-size: 11px;" onclick="toggleWizAllBuildFormats(true)">' +
+                    '<i class="fa-solid fa-check-double"></i> Alle wählen' +
+                  '</button>' +
+                  '<button type="button" class="btn-secondary" style="padding: 6px 12px; font-size: 11px;" onclick="toggleWizAllBuildFormats(false)">' +
+                    '<i class="fa-solid fa-xmark"></i> Zurücksetzen' +
+                  '</button>' +
+                '</div>' +
+              '</div>' +
             '</div>' +
-            '<div class="wizard-tiles-grid">' +
-              '<div class="wizard-tile ' + (wizardData.build.format === 'png' ? 'active' : '') + '" data-val="png" onclick="selectWizBuildFormat(this.dataset.val)">' +
-                '<div class="wizard-tile-header"><i class="fa-solid fa-file-image wizard-tile-icon"></i><span class="wizard-tile-title">PNG</span></div>' +
-                '<div class="wizard-tile-desc">Standard-Grafikformat mit Transparenz.</div>' +
+            '<div class="wizard-tiles-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">' +
+              '<div class="wizard-tile ' + (isTileActive('png') ? 'active' : '') + '" data-val="png" onclick="toggleWizBuildFormat(this.dataset.val)">' +
+                '<div class="wizard-tile-header">' +
+                  '<i class="fa-solid fa-file-image wizard-tile-icon"></i>' +
+                  '<span class="wizard-tile-title">PNG</span>' +
+                  '<span class="wizard-tile-check"><i class="fa-solid fa-check"></i></span>' +
+                '</div>' +
+                '<div class="wizard-tile-desc">Standard-Grafik mit Alphakanal-Transparenz.</div>' +
               '</div>' +
-              '<div class="wizard-tile ' + (wizardData.build.format === 'webp' ? 'active' : '') + '" data-val="webp" onclick="selectWizBuildFormat(this.dataset.val)">' +
-                '<div class="wizard-tile-header"><i class="fa-solid fa-globe wizard-tile-icon" style="color: var(--cyan);"></i><span class="wizard-tile-title">WebP</span></div>' +
-                '<div class="wizard-tile-desc">Hochkomprimiert für Webseiten.</div>' +
+              '<div class="wizard-tile ' + (isTileActive('webp') ? 'active' : '') + '" data-val="webp" onclick="toggleWizBuildFormat(this.dataset.val)">' +
+                '<div class="wizard-tile-header">' +
+                  '<i class="fa-solid fa-globe wizard-tile-icon" style="color: var(--cyan);"></i>' +
+                  '<span class="wizard-tile-title">WebP</span>' +
+                  '<span class="wizard-tile-check"><i class="fa-solid fa-check"></i></span>' +
+                '</div>' +
+                '<div class="wizard-tile-desc">Hochkomprimiert und schnell für moderne Webseiten.</div>' +
               '</div>' +
-              '<div class="wizard-tile ' + (wizardData.build.format === 'jpg' ? 'active' : '') + '" data-val="jpg" onclick="selectWizBuildFormat(this.dataset.val)">' +
-                '<div class="wizard-tile-header"><i class="fa-solid fa-camera wizard-tile-icon" style="color: var(--amber);"></i><span class="wizard-tile-title">JPEG</span></div>' +
-                '<div class="wizard-tile-desc">Ideal für Fotocollagen ohne Alpha.</div>' +
+              '<div class="wizard-tile ' + (isTileActive('jpg') ? 'active' : '') + '" data-val="jpg" onclick="toggleWizBuildFormat(this.dataset.val)">' +
+                '<div class="wizard-tile-header">' +
+                  '<i class="fa-solid fa-camera wizard-tile-icon" style="color: var(--amber);"></i>' +
+                  '<span class="wizard-tile-title">JPEG</span>' +
+                  '<span class="wizard-tile-check"><i class="fa-solid fa-check"></i></span>' +
+                '</div>' +
+                '<div class="wizard-tile-desc">Klassisches Fotoformat ohne Transparenz.</div>' +
               '</div>' +
-              '<div class="wizard-tile ' + (wizardData.build.format === 'psd' ? 'active' : '') + '" data-val="psd" onclick="selectWizBuildFormat(this.dataset.val)">' +
-                '<div class="wizard-tile-header"><i class="fa-solid fa-layer-group wizard-tile-icon" style="color: var(--violet);"></i><span class="wizard-tile-title">PSD (Photoshop)</span></div>' +
-                '<div class="wizard-tile-desc">Mit echten bearbeitbaren Ebenen.</div>' +
+              '<div class="wizard-tile ' + (isTileActive('psd') ? 'active' : '') + '" data-val="psd" onclick="toggleWizBuildFormat(this.dataset.val)">' +
+                '<div class="wizard-tile-header">' +
+                  '<i class="fa-solid fa-layer-group wizard-tile-icon" style="color: var(--violet);"></i>' +
+                  '<span class="wizard-tile-title">PSD (Photoshop)</span>' +
+                  '<span class="wizard-tile-check"><i class="fa-solid fa-check"></i></span>' +
+                '</div>' +
+                '<div class="wizard-tile-desc">Native Photoshop-Datei mit echten editierbaren Ebenen.</div>' +
               '</div>' +
-              '<div class="wizard-tile ' + (wizardData.build.format === 'all' ? 'active' : '') + '" data-val="all" onclick="selectWizBuildFormat(this.dataset.val)">' +
-                '<div class="wizard-tile-header"><i class="fa-solid fa-boxes-stacked wizard-tile-icon" style="color: var(--rose);"></i><span class="wizard-tile-title">Alle Formate</span></div>' +
-                '<div class="wizard-tile-desc">PNG, WebP, JPEG und PSD synchron.</div>' +
+              '<div class="wizard-tile ' + (isTileActive('pdf') ? 'active' : '') + '" data-val="pdf" onclick="toggleWizBuildFormat(this.dataset.val)">' +
+                '<div class="wizard-tile-header">' +
+                  '<i class="fa-solid fa-file-pdf wizard-tile-icon" style="color: var(--rose);"></i>' +
+                  '<span class="wizard-tile-title">PDF (Druck)</span>' +
+                  '<span class="wizard-tile-check"><i class="fa-solid fa-check"></i></span>' +
+                '</div>' +
+                '<div class="wizard-tile-desc">Vektorbasiertes, druckfertiges PDF-Dokument.</div>' +
+              '</div>' +
+              '<div class="wizard-tile ' + (isTileActive('svg') ? 'active' : '') + '" data-val="svg" onclick="toggleWizBuildFormat(this.dataset.val)">' +
+                '<div class="wizard-tile-header">' +
+                  '<i class="fa-solid fa-bezier-curve wizard-tile-icon" style="color: #38BDF8;"></i>' +
+                  '<span class="wizard-tile-title">SVG (Vektor)</span>' +
+                  '<span class="wizard-tile-check"><i class="fa-solid fa-check"></i></span>' +
+                '</div>' +
+                '<div class="wizard-tile-desc">Skalierbare Vektorgrafik für Illustrator &amp; Web.</div>' +
               '</div>' +
             '</div>' +
             '<div class="wizard-footer-nav">' +
               '<button type="button" class="btn-secondary" onclick="prevWizardStep()"><i class="fa-solid fa-chevron-left"></i> Zurück</button>' +
-              '<button type="button" class="btn-primary" style="width: auto; padding: 10px 24px;" onclick="nextWizardStep()">Weiter <i class="fa-solid fa-chevron-right"></i></button>' +
+              '<div style="display: flex; align-items: center; gap: 12px;">' +
+                '<span style="font-size: 12px; color: var(--text-dim);">' + (selFmts.length === 0 ? 'Kein Format gewählt' : (selFmts.length + ' Format(e) gewählt: ' + selFmts.join(', ').toUpperCase())) + '</span>' +
+                '<button type="button" class="btn-primary" style="width: auto; padding: 10px 24px;" ' + (selFmts.length === 0 ? 'disabled style="opacity: 0.5;"' : '') + ' onclick="nextWizardStep()">Weiter <i class="fa-solid fa-chevron-right"></i></button>' +
+              '</div>' +
             '</div>';
           return;
         }
@@ -4134,18 +4602,30 @@ export function generateStudioHtml(initialFile?: string): string {
               '<div class="wizard-step-title">Mit wie vielen Bildern pro Sekunde (FPS)?</div>' +
               '<div class="wizard-step-subtitle">Höhere Frameraten erzeugen ultra-flüssige Bewegungen.</div>' +
             '</div>' +
-            '<div class="wizard-tiles-grid" style="grid-template-columns: repeat(3, 1fr);">' +
+            '<div class="wizard-tiles-grid" style="grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));">' +
+              '<div class="wizard-tile ' + (wizardData.motion.fps === '24' ? 'active' : '') + '" data-val="24" onclick="selectWizMotionFps(this.dataset.val)">' +
+                '<div class="wizard-tile-header"><span class="wizard-tile-title">24 FPS</span></div>' +
+                '<div class="wizard-tile-desc">Kino-Look.</div>' +
+              '</div>' +
               '<div class="wizard-tile ' + (wizardData.motion.fps === '30' ? 'active' : '') + '" data-val="30" onclick="selectWizMotionFps(this.dataset.val)">' +
                 '<div class="wizard-tile-header"><span class="wizard-tile-title">30 FPS</span></div>' +
-                '<div class="wizard-tile-desc">Standard-Webanimation, kleine Dateigröße.</div>' +
+                '<div class="wizard-tile-desc">Standard-Webanimation.</div>' +
+              '</div>' +
+              '<div class="wizard-tile ' + (wizardData.motion.fps === '44' ? 'active' : '') + '" data-val="44" onclick="selectWizMotionFps(this.dataset.val)">' +
+                '<div class="wizard-tile-header"><span class="wizard-tile-title">44 FPS</span></div>' +
+                '<div class="wizard-tile-desc">Ausbalanciert für Social Media.</div>' +
               '</div>' +
               '<div class="wizard-tile ' + (wizardData.motion.fps === '60' ? 'active' : '') + '" data-val="60" onclick="selectWizMotionFps(this.dataset.val)">' +
-                '<div class="wizard-tile-header"><span class="wizard-tile-title">60 FPS (Flüssig)</span></div>' +
-                '<div class="wizard-tile-desc">Empfohlen für moderne Displays und UI-Showcases.</div>' +
+                '<div class="wizard-tile-header"><span class="wizard-tile-title">60 FPS</span></div>' +
+                '<div class="wizard-tile-desc">Flüssig für moderne Screens.</div>' +
+              '</div>' +
+              '<div class="wizard-tile ' + (wizardData.motion.fps === '90' ? 'active' : '') + '" data-val="90" onclick="selectWizMotionFps(this.dataset.val)">' +
+                '<div class="wizard-tile-header"><span class="wizard-tile-title">90 FPS</span></div>' +
+                '<div class="wizard-tile-desc">High-Hz / VR &amp; Gaming Panels.</div>' +
               '</div>' +
               '<div class="wizard-tile ' + (wizardData.motion.fps === '120' ? 'active' : '') + '" data-val="120" onclick="selectWizMotionFps(this.dataset.val)">' +
-                '<div class="wizard-tile-header"><span class="wizard-tile-title">120 FPS (Ultra Smooth)</span></div>' +
-                '<div class="wizard-tile-desc">Höchste Geschmeidigkeit für ProMotion / Gaming-Panels.</div>' +
+                '<div class="wizard-tile-header"><span class="wizard-tile-title">120 FPS</span></div>' +
+                '<div class="wizard-tile-desc">Ultra Smooth / ProMotion.</div>' +
               '</div>' +
             '</div>' +
             '<div class="wizard-footer-nav">' +
@@ -4229,27 +4709,41 @@ export function generateStudioHtml(initialFile?: string): string {
           return;
         }
         if (currentStep === 3) {
+          var qVal = parseInt(wizardData.convert.quality, 10) || 80;
+          function getQDesc(v) {
+            if (v >= 95) return 'Maximal (Verlustfrei / Nahezu unkomprimiert)';
+            if (v >= 85) return 'Hohe Qualität (Kaum sichtbare Kompression)';
+            if (v >= 75) return 'Web-Standard (Optimale Balance aus Größe & Schärfe)';
+            return 'Kompakt (Geringste Dateigröße für schnelle Ladezeiten)';
+          }
+
           body.innerHTML = 
             '<div class="wizard-step-header">' +
               '<div class="wizard-step-title">Welche Qualität &amp; Komprimierung?</div>' +
-              '<div class="wizard-step-subtitle">Wähle die Balance zwischen Dateigröße und Schärfe.</div>' +
+              '<div class="wizard-step-subtitle">Stelle die Balance zwischen Dateigröße und Bildschärfe mit dem Regler oder per Direkteingabe ein.</div>' +
             '</div>' +
-            '<div class="wizard-tiles-grid" style="grid-template-columns: repeat(2, 1fr);">' +
-              '<div class="wizard-tile ' + (wizardData.convert.quality === '80' ? 'active' : '') + '" data-val="80" onclick="selectWizConvertQuality(this.dataset.val)">' +
-                '<div class="wizard-tile-header"><span class="wizard-tile-title">Web-Standard (80%)</span></div>' +
-                '<div class="wizard-tile-desc">Ausgezeichnete Balance für fast alle Einsätze.</div>' +
+            '<div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; display: flex; flex-direction: column; gap: 20px;">' +
+              '<div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">' +
+                '<div>' +
+                  '<div style="font-size: 15px; font-weight: 700; color: var(--text);">Kompressions-Qualität: <span id="wiz-convert-q-display" style="color: var(--accent); font-family: var(--font-mono); font-weight: 700;">' + qVal + '</span>%</div>' +
+                  '<div id="wiz-convert-q-desc" style="font-size: 12px; color: var(--text-dim); margin-top: 2px;">' + getQDesc(qVal) + '</div>' +
+                '</div>' +
+                '<div style="display: flex; align-items: center; gap: 6px;">' +
+                  '<input type="number" class="input-control" id="wiz-convert-q-num" min="1" max="100" value="' + qVal + '" style="width: 72px; padding: 7px 10px; text-align: center; font-family: var(--font-mono); font-weight: 700; font-size: 14px;" oninput="onWizConvertQualityNum(this.value)">' +
+                  '<span style="font-size: 13px; color: var(--text-dim); font-weight: 600;">%</span>' +
+                '</div>' +
               '</div>' +
-              '<div class="wizard-tile ' + (wizardData.convert.quality === '92' ? 'active' : '') + '" data-val="92" onclick="selectWizConvertQuality(this.dataset.val)">' +
-                '<div class="wizard-tile-header"><span class="wizard-tile-title">Hohe Qualität (92%)</span></div>' +
-                '<div class="wizard-tile-desc">Kaum sichtbare Kompression für Portfolios.</div>' +
+              '<div style="display: flex; align-items: center; gap: 14px;">' +
+                '<span style="font-size: 11px; color: var(--text-dim); font-family: var(--font-mono); font-weight: 600;">1%</span>' +
+                '<input type="range" class="slider-control" id="wiz-convert-q-slider" min="1" max="100" value="' + qVal + '" style="flex: 1;" oninput="onWizConvertQualitySlider(this.value)">' +
+                '<span style="font-size: 11px; color: var(--text-dim); font-family: var(--font-mono); font-weight: 600;">100%</span>' +
               '</div>' +
-              '<div class="wizard-tile ' + (wizardData.convert.quality === '60' ? 'active' : '') + '" data-val="60" onclick="selectWizConvertQuality(this.dataset.val)">' +
-                '<div class="wizard-tile-header"><span class="wizard-tile-title">Kompakt (60%)</span></div>' +
-                '<div class="wizard-tile-desc">Minimale Dateigröße für schnelles Laden.</div>' +
-              '</div>' +
-              '<div class="wizard-tile ' + (wizardData.convert.quality === '100' ? 'active' : '') + '" data-val="100" onclick="selectWizConvertQuality(this.dataset.val)">' +
-                '<div class="wizard-tile-header"><span class="wizard-tile-title">Maximal (100%)</span></div>' +
-                '<div class="wizard-tile-desc">Verlustfrei ohne Qualitätsabstriche.</div>' +
+              '<div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; pt: 6px; border-top: 1px solid var(--border); padding-top: 14px;">' +
+                '<span style="font-size: 12px; color: var(--text-dim); margin-right: 6px;">Schnellwahl:</span>' +
+                '<button type="button" class="preset-pill-btn ' + (qVal === 60 ? 'active' : '') + '" onclick="setWizConvertQualityQuick(60)">Kompakt (60%)</button>' +
+                '<button type="button" class="preset-pill-btn ' + (qVal === 80 ? 'active' : '') + '" onclick="setWizConvertQualityQuick(80)">Web-Standard (80%)</button>' +
+                '<button type="button" class="preset-pill-btn ' + (qVal === 92 ? 'active' : '') + '" onclick="setWizConvertQualityQuick(92)">Hohe Qualität (92%)</button>' +
+                '<button type="button" class="preset-pill-btn ' + (qVal === 100 ? 'active' : '') + '" onclick="setWizConvertQualityQuick(100)">Maximal (100%)</button>' +
               '</div>' +
             '</div>' +
             '<div class="wizard-footer-nav">' +
@@ -4313,12 +4807,63 @@ export function generateStudioHtml(initialFile?: string): string {
     function selectWizPreset(p) { wizardData.bgr.preset = p; renderWizardStep(); }
     function selectWizFormat(f) { wizardData.bgr.format = f; renderWizardStep(); }
     function setWizTargetDir(d) { wizardData.bgr.targetDir = d; renderWizardStep(); }
-    function selectWizBuildFormat(f) { wizardData.build.format = f; renderWizardStep(); }
+    function toggleWizBuildFormat(fmt) {
+      if (!wizardData.build.formats) wizardData.build.formats = [];
+      var idx = wizardData.build.formats.indexOf(fmt);
+      if (idx >= 0) {
+        wizardData.build.formats.splice(idx, 1);
+      } else {
+        wizardData.build.formats.push(fmt);
+      }
+      wizardData.build.format = wizardData.build.formats.length > 0 ? wizardData.build.formats.join(',') : '';
+      renderWizardStep();
+    }
+
+    function toggleWizAllBuildFormats(selectAll) {
+      if (selectAll) {
+        wizardData.build.formats = ['png', 'webp', 'jpg', 'psd', 'pdf', 'svg'];
+      } else {
+        wizardData.build.formats = [];
+      }
+      wizardData.build.format = wizardData.build.formats.length > 0 ? wizardData.build.formats.join(',') : '';
+      renderWizardStep();
+    }
+
+    function selectWizBuildFormat(f) {
+      wizardData.build.formats = [f];
+      wizardData.build.format = f;
+      renderWizardStep();
+    }
     function selectWizBuildScale(s) { wizardData.build.scale = s; renderWizardStep(); }
     function selectWizMotionFormat(f) { wizardData.motion.format = f; renderWizardStep(); }
     function selectWizMotionFps(f) { wizardData.motion.fps = f; renderWizardStep(); }
     function selectWizConvertFormat(f) { wizardData.convert.format = f; renderWizardStep(); }
     function selectWizConvertQuality(q) { wizardData.convert.quality = q; renderWizardStep(); }
+    function onWizConvertQualitySlider(v) {
+      wizardData.convert.quality = String(v);
+      var disp = document.getElementById('wiz-convert-q-display');
+      if (disp) disp.textContent = v;
+      var num = document.getElementById('wiz-convert-q-num');
+      if (num && num.value != v) num.value = v;
+      var desc = document.getElementById('wiz-convert-q-desc');
+      if (desc) {
+        var n = parseInt(v, 10) || 80;
+        if (n >= 95) desc.textContent = 'Maximal (Verlustfrei / Nahezu unkomprimiert)';
+        else if (n >= 85) desc.textContent = 'Hohe Qualität (Kaum sichtbare Kompression)';
+        else if (n >= 75) desc.textContent = 'Web-Standard (Optimale Balance aus Größe & Schärfe)';
+        else desc.textContent = 'Kompakt (Geringste Dateigröße für schnelle Ladezeiten)';
+      }
+    }
+    function onWizConvertQualityNum(v) {
+      var n = Math.min(100, Math.max(1, parseInt(v, 10) || 1));
+      var slider = document.getElementById('wiz-convert-q-slider');
+      if (slider) slider.value = n;
+      onWizConvertQualitySlider(n);
+    }
+    function setWizConvertQualityQuick(v) {
+      wizardData.convert.quality = String(v);
+      renderWizardStep();
+    }
     function selectWizReportMode(m) { wizardData.report.mode = m; renderWizardStep(); }
 
     function onWizBgrFiles(files) {
@@ -4654,12 +5199,14 @@ export function generateStudioHtml(initialFile?: string): string {
 
     // Initialization
     window.addEventListener('DOMContentLoaded', function() {
+      applySettingsToUi({ config: studioConfig, configPath: initialConfigPath });
       loadFiles();
       setupSplitSlider();
       setupSse();
       updateCliPreview();
       setupImageConverterDragDrop();
       setupBgRemoverDragDrop();
+      loadStudioSettings();
       switchTab('hub');
     });
 
@@ -4690,6 +5237,552 @@ export function generateStudioHtml(initialFile?: string): string {
 
       if (tabId === 'report' && selectedFilePath) {
         runAuditForActiveFile();
+      }
+      if (tabId === 'settings') {
+        applySettingsToUi({ config: studioConfig, configPath: initialConfigPath });
+      }
+    }
+
+    // Studio Settings Management (toad config / toad settings)
+    const initialConfigData = (typeof window !== 'undefined' && window.__INITIAL_CONFIG__) ? window.__INITIAL_CONFIG__ : {};
+    const initialConfigPath = (typeof window !== 'undefined' && window.__CONFIG_PATH__) ? window.__CONFIG_PATH__ : '';
+
+    let studioConfig = {
+      defaultFormat: 'png',
+      defaultQuality: 90,
+      defaultScale: 1,
+      aiDevice: 'auto',
+      autoUpdate: true,
+      workspaces: [],
+      searchIgnoreDirs: [],
+      searchTimeoutMs: 5000,
+      defaultOutputDir: '',
+      outputNamingPattern: '{name}{suffix}{scale}',
+      overwriteExisting: true,
+      defaultFps: 60,
+      defaultMotionFormat: 'mp4',
+      ...initialConfigData
+    };
+
+    function openSettingsView() {
+      switchTab('settings');
+    }
+
+    async function loadStudioSettings() {
+      try {
+        const res = await fetch('/api/config');
+        const data = await res.json();
+        if (data.success && data.config) {
+          studioConfig = { ...studioConfig, ...data.config };
+          applySettingsToUi(data);
+        }
+      } catch (err) {
+        console.error('Failed to load settings:', err);
+      }
+    }
+
+    function applySettingsToUi(data) {
+      const cfg = studioConfig;
+      const pathEl = document.getElementById('settings-path-label');
+      if (pathEl && (data && data.configPath || initialConfigPath)) {
+        pathEl.textContent = (data && data.configPath) || initialConfigPath;
+      }
+
+      // Format
+      selectConfigFormat(cfg.defaultFormat || 'png', false);
+
+      // Quality
+      const q = cfg.defaultQuality ?? 90;
+      const qSlider = document.getElementById('cfg-quality-slider');
+      if (qSlider) qSlider.value = q;
+      const qVal = document.getElementById('cfg-quality-val');
+      if (qVal) qVal.textContent = q + '%';
+
+      // Scale
+      selectConfigScale(cfg.defaultScale || 1, false);
+
+      // Device
+      selectConfigDevice(cfg.aiDevice || 'auto', false);
+
+      // AutoUpdate
+      const autoUpd = document.getElementById('cfg-auto-update');
+      if (autoUpd) autoUpd.checked = cfg.autoUpdate !== false;
+
+      // Search Timeout
+      const t = cfg.searchTimeoutMs || 5000;
+      const tSlider = document.getElementById('cfg-timeout-slider');
+      if (tSlider) tSlider.value = t;
+      const tVal = document.getElementById('cfg-timeout-val');
+      if (tVal) tVal.textContent = t + ' ms';
+
+      // Ignore Dirs
+      const ignInput = document.getElementById('cfg-ignore-dirs');
+      if (ignInput) {
+        ignInput.value = Array.isArray(cfg.searchIgnoreDirs) ? cfg.searchIgnoreDirs.join(', ') : (cfg.searchIgnoreDirs || '');
+      }
+
+      // Output Dir
+      const outDirInput = document.getElementById('cfg-default-out-dir');
+      if (outDirInput) outDirInput.value = cfg.defaultOutputDir || '';
+
+      // Naming Pattern
+      const patInput = document.getElementById('cfg-naming-pattern');
+      if (patInput) patInput.value = cfg.outputNamingPattern || '{name}{suffix}{scale}';
+      updateNamingPreview();
+
+      // Overwrite
+      const owCheck = document.getElementById('cfg-overwrite');
+      if (owCheck) owCheck.checked = cfg.overwriteExisting !== false;
+
+      // FPS
+      selectConfigFps(cfg.defaultFps || 60, false);
+
+      // Motion Format
+      selectConfigMotionFmt(cfg.defaultMotionFormat || 'mp4', false);
+
+      // Workspaces
+      renderStudioWorkspaces(cfg.workspaces || cfg.searchPaths || []);
+      updateSettingsCliPreview();
+    }
+
+    function selectConfigFormat(fmt, updatePreview) {
+      if (updatePreview === undefined) updatePreview = true;
+      studioConfig.defaultFormat = fmt;
+      document.querySelectorAll('#cfg-format-group .format-pill-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-fmt') === fmt);
+      });
+      updateNamingPreview();
+      if (updatePreview) updateSettingsCliPreview();
+    }
+
+    function onConfigQualityChange(val) {
+      const n = Math.min(100, Math.max(1, parseInt(val, 10) || 90));
+      studioConfig.defaultQuality = n;
+      const qSlider = document.getElementById('cfg-quality-slider');
+      if (qSlider && qSlider.value != n) qSlider.value = n;
+      const qVal = document.getElementById('cfg-quality-val');
+      if (qVal) qVal.textContent = n + '%';
+      updateSettingsCliPreview();
+    }
+
+    function selectConfigScale(scale, updatePreview) {
+      if (updatePreview === undefined) updatePreview = true;
+      studioConfig.defaultScale = Number(scale);
+      document.querySelectorAll('#cfg-scale-group .format-pill-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-scale') === String(scale));
+      });
+      updateNamingPreview();
+      if (updatePreview) updateSettingsCliPreview();
+    }
+
+    function selectConfigDevice(device, updatePreview) {
+      if (updatePreview === undefined) updatePreview = true;
+      studioConfig.aiDevice = device;
+      document.querySelectorAll('#cfg-device-group .wizard-tile').forEach(tile => {
+        tile.classList.toggle('active', tile.getAttribute('data-device') === device);
+      });
+      if (updatePreview) updateSettingsCliPreview();
+    }
+
+    function onConfigTimeoutChange(val) {
+      const n = Math.min(120000, Math.max(500, parseInt(val, 10) || 5000));
+      studioConfig.searchTimeoutMs = n;
+      const tSlider = document.getElementById('cfg-timeout-slider');
+      if (tSlider && tSlider.value != n) tSlider.value = n;
+      const tVal = document.getElementById('cfg-timeout-val');
+      if (tVal) {
+        if (n >= 1000) {
+          tVal.textContent = (n / 1000) + ' s (' + n + ' ms)';
+        } else {
+          tVal.textContent = n + ' ms';
+        }
+      }
+      updateSettingsCliPreview();
+    }
+
+    function appendIgnoreDir(name) {
+      const input = document.getElementById('cfg-ignore-dirs');
+      if (!input) return;
+      const current = input.value.split(',').map(s => s.trim()).filter(Boolean);
+      if (!current.includes(name)) {
+        current.push(name);
+        input.value = current.join(', ');
+        updateSettingsCliPreview();
+      }
+    }
+
+    function selectConfigFps(fps, updatePreview) {
+      if (updatePreview === undefined) updatePreview = true;
+      studioConfig.defaultFps = Number(fps);
+      document.querySelectorAll('#cfg-fps-group .format-pill-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-fps') === String(fps));
+      });
+      if (updatePreview) updateSettingsCliPreview();
+    }
+
+    function selectConfigMotionFmt(fmt, updatePreview) {
+      if (updatePreview === undefined) updatePreview = true;
+      studioConfig.defaultMotionFormat = fmt;
+      document.querySelectorAll('#cfg-motion-fmt-group .format-pill-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-mfmt') === fmt);
+      });
+      if (updatePreview) updateSettingsCliPreview();
+    }
+
+    function insertNamingVar(str) {
+      const input = document.getElementById('cfg-naming-pattern');
+      if (!input) return;
+      const start = input.selectionStart || input.value.length;
+      const end = input.selectionEnd || input.value.length;
+      input.value = input.value.slice(0, start) + str + input.value.slice(end);
+      input.focus();
+      input.setSelectionRange(start + str.length, start + str.length);
+      updateNamingPreview();
+      updateSettingsCliPreview();
+    }
+
+    function updateNamingPreview() {
+      const patInput = document.getElementById('cfg-naming-pattern');
+      const previewEl = document.getElementById('cfg-naming-preview');
+      if (!patInput || !previewEl) return;
+      const pat = patInput.value || '{name}{suffix}{scale}';
+      const now = new Date();
+      const dateStr = now.toISOString().slice(0, 10);
+      const timeStr = [String(now.getHours()).padStart(2, '0'), String(now.getMinutes()).padStart(2, '0'), String(now.getSeconds()).padStart(2, '0')].join('-');
+      const ext = (studioConfig.defaultFormat || 'png').toLowerCase();
+
+      let res = pat
+        .replace(/{name}/g, 'poster')
+        .replace(/{ext}/g, ext)
+        .replace(/{format}/g, ext)
+        .replace(/{suffix}/g, '')
+        .replace(/{scale}/g, studioConfig.defaultScale > 1 ? '@' + studioConfig.defaultScale + 'x' : '')
+        .replace(/{width}/g, '1080')
+        .replace(/{height}/g, '1350')
+        .replace(/{dpi}/g, '300')
+        .replace(/{page}/g, '1')
+        .replace(/{date}/g, dateStr)
+        .replace(/{datum}/g, dateStr)
+        .replace(/{time}/g, timeStr)
+        .replace(/{uhrzeit}/g, timeStr)
+        .replace(/{rand}/g, 'x')
+        .replace(/{rand4}/g, 'a8k2')
+        .replace(/{random}/g, 'a8k2')
+        .replace(/{zufall}/g, 'x');
+
+      if (!res.toLowerCase().endsWith('.' + ext)) {
+        res += '.' + ext;
+      }
+      previewEl.textContent = res;
+    }
+
+    let draggedWorkspaceIndex = null;
+
+    function renderStudioWorkspaces(list) {
+      const container = document.getElementById('cfg-workspaces-list');
+      const countEl = document.getElementById('cfg-ws-count');
+      const searchPathsList = list || [];
+      if (countEl) countEl.textContent = searchPathsList.length + ' konfiguriert';
+      if (!container) return;
+
+      if (!searchPathsList || searchPathsList.length === 0) {
+        container.innerHTML = '<div style="font-size: 12px; color: var(--text-dim); text-align: center; padding: 14px;">Keine Prioritäts-Suchordner hinterlegt. Nutze die Schnell-Buttons oben oder gib einen Pfad ein.</div>';
+        return;
+      }
+
+      container.innerHTML = searchPathsList.map((ws, i) => \`
+        <div class="search-path-item" draggable="true" data-index="\${i}"
+             ondragstart="onWorkspaceDragStart(event, \${i})"
+             ondragover="onWorkspaceDragOver(event)"
+             ondragenter="onWorkspaceDragEnter(event)"
+             ondragleave="onWorkspaceDragLeave(event)"
+             ondrop="onWorkspaceDrop(event, \${i})"
+             ondragend="onWorkspaceDragEnd(event)"
+             style="display: flex; align-items: center; justify-content: space-between; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 7px 12px; gap: 10px; cursor: grab; transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease; user-select: none;">
+          <div style="display: flex; align-items: center; gap: 10px; overflow: hidden; flex: 1;">
+            <div style="cursor: grab; color: var(--text-dim); display: flex; align-items: center; padding: 2px 4px;" title="Ziehen zum Umsortieren der Priorität">
+              <i class="fa-solid fa-grip-vertical" style="font-size: 13px;"></i>
+            </div>
+            <span style="font-size: 10px; font-weight: 700; background: \${i === 0 ? 'rgba(34,197,94,0.18)' : 'rgba(255,255,255,0.08)'}; color: \${i === 0 ? 'var(--accent)' : 'var(--text-muted)'}; padding: 2px 7px; border-radius: 4px; border: 1px solid \${i === 0 ? 'rgba(34,197,94,0.35)' : 'var(--border)'}; white-space: nowrap;">
+              <i class="fa-solid fa-bolt" style="font-size: 9px; margin-right: 3px;"></i>Priorität \${i + 1}
+            </span>
+            <span style="font-family: var(--font-mono); font-size: 12px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="\${escapeHtml(ws)}">\${escapeHtml(ws)}</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 4px;">
+            <button type="button" class="btn-secondary" style="padding: 3px 6px; font-size: 10px; \${i === 0 ? 'opacity: 0.3; cursor: default;' : ''}" \${i === 0 ? 'disabled' : ''} onclick="moveStudioWorkspace(\${i}, -1)" title="Priorität nach oben verschieben">
+              <i class="fa-solid fa-arrow-up"></i>
+            </button>
+            <button type="button" class="btn-secondary" style="padding: 3px 6px; font-size: 10px; \${i === searchPathsList.length - 1 ? 'opacity: 0.3; cursor: default;' : ''}" \${i === searchPathsList.length - 1 ? 'disabled' : ''} onclick="moveStudioWorkspace(\${i}, 1)" title="Priorität nach unten verschieben">
+              <i class="fa-solid fa-arrow-down"></i>
+            </button>
+            <button type="button" class="btn-secondary" style="padding: 4px 8px; font-size: 11px; color: var(--rose); margin-left: 4px;" onclick="removeStudioWorkspace('\${escapeHtml(ws.replace(/\\\\/g, '\\\\\\\\'))}')" title="Ordner aus Prioritätsliste entfernen">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+        </div>
+      \`).join('');
+    }
+
+    function onWorkspaceDragStart(event, index) {
+      draggedWorkspaceIndex = index;
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', String(index));
+      if (event.currentTarget) {
+        event.currentTarget.style.opacity = '0.45';
+        event.currentTarget.style.cursor = 'grabbing';
+      }
+    }
+
+    function onWorkspaceDragOver(event) {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = 'move';
+    }
+
+    function onWorkspaceDragEnter(event) {
+      event.preventDefault();
+      const el = event.currentTarget;
+      if (el && el.classList.contains('search-path-item')) {
+        el.style.borderColor = 'var(--accent)';
+        el.style.background = 'rgba(34,197,94,0.08)';
+      }
+    }
+
+    function onWorkspaceDragLeave(event) {
+      const el = event.currentTarget;
+      if (el && el.classList.contains('search-path-item')) {
+        el.style.borderColor = 'var(--border)';
+        el.style.background = 'var(--bg)';
+      }
+    }
+
+    function onWorkspaceDragEnd(event) {
+      draggedWorkspaceIndex = null;
+      document.querySelectorAll('.search-path-item').forEach(el => {
+        el.style.opacity = '1';
+        el.style.cursor = 'grab';
+        el.style.borderColor = 'var(--border)';
+        el.style.background = 'var(--bg)';
+      });
+    }
+
+    async function onWorkspaceDrop(event, targetIndex) {
+      event.preventDefault();
+      const fromIndex = draggedWorkspaceIndex !== null ? draggedWorkspaceIndex : parseInt(event.dataTransfer.getData('text/plain'), 10);
+      onWorkspaceDragEnd(event);
+
+      if (isNaN(fromIndex) || fromIndex === targetIndex) return;
+
+      const current = Array.from(studioConfig.searchPaths || studioConfig.workspaces || []);
+      if (fromIndex < 0 || fromIndex >= current.length || targetIndex < 0 || targetIndex >= current.length) return;
+
+      const [item] = current.splice(fromIndex, 1);
+      current.splice(targetIndex, 0, item);
+
+      studioConfig.searchPaths = current;
+      studioConfig.workspaces = current;
+      renderStudioWorkspaces(current);
+
+      await saveReorderedSearchPaths(current);
+    }
+
+    async function moveStudioWorkspace(index, direction) {
+      const current = Array.from(studioConfig.searchPaths || studioConfig.workspaces || []);
+      const newIndex = index + direction;
+      if (newIndex < 0 || newIndex >= current.length) return;
+
+      const [item] = current.splice(index, 1);
+      current.splice(newIndex, 0, item);
+
+      studioConfig.searchPaths = current;
+      studioConfig.workspaces = current;
+      renderStudioWorkspaces(current);
+
+      await saveReorderedSearchPaths(current);
+    }
+
+    async function saveReorderedSearchPaths(current) {
+      try {
+        const res = await fetch('/api/search-paths', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dirs: current })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Reihenfolge der Suchordner aktualisiert', 'success');
+        } else {
+          showToast(data.message || 'Fehler beim Speichern der Reihenfolge', 'error');
+        }
+      } catch (err) {
+        showToast('Fehler beim Speichern: ' + err.message, 'error');
+      }
+    }
+
+    async function addQuickSearchFolder(type) {
+      try {
+        const res = await fetch('/api/quick-folder?type=' + encodeURIComponent(type));
+        const data = await res.json();
+        if (data.success && data.path) {
+          const addRes = await fetch('/api/search-paths', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ dir: data.path })
+          });
+          const addData = await addRes.json();
+          if (addData.success) {
+            showToast('Suchordner hinzugefügt: ' + data.path, 'success');
+            loadStudioSettings();
+            loadFiles();
+          } else {
+            showToast(addData.message || 'Suchordner konnte nicht hinzugefügt werden', 'error');
+          }
+        } else {
+          showToast('Ordner konnte nicht ermittelt werden', 'error');
+        }
+      } catch (err) {
+        showToast('Fehler beim Hinzufügen: ' + err.message, 'error');
+      }
+    }
+
+    async function addStudioWorkspace() {
+      const input = document.getElementById('cfg-ws-input');
+      const val = input ? input.value.trim() : '';
+      if (!val) return;
+
+      try {
+        const res = await fetch('/api/search-paths', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dir: val })
+        });
+        const data = await res.json();
+        if (data.success) {
+          input.value = '';
+          showToast('Suchordner hinzugefügt: ' + val, 'success');
+          loadStudioSettings();
+          loadFiles();
+        } else {
+          showToast('Fehler: ' + (data.message || 'Konnte Suchordner nicht hinzufügen'), 'error');
+        }
+      } catch (err) {
+        showToast('Fehler beim Hinzufügen: ' + err.message, 'error');
+      }
+    }
+
+    async function removeStudioWorkspace(dir) {
+      try {
+        const res = await fetch('/api/search-paths?dir=' + encodeURIComponent(dir), { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Suchordner entfernt: ' + dir, 'success');
+          loadStudioSettings();
+          loadFiles();
+        } else {
+          showToast('Fehler beim Entfernen: ' + (data.message || 'Unbekannt'), 'error');
+        }
+      } catch (err) {
+        showToast('Fehler: ' + err.message, 'error');
+      }
+    }
+
+    function updateSettingsCliPreview() {
+      const autoUpd = document.getElementById('cfg-auto-update');
+      if (autoUpd) studioConfig.autoUpdate = autoUpd.checked;
+
+      const owCheck = document.getElementById('cfg-overwrite');
+      if (owCheck) studioConfig.overwriteExisting = owCheck.checked;
+
+      const outDirInput = document.getElementById('cfg-default-out-dir');
+      if (outDirInput) studioConfig.defaultOutputDir = outDirInput.value.trim();
+
+      const patInput = document.getElementById('cfg-naming-pattern');
+      if (patInput) studioConfig.outputNamingPattern = patInput.value.trim();
+
+      const ignInput = document.getElementById('cfg-ignore-dirs');
+      if (ignInput) {
+        studioConfig.searchIgnoreDirs = ignInput.value.split(',').map(s => s.trim()).filter(Boolean);
+      }
+
+      const previewEl = document.getElementById('settings-cli-preview');
+      if (previewEl) {
+        previewEl.textContent = 'toad config set defaultFormat ' + (studioConfig.defaultFormat || 'png') + 
+          ' && toad config set searchTimeoutMs ' + (studioConfig.searchTimeoutMs || 5000) +
+          (studioConfig.defaultOutputDir ? ' && toad config set defaultOutputDir "' + studioConfig.defaultOutputDir + '"' : '') +
+          ' && toad config set defaultFps ' + (studioConfig.defaultFps || 60);
+      }
+    }
+
+    async function saveStudioSettings() {
+      // Synchronously collect all values directly from DOM controls to prevent any race condition
+      const autoUpd = document.getElementById('cfg-auto-update');
+      const owCheck = document.getElementById('cfg-overwrite');
+      const outDirInput = document.getElementById('cfg-default-out-dir');
+      const patInput = document.getElementById('cfg-naming-pattern');
+      const ignInput = document.getElementById('cfg-ignore-dirs');
+      const qSlider = document.getElementById('cfg-quality-slider');
+      const tSlider = document.getElementById('cfg-timeout-slider');
+
+      if (autoUpd) studioConfig.autoUpdate = autoUpd.checked;
+      if (owCheck) studioConfig.overwriteExisting = owCheck.checked;
+      if (outDirInput) studioConfig.defaultOutputDir = outDirInput.value.trim();
+      if (patInput) studioConfig.outputNamingPattern = patInput.value.trim();
+      if (ignInput) {
+        studioConfig.searchIgnoreDirs = ignInput.value.split(',').map(s => s.trim()).filter(Boolean);
+      }
+      if (qSlider) studioConfig.defaultQuality = parseInt(qSlider.value, 10) || 90;
+      if (tSlider) studioConfig.searchTimeoutMs = parseInt(tSlider.value, 10) || 5000;
+
+      updateSettingsCliPreview();
+
+      const payload = {
+        defaultFormat: studioConfig.defaultFormat || 'png',
+        defaultQuality: Number(studioConfig.defaultQuality ?? 90),
+        defaultScale: Number(studioConfig.defaultScale ?? 1),
+        aiDevice: studioConfig.aiDevice || 'auto',
+        autoUpdate: studioConfig.autoUpdate !== false,
+        searchTimeoutMs: Number(studioConfig.searchTimeoutMs ?? 5000),
+        searchIgnoreDirs: studioConfig.searchIgnoreDirs || [],
+        defaultOutputDir: studioConfig.defaultOutputDir || '',
+        outputNamingPattern: studioConfig.outputNamingPattern || '{name}{suffix}{scale}',
+        overwriteExisting: studioConfig.overwriteExisting !== false,
+        defaultFps: Number(studioConfig.defaultFps ?? 60),
+        defaultMotionFormat: studioConfig.defaultMotionFormat || 'mp4',
+        workspaces: studioConfig.workspaces || studioConfig.searchPaths || [],
+        searchPaths: studioConfig.searchPaths || studioConfig.workspaces || []
+      };
+
+      try {
+        const res = await fetch('/api/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success && data.config) {
+          studioConfig = { ...studioConfig, ...data.config };
+          applySettingsToUi(data);
+          showToast('Einstellungen erfolgreich in ~/.toadrc.json gespeichert!', 'success');
+        } else {
+          showToast('Fehler beim Speichern: ' + (data.error || 'Unbekannt'), 'error');
+        }
+      } catch (err) {
+        showToast('Verbindungsfehler beim Speichern: ' + err.message, 'error');
+      }
+    }
+
+    async function resetStudioSettings() {
+      if (!confirm('Möchtest du die TOAD-Einstellungen wirklich auf Standardwerte zurücksetzen?')) return;
+      try {
+        const res = await fetch('/api/config/reset', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Einstellungen auf Standardwerte zurückgesetzt.', 'success');
+          loadStudioSettings();
+        } else {
+          showToast('Fehler beim Zurücksetzen: ' + (data.error || 'Unbekannt'), 'error');
+        }
+      } catch (err) {
+        showToast('Fehler beim Zurücksetzen: ' + err.message, 'error');
       }
     }
 
@@ -4844,16 +5937,22 @@ export function generateStudioHtml(initialFile?: string): string {
         document.getElementById('dpi-select').value = '72';
         document.getElementById('quality-slider').value = '85';
         document.getElementById('quality-val').textContent = '85';
+        const qNum = document.getElementById('quality-num');
+        if (qNum) qNum.value = '85';
       } else if (preset === 'print') {
         setScale(2);
         document.getElementById('dpi-select').value = '300';
         document.getElementById('quality-slider').value = '98';
         document.getElementById('quality-val').textContent = '98';
+        const qNum = document.getElementById('quality-num');
+        if (qNum) qNum.value = '98';
       } else if (preset === 'social') {
         setScale(2);
         document.getElementById('dpi-select').value = '150';
         document.getElementById('quality-slider').value = '90';
         document.getElementById('quality-val').textContent = '90';
+        const qNum = document.getElementById('quality-num');
+        if (qNum) qNum.value = '90';
       }
 
       updateCliPreview();
@@ -5694,6 +6793,8 @@ export function generateStudioHtml(initialFile?: string): string {
 
     function onQualitySliderChange(val) {
       document.getElementById('img-quality-badge').textContent = val + '%';
+      const qNum = document.getElementById('img-quality-num');
+      if (qNum && qNum.value != val) qNum.value = val;
       document.querySelectorAll('.preset-pill-btn').forEach(b => b.classList.remove('active'));
       const matchingBtn = document.getElementById('qp-' + val);
       if (matchingBtn) matchingBtn.classList.add('active');

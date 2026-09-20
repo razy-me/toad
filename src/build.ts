@@ -31,6 +31,7 @@ import { exportToPdfBuffer } from './engine/pdfExporter.js';
 import { loadFontsFromDir, registerFontDirectives } from './engine/fontLoader.js';
 import { ParseError } from './parser/ast.js';
 import { AstCache, TextMeasurementCache } from './engine/buildCache.js';
+import { getConfig, resolveOutputDestination } from './utils/fileFinder.js';
 
 export interface BuildOptions {
   outDir?: string;
@@ -384,21 +385,45 @@ export async function compileToad(
         });
 
         if (formatsToRender.includes('png')) {
-          const pngPath = path.join(outDir, `${fileBase}.png`);
+          const pngPath = resolveOutputDestination(resolvedEntry, options.outDir, 'png', {
+            name: baseName,
+            suffix: page.nameSuffix,
+            scale: scaleSuffix,
+            width: Math.round(pageLayout.canvas.width * scale),
+            height: Math.round(pageLayout.canvas.height * scale),
+            dpi: pageLayout.canvas.dpi,
+            page: layoutPages.indexOf(page) + 1
+          });
           fs.mkdirSync(path.dirname(pngPath), { recursive: true });
           fs.writeFileSync(pngPath, await renderedCanvas.encode('png'));
           outputFiles.push(pngPath);
         }
 
         if (formatsToRender.includes('jpg') || formatsToRender.includes('jpeg')) {
-          const jpgPath = path.join(outDir, `${fileBase}.jpg`);
+          const jpgPath = resolveOutputDestination(resolvedEntry, options.outDir, 'jpg', {
+            name: baseName,
+            suffix: page.nameSuffix,
+            scale: scaleSuffix,
+            width: Math.round(pageLayout.canvas.width * scale),
+            height: Math.round(pageLayout.canvas.height * scale),
+            dpi: pageLayout.canvas.dpi,
+            page: layoutPages.indexOf(page) + 1
+          });
           fs.mkdirSync(path.dirname(jpgPath), { recursive: true });
           fs.writeFileSync(jpgPath, await flattenForJpeg(renderedCanvas).encode('jpeg', quality));
           outputFiles.push(jpgPath);
         }
 
         if (formatsToRender.includes('webp')) {
-          const webpPath = path.join(outDir, `${fileBase}.webp`);
+          const webpPath = resolveOutputDestination(resolvedEntry, options.outDir, 'webp', {
+            name: baseName,
+            suffix: page.nameSuffix,
+            scale: scaleSuffix,
+            width: Math.round(pageLayout.canvas.width * scale),
+            height: Math.round(pageLayout.canvas.height * scale),
+            dpi: pageLayout.canvas.dpi,
+            page: layoutPages.indexOf(page) + 1
+          });
           fs.mkdirSync(path.dirname(webpPath), { recursive: true });
           fs.writeFileSync(webpPath, await renderedCanvas.encode('webp', quality));
           outputFiles.push(webpPath);
@@ -412,8 +437,8 @@ export async function compileToad(
   const vectorScale = options.vectorScale && options.vectorScale > 0 ? options.vectorScale : 2.5;
 
   for (const page of layoutPages) {
-    const fileBase = `${baseName}${page.nameSuffix}`;
     const pageLayout = page.pageLayout;
+    const pageIndex = layoutPages.indexOf(page) + 1;
 
     if (formatsToRender.includes('psd')) {
       const effectiveDpi = options.dpi || (pageLayout.canvas.hasExplicitDpi ? pageLayout.canvas.dpi : 72);
@@ -423,7 +448,15 @@ export async function compileToad(
         basePath: resolvedEntry,
         humanizeLayerNames: options.humanizeLayerNames
       });
-      const psdPath = path.join(outDir, `${fileBase}.psd`);
+      const psdPath = resolveOutputDestination(resolvedEntry, options.outDir, 'psd', {
+        name: baseName,
+        suffix: page.nameSuffix,
+        scale: '',
+        width: Math.round(pageLayout.canvas.width * vectorScale),
+        height: Math.round(pageLayout.canvas.height * vectorScale),
+        dpi: effectiveDpi,
+        page: pageIndex
+      });
       fs.mkdirSync(path.dirname(psdPath), { recursive: true });
       fs.writeFileSync(psdPath, psdBuf);
       outputFiles.push(psdPath);
@@ -436,7 +469,15 @@ export async function compileToad(
         textToPath: options.textToPath
       });
       const svgContent = await exporter.export(pageLayout, vectorScale);
-      const svgPath = path.join(outDir, `${fileBase}.svg`);
+      const svgPath = resolveOutputDestination(resolvedEntry, options.outDir, 'svg', {
+        name: baseName,
+        suffix: page.nameSuffix,
+        scale: '',
+        width: Math.round(pageLayout.canvas.width * vectorScale),
+        height: Math.round(pageLayout.canvas.height * vectorScale),
+        dpi: pageLayout.canvas.dpi,
+        page: pageIndex
+      });
       fs.mkdirSync(path.dirname(svgPath), { recursive: true });
       fs.writeFileSync(svgPath, svgContent, 'utf-8');
       outputFiles.push(svgPath);
@@ -451,7 +492,15 @@ export async function compileToad(
         colorMode: (pageLayout.canvas as any).colorMode,
         scale: pdfScale
       });
-      const pdfPath = path.join(outDir, `${fileBase}.pdf`);
+      const pdfPath = resolveOutputDestination(resolvedEntry, options.outDir, 'pdf', {
+        name: baseName,
+        suffix: page.nameSuffix,
+        scale: pdfScale !== 1 ? `@${pdfScale}x` : '',
+        width: Math.round(pageLayout.canvas.width * pdfScale),
+        height: Math.round(pageLayout.canvas.height * pdfScale),
+        dpi: pageLayout.canvas.dpi,
+        page: pageIndex
+      });
       fs.mkdirSync(path.dirname(pdfPath), { recursive: true });
       fs.writeFileSync(pdfPath, pdfBuf);
       outputFiles.push(pdfPath);

@@ -142,7 +142,28 @@ export { formatToad, FormatOptions } from './tools/formatter.js';
 export { lintDocument } from './tools/linter.js';
 export { ToadLanguageServer } from './tools/lsp/server.js';
 export { runInit } from './scaffold.js';
-export { findToadFiles, resolveEntryFile, getWorkspaces, addWorkspace, removeWorkspace, listAllToadFiles, ToadFileInfo } from './utils/fileFinder.js';
+export {
+  findToadFiles,
+  resolveEntryFile,
+  findAnyFile,
+  resolveAnyFile,
+  getWorkspaces,
+  addWorkspace,
+  removeWorkspace,
+  getSearchPaths,
+  addSearchPath,
+  removeSearchPath,
+  listAllToadFiles,
+  getConfigPath,
+  getConfig,
+  saveConfig,
+  getConfigValue,
+  setConfigValue,
+  resetConfig,
+  DEFAULT_CONFIG,
+  ToadConfig,
+  ToadFileInfo
+} from './utils/fileFinder.js';
 export { auditDesign, formatTerminalReport, formatWarningsSection, formatFixesSection, FormatReportOptions, DesignAuditResult, DesignIssue } from './tools/designAuditor.js';
 export {
   bundleAssets,

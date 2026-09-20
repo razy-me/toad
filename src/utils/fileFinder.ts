@@ -14,15 +14,55 @@ const IGNORED_FOLDERS = new Set([
   'windows', 'program files', 'program files (x86)', 'programdata', '.vscode', '.gemini',
   'dist', 'build', '.cache', 'temp', 'tmp', '$winreagent', 'config.msi', 'perflogs',
   '.antigravity-ide', '.next', '.nuxt', '.turbo', '.angular', 'vendor', '$sysreset',
-  'recovery', 'msys64', 'inetpub', 'intel', 'users', 'dokumente und einstellungen',
-  'programme', 'application data'
+  'recovery', 'msys64', 'inetpub', 'intel', 'programme', 'application data'
 ]);
+
+// Configuration file for user settings and workspaces
+const CONFIG_FILE = path.join(os.homedir(), '.toadrc.json');
+
+export interface ToadConfig {
+  searchPaths?: string[]; // Folders searched first during file searches
+  workspaces?: string[];  // Alias for searchPaths
+  searchIgnoreDirs?: string[]; // Custom directory names/patterns to skip during file searches
+  searchTimeoutMs?: number; // Maximum search duration in milliseconds before early abort
+  defaultOutputDir?: string; // Default output folder for exports (empty = beside input file)
+  outputNamingPattern?: string; // Custom naming pattern with variables, e.g. "{name}{scale}"
+  overwriteExisting?: boolean; // Overwrite existing files or generate numbered suffixes
+  defaultFps?: number; // Default framerate for motion exports (e.g. 30, 60, 120)
+  defaultMotionFormat?: string; // Default format for motion (mp4, webm, gif, frames)
+  defaultFormat?: string; // e.g. 'png' | 'webp' | 'jpg' | 'svg'
+  defaultQuality?: number; // 1-100 (default: 90)
+  defaultScale?: number; // e.g. 1, 2, 4
+  aiDevice?: 'auto' | 'dml' | 'cpu' | string;
+  autoUpdate?: boolean;
+  theme?: string;
+  [key: string]: any;
+}
+
+export const DEFAULT_CONFIG: ToadConfig = {
+  searchPaths: [],
+  workspaces: [],
+  searchIgnoreDirs: [],
+  searchTimeoutMs: 5000,
+  defaultOutputDir: '',
+  outputNamingPattern: '{name}{suffix}{scale}',
+  overwriteExisting: true,
+  defaultFps: 60,
+  defaultMotionFormat: 'mp4',
+  defaultFormat: 'png',
+  defaultQuality: 90,
+  defaultScale: 1,
+  aiDevice: 'auto',
+  autoUpdate: true,
+  theme: 'dark'
+};
 
 /**
  * Checks if a given path or directory name should be skipped.
- * Explicitly ignores OS system folders, \toad\tests\, and \toad\the_seed\.
+ * Explicitly ignores OS system folders, \toad\tests\, \toad\the_seed\,
+ * and user-configured searchIgnoreDirs.
  */
-export function isIgnoredPath(targetPath: string): boolean {
+export function isIgnoredPath(targetPath: string, customIgnoreDirs?: string[]): boolean {
   const normalized = targetPath.replace(/\\/g, '/').toLowerCase();
   
   // Allow test sandbox during testing
@@ -45,80 +85,389 @@ export function isIgnoredPath(targetPath: string): boolean {
     }
   }
 
+  // Check against custom user ignore dirs
+  const userIgnores = customIgnoreDirs || getConfig().searchIgnoreDirs || [];
+  if (userIgnores.length > 0) {
+    for (const pattern of userIgnores) {
+      const p = pattern.trim().toLowerCase().replace(/\\/g, '/').replace(/^\/+|\/+$/g, '');
+      if (!p) continue;
+      if (segments.includes(p) || normalized.includes('/' + p + '/') || normalized.endsWith('/' + p) || normalized === p) {
+        return true;
+      }
+    }
+  }
+
   return false;
 }
 
-// Configuration file for user-defined workspaces
-const CONFIG_FILE = path.join(os.homedir(), '.toadrc.json');
+/**
+ * Formats an output filename according to the user-configured pattern or default template.
+ * Supported variables:
+ *  - {name}    : Basename of the file (e.g. "poster")
+ *  - {ext}     : Extension without dot (e.g. "png")
+ *  - {suffix}  : Canvas/Page suffix (e.g. "-page2")
+ *  - {scale}   : Scale indicator (e.g. "@2x" or empty)
+ *  - {width}   : Canvas width in pixels
+ *  - {height}  : Canvas height in pixels
+ *  - {dpi}     : Effective DPI
+ *  - {format}  : Output format (e.g. "png")
+ *  - {date}    : Current ISO date (YYYY-MM-DD)
+ *  - {time}    : Current timestamp (HH-MM-SS)
+ *  - {page}    : Page/canvas index (1-based)
+ */
+export function formatOutputFileName(
+  pattern: string | undefined,
+  vars: {
+    name: string;
+    ext?: string;
+    suffix?: string;
+    scale?: string | number;
+    width?: number;
+    height?: number;
+    dpi?: number;
+    format?: string;
+    page?: number;
+  }
+): string {
+  const tmpl = pattern && pattern.trim() ? pattern : '{name}{suffix}{scale}';
+  const now = new Date();
+  const dateStr = now.toISOString().slice(0, 10);
+  const timeStr = [
+    String(now.getHours()).padStart(2, '0'),
+    String(now.getMinutes()).padStart(2, '0'),
+    String(now.getSeconds()).padStart(2, '0')
+  ].join('-');
 
-export interface ToadConfig {
-  workspaces?: string[];
+  // Random character generation: {rand} = single char, {rand4} = 4 chars
+  const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  const getRandomChars = (len = 1) => {
+    let s = '';
+    for (let i = 0; i < len; i++) {
+      s += alphabet[Math.floor(Math.random() * alphabet.length)];
+    }
+    return s;
+  };
+  const rand1 = getRandomChars(1);
+  const rand4 = getRandomChars(4);
+
+  let scaleStr = '';
+  if (vars.scale !== undefined && vars.scale !== '' && vars.scale !== 1) {
+    if (typeof vars.scale === 'number') {
+      scaleStr = `@${vars.scale}x`;
+    } else {
+      scaleStr = String(vars.scale);
+    }
+  }
+
+  const map: Record<string, string> = {
+    '{name}': vars.name || 'output',
+    '{ext}': vars.ext || vars.format || 'png',
+    '{suffix}': vars.suffix || '',
+    '{scale}': scaleStr,
+    '{width}': vars.width !== undefined ? String(vars.width) : '',
+    '{height}': vars.height !== undefined ? String(vars.height) : '',
+    '{dpi}': vars.dpi !== undefined ? String(vars.dpi) : '',
+    '{format}': vars.format || vars.ext || 'png',
+    '{page}': vars.page !== undefined ? String(vars.page) : '1',
+    '{date}': dateStr,
+    '{time}': timeStr,
+    '{datum}': dateStr,
+    '{uhrzeit}': timeStr,
+    '{rand}': rand1,
+    '{rand4}': rand4,
+    '{random}': rand4,
+    '{zufall}': rand1
+  };
+
+  let res = tmpl;
+  for (const [placeholder, val] of Object.entries(map)) {
+    res = res.split(placeholder).join(val);
+  }
+
+  // Clean up duplicate separators or invalid filesystem characters
+  return res.replace(/[/\\:*?"<>|]/g, '-').replace(/-+/g, '-').replace(/^[-_]+|[-_]+$/g, '') || vars.name;
 }
 
-export function getWorkspaces(): string[] {
+/**
+ * Resolves the destination output file path, taking into account defaultOutputDir,
+ * outputNamingPattern, and overwriteExisting (numbering -1, -2 if overwrite is false).
+ */
+export function resolveOutputDestination(
+  inputEntry: string,
+  cliOutDir: string | undefined,
+  format: string,
+  vars: {
+    name: string;
+    suffix?: string;
+    scale?: string | number;
+    width?: number;
+    height?: number;
+    dpi?: number;
+    page?: number;
+  }
+): string {
+  const cfg = getConfig();
+  let baseDir = cliOutDir ? path.resolve(cliOutDir) : '';
+  if (!baseDir) {
+    if (cfg.defaultOutputDir && cfg.defaultOutputDir.trim()) {
+      baseDir = path.isAbsolute(cfg.defaultOutputDir)
+        ? cfg.defaultOutputDir
+        : path.resolve(process.cwd(), cfg.defaultOutputDir);
+    } else {
+      baseDir = path.dirname(path.resolve(inputEntry));
+    }
+  }
+
+  const baseFileName = formatOutputFileName(cfg.outputNamingPattern, {
+    ...vars,
+    format,
+    ext: format
+  });
+
+  const extWithDot = `.${format.toLowerCase()}`;
+  let finalPath = path.join(baseDir, `${baseFileName}${extWithDot}`);
+
+  const overwrite = cfg.overwriteExisting !== false;
+  if (!overwrite && fs.existsSync(finalPath)) {
+    let counter = 1;
+    while (fs.existsSync(path.join(baseDir, `${baseFileName}-${counter}${extWithDot}`))) {
+      counter++;
+    }
+    finalPath = path.join(baseDir, `${baseFileName}-${counter}${extWithDot}`);
+  }
+
+  return finalPath;
+}
+
+export function getConfigPath(): string {
+  return CONFIG_FILE;
+}
+
+export function getConfig(): ToadConfig {
+  let loaded: ToadConfig = {};
   try {
     if (fs.existsSync(CONFIG_FILE)) {
       const raw = fs.readFileSync(CONFIG_FILE, 'utf-8');
-      const data: ToadConfig = JSON.parse(raw);
-      if (Array.isArray(data.workspaces)) {
-        return data.workspaces.filter(dir => {
-          try {
-            return fs.existsSync(dir) && fs.statSync(dir).isDirectory();
-          } catch {
-            return false;
-          }
-        });
-      }
+      loaded = JSON.parse(raw) || {};
     }
   } catch {}
-  return [];
+
+  const rawPaths = Array.isArray(loaded.searchPaths)
+    ? loaded.searchPaths
+    : (Array.isArray(loaded.workspaces) ? loaded.workspaces : []);
+
+  return {
+    ...DEFAULT_CONFIG,
+    ...loaded,
+    searchPaths: rawPaths,
+    workspaces: rawPaths
+  };
 }
 
-export function addWorkspace(dirPath: string): { success: boolean; message: string; workspaces: string[] } {
+export function saveConfig(updates: Partial<ToadConfig>): ToadConfig {
+  let current: ToadConfig = {};
+  try {
+    if (fs.existsSync(CONFIG_FILE)) {
+      const raw = fs.readFileSync(CONFIG_FILE, 'utf-8');
+      current = JSON.parse(raw) || {};
+    }
+  } catch {}
+
+  const merged = { ...current, ...updates };
+  Object.keys(merged).forEach(k => {
+    if (merged[k] === undefined) delete merged[k];
+  });
+
+  try {
+    fs.writeFileSync(CONFIG_FILE, JSON.stringify(merged, null, 2), 'utf-8');
+  } catch (err: any) {
+    console.error(`Failed to write configuration to ${CONFIG_FILE}:`, err);
+  }
+  return getConfig();
+}
+
+export function getConfigValue(key: string): any {
+  const cfg = getConfig();
+  return cfg[key];
+}
+
+export function setConfigValue(key: string, rawVal: any): { success: boolean; message: string; key: string; value: any; config: ToadConfig } {
+  let parsedVal = rawVal;
+  if (typeof rawVal === 'string') {
+    const trimmed = rawVal.trim();
+    if (trimmed.toLowerCase() === 'true') parsedVal = true;
+    else if (trimmed.toLowerCase() === 'false') parsedVal = false;
+    else if (/^-?\d+(\.\d+)?$/.test(trimmed)) parsedVal = Number(trimmed);
+    else {
+      try {
+        if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+          parsedVal = JSON.parse(trimmed);
+        }
+      } catch {}
+    }
+  }
+
+  // Value validations
+  if (key === 'defaultQuality') {
+    const n = Number(parsedVal);
+    if (isNaN(n) || n < 1 || n > 100) {
+      return { success: false, message: `Quality must be a number between 1 and 100 (got ${rawVal})`, key, value: rawVal, config: getConfig() };
+    }
+    parsedVal = Math.round(n);
+  }
+  if (key === 'defaultScale') {
+    const n = Number(parsedVal);
+    if (isNaN(n) || n <= 0 || n > 16) {
+      return { success: false, message: `Scale must be a positive number between 1 and 16 (got ${rawVal})`, key, value: rawVal, config: getConfig() };
+    }
+    parsedVal = n;
+  }
+  if (key === 'defaultFormat') {
+    const valid = ['png', 'webp', 'jpg', 'jpeg', 'svg', 'psd', 'pdf', 'avif'];
+    if (!valid.includes(String(parsedVal).toLowerCase())) {
+      return { success: false, message: `Format must be one of: ${valid.join(', ')} (got ${rawVal})`, key, value: rawVal, config: getConfig() };
+    }
+    parsedVal = String(parsedVal).toLowerCase();
+  }
+  if (key === 'aiDevice') {
+    const valid = ['auto', 'dml', 'cpu'];
+    if (!valid.includes(String(parsedVal).toLowerCase())) {
+      return { success: false, message: `aiDevice must be one of: ${valid.join(', ')} (got ${rawVal})`, key, value: rawVal, config: getConfig() };
+    }
+    parsedVal = String(parsedVal).toLowerCase();
+  }
+  if (key === 'searchTimeoutMs') {
+    const n = Number(parsedVal);
+    if (isNaN(n) || n < 500 || n > 120000) {
+      return { success: false, message: `searchTimeoutMs must be a number between 500 and 120000 ms (got ${rawVal})`, key, value: rawVal, config: getConfig() };
+    }
+    parsedVal = Math.round(n);
+  }
+  if (key === 'defaultFps') {
+    const n = Number(parsedVal);
+    if (isNaN(n) || n < 1 || n > 240) {
+      return { success: false, message: `defaultFps must be between 1 and 240 (got ${rawVal})`, key, value: rawVal, config: getConfig() };
+    }
+    parsedVal = Math.round(n);
+  }
+  if (key === 'defaultMotionFormat') {
+    const valid = ['mp4', 'webm', 'gif', 'frames'];
+    if (!valid.includes(String(parsedVal).toLowerCase())) {
+      return { success: false, message: `defaultMotionFormat must be one of: ${valid.join(', ')} (got ${rawVal})`, key, value: rawVal, config: getConfig() };
+    }
+    parsedVal = String(parsedVal).toLowerCase();
+  }
+  if (key === 'searchIgnoreDirs') {
+    if (typeof parsedVal === 'string') {
+      parsedVal = parsedVal.split(/[,;\n]+/).map(s => s.trim()).filter(Boolean);
+    } else if (!Array.isArray(parsedVal)) {
+      parsedVal = [];
+    }
+  }
+  if (key === 'outputNamingPattern') {
+    parsedVal = String(parsedVal || '{name}{suffix}{scale}').trim();
+  }
+  if (key === 'defaultOutputDir') {
+    parsedVal = String(parsedVal || '').trim();
+  }
+  if (key === 'overwriteExisting') {
+    parsedVal = Boolean(parsedVal);
+  }
+
+  const updated = saveConfig({ [key]: parsedVal });
+  return {
+    success: true,
+    message: `Configuration updated: ${key} = ${JSON.stringify(parsedVal)}`,
+    key,
+    value: parsedVal,
+    config: updated
+  };
+}
+
+export function resetConfig(): ToadConfig {
+  const current = getConfig();
+  const resetData: ToadConfig = {
+    ...DEFAULT_CONFIG,
+    searchPaths: current.searchPaths || current.workspaces || [],
+    workspaces: current.searchPaths || current.workspaces || []
+  };
+  fs.writeFileSync(CONFIG_FILE, JSON.stringify(resetData, null, 2), 'utf-8');
+  return resetData;
+}
+
+export function getSearchPaths(): string[] {
+  const cfg = getConfig();
+  const list = Array.isArray(cfg.searchPaths) ? cfg.searchPaths : (Array.isArray(cfg.workspaces) ? cfg.workspaces : []);
+  return list.filter(dir => {
+    try {
+      return fs.existsSync(dir) && fs.statSync(dir).isDirectory();
+    } catch {
+      return false;
+    }
+  });
+}
+
+export function addSearchPath(dirPath: string): { success: boolean; message: string; searchPaths: string[] } {
   const resolved = path.resolve(dirPath);
   if (!fs.existsSync(resolved) || !fs.statSync(resolved).isDirectory()) {
-    return { success: false, message: `Directory does not exist: ${resolved}`, workspaces: getWorkspaces() };
+    return { success: false, message: `Directory does not exist: ${resolved}`, searchPaths: getSearchPaths() };
   }
 
-  let currentConfig: ToadConfig = {};
-  try {
-    if (fs.existsSync(CONFIG_FILE)) {
-      currentConfig = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf-8'));
-    }
-  } catch {}
-
-  const currentWorkspaces = Array.isArray(currentConfig.workspaces) ? currentConfig.workspaces : [];
+  const current = getSearchPaths();
   const normalizedNew = resolved.toLowerCase();
-  if (currentWorkspaces.some(w => path.resolve(w).toLowerCase() === normalizedNew)) {
-    return { success: true, message: `Workspace is already registered: ${resolved}`, workspaces: currentWorkspaces };
+  if (current.some(w => path.resolve(w).toLowerCase() === normalizedNew)) {
+    return { success: true, message: `Priority search path is already registered: ${resolved}`, searchPaths: current };
   }
 
-  currentWorkspaces.push(resolved);
-  currentConfig.workspaces = currentWorkspaces;
-  fs.writeFileSync(CONFIG_FILE, JSON.stringify(currentConfig, null, 2), 'utf-8');
-  return { success: true, message: `Workspace added: ${resolved}`, workspaces: currentWorkspaces };
+  current.push(resolved);
+  saveConfig({ searchPaths: current, workspaces: current });
+  return { success: true, message: `Priority search path added: ${resolved}`, searchPaths: current };
 }
 
-export function removeWorkspace(dirPath: string): { success: boolean; message: string; workspaces: string[] } {
+export function removeSearchPath(dirPath: string): { success: boolean; message: string; searchPaths: string[] } {
   const resolved = path.resolve(dirPath);
-  let currentConfig: ToadConfig = {};
-  try {
-    if (fs.existsSync(CONFIG_FILE)) {
-      currentConfig = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf-8'));
-    }
-  } catch {}
-
-  const currentWorkspaces = Array.isArray(currentConfig.workspaces) ? currentConfig.workspaces : [];
+  const current = getSearchPaths();
   const normalized = resolved.toLowerCase();
-  const filtered = currentWorkspaces.filter(w => path.resolve(w).toLowerCase() !== normalized);
+  const filtered = current.filter(w => path.resolve(w).toLowerCase() !== normalized);
 
-  if (filtered.length === currentWorkspaces.length) {
-    return { success: false, message: `Workspace not found: ${dirPath}`, workspaces: currentWorkspaces };
+  if (filtered.length === current.length) {
+    return { success: false, message: `Search path not found: ${dirPath}`, searchPaths: current };
   }
 
-  currentConfig.workspaces = filtered;
-  fs.writeFileSync(CONFIG_FILE, JSON.stringify(currentConfig, null, 2), 'utf-8');
-  return { success: true, message: `Workspace removed: ${resolved}`, workspaces: filtered };
+  saveConfig({ searchPaths: filtered, workspaces: filtered });
+  return { success: true, message: `Priority search path removed: ${resolved}`, searchPaths: filtered };
+}
+
+export function setSearchPaths(dirs: string[]): { success: boolean; message: string; searchPaths: string[] } {
+  const valid: string[] = [];
+  const seen = new Set<string>();
+
+  for (const d of dirs) {
+    if (typeof d !== 'string' || !d.trim()) continue;
+    const resolved = path.resolve(d.trim());
+    const norm = resolved.toLowerCase();
+    if (!seen.has(norm)) {
+      seen.add(norm);
+      if (fs.existsSync(resolved) && fs.statSync(resolved).isDirectory()) {
+        valid.push(resolved);
+      }
+    }
+  }
+
+  saveConfig({ searchPaths: valid, workspaces: valid });
+  return { success: true, message: 'Priority search paths reordered successfully', searchPaths: valid };
+}
+
+export const setWorkspaces = setSearchPaths;
+
+export const getWorkspaces = getSearchPaths;
+export function addWorkspace(dirPath: string): { success: boolean; message: string; workspaces: string[] } {
+  const res = addSearchPath(dirPath);
+  return { success: res.success, message: res.message, workspaces: res.searchPaths };
+}
+export function removeWorkspace(dirPath: string): { success: boolean; message: string; workspaces: string[] } {
+  const res = removeSearchPath(dirPath);
+  return { success: res.success, message: res.message, workspaces: res.searchPaths };
 }
 
 // Persistent cache path for recently discovered .toad files across sessions
@@ -164,7 +513,7 @@ function saveCache(newFiles: string[]): void {
 }
 
 /**
- * Searches directories breadth-first for matching .toad files.
+ * Searches directories breadth-first for matching files (.toad or any extension).
  */
 function searchDir(
   dir: string,
@@ -173,9 +522,12 @@ function searchDir(
   seenPaths: Set<string>,
   maxDepth = 5,
   currentDepth = 0,
-  seenDirs = new Set<string>()
+  seenDirs = new Set<string>(),
+  targetExtensions?: string[],
+  deadline?: number
 ): void {
   if (currentDepth > maxDepth || results.length >= 25) return;
+  if (deadline !== undefined && Date.now() > deadline) return;
 
   try {
     let canonicalDir = dir;
@@ -190,7 +542,10 @@ function searchDir(
     const entries = fs.readdirSync(dir, { withFileTypes: true });
     const subdirs: string[] = [];
 
+    const allowedExts = targetExtensions ? targetExtensions.map(e => e.toLowerCase()) : null;
+
     for (const entry of entries) {
+      if (deadline !== undefined && Date.now() > deadline) return;
       const name = entry.name;
       const lower = name.toLowerCase();
 
@@ -215,20 +570,44 @@ function searchDir(
       }
 
       if (isFile) {
-        const lowerNoExt = lower.endsWith('.toad') ? lower.slice(0, -5) : lower;
-        const targetNoExt = targetFileName.endsWith('.toad') ? targetFileName.slice(0, -5) : targetFileName;
+        let isMatch = false;
 
-        const isExactMatch =
-          lower === targetFileName ||
-          lower === targetFileName + '.toad' ||
-          (targetFileName.endsWith('.toad') && lower === targetFileName);
+        if (allowedExts && allowedExts.length > 0) {
+          const entryExt = path.extname(lower);
+          if (allowedExts.includes(entryExt)) {
+            // Check exact filename match
+            if (lower === targetFileName) {
+              isMatch = true;
+            } else {
+              const entryBase = path.basename(lower, entryExt);
+              const targetExt = path.extname(targetFileName);
+              const targetBase = targetExt ? path.basename(targetFileName, targetExt) : targetFileName;
 
-        // Normalize hyphens and underscores (e.g. velora_nova matches velora-nova)
-        const isFuzzyHyphenMatch =
-          lower.endsWith('.toad') &&
-          lowerNoExt.replace(/[-_]/g, '') === targetNoExt.replace(/[-_]/g, '');
+              // Exact stem match or fuzzy hyphen/underscore match
+              if (entryBase === targetBase || entryBase.replace(/[-_]/g, '') === targetBase.replace(/[-_]/g, '')) {
+                isMatch = true;
+              }
+            }
+          }
+        } else {
+          // Default .toad matching mode
+          const lowerNoExt = lower.endsWith('.toad') ? lower.slice(0, -5) : lower;
+          const targetNoExt = targetFileName.endsWith('.toad') ? targetFileName.slice(0, -5) : targetFileName;
 
-        if (isExactMatch || isFuzzyHyphenMatch) {
+          const isExactMatch =
+            lower === targetFileName ||
+            lower === targetFileName + '.toad' ||
+            (targetFileName.endsWith('.toad') && lower === targetFileName);
+
+          // Normalize hyphens and underscores (e.g. velora_nova matches velora-nova)
+          const isFuzzyHyphenMatch =
+            lower.endsWith('.toad') &&
+            lowerNoExt.replace(/[-_]/g, '') === targetNoExt.replace(/[-_]/g, '');
+
+          isMatch = isExactMatch || isFuzzyHyphenMatch;
+        }
+
+        if (isMatch) {
           const resolved = path.resolve(fullPath);
           const normalized = resolved.toLowerCase();
           if (!seenPaths.has(normalized)) {
@@ -237,7 +616,7 @@ function searchDir(
           }
         }
       } else if (isDir) {
-        if (!IGNORED_FOLDERS.has(lower)) {
+        if (!isIgnoredPath(fullPath) && !IGNORED_FOLDERS.has(lower)) {
           try {
             const realSub = fs.realpathSync(fullPath).toLowerCase();
             if (!seenDirs.has(realSub)) {
@@ -252,7 +631,8 @@ function searchDir(
 
     for (const sub of subdirs) {
       if (results.length >= 25) break;
-      searchDir(sub, targetFileName, results, seenPaths, maxDepth, currentDepth + 1, seenDirs);
+      if (deadline !== undefined && Date.now() > deadline) break;
+      searchDir(sub, targetFileName, results, seenPaths, maxDepth, currentDepth + 1, seenDirs, targetExtensions, deadline);
     }
   } catch {}
 }
@@ -326,12 +706,28 @@ export async function findToadFiles(query: string): Promise<string[]> {
 
   const results: string[] = [];
   const seenPaths = new Set<string>();
+  const cfg = getConfig();
+  const deadline = Date.now() + (cfg.searchTimeoutMs || 5000);
+
+  // 1.5 Priority Search Paths (Configured in settings - searched first)
+  const priorityPaths = getSearchPaths();
+  for (const pDir of priorityPaths) {
+    if (fs.existsSync(pDir) && !seenPaths.has(pDir.toLowerCase())) {
+      searchDir(pDir, targetBase, results, seenPaths, 5, 0, new Set<string>(), undefined, deadline);
+      if (results.length > 0) {
+        saveCache(results);
+        return results;
+      }
+    }
+  }
 
   // 2. Fast Tier 1: Search current working directory (depth 5)
-  searchDir(process.cwd(), targetBase, results, seenPaths, 5, 0);
-  if (results.length > 0) {
-    saveCache(results);
-    return results;
+  if (!seenPaths.has(process.cwd().toLowerCase())) {
+    searchDir(process.cwd(), targetBase, results, seenPaths, 5, 0, new Set<string>(), undefined, deadline);
+    if (results.length > 0) {
+      saveCache(results);
+      return results;
+    }
   }
 
   // In test or CI environments, do not traverse external directories
@@ -378,7 +774,7 @@ export async function findToadFiles(query: string): Promise<string[]> {
   // 4. Fast Tier 3: Search common user project directories (depth 4)
   const home = os.homedir();
   if (home) {
-    const commonDirs = ['Desktop', 'Downloads', 'Documents', 'Projects', 'toad', 'dev', 'workspace']
+    const commonDirs = ['Desktop', 'Downloads', 'Documents', 'Pictures', 'Bilder', 'Projects', 'toad', 'dev', 'workspace']
       .map(sub => path.join(home, sub))
       .filter(p => fs.existsSync(p));
 
@@ -417,7 +813,7 @@ export async function findToadFiles(query: string): Promise<string[]> {
       for (const entry of entries) {
         if (!entry.isDirectory()) continue;
         const lower = entry.name.toLowerCase();
-        if (IGNORED_FOLDERS.has(lower) || lower.startsWith('$') || lower.startsWith('.')) {
+        if (IGNORED_FOLDERS.has(lower) || lower === 'users' || lower === 'dokumente und einstellungen' || lower.startsWith('$') || lower.startsWith('.')) {
           continue;
         }
         const full = path.join(drive, entry.name);
@@ -434,6 +830,131 @@ export async function findToadFiles(query: string): Promise<string[]> {
 
   if (results.length > 0) {
     saveCache(results);
+  }
+
+  return results;
+}
+
+/**
+ * Finds all matching files with specified extensions across cwd, workspaces, user directories, and system drives.
+ */
+export async function findAnyFile(query: string, options?: { extensions?: string[] }): Promise<string[]> {
+  const normalizedQuery = query.trim().toLowerCase();
+  const allowedExts = options?.extensions && options.extensions.length > 0
+    ? options.extensions.map(e => e.startsWith('.') ? e.toLowerCase() : `.${e.toLowerCase()}`)
+    : undefined;
+
+  // 1. Direct path check (instant)
+  const resolvedDirect = path.resolve(query);
+  if (fs.existsSync(resolvedDirect)) {
+    if (fs.statSync(resolvedDirect).isDirectory()) {
+      return [];
+    }
+    return [resolvedDirect];
+  }
+
+  // If extensions provided and query has no extension, try direct with each extension
+  if (allowedExts && !path.extname(query)) {
+    for (const ext of allowedExts) {
+      const withExt = path.resolve(query + ext);
+      if (fs.existsSync(withExt) && !fs.statSync(withExt).isDirectory()) {
+        return [withExt];
+      }
+    }
+  }
+
+  const results: string[] = [];
+  const seenPaths = new Set<string>();
+  const cfg = getConfig();
+  const deadline = Date.now() + (cfg.searchTimeoutMs || 5000);
+
+  // 1.5 Priority Search Paths (Configured in settings - searched first)
+  const priorityPaths = getSearchPaths();
+  for (const pDir of priorityPaths) {
+    if (fs.existsSync(pDir) && !seenPaths.has(pDir.toLowerCase())) {
+      searchDir(pDir, normalizedQuery, results, seenPaths, 5, 0, new Set<string>(), allowedExts, deadline);
+      if (results.length > 0) {
+        return results;
+      }
+    }
+  }
+
+  // 2. Fast Tier 1: Search current working directory (depth 5)
+  if (!seenPaths.has(process.cwd().toLowerCase())) {
+    searchDir(process.cwd(), normalizedQuery, results, seenPaths, 5, 0, new Set<string>(), allowedExts, deadline);
+    if (results.length > 0) {
+      return results;
+    }
+  }
+
+  // In test or CI environments, do not traverse external directories unless explicitly allowed
+  if (process.env.VITEST || process.env.CI || process.env.NODE_ENV === 'test') {
+    return results;
+  }
+
+  // 3. Preferred Workspaces (Highest priority outside CWD)
+  const configuredWorkspaces = getWorkspaces();
+  for (const ws of configuredWorkspaces) {
+    if (!seenPaths.has(ws.toLowerCase())) {
+      searchDir(ws, normalizedQuery, results, seenPaths, 5, 0, new Set<string>(), allowedExts, deadline);
+      if (results.length > 0) {
+        return results;
+      }
+    }
+  }
+
+  // 4. Fast Tier 3: Search common user directories (depth 4)
+  const home = os.homedir();
+  if (home) {
+    const commonDirs = ['Desktop', 'Downloads', 'Documents', 'Pictures', 'Bilder', 'Projects', 'toad', 'dev', 'workspace']
+      .map(sub => path.join(home, sub))
+      .filter(p => fs.existsSync(p));
+
+    for (const dir of commonDirs) {
+      if (!seenPaths.has(dir.toLowerCase())) {
+        searchDir(dir, normalizedQuery, results, seenPaths, 4, 0, new Set<string>(), allowedExts, deadline);
+        if (results.length > 0) {
+          return results;
+        }
+      }
+    }
+  }
+
+  // 5. Fast Tier 4: Search root drive project folders
+  const drives = getSystemDrives();
+  const rootCandidates = ['toad', 'projects', 'dev', 'workspace', 'coding', 'designs', 'toad-projects', 'images', 'assets', 'bilder'];
+
+  for (const drive of drives) {
+    for (const candidate of rootCandidates) {
+      const candidatePath = path.join(drive, candidate);
+      if (fs.existsSync(candidatePath) && !seenPaths.has(candidatePath.toLowerCase())) {
+        searchDir(candidatePath, normalizedQuery, results, seenPaths, 4, 0, new Set<string>(), allowedExts, deadline);
+        if (results.length > 0) {
+          return results;
+        }
+      }
+    }
+  }
+
+  // 6. Fast Tier 5: Scan top-level folders on system drives
+  for (const drive of drives) {
+    try {
+      const entries = fs.readdirSync(drive, { withFileTypes: true });
+      for (const entry of entries) {
+        if (!entry.isDirectory()) continue;
+        const lower = entry.name.toLowerCase();
+        if (IGNORED_FOLDERS.has(lower) || lower === 'users' || lower === 'dokumente und einstellungen' || lower.startsWith('$') || lower.startsWith('.')) {
+          continue;
+        }
+        const full = path.join(drive, entry.name);
+        if (!seenPaths.has(full.toLowerCase())) {
+          searchDir(full, normalizedQuery, results, seenPaths, 3, 0, new Set<string>(), allowedExts, deadline);
+          if (results.length > 0) {
+            return results;
+          }
+        }
+      }
+    } catch {}
   }
 
   return results;
@@ -557,17 +1078,17 @@ export async function listAllToadFiles(options?: { scanDirectories?: string[] })
     return Array.from(results.values()).sort((a, b) => a.path.localeCompare(b.path));
   }
 
-  // 1. Current working directory (depth 5)
-  if (!isIgnoredPath(process.cwd())) {
-    collectToadFiles(process.cwd(), results, seenDirs, 5, 0);
+  // 1. Priority Search Paths (Configured in settings - searched first)
+  const priorityPaths = getSearchPaths();
+  for (const pDir of priorityPaths) {
+    if (fs.existsSync(pDir) && !isIgnoredPath(pDir)) {
+      collectToadFiles(pDir, results, seenDirs, 5, 0);
+    }
   }
 
-  // 2. Configured workspaces from .toadrc.json
-  const workspaces = getWorkspaces();
-  for (const ws of workspaces) {
-    if (fs.existsSync(ws) && !isIgnoredPath(ws)) {
-      collectToadFiles(ws, results, seenDirs, 5, 0);
-    }
+  // 2. Current working directory (depth 5)
+  if (!isIgnoredPath(process.cwd()) && !seenDirs.has(process.cwd().toLowerCase())) {
+    collectToadFiles(process.cwd(), results, seenDirs, 5, 0);
   }
 
   // 3. Persistent cache of previously found files
@@ -597,7 +1118,7 @@ export async function listAllToadFiles(options?: { scanDirectories?: string[] })
   // 4. Common user directories
   const home = os.homedir();
   if (home) {
-    const commonDirs = ['Desktop', 'Downloads', 'Documents', 'Projects', 'toad', 'dev', 'workspace', 'repos', 'code', 'designs']
+    const commonDirs = ['Desktop', 'Downloads', 'Documents', 'Pictures', 'Bilder', 'Projects', 'toad', 'dev', 'workspace', 'repos', 'code', 'designs']
       .map(sub => path.join(home, sub))
       .filter(p => fs.existsSync(p));
 
@@ -624,7 +1145,7 @@ export async function listAllToadFiles(options?: { scanDirectories?: string[] })
         if (!entry.isDirectory()) continue;
         const lower = entry.name.toLowerCase();
         const full = path.join(drive, entry.name);
-        if (isIgnoredPath(full) || isIgnoredPath(lower) || lower.startsWith('$') || lower.startsWith('.')) {
+        if (isIgnoredPath(full) || isIgnoredPath(lower) || lower === 'users' || lower === 'dokumente und einstellungen' || lower.startsWith('$') || lower.startsWith('.')) {
           continue;
         }
         collectToadFiles(full, results, seenDirs, 3, 0);
@@ -728,4 +1249,45 @@ function promptUserSelection(matches: string[], contextLabel: string): Promise<s
       }
     });
   });
+}
+
+/**
+ * Resolves any file (e.g. image, PSD, motion animation) by query or bare filename.
+ * Searches cwd, workspaces, user directories (Downloads, Bilder, Desktop, etc.), and system drives.
+ */
+export async function resolveAnyFile(
+  query: string | undefined,
+  options?: { extensions?: string[]; description?: string }
+): Promise<string | null> {
+  if (!query || !query.trim()) {
+    return null;
+  }
+
+  const desc = options?.description || 'file';
+
+  // 1. Check direct path first
+  const resolvedDirect = path.resolve(process.cwd(), query);
+  if (fs.existsSync(resolvedDirect) && !fs.statSync(resolvedDirect).isDirectory()) {
+    return resolvedDirect;
+  }
+
+  try {
+    console.log(`[toad] Searching for "${query}"...`);
+    const matches = await findAnyFile(query, { extensions: options?.extensions });
+
+    if (matches.length === 0) {
+      console.error(`\n[toad error] File not found. No ${desc} named "${query}" found on disk.\n`);
+      return null;
+    }
+
+    if (matches.length === 1) {
+      console.log(`[toad] Found: ${matches[0]}`);
+      return matches[0];
+    }
+
+    return promptUserSelection(matches, `for "${query}"`);
+  } catch (err: any) {
+    console.error(`[toad error] ${err.message || String(err)}`);
+    return null;
+  }
 }

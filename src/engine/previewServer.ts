@@ -10,7 +10,7 @@ import * as os from 'node:os';
 import { spawn } from 'node:child_process';
 import { BuildResult, compileToad } from '../build.js';
 import { auditDesign } from '../tools/designAuditor.js';
-import { listAllToadFiles, getWorkspaces, addWorkspace, removeWorkspace } from '../utils/fileFinder.js';
+import { listAllToadFiles, getWorkspaces, addWorkspace, removeWorkspace, getSearchPaths, addSearchPath, removeSearchPath, setSearchPaths, getConfigPath, getConfig, saveConfig, resetConfig, DEFAULT_CONFIG } from '../utils/fileFinder.js';
 import { formatToad } from '../tools/formatter.js';
 import { generateStudioHtml } from './uiHtml.js';
 import { executeInLiveTerminal, abortLiveTerminalCommand } from './terminalRunner.js';
@@ -849,6 +849,110 @@ export function createPreviewServer(
         }
       }
 
+      // 4k-2. Studio API: Global Configuration Management
+      if (url.pathname === '/api/config') {
+        if (req.method === 'GET') {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({
+            success: true,
+            config: getConfig(),
+            configPath: getConfigPath(),
+            defaults: DEFAULT_CONFIG
+          }));
+          return;
+        }
+        if (req.method === 'POST') {
+          parseJsonBody((body) => {
+            try {
+              const updates = body.updates || body;
+              const updated = saveConfig(updates);
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: true, config: updated }));
+            } catch (err: any) {
+              res.writeHead(500, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: false, error: err.message || String(err) }));
+            }
+          });
+          return;
+        }
+      }
+
+      if (url.pathname === '/api/config/reset' && req.method === 'POST') {
+        try {
+          const cfg = resetConfig();
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true, config: cfg }));
+        } catch (err: any) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, error: err.message || String(err) }));
+        }
+        return;
+      }
+
+      // 4k-3. Studio API: Priority Search Paths Management
+      if (url.pathname === '/api/search-paths') {
+        if (req.method === 'GET') {
+          const list = getSearchPaths();
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ searchPaths: list, workspaces: list }));
+          return;
+        }
+        if (req.method === 'POST') {
+          parseJsonBody((body) => {
+            const dir = body.dir || body.path;
+            const resAdd = addSearchPath(dir);
+            res.writeHead(resAdd.success ? 200 : 400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(resAdd));
+          });
+          return;
+        }
+        if (req.method === 'PUT') {
+          parseJsonBody((body) => {
+            const dirs = Array.isArray(body.dirs) ? body.dirs : (Array.isArray(body.searchPaths) ? body.searchPaths : []);
+            const resSet = setSearchPaths(dirs);
+            res.writeHead(resSet.success ? 200 : 400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(resSet));
+          });
+          return;
+        }
+        if (req.method === 'DELETE') {
+          const dir = url.searchParams.get('dir') || url.searchParams.get('path');
+          if (dir) {
+            const resRem = removeSearchPath(dir);
+            res.writeHead(resRem.success ? 200 : 400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(resRem));
+            return;
+          }
+        }
+      }
+
+      // 4k-4. Studio API: Resolve System Quick Folder
+      if (url.pathname === '/api/quick-folder' && req.method === 'GET') {
+        const type = url.searchParams.get('type') || '';
+        const home = os.homedir();
+        let targetDir = '';
+        if (type === 'Downloads') targetDir = path.join(home, 'Downloads');
+        else if (type === 'Pictures') {
+          targetDir = path.join(home, 'Pictures');
+          if (!fs.existsSync(targetDir)) targetDir = path.join(home, 'Bilder');
+        }
+        else if (type === 'Desktop') targetDir = path.join(home, 'Desktop');
+        else if (type === 'Documents') {
+          targetDir = path.join(home, 'Documents');
+          if (!fs.existsSync(targetDir)) targetDir = path.join(home, 'Dokumente');
+        }
+        else if (type === 'cwd') targetDir = process.cwd();
+
+        if (targetDir && fs.existsSync(targetDir)) {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true, path: targetDir }));
+        } else {
+          res.writeHead(404, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, error: 'Folder not found on system' }));
+        }
+        return;
+      }
+
       // 4l. Studio API: Project Initializer
       if (url.pathname === '/api/init' && req.method === 'POST') {
         if (!isOriginOrLoopbackSafe(req)) {
@@ -929,7 +1033,7 @@ export function createPreviewServer(
       // 5. HTML Single Page Preview App & TOAD Studio
       if (url.pathname === '/' || url.pathname === '/index.html') {
         const html = studioMode
-          ? generateStudioHtml(entryFilePath)
+          ? generateStudioHtml(entryFilePath, getConfig(), getConfigPath())
           : generatePreviewHtml(path.basename(entryFilePath));
         res.writeHead(200, {
           'Content-Type': 'text/html; charset=utf-8',
