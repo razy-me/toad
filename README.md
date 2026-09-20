@@ -99,6 +99,19 @@ stack #card {
 
 ---
 
+## 🛠️ Tech Stack & Architecture
+
+| Layer | Technologies | Details & Purpose |
+| :--- | :--- | :--- |
+| **Runtime & Core** | ![Node.js](https://img.shields.io/badge/Node.js-20+-339933?style=flat-square&logo=node.js&logoColor=white) ![TypeScript](https://img.shields.io/badge/TypeScript-5.5-3178C6?style=flat-square&logo=typescript&logoColor=white) | Native ECMAScript Modules (ESM), strict type safety across compiler & engine |
+| **Graphics & Rendering** | ![Rust](https://img.shields.io/badge/Rust_NAPI-Canvas-DEA584?style=flat-square&logo=rust&logoColor=white) `@napi-rs/canvas` | High-performance 2D rasterizer powered by Skia for ultra-crisp output & layout measurements |
+| **PSD Composition** | `ag-psd` | Native Photoshop document engine (generates layered PSDs, vector masks, text styles) |
+| **On-Device AI / ML** | ![Transformers](https://img.shields.io/badge/HF-Transformers-FFD21E?style=flat-square&logo=huggingface&logoColor=black) `onnxruntime-node` | Zero-cloud, local neural models (e.g., commercial MIT BiRefNet for instant background removal) |
+| **CLI & Watch Engine** | `commander`, `chokidar` | Command-line dispatching, interactive flags, and reactive file watching for live previews |
+| **Testing & Quality** | ![Vitest](https://img.shields.io/badge/Vitest-2.0-729B1B?style=flat-square&logo=vitest&logoColor=white) | Fast, modern test runner with snapshot, visual regression, and unit test suites |
+
+---
+
 ## 📄 License
 
 MIT License • [razy-me](https://github.com/razy-me)
