@@ -102,13 +102,13 @@ toad lint design.toad       # Static code analysis & syntax verification
 toad format design.toad     # Auto-format indentation and layout rules (alias: toad fmt)
 
 # ⚙️ Workspaces, Configuration & Updates
-toad list                   # Scan system and list all discovered .toad files
-toad workspace add ./designs# Add preferred workspace for priority file resolution
-toad workspace list         # Show registered workspaces
-toad config                 # View global settings (~/.toadrc.json)
-toad config set defaultFormat psd # Set default compilation target
-toad config set defaultFps 60     # Configure default animation framerate
-toad update                 # Update TOAD directly to the latest version from GitHub
+toad list                    # Scan system and list all discovered .toad files
+toad workspace add ./designs # Add preferred workspace for priority file resolution
+toad workspace list          # Show registered workspaces
+toad config                  # View global settings (~/.toadrc.json)
+toad config set defaultFormat psd  # Set default compilation target
+toad config set defaultFps 60      # Configure default animation framerate
+toad update                  # Update TOAD directly to the latest version from GitHub
 ```
 
 ---
