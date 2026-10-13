@@ -65,7 +65,7 @@ export function lintDocument(doc: DocumentNode, filePath?: string): Diagnostic[]
             'RectElement', 'CircleElement', 'TextElement', 'PolygonElement',
             'PathElement', 'ImageElement', 'GroupElement', 'GridElement',
             'StackElement', 'ComponentInstance', 'IconElement', 'ShapeElement',
-            'SlotElement'
+            'SlotElement', 'BarcodeElement', 'QrCodeElement', 'AdjustElement'
           ].includes(node.type)
         ) {
           const elem = node as ElementNode;

@@ -129,7 +129,14 @@ export function formatOutputFileName(
     page?: number;
   }
 ): string {
-  const tmpl = pattern && pattern.trim() ? pattern : '{name}{suffix}{scale}';
+  let tmpl = pattern && pattern.trim() ? pattern : '{name}{suffix}{scale}';
+  if (vars.suffix && !tmpl.includes('{suffix}')) {
+    if (tmpl.includes('{name}')) {
+      tmpl = tmpl.replace('{name}', `{name}{suffix}`);
+    } else {
+      tmpl = `${tmpl}{suffix}`;
+    }
+  }
   const now = new Date();
   const dateStr = now.toISOString().slice(0, 10);
   const timeStr = [
@@ -246,8 +253,9 @@ export function getConfigPath(): string {
 export function getConfig(): ToadConfig {
   let loaded: ToadConfig = {};
   try {
-    if (fs.existsSync(CONFIG_FILE)) {
-      const raw = fs.readFileSync(CONFIG_FILE, 'utf-8');
+    const configPath = process.env.TOAD_CONFIG_FILE || (!process.env.VITEST ? CONFIG_FILE : undefined);
+    if (configPath && fs.existsSync(configPath)) {
+      const raw = fs.readFileSync(configPath, 'utf-8');
       loaded = JSON.parse(raw) || {};
     }
   } catch {}

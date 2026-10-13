@@ -62,7 +62,7 @@ describe('SVG exporter: clipping model', () => {
       ${CANVAS}
       rect #mask { at: 10px 10px; size: 50px 50px; clip: true; fill: #f00; }
       rect #masked { at: 40px 20px; size: 40px 40px; fill: #0f0; }
-      rect #unrelated { at: 90px 20px; size: 20px 20px; fill: #00f; }
+      rect #unrelated { at: 90px 20px; size: 20px 20px; clip: false; fill: #00f; }
     `);
     expect(svg).toContain('<clipPath id="clip_1">');
     const tagOf = (id: string) => {

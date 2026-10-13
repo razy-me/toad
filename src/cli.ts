@@ -20,6 +20,7 @@ import { formatRustDiagnostic, generateHelpSuggestion } from './tools/diagnostic
 import { compileMotion } from './motion/index.js';
 import { updateToad, checkForUpdatesSummary } from './tools/updater.js';
 import { removeBackground, isGpuAvailable, detectBestDevice } from './tools/backgroundRemover.js';
+import { enhanceImage } from './tools/imageEnhancer.js';
 import {
   startStudioDaemon,
   stopStudioDaemon,
@@ -1316,6 +1317,194 @@ export function createCli(): Command {
           process.exit(130);
         }
         console.error(`\n${c.bgRed(' ERROR ')} ${c.bold(c.red(`Failed to remove background:`))} ${err.message || String(err)}\n`);
+        process.exit(1);
+      } finally {
+        try {
+          winRl?.close();
+        } catch {}
+        process.removeListener('SIGINT', terminateNow);
+        process.removeListener('SIGBREAK', terminateNow);
+      }
+    });
+
+  // Command: enhance <source> [target]
+  program
+    .command('enhance <source> [target]')
+    .alias('upscale')
+    .description('Enhance image quality, sharpen blurry photos, denoise, and upscale (2x/4x) locally via AI')
+    .option('-s, --scale <factor>', 'Upscaling factor: 1 (sharpen only), 2 (2x HD, default), or 4 (4x Ultra-HD)', '2')
+    .option('--deblur', 'Optical deblurring & sharpening for out-of-focus or motion-softened smartphone photos')
+    .option('--denoise', 'Remove sensor noise and JPEG compression block artifacts')
+    .option('--dyb', 'Do-Your-Best preset: maximum neural detail reconstruction + multi-pass deconvolution')
+    .option('--fast', 'Speed preset: use lightweight fast enhancement model')
+    .option('--quick', 'Speed preset: alias for --fast')
+    .option('-f, --format <format>', 'Output format: png, webp, or jpg', 'png')
+    .option('-q, --quality <number>', 'Compression quality for WebP/JPG (1-100)', '95')
+    .option('-r, --recursive', 'Recursively search subdirectories when source is a folder')
+    .action(async (source: string, target: string | undefined, options: any) => {
+      const abortController = new AbortController();
+      let winRl: any = null;
+
+      const terminateNow = () => {
+        try {
+          process.stdout.write(`\n\n  ${c.yellow('⚠ Vorgang durch Benutzer mit Strg+C abgebrochen. Beende sofort...')}\n\n`);
+        } catch {}
+        try {
+          winRl?.close();
+        } catch {}
+        try {
+          abortController.abort();
+        } catch {}
+        process.exit(130);
+      };
+
+      process.once('SIGINT', terminateNow);
+      process.once('SIGBREAK', terminateNow);
+
+      if (process.platform === 'win32' && process.stdin.isTTY) {
+        try {
+          const readline = await import('node:readline');
+          winRl = readline.createInterface({
+            input: process.stdin,
+            output: process.stdout,
+          });
+          winRl.on('SIGINT', terminateNow);
+        } catch {}
+      }
+
+      try {
+        let resolvedSource = path.resolve(source);
+        if (!fs.existsSync(resolvedSource)) {
+          const found = await resolveAnyFile(source, {
+            extensions: ['.png', '.jpg', '.jpeg', '.webp'],
+            description: 'image file'
+          });
+          if (!found) {
+            process.exit(1);
+          }
+          resolvedSource = found;
+        }
+
+        const isDirectory = fs.statSync(resolvedSource).isDirectory();
+        const useFast = Boolean(options.fast || options.quick);
+        const useDyb = Boolean(options.dyb);
+        const useDeblur = Boolean(options.deblur);
+        const useDenoise = Boolean(options.denoise);
+        const parsedScale = parseInt(options.scale, 10);
+        const scale: 1 | 2 | 4 = parsedScale === 1 ? 1 : parsedScale === 4 ? 4 : 2;
+        const quality = options.quality ? parseInt(options.quality, 10) : 95;
+        const effectiveDevice = detectBestDevice();
+        const autoConcurrency = useFast ? 4 : 1;
+
+        let preset: 'fast' | 'balanced' | 'sharp' | 'denoise' | 'dyb' = 'balanced';
+        if (useDyb) preset = 'dyb';
+        else if (useFast) preset = 'fast';
+        else if (useDeblur) preset = 'sharp';
+        else if (useDenoise) preset = 'denoise';
+
+        console.log(`\n${c.bold('✨  TOAD Local AI Image Enhancer & Super-Resolution')}`);
+        console.log(`  ${c.green('🔒 [Local AI]')} ${c.dim('100% on-device restoration & super-resolution. Zero cloud uploads.')}`);
+        let modeTag = c.cyan(` [${scale}x Scale • ${preset.toUpperCase()}]`);
+        if (useDyb) modeTag = c.yellow(` [DYB: ${scale}x Neural Super-Resolution + Deconvolution + Multi-Scale Clarity]`);
+        else if (useFast) modeTag = c.cyan(` [Fast Mode: ${scale}x Lightweight Swin2SR]`);
+        console.log(`  ${c.dim('Model:')}    ${c.cyan('AI-Model')}${modeTag}`);
+        console.log(`  ${c.dim('Hardware:')} ${c.green('⚡ Multi-Threaded CPU Tensor Engine (AVX2/NEON, Memory-Safe)')}`);
+        console.log(`  ${c.dim('Features:')} ${c.dim('Optical Deblurring, Bilateral Chroma/Luma Denoising, Detail Synthesis')}`);
+        console.log(`  ${c.dim('Source:')}   ${c.white(resolvedSource)}`);
+        if (target) {
+          console.log(`  ${c.dim('Target:')}   ${c.cyan(path.resolve(target))}\n`);
+        } else {
+          console.log('');
+        }
+
+        function renderProgressBar(current: number, total: number, width = 20): string {
+          const pct = total > 0 ? Math.min(1, Math.max(0, current / total)) : 0;
+          const filled = Math.round(pct * width);
+          const empty = width - filled;
+          const bar = '█'.repeat(filled) + '░'.repeat(empty);
+          return `[${c.green(bar)}] ${(pct * 100).toFixed(0).padStart(3)}%`;
+        }
+
+        let aiModelReportedDone = false;
+        const onDownloadProgress = (p: any) => {
+          if (p.status === 'progress') {
+            const pct = typeof p.progress === 'number' ? Math.round(p.progress) : 0;
+            const bar = renderProgressBar(pct, 100, 20);
+            process.stdout.write(`\r  📥 Initializing AI-Model: ${bar}   `);
+          } else if (p.status === 'done') {
+            if (!aiModelReportedDone) {
+              aiModelReportedDone = true;
+              process.stdout.write(`\r  ✔ AI-Model ready (100% on-device)                                    \n`);
+            }
+          }
+        };
+
+        if (!isDirectory) {
+          console.log(`  ⏳ Enhancing ${c.cyan(path.basename(resolvedSource))} (Deblur, Denoise & ${scale}x Super-Resolution)...`);
+        }
+
+        const result = await enhanceImage(resolvedSource, target, {
+          scale,
+          preset,
+          dyb: useDyb,
+          fast: useFast,
+          quick: useFast,
+          deblur: useDeblur ? true : undefined,
+          denoise: useDenoise ? true : undefined,
+          format: options.format,
+          quality,
+          concurrency: autoConcurrency,
+          device: effectiveDevice,
+          recursive: options.recursive,
+          signal: abortController.signal,
+          onDownloadProgress,
+          onProgress: (info: any) => {
+            const bar = renderProgressBar(info.index, info.total, 20);
+            const baseName = path.basename(info.sourceFile);
+            if (info.status === 'start') {
+              process.stdout.write(`\r  ⏳ ${bar} [${info.index}/${info.total}] ${c.cyan(baseName)} (enhancing...)          `);
+            } else if (info.status === 'success') {
+              const sizeKb = (info.outputBytes / 1024).toFixed(1);
+              const sizeStr = info.outputBytes > 1024 * 1024
+                ? `${(info.outputBytes / 1024 / 1024).toFixed(2)} MB`
+                : `${sizeKb} KB`;
+              const dimStr = c.dim(`(${info.originalWidth}x${info.originalHeight} ➜ ${info.width}x${info.height})`);
+              const durationStr = c.dim(`${info.durationMs}ms`);
+              process.stdout.write(`\r  ✔ ${bar} [${info.index}/${info.total}] ${c.bold(baseName)} ${dimStr} ${c.yellow(sizeStr.padStart(8))} ${durationStr}          \n`);
+            } else if (info.status === 'error') {
+              process.stdout.write(`\r  ✖ ${bar} [${info.index}/${info.total}] ${c.red(baseName)}: ${info.error}          \n`);
+            }
+          }
+        });
+
+        if (isDirectory) {
+          const batchRes = result as any;
+          const sec = (batchRes.durationMs / 1000).toFixed(2);
+          if (batchRes.total === 0) {
+            console.log(`  ${c.yellow('⚠ No supported images (.png, .jpg, .jpeg, .webp) found in directory.')}\n`);
+            return;
+          }
+          console.log(`\n${c.bgGreen(' SUCCESS ')} ${c.bold(c.green(`Enhanced ${batchRes.succeeded}/${batchRes.total} image(s) in ${sec}s`))}`);
+          const finalOutFolder = target ? path.resolve(target) : path.join(resolvedSource, 'verbessert');
+          console.log(`  ${c.cyan('➜')} Output folder: ${c.bold(finalOutFolder)}\n`);
+          if (batchRes.failed > 0) {
+            console.log(`  ${c.yellow(`⚠ ${batchRes.failed} image(s) failed to process.`)}\n`);
+          }
+        } else {
+          const singleRes = result as any;
+          const sizeKb = (singleRes.outputBytes / 1024).toFixed(1);
+          const sizeStr = singleRes.outputBytes > 1024 * 1024
+            ? `${(singleRes.outputBytes / 1024 / 1024).toFixed(2)} MB`
+            : `${sizeKb} KB`;
+          console.log(`\n${c.bgGreen(' SUCCESS ')} ${c.bold(c.green(`Image enhanced in ${singleRes.durationMs}ms`))}`);
+          console.log(`  ${c.cyan('➜')} ${c.bold(path.basename(singleRes.targetFile))} ${c.yellow(sizeStr)} ${c.dim(`(${singleRes.originalWidth}x${singleRes.originalHeight} ➜ ${singleRes.width}x${singleRes.height} px)`)}`);
+          console.log(`  ${c.dim('Location:')} ${c.cyan(singleRes.targetFile)}\n`);
+        }
+      } catch (err: any) {
+        if (abortController.signal.aborted) {
+          process.exit(130);
+        }
+        console.error(`\n${c.bgRed(' ERROR ')} ${c.bold(c.red(`Failed to enhance image:`))} ${err.message || String(err)}\n`);
         process.exit(1);
       } finally {
         try {

@@ -625,7 +625,7 @@ export function auditDesign(
     let effectiveBg = bgRgba;
     for (const other of allNodes) {
       if (other === node) break;
-      if (other.type === 'rect' || other.type === 'circle' || other.type === 'polygon') {
+      if (other.type === 'rect' || other.type === 'circle' || other.type === 'polygon' || other.type === 'stack' || other.type === 'grid') {
         const isChild = Boolean(other.children && other.children.some(c => c === node || c.id === node.id));
         const textMidX = node.x + node.width / 2;
         const textMidY = node.y + node.height / 2;

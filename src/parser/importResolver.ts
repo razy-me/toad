@@ -713,31 +713,41 @@ export class ImportResolver {
           const PRESETS: Record<string, { w: number; h: number }> = {
             'og-image': { w: 1200, h: 630 },
             'banner': { w: 1920, h: 1080 },
+            'presentation': { w: 1920, h: 1080 },
             'github-banner': { w: 1280, h: 640 },
             'avatar': { w: 400, h: 400 },
             'app-icon': { w: 1024, h: 1024 },
             'favicon': { w: 32, h: 32 },
             'insta-post': { w: 1080, h: 1080 },
+            'social-post': { w: 1080, h: 1080 },
             'insta-story': { w: 1080, h: 1920 },
+            'story': { w: 1080, h: 1920 },
             'youtube-thumbnail': { w: 1280, h: 720 },
+            'youtube-thumb': { w: 1280, h: 720 },
             'instagram-post': { w: 1080, h: 1080 },
             'instagram-story': { w: 1080, h: 1920 },
             'twitter-post': { w: 1200, h: 675 },
             'twitter-header': { w: 1500, h: 500 },
             'facebook-post': { w: 1200, h: 630 },
             'facebook-cover': { w: 820, h: 312 },
+            'fb-cover': { w: 820, h: 312 },
             'linkedin-post': { w: 1200, h: 627 },
             'pinterest-pin': { w: 1000, h: 1500 },
             'dribbble-shot': { w: 1600, h: 1200 },
+            'desktop-hd': { w: 1440, h: 1024 },
+            'macbook-air': { w: 1280, h: 832 },
+            'iphone-15-pro': { w: 393, h: 852 },
+            'a3': { w: Math.round((297 / 25.4) * effectivePresetDpi), h: Math.round((420 / 25.4) * effectivePresetDpi) },
             'a4': { w: a4W, h: a4H },
-            'a4-landscape': { w: a4H, h: a4W }
+            'a4-landscape': { w: a4H, h: a4W },
+            'a5': { w: Math.round((148 / 25.4) * effectivePresetDpi), h: Math.round((210 / 25.4) * effectivePresetDpi) }
           };
           if (presetName && PRESETS[presetName]) {
             if (!explicitWidth) width = PRESETS[presetName].w;
             if (!explicitHeight) height = PRESETS[presetName].h;
             explicitWidth = true;
             explicitHeight = true;
-          } else if (presetName) {
+          } else if (presetName && presetName !== name?.toLowerCase()) {
             this.warnings.push(
               `Unknown canvas preset '${presetName}'. Supported presets: ${Object.keys(PRESETS).join(', ')}.`
             );
@@ -807,6 +817,52 @@ export class ImportResolver {
             properties[prop.name] = this.extractRawValue(val);
           }
         }
+      }
+    }
+
+    if (!appliedPreset && name) {
+      const effectivePresetDpi = hasExplicitDpi && dpi ? dpi : 300;
+      const a4W = Math.round((210 / 25.4) * effectivePresetDpi);
+      const a4H = Math.round((297 / 25.4) * effectivePresetDpi);
+      const HEADER_PRESETS: Record<string, { w: number; h: number }> = {
+        'og-image': { w: 1200, h: 630 },
+        'banner': { w: 1920, h: 1080 },
+        'presentation': { w: 1920, h: 1080 },
+        'github-banner': { w: 1280, h: 640 },
+        'avatar': { w: 400, h: 400 },
+        'app-icon': { w: 1024, h: 1024 },
+        'favicon': { w: 32, h: 32 },
+        'insta-post': { w: 1080, h: 1080 },
+        'social-post': { w: 1080, h: 1080 },
+        'insta-story': { w: 1080, h: 1920 },
+        'story': { w: 1080, h: 1920 },
+        'youtube-thumbnail': { w: 1280, h: 720 },
+        'youtube-thumb': { w: 1280, h: 720 },
+        'instagram-post': { w: 1080, h: 1080 },
+        'instagram-story': { w: 1080, h: 1920 },
+        'twitter-post': { w: 1200, h: 675 },
+        'twitter-header': { w: 1500, h: 500 },
+        'facebook-post': { w: 1200, h: 630 },
+        'facebook-cover': { w: 820, h: 312 },
+        'fb-cover': { w: 820, h: 312 },
+        'linkedin-post': { w: 1200, h: 627 },
+        'pinterest-pin': { w: 1000, h: 1500 },
+        'dribbble-shot': { w: 1600, h: 1200 },
+        'desktop-hd': { w: 1440, h: 1024 },
+        'macbook-air': { w: 1280, h: 832 },
+        'iphone-15-pro': { w: 393, h: 852 },
+        'a3': { w: Math.round((297 / 25.4) * effectivePresetDpi), h: Math.round((420 / 25.4) * effectivePresetDpi) },
+        'a4': { w: a4W, h: a4H },
+        'a4-landscape': { w: a4H, h: a4W },
+        'a5': { w: Math.round((148 / 25.4) * effectivePresetDpi), h: Math.round((210 / 25.4) * effectivePresetDpi) }
+      };
+      const lowerName = name.toLowerCase();
+      if (HEADER_PRESETS[lowerName]) {
+        appliedPreset = lowerName;
+        if (!explicitWidth) width = HEADER_PRESETS[lowerName].w;
+        if (!explicitHeight) height = HEADER_PRESETS[lowerName].h;
+        explicitWidth = true;
+        explicitHeight = true;
       }
     }
 
@@ -1226,6 +1282,9 @@ export class ImportResolver {
         case 'size':
         case 'dimensions': {
           target.size = this.extractDimensions(val);
+          if (val.type === 'CoordinateValue' || (val.type === 'ExpressionList' && val.expressions.length >= 2)) {
+            (target as any)._hasExplicitHeight = true;
+          }
           break;
         }
         case 'width': {
@@ -1235,7 +1294,10 @@ export class ImportResolver {
         }
         case 'height': {
           const h = this.extractSizeValue(val);
-          if (h !== undefined) target.size = { ...(target.size || {}), h };
+          if (h !== undefined) {
+            target.size = { ...(target.size || {}), h };
+            (target as any)._hasExplicitHeight = true;
+          }
           break;
         }
         case 'name':

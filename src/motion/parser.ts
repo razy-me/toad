@@ -148,7 +148,10 @@ export class MotionParser {
         const fpsTok = this.consume(MotionTokenType.NUMBER, 'Expected fps number');
         fps = fpsTok.numValue ?? parseInt(fpsTok.value, 10);
         this.match(MotionTokenType.SEMICOLON);
-      } else if (this.match(MotionTokenType.KW_DIMENSIONS)) {
+      } else if (
+        this.match(MotionTokenType.KW_DIMENSIONS) ||
+        (this.check(MotionTokenType.IDENTIFIER) && ['size', 'resolution'].includes(this.peek().value.toLowerCase()) && this.advance())
+      ) {
         this.consume(MotionTokenType.COLON, "Expected ':' after 'dimensions'");
         const wTok = this.advance();
         const hTok = this.advance();
@@ -320,7 +323,7 @@ export class MotionParser {
           if (prevAlong.autoRotate !== undefined) props.along.autoRotate = prevAlong.autoRotate;
           if (prevAlong.progress !== undefined && prevAlong.progress !== 0) props.along.progress = prevAlong.progress;
         }
-      } else if (key === 'ease') {
+      } else if (key === 'ease' || key === 'easing') {
         props.ease = this.parseEasing();
       } else if (key === 'opacity') {
         const val = this.advance();

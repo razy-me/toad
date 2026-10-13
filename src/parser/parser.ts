@@ -157,9 +157,20 @@ export class Parser {
 
   private parseFontDirective(): FontDirectiveNode {
     const startLoc = this.consume(TokenType.DIRECTIVE_FONT, "Expected '@font'").loc.start;
-    const pathTok = this.consume(TokenType.STRING, "Expected font path string after '@font'");
-    this.consume(TokenType.KW_AS, "Expected 'as' keyword in @font directive");
-    const familyTok = this.consumeStringOrIdentifier("Expected font family name after 'as'");
+    const pathTok = this.consume(TokenType.STRING, "Expected font path or family string after '@font'");
+    let familyName = pathTok.value;
+    if (this.check(TokenType.KW_AS)) {
+      this.advance();
+      const familyTok = this.consumeStringOrIdentifier("Expected font family name after 'as'");
+      familyName = familyTok.value;
+    } else if (this.peek().value.toLowerCase() === 'from') {
+      this.advance();
+      const fromTok = this.consume(TokenType.STRING, "Expected font path string after 'from'");
+      familyName = pathTok.value;
+      pathTok.value = fromTok.value;
+    } else if (this.check(TokenType.SEMICOLON)) {
+      this.reportError("Expected 'as' keyword in @font directive", { start: startLoc, end: this.peek().loc.end, file: this.filename });
+    }
 
     let weight: string | number | undefined;
     let style: 'normal' | 'italic' | 'oblique' | undefined;
@@ -223,7 +234,7 @@ export class Parser {
     return {
       type: 'FontDirective',
       path: pathTok.value,
-      family: familyTok.value,
+      family: familyName,
       weight,
       style,
       loc: { start: startLoc, end: this.previous().loc.end, file: this.filename }
@@ -327,6 +338,7 @@ export class Parser {
     let name: string | undefined;
     let mode: 'graphic' | 'photo' | undefined;
     let photoSrc: string | undefined;
+    const properties: PropertyNode[] = [];
 
     if (this.match(TokenType.KW_PHOTO)) {
       mode = 'photo';
@@ -335,12 +347,48 @@ export class Parser {
       }
     }
 
-    if (this.check(TokenType.STRING) || this.check(TokenType.IDENTIFIER)) {
-      name = this.advance().value;
+    // Support optional name/preset identifier or string, inline dimensions (`canvas 1600px 960px`), and inline background (`#030712`)
+    while (!this.check(TokenType.LBRACE) && !this.isAtEnd()) {
+      const tok = this.peek();
+      if (tok.type === TokenType.DIMENSION && this.peek(1).type === TokenType.DIMENSION) {
+        const wTok = this.advance();
+        const hTok = this.advance();
+        properties.push({
+          type: 'Property',
+          name: 'size',
+          value: {
+            type: 'CoordinateValue',
+            x: { type: 'DimensionLiteral', value: Number(wTok.numberValue ?? parseFloat(wTok.value)), unit: (wTok.unit || 'px') as any, raw: wTok.value, loc: wTok.loc },
+            y: { type: 'DimensionLiteral', value: Number(hTok.numberValue ?? parseFloat(hTok.value)), unit: (hTok.unit || 'px') as any, raw: hTok.value, loc: hTok.loc },
+            loc: wTok.loc
+          },
+          loc: wTok.loc
+        });
+      } else if (tok.type === TokenType.HEX_COLOR || tok.type === TokenType.VARIABLE) {
+        const cTok = this.advance();
+        properties.push({
+          type: 'Property',
+          name: 'fill',
+          value: cTok.type === TokenType.VARIABLE
+            ? { type: 'VariableReference', name: cTok.value, loc: cTok.loc }
+            : { type: 'ColorLiteral', format: 'hex', value: cTok.value, loc: cTok.loc },
+          loc: cTok.loc
+        });
+      } else if (tok.type === TokenType.STRING || tok.type === TokenType.IDENTIFIER) {
+        let idStr = this.advance().value;
+        while (this.peek().value === '-' && (this.peek(1).type === TokenType.IDENTIFIER || this.peek(1).type === TokenType.NUMBER)) {
+          this.advance(); // consume '-'
+          idStr += '-' + this.advance().value;
+        }
+        if (!name) {
+          name = idStr;
+        }
+      } else {
+        break;
+      }
     }
 
     this.consume(TokenType.LBRACE, "Expected '{' after canvas");
-    const properties: PropertyNode[] = [];
     const elements: ElementNode[] = [];
 
     while (!this.check(TokenType.RBRACE) && !this.isAtEnd()) {
@@ -769,14 +817,17 @@ export class Parser {
     const startLoc = this.peek().loc.start;
 
     // Check for relational positions: right of #id, below #id, center of canvas, etc.
-    const relationalKeywords = ['right', 'left', 'above', 'below', 'center', 'inside', 'top', 'bottom', 'top-left', 'top-right', 'bottom-left', 'bottom-right'];
+    const relationalKeywords = ['right', 'left', 'right-of', 'left-of', 'center-of', 'above', 'below', 'center', 'inside', 'top', 'bottom', 'top-left', 'top-right', 'bottom-left', 'bottom-right'];
     const peekVal = this.peek().value;
 
     if (relationalKeywords.includes(peekVal)) {
       const relWord = this.advance().value;
       let relation: RelationalRelation;
 
-      if (['right', 'left', 'center', 'top-left', 'top-right', 'bottom-left', 'bottom-right'].includes(relWord)) {
+      if (relWord === 'right-of' || relWord === 'left-of' || relWord === 'center-of') {
+        this.match(TokenType.KW_OF);
+        relation = relWord.replace('-of', ' of') as RelationalRelation;
+      } else if (['right', 'left', 'center', 'top-left', 'top-right', 'bottom-left', 'bottom-right'].includes(relWord)) {
         this.match(TokenType.KW_OF); // optional 'of'
         relation = `${relWord} of` as RelationalRelation;
       } else if (['above', 'below', 'inside'].includes(relWord)) {
@@ -849,6 +900,9 @@ export class Parser {
   private parsePointsValue(): ValueNode {
     const startLoc = this.peek().loc.start;
     if (this.check(TokenType.VARIABLE)) {
+      return this.parseSingleValue();
+    }
+    if (this.check(TokenType.NUMBER) && this.peek(1).type === TokenType.SEMICOLON) {
       return this.parseSingleValue();
     }
     const points: Point2DNode[] = [];

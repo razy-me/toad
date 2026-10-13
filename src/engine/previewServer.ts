@@ -624,20 +624,39 @@ export function createPreviewServer(
       if (url.pathname === '/api/bg-remover/process' && req.method === 'POST') {
         parseJsonBody(async (body) => {
           try {
-            const { dataUrl, filename, preset, format, saveToDisk, outDir } = body;
-            if (!dataUrl) {
+            const { dataUrl, filePath, filename, preset, format, saveToDisk, outDir } = body;
+            let buffer: Buffer;
+            let resolvedOriginalDataUrl = dataUrl || '';
+            let effectiveFilename = filename || 'image.png';
+
+            if (dataUrl) {
+              const matches = dataUrl.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+              if (!matches || matches.length !== 3) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Invalid base64 data URL' }));
+                return;
+              }
+              buffer = Buffer.from(matches[2], 'base64');
+            } else if (filePath) {
+              const candPath = path.resolve(process.cwd(), String(filePath));
+              if (!isPathWithinWorkspace(candPath) || !fs.existsSync(candPath) || fs.statSync(candPath).isDirectory()) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: `Quelldatei für Vorschau nicht gefunden: ${filePath}` }));
+                return;
+              }
+              buffer = fs.readFileSync(candPath);
+              effectiveFilename = path.basename(candPath);
+              const inExt = path.extname(candPath).toLowerCase();
+              const inMime = inExt === '.webp' ? 'image/webp' : (inExt === '.jpg' || inExt === '.jpeg') ? 'image/jpeg' : 'image/png';
+              resolvedOriginalDataUrl = `data:${inMime};base64,${buffer.toString('base64')}`;
+            } else {
               res.writeHead(400, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify({ error: 'No image dataUrl provided' }));
+              res.end(JSON.stringify({ error: 'No image dataUrl or filePath provided' }));
               return;
             }
-            const matches = dataUrl.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-            if (!matches || matches.length !== 3) {
-              res.writeHead(400, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify({ error: 'Invalid base64 data URL' }));
-              return;
-            }
-            const buffer = Buffer.from(matches[2], 'base64');
-            const tmpInput = path.join(os.tmpdir(), `toad_bg_in_${Date.now()}_${filename || 'image.png'}`);
+
+            const safeName = path.basename(effectiveFilename).replace(/[^a-zA-Z0-9._-]/g, '_');
+            const tmpInput = path.join(os.tmpdir(), `toad_bg_in_${Date.now()}_${safeName}`);
             const outExt = format === 'webp' ? '.webp' : '.png';
             const tmpOutput = path.join(os.tmpdir(), `toad_bg_out_${Date.now()}${outExt}`);
 
@@ -669,7 +688,7 @@ export function createPreviewServer(
               if (!fs.existsSync(targetDir)) {
                 fs.mkdirSync(targetDir, { recursive: true });
               }
-              const baseStem = path.basename(filename || 'image').replace(/\.[^/.]+$/, '');
+              const baseStem = path.basename(effectiveFilename).replace(/\.[^/.]+$/, '');
               const targetFile = path.join(targetDir, `${baseStem}-freigestellt${outExt}`);
               fs.writeFileSync(targetFile, outBuf);
               savedPath = targetFile;
@@ -681,8 +700,124 @@ export function createPreviewServer(
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({
               success: true,
+              originalDataUrl: resolvedOriginalDataUrl,
               resultUrl,
               savedPath,
+              durationMs: Date.now() - startTime
+            }));
+          } catch (err: any) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: err.message || String(err) }));
+          }
+        });
+        return;
+      }
+
+      // 4h2. Studio API: Local AI Image Enhancer & Super-Resolution
+      if ((url.pathname === '/api/image/enhance' || url.pathname === '/api/enhancer/process') && req.method === 'POST') {
+        parseJsonBody(async (body) => {
+          try {
+            const { dataUrl, filePath, filename, scale, preset, deblur, denoise, format, quality, saveToDisk, outDir } = body;
+            let buffer: Buffer;
+            let resolvedOriginalDataUrl = dataUrl || '';
+            let effectiveFilename = filename || 'image.png';
+
+            if (dataUrl) {
+              const matches = dataUrl.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+              if (!matches || matches.length !== 3) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Invalid base64 data URL' }));
+                return;
+              }
+              buffer = Buffer.from(matches[2], 'base64');
+            } else if (filePath) {
+              const candPath = path.resolve(process.cwd(), String(filePath));
+              if (!isPathWithinWorkspace(candPath) || !fs.existsSync(candPath) || fs.statSync(candPath).isDirectory()) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: `Quelldatei für Vorschau nicht gefunden: ${filePath}` }));
+                return;
+              }
+              buffer = fs.readFileSync(candPath);
+              effectiveFilename = path.basename(candPath);
+              const inExt = path.extname(candPath).toLowerCase();
+              const inMime = inExt === '.webp' ? 'image/webp' : (inExt === '.jpg' || inExt === '.jpeg') ? 'image/jpeg' : 'image/png';
+              resolvedOriginalDataUrl = `data:${inMime};base64,${buffer.toString('base64')}`;
+            } else {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'No image dataUrl or filePath provided' }));
+              return;
+            }
+
+            const safeName = path.basename(effectiveFilename).replace(/[^a-zA-Z0-9._-]/g, '_');
+            const tmpInput = path.join(os.tmpdir(), `toad_enh_in_${Date.now()}_${safeName}`);
+            const normFmt = (format || 'png').toLowerCase();
+            const outExt = normFmt === 'webp' ? '.webp' : (normFmt === 'jpg' || normFmt === 'jpeg') ? '.jpg' : '.png';
+            const tmpOutput = path.join(os.tmpdir(), `toad_enh_out_${Date.now()}${outExt}`);
+
+            fs.writeFileSync(tmpInput, buffer);
+
+            const parsedScale = parseInt(String(scale || 2), 10);
+            const effScale: 1 | 2 | 4 = parsedScale === 1 ? 1 : parsedScale === 4 ? 4 : 2;
+            const isDyb = preset === 'dyb' || preset === 'precision';
+            const isFast = preset === 'fast' || preset === 'quick';
+            const effPreset = isDyb ? 'dyb' : isFast ? 'fast' : (preset || 'balanced');
+
+            const { enhanceImageFile } = await import('../tools/imageEnhancer.js');
+            const startTime = Date.now();
+            const enhRes = await enhanceImageFile(tmpInput, tmpOutput, {
+              scale: effScale,
+              preset: effPreset as any,
+              dyb: isDyb,
+              fast: isFast,
+              deblur: deblur !== undefined ? deblur : undefined,
+              denoise: denoise !== undefined ? denoise : undefined,
+              format: normFmt as any,
+              quality: quality ? parseInt(String(quality), 10) : 95
+            });
+
+            const outBuf = fs.readFileSync(tmpOutput);
+            const mime = outExt === '.webp' ? 'image/webp' : outExt === '.jpg' ? 'image/jpeg' : 'image/png';
+            const resultUrl = `data:${mime};base64,${outBuf.toString('base64')}`;
+
+            let savedPath: string | null = null;
+            if (saveToDisk !== false) {
+              const targetDir = path.resolve(process.cwd(), outDir || 'verbessert');
+              if (!isPathWithinWorkspace(targetDir)) {
+                try { fs.unlinkSync(tmpInput); } catch {}
+                try { fs.unlinkSync(tmpOutput); } catch {}
+                res.writeHead(403, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, error: 'Target directory outside workspace boundary' }));
+                return;
+              }
+              if (!fs.existsSync(targetDir)) {
+                fs.mkdirSync(targetDir, { recursive: true });
+              }
+              const baseStem = path.basename(effectiveFilename).replace(/\.[^/.]+$/, '');
+              const targetFile = path.join(targetDir, `${baseStem}-verbessert${outExt}`);
+              fs.writeFileSync(targetFile, outBuf);
+              savedPath = targetFile;
+            }
+
+            try { fs.unlinkSync(tmpInput); } catch {}
+            try { fs.unlinkSync(tmpOutput); } catch {}
+
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+              success: true,
+              originalDataUrl: resolvedOriginalDataUrl,
+              resultUrl,
+              savedPath,
+              originalWidth: enhRes.originalWidth,
+              originalHeight: enhRes.originalHeight,
+              width: enhRes.width,
+              height: enhRes.height,
+              inputWidth: enhRes.originalWidth,
+              inputHeight: enhRes.originalHeight,
+              outputWidth: enhRes.width,
+              outputHeight: enhRes.height,
+              scale: enhRes.scale,
+              originalBytes: enhRes.originalBytes,
+              outputBytes: enhRes.outputBytes,
               durationMs: Date.now() - startTime
             }));
           } catch (err: any) {

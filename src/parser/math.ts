@@ -1468,11 +1468,18 @@ export class LayoutSolver {
     const intrinsic = this.computeIntrinsicSize(elem, canvasW, canvasH);
 
     const dpi = this.doc.canvas?.dpi || 96;
+    const hasExplicitTextHeight = elem.type === 'text' && Boolean(
+      (elem as any)._hasExplicitHeight ||
+      (typeof elem.size?.h === 'number' && elem.size.h > 0 && elem.size.h !== elem.size?.w)
+    );
+    const rawTextH = elem.type === 'text' && !hasExplicitTextHeight && typeof elem.size?.h === 'number'
+      ? undefined
+      : elem.size?.h;
     let w = resolveDimension(elem.size?.w, parentW, intrinsic.w, dpi, canvasW, canvasH);
-    let h = resolveDimension(elem.size?.h, parentH, intrinsic.h, dpi, canvasW, canvasH);
+    let h = resolveDimension(rawTextH, parentH, intrinsic.h, dpi, canvasW, canvasH);
 
     // Re-measure text height now that we know its layout width
-    if (elem.type === 'text' && typeof elem.size?.h !== 'number') {
+    if (elem.type === 'text' && !hasExplicitTextHeight) {
       const textWidthLimit = typeof elem.size?.w === 'number' && elem.size.w > 0 ? elem.size.w : w;
       const tLayout = layoutText(elem.text || '', {
         fontFamily: elem.font?.family,
@@ -1487,7 +1494,7 @@ export class LayoutSolver {
         overflow: (elem as any).overflow,
         trim: (elem as any).trim
       });
-      h = resolveDimension(elem.size?.h, parentH, tLayout.height, dpi, canvasW, canvasH);
+      h = resolveDimension(rawTextH, parentH, tLayout.height, dpi, canvasW, canvasH);
     }
 
     if (elem.type === 'circle') {
@@ -1867,12 +1874,19 @@ export class LayoutSolver {
           else if (alignStr === 'end' || alignStr === 'bottom') cy += (effectiveCrossTotal - ch);
         }
 
-        child.at = { x: cx, y: cy };
-        if (!child.size || child.size.w === 'fill' || child.size.h === 'fill') {
+        child.at = { x: child.type === 'text' ? Math.round(cx) : cx, y: child.type === 'text' ? Math.round(cy) : cy };
+        if (child.type === 'text' && !(child as any)._hasExplicitHeight) {
+          if (child.size?.w === 'fill') {
+            child.size = { w: cw, h: undefined };
+          }
+        } else if (!child.size || child.size.w === 'fill' || child.size.h === 'fill') {
           child.size = { ...child.size, w: cw, h: ch };
         }
         
-        this.resolveElementLayout(child, canvasW, canvasH, box);
+        const resolvedChildBox = this.resolveElementLayout(child, canvasW, canvasH, box);
+        if (child.type === 'text' && !(child as any)._hasExplicitHeight) {
+          ch = resolvedChildBox.h;
+        }
 
         if (dir === 'vertical') {
           cursorY += ch + effectiveGap;

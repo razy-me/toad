@@ -229,4 +229,29 @@ export {
   SupportedImageFormat
 } from './tools/imageConverter.js';
 
+// 20. Local AI Image Enhancer & Super-Resolution
+export {
+  enhanceImage,
+  enhanceImageFile,
+  enhanceImagesInDirectory,
+  enhanceRawImage,
+  resolveEnhanceModelName,
+  getModelNativeScale,
+  applyBilateralDenoise,
+  applyRichardsonLucyDeblur,
+  applyMultiScaleSharpen,
+  upscaleEdgeDirectedIBP,
+  resizeBicubic,
+  gaussianBlur2D,
+  runTiledNeuralSuperResolution,
+  ENHANCE_MODEL_MAP,
+  SUPPORTED_ENHANCE_EXTENSIONS,
+  EnhancePreset,
+  EnhanceOptions,
+  EnhanceProgressInfo,
+  SingleEnhanceResult,
+  BatchEnhanceResult
+} from './tools/imageEnhancer.js';
+
+
 

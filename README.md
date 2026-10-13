@@ -196,17 +196,22 @@ motion "Hero Entrance" {
     scene: scene;
     duration: 3s;
     fps: 60;
-}
+    dimensions: 1920px 1080px;
 
-animate #card {
-    0s {
-        opacity: 0;
-        transform: translateY(40px) scale(0.95);
-    }
-    1.2s {
-        opacity: 1;
-        transform: translateY(0px) scale(1.0);
-        easing: cubic-bezier(0.16, 1, 0.3, 1);
+    timeline {
+        #card {
+            0.0s: {
+                opacity: 0;
+                translateY: 40px;
+                scale: 0.95;
+            }
+            1.2s: {
+                opacity: 1;
+                translateY: 0px;
+                scale: 1.0;
+                ease: cubic-bezier(0.16, 1, 0.3, 1);
+            }
+        }
     }
 }
 ```

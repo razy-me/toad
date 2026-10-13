@@ -107,8 +107,8 @@ describe('Review fixes: preview server hardening', () => {
     // GET without Origin header: previously executed explorer.exe!
     const getSt = await httpStatus(base + '/api/open-folder', 'GET');
     expect(getSt).toBe(405);
-    // Cross-site origin must never trigger OS actions either.
-    expect(await httpStatus(base + '/api/open-folder', 'POST', { Origin: 'https://evil.example' })).toBe(405);
+    // Cross-site origin must never trigger OS actions either (403 Forbidden).
+    expect(await httpStatus(base + '/api/open-folder', 'POST', { Origin: 'https://evil.example' })).toBe(403);
   });
 
   it('still serves the preview page on the loopback interface', async () => {

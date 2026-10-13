@@ -1425,8 +1425,8 @@ export function generateStudioHtml(initialFile?: string, initialConfig?: ToadCon
     .split-container {
       position: relative;
       width: 100%;
-      max-width: 800px;
-      height: 520px;
+      max-width: 960px;
+      height: 540px;
       border-radius: var(--radius);
       overflow: hidden;
       background-color: #0d1117;
@@ -1468,9 +1468,13 @@ export function generateStudioHtml(initialFile?: string, initialConfig?: ToadCon
     }
 
     .split-layer img {
+      width: 100%;
+      height: 100%;
       max-width: 100%;
       max-height: 100%;
       object-fit: contain;
+      transform-origin: center center;
+      transition: transform 0.12s ease;
       pointer-events: none !important;
       user-select: none !important;
       -webkit-user-drag: none !important;
@@ -1487,6 +1491,7 @@ export function generateStudioHtml(initialFile?: string, initialConfig?: ToadCon
       z-index: 10;
       cursor: col-resize;
       touch-action: none;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
     }
 
     .split-knob {
@@ -1494,8 +1499,8 @@ export function generateStudioHtml(initialFile?: string, initialConfig?: ToadCon
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 32px;
-      height: 32px;
+      width: 36px;
+      height: 36px;
       background: #FFFFFF;
       color: #090D16;
       border-radius: 50%;
@@ -1503,7 +1508,7 @@ export function generateStudioHtml(initialFile?: string, initialConfig?: ToadCon
       align-items: center;
       justify-content: center;
       font-size: 13px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.6);
       cursor: col-resize;
       user-select: none;
     }
@@ -1511,19 +1516,98 @@ export function generateStudioHtml(initialFile?: string, initialConfig?: ToadCon
     .split-floating-tag {
       position: absolute;
       top: 14px;
-      padding: 4px 10px;
+      padding: 5px 12px;
       font-size: 11px;
       font-weight: 700;
       border-radius: var(--radius-sm);
-      background: rgba(9, 13, 22, 0.85);
+      background: rgba(9, 13, 22, 0.88);
       border: 1px solid var(--border);
       color: var(--text);
       z-index: 20;
       pointer-events: none;
-      backdrop-filter: blur(4px);
+      backdrop-filter: blur(6px);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
     .split-floating-tag.left { left: 14px; color: var(--text-muted); }
-    .split-floating-tag.right { right: 14px; color: var(--accent); border-color: rgba(16, 185, 129, 0.3); }
+    .split-floating-tag.right { right: 14px; color: var(--accent); border-color: rgba(16, 185, 129, 0.35); }
+
+    .compare-toolbar {
+      width: 100%;
+      max-width: 960px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px 14px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .side-by-side-container {
+      width: 100%;
+      max-width: 960px;
+      height: 540px;
+      display: none;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .side-by-side-pane {
+      position: relative;
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 12px 28px rgba(0,0,0,0.5);
+    }
+
+    .side-by-side-pane img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      transform-origin: center center;
+      transition: transform 0.12s ease;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .split-empty-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 25;
+      background: rgba(9, 13, 22, 0.92);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      text-align: center;
+      padding: 24px;
+      cursor: pointer;
+    }
+
+    .split-loading-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 26;
+      background: rgba(9, 13, 22, 0.68);
+      backdrop-filter: blur(3px);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      text-align: center;
+      padding: 24px;
+    }
 
     /* Report / Audit Hero & Cards */
     .audit-container {
@@ -1911,6 +1995,12 @@ export function generateStudioHtml(initialFile?: string, initialConfig?: ToadCon
     }
     .hub-col.col-settings:hover::before { background: #38bdf8; }
 
+    .hub-col.col-enhance:hover {
+      background: radial-gradient(circle at 50% 25%, rgba(129, 140, 248, 0.18) 0%, #0a1424 100%);
+      box-shadow: 0 0 60px rgba(129, 140, 248, 0.2);
+    }
+    .hub-col.col-enhance:hover::before { background: #818cf8; }
+
     .hub-col-top {
       display: flex;
       flex-direction: column;
@@ -1977,6 +2067,7 @@ export function generateStudioHtml(initialFile?: string, initialConfig?: ToadCon
     }
 
     .col-bgr .hub-col-icon { background: rgba(16, 185, 129, 0.14); color: var(--accent); border: 1px solid rgba(16, 185, 129, 0.3); }
+    .col-enhance .hub-col-icon { background: rgba(129, 140, 248, 0.14); color: #818cf8; border: 1px solid rgba(129, 140, 248, 0.3); }
     .col-build .hub-col-icon { background: rgba(6, 182, 212, 0.14); color: var(--cyan); border: 1px solid rgba(6, 182, 212, 0.3); }
     .col-motion .hub-col-icon { background: rgba(168, 85, 247, 0.14); color: var(--violet); border: 1px solid rgba(168, 85, 247, 0.3); }
     .col-convert .hub-col-icon { background: rgba(245, 158, 11, 0.14); color: var(--amber); border: 1px solid rgba(245, 158, 11, 0.3); }
@@ -2023,6 +2114,7 @@ export function generateStudioHtml(initialFile?: string, initialConfig?: ToadCon
     }
 
     .col-bgr:hover .hub-col-action { background: var(--accent); color: #021a10; border-color: var(--accent); box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35); }
+    .col-enhance:hover .hub-col-action { background: #818cf8; color: #080a24; border-color: #818cf8; box-shadow: 0 8px 24px rgba(129, 140, 248, 0.35); }
     .col-build:hover .hub-col-action { background: var(--cyan); color: #02151d; border-color: var(--cyan); box-shadow: 0 8px 24px rgba(6, 182, 212, 0.35); }
     .col-motion:hover .hub-col-action { background: var(--violet); color: #160424; border-color: var(--violet); box-shadow: 0 8px 24px rgba(168, 85, 247, 0.35); }
     .col-convert:hover .hub-col-action { background: var(--amber); color: #211300; border-color: var(--amber); box-shadow: 0 8px 24px rgba(245, 158, 11, 0.35); }
@@ -2507,6 +2599,18 @@ export function generateStudioHtml(initialFile?: string, initialConfig?: ToadCon
               <div class="hub-col-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
               <h2 class="hub-col-title">Freistellen</h2>
               <p class="hub-col-desc">Hintergründe automatisch und lokal per KI entfernen</p>
+            </div>
+          </div>
+
+          <!-- Column 2: Bildqualität verbessern -->
+          <div class="hub-col col-enhance" onclick="openWizard('enhance')">
+            <div class="hub-col-top">
+              <span class="hub-col-cmd">toad enhance</span>
+            </div>
+            <div class="hub-col-body">
+              <div class="hub-col-icon"><i class="fa-solid fa-bolt-lightning"></i></div>
+              <h2 class="hub-col-title">Verbessern</h2>
+              <p class="hub-col-desc">Bilder lokal per KI schärfen, entrauschen &amp; hochskalieren</p>
             </div>
           </div>
 
@@ -3013,18 +3117,56 @@ export function generateStudioHtml(initialFile?: string, initialConfig?: ToadCon
             </div>
           </div>
 
-          <!-- Split-Slider Comparison View -->
+          <!-- Split-Slider & Side-by-Side Comparison View (BG-Remover) -->
           <div class="bgr-view">
+            <div class="compare-toolbar">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">
+                  <i class="fa-solid fa-eye" style="color: var(--accent); margin-right: 4px;"></i> Vorher / Nachher:
+                </span>
+                <div class="segment-group">
+                  <button type="button" class="segment-btn active" id="bgr-mode-split" onclick="setBgrCompareMode('split')">
+                    <i class="fa-solid fa-arrows-left-right"></i> Split-Slider
+                  </button>
+                  <button type="button" class="segment-btn" id="bgr-mode-sbs" onclick="setBgrCompareMode('sbs')">
+                    <i class="fa-solid fa-table-columns"></i> Nebeneinander
+                  </button>
+                  <button type="button" class="segment-btn" id="bgr-mode-hold"
+                    onmousedown="toggleBgrHoldOriginal(true)" onmouseup="toggleBgrHoldOriginal(false)" onmouseleave="toggleBgrHoldOriginal(false)"
+                    ontouchstart="toggleBgrHoldOriginal(true)" ontouchend="toggleBgrHoldOriginal(false)">
+                    <i class="fa-solid fa-hand-pointer"></i> Original halten
+                  </button>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div class="segment-group">
+                  <button type="button" class="segment-btn active" id="bgr-zoom-fit" onclick="setBgrZoom(1)">Fit</button>
+                  <button type="button" class="segment-btn" id="bgr-zoom-15" onclick="setBgrZoom(1.5)">150%</button>
+                  <button type="button" class="segment-btn" id="bgr-zoom-2" onclick="setBgrZoom(2.5)">250%</button>
+                </div>
+              </div>
+            </div>
+
             <div class="split-container" id="split-box">
-              <div class="split-floating-tag left">Original</div>
-              <div class="split-floating-tag right"><i class="fa-solid fa-wand-magic-sparkles" style="margin-right: 4px;"></i> Freigestellt (KI)</div>
+              <div class="split-floating-tag left" id="bgr-tag-before">VORHER &bull; Original</div>
+              <div class="split-floating-tag right" id="bgr-tag-after"><i class="fa-solid fa-wand-magic-sparkles"></i> NACHHER &bull; Freigestellt (KI)</div>
+
+              <!-- Empty State when no image is loaded yet -->
+              <div class="split-empty-overlay" id="bgr-empty-state" onclick="triggerBgrFilePicker(event)">
+                <i class="fa-solid fa-arrows-left-right" style="font-size: 34px; color: var(--accent); opacity: 0.85;"></i>
+                <div style="font-size: 15px; font-weight: 700; color: var(--text);">Vorher / Nachher Live-Vorschau</div>
+                <div style="font-size: 12px; color: var(--text-dim); max-width: 380px;">
+                  Wähle links ein Bild aus oder klicke hier, um Original und KI-Freistellung direkt mit dem interaktiven Slider zu vergleichen.
+                </div>
+              </div>
+
               <!-- Bottom Layer: Original -->
               <div class="split-layer bottom">
-                <img id="split-img-orig" src="" alt="Original" draggable="false">
+                <img id="split-img-orig" src="" alt="Original" draggable="false" style="display: none;">
               </div>
               <!-- Top Layer: Processed Alpha Isolated Image -->
               <div class="split-layer top" id="split-top-layer">
-                <img id="split-img-proc" src="" alt="Freigestellt" draggable="false">
+                <img id="split-img-proc" src="" alt="Freigestellt" draggable="false" style="display: none;">
               </div>
               <!-- Drag Divider Handle -->
               <div class="split-handle" id="split-divider">
@@ -3032,12 +3174,258 @@ export function generateStudioHtml(initialFile?: string, initialConfig?: ToadCon
               </div>
             </div>
 
+            <!-- Side-by-Side View (BG-Remover) -->
+            <div class="side-by-side-container" id="bgr-sbs-box">
+              <div class="side-by-side-pane">
+                <div class="split-floating-tag left">VORHER &bull; Original</div>
+                <img id="bgr-sbs-orig" src="" alt="Original" draggable="false">
+              </div>
+              <div class="side-by-side-pane" style="background-image: linear-gradient(45deg, #1e2638 25%, transparent 25%), linear-gradient(-45deg, #1e2638 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #1e2638 75%), linear-gradient(-45deg, transparent 75%, #1e2638 75%); background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0px;">
+                <div class="split-floating-tag right"><i class="fa-solid fa-wand-magic-sparkles"></i> NACHHER &bull; Freigestellt (KI)</div>
+                <img id="bgr-sbs-proc" src="" alt="Freigestellt" draggable="false">
+              </div>
+            </div>
+
             <div style="margin-top: 16px; display: flex; gap: 12px; align-items: center;">
               <span style="font-size: 12px; color: var(--text-dim);">
-                <i class="fa-solid fa-hand-pointer" style="margin-right: 4px;"></i> Ziehe den Slider nach links/rechts zum Vergleichen
+                <i class="fa-solid fa-hand-pointer" style="margin-right: 4px;"></i> Ziehe den Slider nach links/rechts zum direkten Vorher/Nachher-Vergleich
               </span>
               <button class="btn-secondary" id="btn-bgr-download" style="display: none;" onclick="downloadBgrResult()">
                 <i class="fa-solid fa-download"></i> Freigestelltes Bild herunterladen
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 3b: Verbessern / AI Image Enhancer (toad enhance) -->
+      <div class="tab-view" id="tab-enhancer">
+        <div class="bgr-container">
+          <div class="bgr-sidebar">
+            <div class="section-title">
+              <span><i class="fa-solid fa-bolt-lightning" style="color: #818cf8;"></i> KI-Bildverbesserung (toad enhance)</span>
+              <button type="button" class="btn-secondary" style="padding: 3px 8px; font-size: 10px;" onclick="switchTab('hub')">
+                <i class="fa-solid fa-arrow-left"></i> Hub
+              </button>
+            </div>
+
+            <!-- Dropzone (Images & Folders) -->
+            <div class="dropzone" id="enh-dropzone" onclick="onEnhDropzoneClick(event)">
+              <input type="file" id="enh-file-input" style="display: none;" accept="image/*" multiple onchange="handleEnhFiles(this.files)">
+              <input type="file" id="enh-folder-input" style="display: none;" webkitdirectory mozdirectory directory multiple onchange="handleEnhFiles(this.files)">
+              <i class="fa-solid fa-wand-magic-sparkles dropzone-icon" style="color: #818cf8;"></i>
+              <div style="font-size: 14px; font-weight: 700; color: var(--text);">Fotos oder Ordner hier ablegen</div>
+              <div style="font-size: 11px; color: var(--text-dim); margin-top: 2px;">Schärft Handyaufnahmen, entfernt Rauschen &amp; skaliert bis 4x hoch</div>
+              <div style="display: flex; gap: 8px; margin-top: 8px;">
+                <button type="button" class="btn-secondary" style="padding: 5px 12px; font-size: 11px;" onclick="triggerEnhFilePicker(event)">
+                  <i class="fa-solid fa-images"></i> Bilder wählen
+                </button>
+                <button type="button" class="btn-secondary" style="padding: 5px 12px; font-size: 11px;" onclick="triggerEnhFolderPicker(event)">
+                  <i class="fa-solid fa-folder-open"></i> Ordner wählen
+                </button>
+              </div>
+            </div>
+
+            <!-- Skalierungsfaktor (Scale) -->
+            <div class="param-group">
+              <div class="param-label">
+                <span><i class="fa-solid fa-expand" style="color: #818cf8; margin-right: 6px;"></i> Skalierung / Auflösung</span>
+                <span class="param-sub">(-s / --scale)</span>
+              </div>
+              <div class="segment-group">
+                <button class="segment-btn" id="enh-scale-1" onclick="setEnhScale(1)">1x (Schärfen)</button>
+                <button class="segment-btn active" id="enh-scale-2" onclick="setEnhScale(2)">2x HD</button>
+                <button class="segment-btn" id="enh-scale-4" onclick="setEnhScale(4)">4x Ultra-HD</button>
+              </div>
+            </div>
+
+            <!-- KI-Modus / Presets -->
+            <div class="param-group">
+              <div class="param-label">
+                <span><i class="fa-solid fa-sliders" style="color: var(--cyan); margin-right: 6px;"></i> Verbesserungs-Modus</span>
+                <span class="param-sub">(--preset)</span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 6px;" id="enh-presets">
+                <label class="check-btn" style="flex-direction: column; align-items: flex-start;">
+                  <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
+                    <input type="radio" name="enh-preset" value="fast" onchange="updateEnhPreset()">
+                    <span style="font-weight: 700;"><i class="fa-solid fa-bolt" style="color: var(--amber); margin-right: 4px;"></i> Schnell</span>
+                    <span style="font-size: 10px; color: var(--cyan); margin-left: auto;">Swin2SR Lite</span>
+                  </div>
+                  <div style="font-size: 11px; color: var(--text-dim); margin-left: 24px;">Schnelles Upscaling &amp; Basis-Schärfung.</div>
+                </label>
+
+                <label class="check-btn" style="flex-direction: column; align-items: flex-start;">
+                  <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
+                    <input type="radio" name="enh-preset" value="balanced" checked onchange="updateEnhPreset()">
+                    <span style="font-weight: 700;"><i class="fa-solid fa-scale-balanced" style="color: var(--accent); margin-right: 4px;"></i> Ausgewogen</span>
+                    <span style="font-size: 10px; color: var(--accent); margin-left: auto;">Standard</span>
+                  </div>
+                  <div style="font-size: 11px; color: var(--text-dim); margin-left: 24px;">Natürliche Details, Entschärfung &amp; Rauschreduktion.</div>
+                </label>
+
+                <label class="check-btn" style="flex-direction: column; align-items: flex-start;">
+                  <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
+                    <input type="radio" name="enh-preset" value="sharp" onchange="updateEnhPreset()">
+                    <span style="font-weight: 700;"><i class="fa-solid fa-eye" style="color: #818cf8; margin-right: 4px;"></i> Scharfstellen (Deblur)</span>
+                    <span style="font-size: 10px; color: #818cf8; margin-left: auto;">--deblur</span>
+                  </div>
+                  <div style="font-size: 11px; color: var(--text-dim); margin-left: 24px;">Stellt leicht verschwommene Handyaufnahmen scharf.</div>
+                </label>
+
+                <label class="check-btn" style="flex-direction: column; align-items: flex-start;">
+                  <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
+                    <input type="radio" name="enh-preset" value="denoise" onchange="updateEnhPreset()">
+                    <span style="font-weight: 700;"><i class="fa-solid fa-droplet-slash" style="color: var(--cyan); margin-right: 4px;"></i> Entrauschen (Denoise)</span>
+                    <span style="font-size: 10px; color: var(--cyan); margin-left: auto;">--denoise</span>
+                  </div>
+                  <div style="font-size: 11px; color: var(--text-dim); margin-left: 24px;">Beseitigt ISO-Bildrauschen &amp; JPEG-Kompressionsblöcke.</div>
+                </label>
+
+                <label class="check-btn" style="flex-direction: column; align-items: flex-start;">
+                  <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
+                    <input type="radio" name="enh-preset" value="dyb" onchange="updateEnhPreset()">
+                    <span style="font-weight: 700;"><i class="fa-solid fa-gem" style="color: var(--violet); margin-right: 4px;"></i> Höchste Präzision (DYB)</span>
+                    <span style="font-size: 10px; color: var(--violet); margin-left: auto;">--dyb</span>
+                  </div>
+                  <div style="font-size: 11px; color: var(--text-dim); margin-left: 24px;">Maximale Detail-Synthese + Deconvolution + Clarity.</div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Format -->
+            <div class="param-group">
+              <div class="param-label">Ausgabe-Format</div>
+              <div class="segment-group">
+                <button class="segment-btn active" id="enh-fmt-png" onclick="setEnhFormat('png')">PNG</button>
+                <button class="segment-btn" id="enh-fmt-webp" onclick="setEnhFormat('webp')">WebP</button>
+                <button class="segment-btn" id="enh-fmt-jpg" onclick="setEnhFormat('jpg')">JPEG</button>
+              </div>
+            </div>
+
+            <!-- Zielverzeichnis & Auto-Save -->
+            <div class="param-group">
+              <div class="param-label" style="display: flex; align-items: center; justify-content: space-between;">
+                <span><i class="fa-solid fa-folder-arrow-down" style="color: var(--accent); margin-right: 6px;"></i> Zielordner</span>
+                <label style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 500; cursor: pointer; color: var(--text-dim); text-transform: none; letter-spacing: normal;">
+                  <input type="checkbox" id="enh-auto-save" checked style="accent-color: var(--accent);"> Auto-Speichern
+                </label>
+              </div>
+              <div style="display: flex; gap: 6px; align-items: center;">
+                <input type="text" class="text-input" id="enh-out-dir" value="./verbessert" placeholder="./verbessert" style="flex: 1; font-family: var(--font-mono); font-size: 12px; padding: 7px 10px;">
+                <button type="button" class="btn-secondary" style="padding: 7px 10px; font-size: 11px;" title="Zielordner im Explorer öffnen" onclick="openEnhTargetFolder()">
+                  <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                </button>
+              </div>
+              <div style="font-size: 10px; color: var(--text-dim); margin-top: 4px;">
+                Verbesserte Bilder werden direkt als <code>[Name]-verbessert.[ext]</code> gespeichert.
+              </div>
+            </div>
+
+            <!-- Warteschlange -->
+            <div class="section-title" style="margin-top: 10px;">
+              <span><i class="fa-solid fa-list-check"></i> Bilder-Warteschlange</span>
+            </div>
+            <div class="bgr-image-list" id="enh-queue-list">
+              <div style="font-size: 12px; color: var(--text-dim); text-align: center; padding: 12px;">Keine Bilder geladen.</div>
+            </div>
+          </div>
+
+          <!-- Split-Slider & Side-by-Side Comparison View (Enhancer) -->
+          <div class="bgr-view">
+            <!-- Interactive Vorher / Nachher Toolbar -->
+            <div class="compare-toolbar" id="enh-compare-toolbar">
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">
+                  <i class="fa-solid fa-bolt-lightning" style="color: #818cf8; margin-right: 4px;"></i> Vorher / Nachher:
+                </span>
+                <div class="segment-group">
+                  <button type="button" class="segment-btn active" id="enh-mode-split" onclick="setEnhCompareMode('split')">
+                    <i class="fa-solid fa-arrows-left-right"></i> Split-Slider
+                  </button>
+                  <button type="button" class="segment-btn" id="enh-mode-sbs" onclick="setEnhCompareMode('sbs')">
+                    <i class="fa-solid fa-table-columns"></i> Nebeneinander
+                  </button>
+                  <button type="button" class="segment-btn" id="enh-mode-hold"
+                    onmousedown="toggleEnhHoldOriginal(true)" onmouseup="toggleEnhHoldOriginal(false)" onmouseleave="toggleEnhHoldOriginal(false)"
+                    ontouchstart="toggleEnhHoldOriginal(true)" ontouchend="toggleEnhHoldOriginal(false)">
+                    <i class="fa-solid fa-hand-pointer"></i> Original halten
+                  </button>
+                </div>
+              </div>
+
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span style="font-size: 11px; color: var(--text-dim);">Lupe:</span>
+                <div class="segment-group">
+                  <button type="button" class="segment-btn active" id="enh-zoom-fit" onclick="setEnhZoom(1)">Fit</button>
+                  <button type="button" class="segment-btn" id="enh-zoom-15" onclick="setEnhZoom(1.75)">175%</button>
+                  <button type="button" class="segment-btn" id="enh-zoom-25" onclick="setEnhZoom(2.5)">250%</button>
+                  <button type="button" class="segment-btn" id="enh-zoom-40" onclick="setEnhZoom(4)">400%</button>
+                </div>
+                <button type="button" class="btn-secondary" id="btn-enh-reprocess" style="display: none; padding: 5px 10px; font-size: 11px; border-color: rgba(129, 140, 248, 0.45); color: #c7d2fe;" onclick="reprocessActiveEnhImage()" title="Aktives Bild mit den aktuell gewählten Einstellungen (Skalierung & Modus) neu berechnen">
+                  <i class="fa-solid fa-arrows-rotate" style="color: #818cf8;"></i> Neu berechnen
+                </button>
+              </div>
+            </div>
+
+            <!-- Mode 1: Interactive Split-Slider Box -->
+            <div class="split-container" id="enh-split-box">
+              <div class="split-floating-tag left" id="enh-tag-before">VORHER &bull; Original</div>
+              <div class="split-floating-tag right" id="enh-tag-after" style="border-color: rgba(129, 140, 248, 0.45); color: #c7d2fe;">
+                <i class="fa-solid fa-bolt-lightning" style="color: #818cf8;"></i> NACHHER &bull; Verbessert (KI)
+              </div>
+
+              <!-- Empty State when no image is loaded yet -->
+              <div class="split-empty-overlay" id="enh-empty-state" onclick="triggerEnhFilePicker(event)">
+                <i class="fa-solid fa-wand-magic-sparkles" style="font-size: 36px; color: #818cf8; opacity: 0.9;"></i>
+                <div style="font-size: 15px; font-weight: 700; color: var(--text);">Vorher / Nachher Qualitätsvergleich</div>
+                <div style="font-size: 12px; color: var(--text-dim); max-width: 400px;">
+                  Ziehe ein Foto in die Dropzone links oder klicke hier, um Original und KI-Super-Resolution direkt mit dem interaktiven Slider und bis zu 400% Detail-Lupe zu vergleichen.
+                </div>
+              </div>
+
+              <!-- Live AI Processing Overlay -->
+              <div class="split-loading-overlay" id="enh-loading-overlay">
+                <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 32px; color: #818cf8;"></i>
+                <div style="font-size: 14px; font-weight: 700; color: var(--text);" id="enh-loading-text">KI verbessert Bildqualität...</div>
+                <div style="font-size: 11px; color: var(--text-dim);">100% lokal auf deinem Gerät (Swin2SR + Optische Restaurierung)</div>
+              </div>
+
+              <!-- Bottom Layer: Original -->
+              <div class="split-layer bottom">
+                <img id="enh-split-img-orig" src="" alt="Original" draggable="false" style="display: none;">
+              </div>
+              <!-- Top Layer: Enhanced Image -->
+              <div class="split-layer top" id="enh-split-top-layer" style="background: #0d1117;">
+                <img id="enh-split-img-proc" src="" alt="Verbessert" draggable="false" style="display: none;">
+              </div>
+              <!-- Drag Divider Handle -->
+              <div class="split-handle" id="enh-split-divider">
+                <div class="split-knob"><i class="fa-solid fa-arrows-left-right"></i></div>
+              </div>
+            </div>
+
+            <!-- Mode 2: Side-by-Side View (Vorher links | Nachher rechts) -->
+            <div class="side-by-side-container" id="enh-sbs-box">
+              <div class="side-by-side-pane">
+                <div class="split-floating-tag left" id="enh-sbs-tag-before">VORHER &bull; Original</div>
+                <img id="enh-sbs-orig" src="" alt="Original" draggable="false">
+              </div>
+              <div class="side-by-side-pane">
+                <div class="split-floating-tag right" id="enh-sbs-tag-after" style="border-color: rgba(129, 140, 248, 0.45); color: #c7d2fe;">
+                  <i class="fa-solid fa-bolt-lightning" style="color: #818cf8;"></i> NACHHER &bull; Verbessert (KI)
+                </div>
+                <img id="enh-sbs-proc" src="" alt="Verbessert" draggable="false">
+              </div>
+            </div>
+
+            <div style="margin-top: 16px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; justify-content: center;">
+              <span style="font-size: 12px; color: var(--text-dim);">
+                <i class="fa-solid fa-hand-pointer" style="margin-right: 4px;"></i> Ziehe den Slider zum Schärfe- &amp; Detailvergleich (oder nutze die Detail-Lupe oben)
+              </span>
+              <span id="enh-res-badge" style="font-size: 12px; font-family: var(--font-mono); color: var(--accent); font-weight: 700;"></span>
+              <button class="btn-secondary" id="btn-enh-download" style="display: none;" onclick="downloadEnhResult()">
+                <i class="fa-solid fa-download"></i> Verbessertes Bild herunterladen
               </button>
             </div>
           </div>
@@ -3286,39 +3674,50 @@ export function generateStudioHtml(initialFile?: string, initialConfig?: ToadCon
               <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
                 <div style="display: flex; align-items: center; gap: 8px;">
                   <i class="fa-solid fa-circle-check" style="font-size: 18px; color: var(--success);"></i>
-                  <span style="font-weight: 700; color: var(--success); font-size: 15px;">Erfolgreich konvertiert!</span>
+                  <span style="font-weight: 700; color: var(--success); font-size: 15px;">Erfolgreich konvertiert! &bull; Vorher / Nachher Vorschau</span>
                 </div>
                 <div id="res-savings-badge" class="savings-badge positive"></div>
               </div>
 
-              <div style="display: grid; grid-template-columns: 240px 1fr; gap: 20px; align-items: center;">
-                <div style="text-align: center;">
-                  <img id="img-result-preview" src="" style="max-width: 100%; max-height: 200px; object-fit: contain; border-radius: var(--radius-sm); border: 1px solid var(--border); background: repeating-conic-gradient(#1e293b 0% 25%, transparent 0% 50%) 50% / 16px 16px;" />
+              <!-- Interactive Vorher / Nachher Split-Slider for Converted Image -->
+              <div class="split-container" id="conv-split-box" style="height: 360px; max-width: 100%; margin-bottom: 16px;">
+                <div class="split-floating-tag left">VORHER &bull; Original</div>
+                <div class="split-floating-tag right"><i class="fa-solid fa-arrows-rotate"></i> NACHHER &bull; Konvertiert</div>
+                <div class="split-layer bottom">
+                  <img id="conv-split-img-orig" src="" alt="Original" draggable="false">
                 </div>
-                <div style="display: flex; flex-direction: column; gap: 10px;">
-                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <div class="result-stat-box">
-                      <span class="result-stat-label"><i class="fa-solid fa-file"></i> Original</span>
-                      <span class="result-stat-val" id="res-orig-stat">-</span>
-                    </div>
-                    <div class="result-stat-box">
-                      <span class="result-stat-label"><i class="fa-solid fa-file-export"></i> Ergebnis (<span id="res-out-fmt">WEBP</span>)</span>
-                      <span class="result-stat-val" id="res-out-stat" style="color: var(--accent);">-</span>
-                    </div>
+                <div class="split-layer top" id="conv-split-top-layer">
+                  <img id="img-result-preview" src="" alt="Konvertiert" draggable="false">
+                </div>
+                <div class="split-handle" id="conv-split-divider">
+                  <div class="split-knob"><i class="fa-solid fa-arrows-left-right"></i></div>
+                </div>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                  <div class="result-stat-box">
+                    <span class="result-stat-label"><i class="fa-solid fa-file"></i> Vorher (Original)</span>
+                    <span class="result-stat-val" id="res-orig-stat">-</span>
                   </div>
-                  <div style="font-size: 12px; color: var(--text-dim);">
-                    Verarbeitungsdauer: <strong id="res-duration" style="color: var(--text-muted);">-</strong>
+                  <div class="result-stat-box">
+                    <span class="result-stat-label"><i class="fa-solid fa-file-export"></i> Nachher (<span id="res-out-fmt">WEBP</span>)</span>
+                    <span class="result-stat-val" id="res-out-stat" style="color: var(--accent);">-</span>
                   </div>
-                  <div style="display: flex; gap: 10px; margin-top: 6px;">
-                    <button class="btn-primary" id="btn-download-result" onclick="downloadConvertedImage()" style="flex: 1;">
-                      <i class="fa-solid fa-download"></i>
-                      <span>Herunterladen</span>
-                    </button>
-                    <button class="btn-secondary" onclick="saveResultToWorkspace()">
-                      <i class="fa-solid fa-folder-plus"></i>
-                      <span>Im Projekt speichern</span>
-                    </button>
-                  </div>
+                </div>
+                <div style="font-size: 12px; color: var(--text-dim); display: flex; justify-content: space-between; align-items: center;">
+                  <span>Verarbeitungsdauer: <strong id="res-duration" style="color: var(--text-muted);">-</strong></span>
+                  <span><i class="fa-solid fa-hand-pointer"></i> Ziehe den Slider oben für den direkten Vorher/Nachher-Vergleich</span>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 6px;">
+                  <button class="btn-primary" id="btn-download-result" onclick="downloadConvertedImage()" style="flex: 1;">
+                    <i class="fa-solid fa-download"></i>
+                    <span>Herunterladen</span>
+                  </button>
+                  <button class="btn-secondary" onclick="saveResultToWorkspace()">
+                    <i class="fa-solid fa-folder-plus"></i>
+                    <span>Im Projekt speichern</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -3958,6 +4357,14 @@ export function generateStudioHtml(initialFile?: string, initialConfig?: ToadCon
         format: 'png',
         targetDir: './freigestellt'
       },
+      enhance: {
+        sourcePath: './bilder',
+        sourceName: 'Ordner: ./bilder',
+        preset: 'balanced',
+        scale: '2',
+        format: 'png',
+        targetDir: './verbessert'
+      },
       build: {
         file: '',
         formats: ['png'],
@@ -3986,6 +4393,12 @@ export function generateStudioHtml(initialFile?: string, initialConfig?: ToadCon
         badge: 'toad remove-bg',
         totalSteps: 5,
         stepNames: ['1. Motiv', '2. Modus', '3. Format', '4. Zielordner', '5. Ausführen']
+      },
+      enhance: {
+        title: 'Bildqualität verbessern',
+        badge: 'toad enhance',
+        totalSteps: 5,
+        stepNames: ['1. Quellbild', '2. KI-Modus', '3. Skalierung', '4. Format & Ziel', '5. Ausführen']
       },
       build: {
         title: 'Design exportieren',
@@ -4087,6 +4500,17 @@ export function generateStudioHtml(initialFile?: string, initialConfig?: ToadCon
         var flag = d.preset === 'dyb' ? ' --dyb' : (d.preset === 'fast' ? ' --fast' : '');
         return 'toad remove-bg "' + src + '" "' + tgt + '"' + flag + ' -f ' + d.format;
       }
+      if (type === 'enhance') {
+        var d = wizardData.enhance;
+        var src = toPosix(d.sourcePath || './bilder');
+        var tgt = toPosix(d.targetDir || './verbessert');
+        var flag = '';
+        if (d.preset === 'dyb') flag = ' --dyb';
+        else if (d.preset === 'fast') flag = ' --fast';
+        else if (d.preset === 'sharp') flag = ' --deblur';
+        else if (d.preset === 'denoise') flag = ' --denoise';
+        return 'toad enhance "' + src + '" "' + tgt + '" -s ' + (d.scale || '2') + flag + ' -f ' + (d.format || 'png');
+      }
       if (type === 'build') {
         var d = wizardData.build;
         var f = toPosix(d.file || (allFiles.find(function(x) { return x.path.endsWith('.toad'); }) || {}).path || 'design.toad');
@@ -4180,6 +4604,23 @@ export function generateStudioHtml(initialFile?: string, initialConfig?: ToadCon
         }
         var dirEl = document.getElementById('bgr-out-dir');
         if (dirEl) dirEl.value = wizardData.bgr.targetDir;
+        if (wizardData.bgr.files && wizardData.bgr.files.length > 0) {
+          handleBgFiles(wizardData.bgr.files);
+        }
+      } else if (wiz === 'enhance') {
+        switchTab('enhancer');
+        setEnhScale(parseInt(wizardData.enhance.scale, 10) || 2);
+        setEnhFormat(wizardData.enhance.format || 'png');
+        var eradio = document.querySelector('input[name="enh-preset"][value="' + wizardData.enhance.preset + '"]');
+        if (eradio) {
+          eradio.checked = true;
+          updateEnhPreset();
+        }
+        var edirEl = document.getElementById('enh-out-dir');
+        if (edirEl) edirEl.value = wizardData.enhance.targetDir;
+        if (wizardData.enhance.files && wizardData.enhance.files.length > 0) {
+          handleEnhFiles(wizardData.enhance.files);
+        }
       } else if (wiz === 'build') {
         switchTab('graphic');
         if (wizardData.build.file) selectFile(wizardData.build.file);
@@ -4221,20 +4662,80 @@ export function generateStudioHtml(initialFile?: string, initialConfig?: ToadCon
 
       var body = document.getElementById('wizard-card-body');
 
-      // Final Step: Render Generated Terminal Command Box
+      // Final Step: Render Generated Terminal Command Box + Embedded Vorher/Nachher Preview
       if (currentStep === cfg.totalSteps) {
         var cmd = getGeneratedCommand(currentWizard);
+        var hasVisualPreview = (currentWizard === 'enhance' || currentWizard === 'bgr');
+        var previewSectionHtml = '';
+
+        if (hasVisualPreview) {
+          var isEnh = currentWizard === 'enhance';
+          var afterLabel = isEnh ? 'NACHHER &bull; Verbessert (KI)' : 'NACHHER &bull; Freigestellt (KI)';
+          var accentCol = isEnh ? '#818cf8' : 'var(--accent)';
+          previewSectionHtml =
+            '<div style="margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 12px;">' +
+              '<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">' +
+                '<div>' +
+                  '<div style="font-size: 14px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px;">' +
+                    '<i class="fa-solid fa-arrows-left-right" style="color: ' + accentCol + ';"></i>' +
+                    '<span>Interaktive Vorher / Nachher Live-Vorschau</span>' +
+                  '</div>' +
+                  '<div style="font-size: 11px; color: var(--text-dim); margin-top: 2px;">Teste das KI-Ergebnis direkt hier im Browser mit dem Vorher/Nachher-Slider.</div>' +
+                '</div>' +
+                '<div style="display: flex; gap: 8px; align-items: center;">' +
+                  '<input type="file" id="wiz-preview-file-picker" style="display:none;" accept="image/*" onchange="onWizPreviewFilePick(this.files)">' +
+                  '<button type="button" class="btn-secondary" style="padding: 8px 14px; font-size: 12px;" onclick="triggerWizPreviewFilePicker()">' +
+                    '<i class="fa-solid fa-image"></i> Testbild wählen' +
+                  '</button>' +
+                  '<button type="button" class="btn-primary" id="btn-wiz-run-preview" style="width: auto; padding: 8px 16px; font-size: 12px;" onclick="runWizardLivePreview()">' +
+                    '<i class="fa-solid fa-wand-magic-sparkles"></i> <span>Vorher / Nachher Vorschau berechnen</span>' +
+                  '</button>' +
+                '</div>' +
+              '</div>' +
+
+              '<div class="split-container" id="wiz-live-split-box" style="height: 380px; max-width: 100%;">' +
+                '<div class="split-floating-tag left" id="wiz-tag-before">VORHER &bull; Original</div>' +
+                '<div class="split-floating-tag right" id="wiz-tag-after"><i class="fa-solid fa-wand-magic-sparkles"></i> ' + afterLabel + '</div>' +
+
+                '<div class="split-empty-overlay" id="wiz-split-empty" onclick="triggerWizPreviewFilePicker()">' +
+                  '<i class="fa-solid fa-arrows-left-right" style="font-size: 32px; color: ' + accentCol + ';"></i>' +
+                  '<div style="font-size: 14px; font-weight: 700; color: var(--text);">Vorher / Nachher Vergleich starten</div>' +
+                  '<div style="font-size: 12px; color: var(--text-dim); max-width: 420px;">Klicke auf „Vorher / Nachher Vorschau berechnen" oder wähle ein Bild aus, um Original und KI-Ergebnis interaktiv zu vergleichen.</div>' +
+                '</div>' +
+
+                '<div class="split-loading-overlay" id="wiz-split-loading">' +
+                  '<i class="fa-solid fa-circle-notch fa-spin" style="font-size: 30px; color: ' + accentCol + ';"></i>' +
+                  '<div style="font-size: 13px; font-weight: 700; color: var(--text);" id="wiz-split-loading-text">Berechne KI-Vorschau...</div>' +
+                '</div>' +
+
+                '<div class="split-layer bottom">' +
+                  '<img id="wiz-split-img-orig" src="" alt="Vorher" draggable="false" style="display: none;">' +
+                '</div>' +
+                '<div class="split-layer top" id="wiz-split-top-layer">' +
+                  '<img id="wiz-split-img-proc" src="" alt="Nachher" draggable="false" style="display: none;">' +
+                '</div>' +
+                '<div class="split-handle" id="wiz-split-divider">' +
+                  '<div class="split-knob"><i class="fa-solid fa-arrows-left-right"></i></div>' +
+                '</div>' +
+              '</div>' +
+              '<div id="wiz-preview-status-bar" style="font-size: 11px; font-family: var(--font-mono); color: var(--text-dim); display: flex; justify-content: space-between; align-items: center;">' +
+                '<span><i class="fa-solid fa-hand-pointer"></i> Ziehe den mittleren Regler nach links/rechts für den direkten Vorher/Nachher-Vergleich</span>' +
+                '<span id="wiz-preview-dim-info" style="color: var(--accent); font-weight: 700;"></span>' +
+              '</div>' +
+            '</div>';
+        }
+
         body.innerHTML = 
           '<div class="wizard-step-header">' +
-            '<div class="wizard-step-title"><i class="fa-solid fa-circle-check" style="color: var(--accent); margin-right: 8px;"></i> Dein Terminal-Befehl ist bereit!</div>' +
-            '<div class="wizard-step-subtitle">Führe den Befehl direkt im interaktiven CMD-Terminal aus oder kopiere ihn mit einem Klick.</div>' +
+            '<div class="wizard-step-title"><i class="fa-solid fa-circle-check" style="color: var(--accent); margin-right: 8px;"></i> Dein Terminal-Befehl &amp; Vorher/Nachher-Vorschau sind bereit!</div>' +
+            '<div class="wizard-step-subtitle">Führe den Befehl im CMD-Terminal aus, kopiere ihn oder teste die Vorher/Nachher-Vorschau direkt hier im Browser.</div>' +
           '</div>' +
 
           '<div class="terminal-cmd-box" id="wiz-cmd-box">' +
             '<span class="terminal-cmd-prompt">C:\\&gt;</span><span>' + cmd + '</span>' +
           '</div>' +
 
-          '<div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px;">' +
+          '<div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 6px;">' +
             '<button type="button" class="btn-run-cmd" id="btn-wizard-run-cmd" onclick="runWizardInCmd()">' +
               '<i class="fa-solid fa-terminal"></i>' +
               '<span>Jetzt im CMD ausführen</span>' +
@@ -4243,11 +4744,13 @@ export function generateStudioHtml(initialFile?: string, initialConfig?: ToadCon
               '<i class="fa-solid fa-copy"></i>' +
               '<span>Befehl kopieren</span>' +
             '</button>' +
-            '<button type="button" class="btn-secondary" style="padding: 12px 20px; font-size: 14px;" onclick="openWizardInStudio()">' +
-              '<i class="fa-solid fa-arrow-up-right-from-square"></i>' +
-              '<span>Im Web-GUI öffnen</span>' +
+            '<button type="button" class="btn-secondary" style="padding: 12px 20px; font-size: 14px; border-color: rgba(129, 140, 248, 0.45);" onclick="openWizardInStudio()">' +
+              '<i class="fa-solid fa-arrows-left-right" style="color: #818cf8;"></i>' +
+              '<span>Im Vollbild Vorher/Nachher-Viewer öffnen</span>' +
             '</button>' +
           '</div>' +
+
+          previewSectionHtml +
 
           '<div class="wizard-footer-nav">' +
             '<button type="button" class="btn-secondary" onclick="prevWizardStep()">' +
@@ -4257,7 +4760,186 @@ export function generateStudioHtml(initialFile?: string, initialConfig?: ToadCon
               '<i class="fa-solid fa-rotate-left"></i> Zum Hauptmenü' +
             '</button>' +
           '</div>';
+
+        if (hasVisualPreview) {
+          setTimeout(function() {
+            setupGenericSplitSlider('wiz-live-split-box', 'wiz-split-divider', 'wiz-split-top-layer');
+            initWizardPreviewFromSelection();
+          }, 30);
+        }
         return;
+      }
+
+      // Steps for Enhance
+      if (currentWizard === 'enhance') {
+        if (currentStep === 1) {
+          body.innerHTML =
+            '<div class="wizard-step-header">' +
+              '<div class="wizard-step-title">Welche Fotos möchtest du verbessern?</div>' +
+              '<div class="wizard-step-subtitle">Ziehe einzelne Handyaufnahmen, Bilder oder einen ganzen Ordner hinein.</div>' +
+            '</div>' +
+            '<div class="dropzone" id="wiz-enh-dropzone" style="padding: 24px;" onclick="triggerWizEnhFileInput()">' +
+              '<input type="file" id="wiz-enh-file-input" style="display:none;" accept="image/*" multiple onchange="onWizEnhFiles(this.files)">' +
+              '<input type="file" id="wiz-enh-folder-input" style="display:none;" webkitdirectory mozdirectory directory multiple onchange="onWizEnhFolder(this.files)">' +
+              '<i class="fa-solid fa-bolt-lightning dropzone-icon" style="font-size: 32px; color: #818cf8;"></i>' +
+              '<div style="font-size: 14px; font-weight: 700; color: var(--text); margin-top: 6px;">Fotos oder Ordner hier ablegen</div>' +
+              '<div style="font-size: 11px; color: var(--text-dim); margin-top: 4px;">Unterstützt PNG, JPG, WebP</div>' +
+              '<div style="display: flex; gap: 8px; margin-top: 12px;" onclick="event.stopPropagation()">' +
+                '<button type="button" class="btn-secondary" onclick="triggerWizEnhFileInput()">' +
+                  '<i class="fa-solid fa-images"></i> Einzelne Bilder wählen' +
+                '</button>' +
+                '<button type="button" class="btn-secondary" onclick="triggerWizEnhFolderInput()">' +
+                  '<i class="fa-solid fa-folder-open"></i> Ganzen Ordner wählen' +
+                '</button>' +
+              '</div>' +
+            '</div>' +
+            '<div style="display: flex; flex-direction: column; gap: 6px;">' +
+              '<div class="param-label" style="font-size: 11px; color: var(--text-muted);">Ausgewählter Pfad / Quelle:</div>' +
+              '<input type="text" class="input-control" id="wiz-enh-path" value="' + wizardData.enhance.sourcePath + '" oninput="wizardData.enhance.sourcePath = this.value" placeholder="./bilder oder foto.jpg">' +
+              '<div id="wiz-enh-hint" style="font-size: 11px; color: var(--accent); font-weight: 600;">' +
+                '<i class="fa-solid fa-check"></i> ' + wizardData.enhance.sourceName +
+              '</div>' +
+            '</div>' +
+            '<div class="wizard-footer-nav">' +
+              '<button type="button" class="btn-secondary" style="border-color: rgba(129, 140, 248, 0.45);" onclick="openWizardInStudio()">' +
+                '<i class="fa-solid fa-arrows-left-right" style="color: #818cf8;"></i> Direkt im Vorher/Nachher Web-Viewer öffnen' +
+              '</button>' +
+              '<button type="button" class="btn-primary" style="width: auto; padding: 10px 24px;" onclick="nextWizardStep()">' +
+                'Weiter <i class="fa-solid fa-chevron-right"></i>' +
+              '</button>' +
+            '</div>';
+
+          setupWizDropzone('wiz-enh-dropzone', function(name, isDir, droppedFiles) {
+            wizardData.enhance.sourcePath = name;
+            wizardData.enhance.sourceName = (isDir ? 'Ordner: ' : 'Datei: ') + name;
+            if (droppedFiles && droppedFiles.length > 0) {
+              wizardData.enhance.files = droppedFiles;
+            }
+            var p = document.getElementById('wiz-enh-path');
+            if (p) p.value = name;
+            var h = document.getElementById('wiz-enh-hint');
+            if (h) h.innerHTML = '<i class="fa-solid fa-check"></i> ' + wizardData.enhance.sourceName;
+          });
+          return;
+        }
+
+        if (currentStep === 2) {
+          body.innerHTML =
+            '<div class="wizard-step-header">' +
+              '<div class="wizard-step-title">Wie sollen die Bilder aufgewertet werden?</div>' +
+              '<div class="wizard-step-subtitle">Wähle den passenden KI-Fokus für deine Aufnahmen.</div>' +
+            '</div>' +
+            '<div class="wizard-tiles-grid">' +
+              '<div class="wizard-tile ' + (wizardData.enhance.preset === 'balanced' ? 'active' : '') + '" data-val="balanced" onclick="selectWizEnhPreset(this.dataset.val)">' +
+                '<div class="wizard-tile-header">' +
+                  '<i class="fa-solid fa-scale-balanced wizard-tile-icon" style="color: var(--accent);"></i>' +
+                  '<span class="wizard-tile-title">Ausgewogen</span>' +
+                '</div>' +
+                '<div class="wizard-tile-desc">Optimale Balance aus Schärfung, Detailrekonstruktion und Rauschreduzierung.</div>' +
+                '<span style="font-size: 10px; font-family: var(--font-mono); color: var(--accent); margin-top: auto;">Standard</span>' +
+              '</div>' +
+              '<div class="wizard-tile ' + (wizardData.enhance.preset === 'sharp' ? 'active' : '') + '" data-val="sharp" onclick="selectWizEnhPreset(this.dataset.val)">' +
+                '<div class="wizard-tile-header">' +
+                  '<i class="fa-solid fa-eye wizard-tile-icon" style="color: #818cf8;"></i>' +
+                  '<span class="wizard-tile-title">Scharfstellen (Deblur)</span>' +
+                '</div>' +
+                '<div class="wizard-tile-desc">Stellt leicht verwackelte oder unscharfe Handyfotos optisch scharf.</div>' +
+                '<span style="font-size: 10px; font-family: var(--font-mono); color: #818cf8; margin-top: auto;">--deblur</span>' +
+              '</div>' +
+              '<div class="wizard-tile ' + (wizardData.enhance.preset === 'denoise' ? 'active' : '') + '" data-val="denoise" onclick="selectWizEnhPreset(this.dataset.val)">' +
+                '<div class="wizard-tile-header">' +
+                  '<i class="fa-solid fa-droplet-slash wizard-tile-icon" style="color: var(--cyan);"></i>' +
+                  '<span class="wizard-tile-title">Entrauschen (Denoise)</span>' +
+                '</div>' +
+                '<div class="wizard-tile-desc">Entfernt Bildrauschen bei schlechtem Licht und JPEG-Artefakte.</div>' +
+                '<span style="font-size: 10px; font-family: var(--font-mono); color: var(--cyan); margin-top: auto;">--denoise</span>' +
+              '</div>' +
+              '<div class="wizard-tile ' + (wizardData.enhance.preset === 'dyb' ? 'active' : '') + '" data-val="dyb" onclick="selectWizEnhPreset(this.dataset.val)">' +
+                '<div class="wizard-tile-header">' +
+                  '<i class="fa-solid fa-gem wizard-tile-icon" style="color: var(--violet);"></i>' +
+                  '<span class="wizard-tile-title">Höchste Präzision (DYB)</span>' +
+                '</div>' +
+                '<div class="wizard-tile-desc">Maximale KI-Super-Resolution + Deconvolution + Mikrokontrast.</div>' +
+                '<span style="font-size: 10px; font-family: var(--font-mono); color: var(--violet); margin-top: auto;">--dyb</span>' +
+              '</div>' +
+              '<div class="wizard-tile ' + (wizardData.enhance.preset === 'fast' ? 'active' : '') + '" data-val="fast" onclick="selectWizEnhPreset(this.dataset.val)">' +
+                '<div class="wizard-tile-header">' +
+                  '<i class="fa-solid fa-bolt wizard-tile-icon" style="color: var(--amber);"></i>' +
+                  '<span class="wizard-tile-title">Schnell</span>' +
+                '</div>' +
+                '<div class="wizard-tile-desc">Leichtgewichtiges Swin2SR-Lite Modell für schnelle Serienverarbeitung.</div>' +
+                '<span style="font-size: 10px; font-family: var(--font-mono); color: var(--amber); margin-top: auto;">--fast</span>' +
+              '</div>' +
+            '</div>' +
+            '<div class="wizard-footer-nav">' +
+              '<button type="button" class="btn-secondary" onclick="prevWizardStep()"><i class="fa-solid fa-chevron-left"></i> Zurück</button>' +
+              '<button type="button" class="btn-primary" style="width: auto; padding: 10px 24px;" onclick="nextWizardStep()">Weiter <i class="fa-solid fa-chevron-right"></i></button>' +
+            '</div>';
+          return;
+        }
+
+        if (currentStep === 3) {
+          body.innerHTML =
+            '<div class="wizard-step-header">' +
+              '<div class="wizard-step-title">Welcher Vergrößerungsfaktor (Upscaling)?</div>' +
+              '<div class="wizard-step-subtitle">Du kannst die Originalgröße beibehalten (nur schärfen) oder die Auflösung vervielfachen.</div>' +
+            '</div>' +
+            '<div class="wizard-tiles-grid">' +
+              '<div class="wizard-tile ' + (wizardData.enhance.scale === '1' ? 'active' : '') + '" data-val="1" onclick="selectWizEnhScale(this.dataset.val)">' +
+                '<div class="wizard-tile-header"><i class="fa-solid fa-wand-sparkles wizard-tile-icon" style="color: var(--cyan);"></i><span class="wizard-tile-title">1x (Originalgröße)</span></div>' +
+                '<div class="wizard-tile-desc">Behält die Pixelmaße bei und optimiert Schärfe, Klarheit &amp; Details.</div>' +
+              '</div>' +
+              '<div class="wizard-tile ' + (wizardData.enhance.scale === '2' ? 'active' : '') + '" data-val="2" onclick="selectWizEnhScale(this.dataset.val)">' +
+                '<div class="wizard-tile-header"><i class="fa-solid fa-expand wizard-tile-icon" style="color: var(--accent);"></i><span class="wizard-tile-title">2x Super-Resolution</span></div>' +
+                '<div class="wizard-tile-desc">Verdoppelt Breite &amp; Höhe (4-fache Pixelanzahl) mit KI-Detailrekonstruktion.</div>' +
+              '</div>' +
+              '<div class="wizard-tile ' + (wizardData.enhance.scale === '4' ? 'active' : '') + '" data-val="4" onclick="selectWizEnhScale(this.dataset.val)">' +
+                '<div class="wizard-tile-header"><i class="fa-solid fa-up-right-and-down-left-from-center wizard-tile-icon" style="color: var(--violet);"></i><span class="wizard-tile-title">4x Ultra-HD</span></div>' +
+                '<div class="wizard-tile-desc">Vervierfacht Breite &amp; Höhe (16-fache Pixelanzahl) für Großformat &amp; Print.</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="wizard-footer-nav">' +
+              '<button type="button" class="btn-secondary" onclick="prevWizardStep()"><i class="fa-solid fa-chevron-left"></i> Zurück</button>' +
+              '<button type="button" class="btn-primary" style="width: auto; padding: 10px 24px;" onclick="nextWizardStep()">Weiter <i class="fa-solid fa-chevron-right"></i></button>' +
+            '</div>';
+          return;
+        }
+
+        if (currentStep === 4) {
+          body.innerHTML =
+            '<div class="wizard-step-header">' +
+              '<div class="wizard-step-title">Ausgabeformat &amp; Zielordner</div>' +
+              '<div class="wizard-step-subtitle">Wähle das Format und den Speicherort für die verbesserten Aufnahmen.</div>' +
+            '</div>' +
+            '<div class="wizard-tiles-grid" style="margin-bottom: 16px;">' +
+              '<div class="wizard-tile ' + (wizardData.enhance.format === 'png' ? 'active' : '') + '" data-val="png" onclick="selectWizEnhFormat(this.dataset.val)">' +
+                '<div class="wizard-tile-header"><i class="fa-solid fa-file-image wizard-tile-icon" style="color: var(--accent);"></i><span class="wizard-tile-title">PNG (Verlustfrei)</span></div>' +
+                '<div class="wizard-tile-desc">100% verlustfreie Speicherung aller rekonstruierten Details.</div>' +
+              '</div>' +
+              '<div class="wizard-tile ' + (wizardData.enhance.format === 'webp' ? 'active' : '') + '" data-val="webp" onclick="selectWizEnhFormat(this.dataset.val)">' +
+                '<div class="wizard-tile-header"><i class="fa-solid fa-globe wizard-tile-icon" style="color: var(--cyan);"></i><span class="wizard-tile-title">WebP (Kompakt)</span></div>' +
+                '<div class="wizard-tile-desc">Hohe Detailtreue bei deutlich geringerer Dateigröße.</div>' +
+              '</div>' +
+              '<div class="wizard-tile ' + (wizardData.enhance.format === 'jpg' ? 'active' : '') + '" data-val="jpg" onclick="selectWizEnhFormat(this.dataset.val)">' +
+                '<div class="wizard-tile-header"><i class="fa-solid fa-camera wizard-tile-icon" style="color: var(--amber);"></i><span class="wizard-tile-title">JPEG (Foto)</span></div>' +
+                '<div class="wizard-tile-desc">Klassisches Fotoformat für universelle Kompatibilität.</div>' +
+              '</div>' +
+            '</div>' +
+            '<div style="display: flex; flex-direction: column; gap: 10px;">' +
+              '<div class="param-label" style="font-size: 11px; color: var(--text-muted);">Zielverzeichnis:</div>' +
+              '<input type="text" class="input-control" id="wiz-enh-target" value="' + wizardData.enhance.targetDir + '" oninput="wizardData.enhance.targetDir = this.value" placeholder="./verbessert">' +
+              '<div style="display: flex; gap: 8px;">' +
+                '<button type="button" class="btn-secondary" style="font-size: 11px; padding: 5px 10px;" data-val="./verbessert" onclick="setWizEnhTargetDir(this.dataset.val)">./verbessert</button>' +
+                '<button type="button" class="btn-secondary" style="font-size: 11px; padding: 5px 10px;" data-val="./upscaled" onclick="setWizEnhTargetDir(this.dataset.val)">./upscaled</button>' +
+                '<button type="button" class="btn-secondary" style="font-size: 11px; padding: 5px 10px;" data-val="./output" onclick="setWizEnhTargetDir(this.dataset.val)">./output</button>' +
+              '</div>' +
+            '</div>' +
+            '<div class="wizard-footer-nav">' +
+              '<button type="button" class="btn-secondary" onclick="prevWizardStep()"><i class="fa-solid fa-chevron-left"></i> Zurück</button>' +
+              '<button type="button" class="btn-primary" style="width: auto; padding: 10px 24px;" onclick="nextWizardStep()">Befehl &amp; Vorschau <i class="fa-solid fa-chevron-right"></i></button>' +
+            '</div>';
+          return;
+        }
       }
 
       // Steps for BGR
@@ -4294,15 +4976,20 @@ export function generateStudioHtml(initialFile?: string, initialConfig?: ToadCon
             '</div>' +
 
             '<div class="wizard-footer-nav">' +
-              '<div></div>' +
+              '<button type="button" class="btn-secondary" onclick="openWizardInStudio()">' +
+                '<i class="fa-solid fa-arrows-left-right" style="color: var(--accent);"></i> Direkt im Vorher/Nachher Web-Viewer öffnen' +
+              '</button>' +
               '<button type="button" class="btn-primary" style="width: auto; padding: 10px 24px;" onclick="nextWizardStep()">' +
                 'Weiter <i class="fa-solid fa-chevron-right"></i>' +
               '</button>' +
             '</div>';
 
-          setupWizDropzone('wiz-bgr-dropzone', function(name, isDir) {
+          setupWizDropzone('wiz-bgr-dropzone', function(name, isDir, droppedFiles) {
             wizardData.bgr.sourcePath = name;
             wizardData.bgr.sourceName = (isDir ? 'Ordner: ' : 'Datei: ') + name;
+            if (droppedFiles && droppedFiles.length > 0) {
+              wizardData.bgr.files = droppedFiles;
+            }
             var p = document.getElementById('wiz-bgr-path');
             if (p) p.value = name;
             var h = document.getElementById('wiz-bgr-hint');
@@ -4807,6 +5494,10 @@ export function generateStudioHtml(initialFile?: string, initialConfig?: ToadCon
     function selectWizPreset(p) { wizardData.bgr.preset = p; renderWizardStep(); }
     function selectWizFormat(f) { wizardData.bgr.format = f; renderWizardStep(); }
     function setWizTargetDir(d) { wizardData.bgr.targetDir = d; renderWizardStep(); }
+    function selectWizEnhPreset(p) { wizardData.enhance.preset = p; renderWizardStep(); }
+    function selectWizEnhScale(s) { wizardData.enhance.scale = s; renderWizardStep(); }
+    function selectWizEnhFormat(f) { wizardData.enhance.format = f; renderWizardStep(); }
+    function setWizEnhTargetDir(d) { wizardData.enhance.targetDir = d; renderWizardStep(); }
     function toggleWizBuildFormat(fmt) {
       if (!wizardData.build.formats) wizardData.build.formats = [];
       var idx = wizardData.build.formats.indexOf(fmt);
@@ -4868,6 +5559,7 @@ export function generateStudioHtml(initialFile?: string, initialConfig?: ToadCon
 
     function onWizBgrFiles(files) {
       if (!files || files.length === 0) return;
+      wizardData.bgr.files = Array.from(files);
       if (files.length === 1) {
         wizardData.bgr.sourcePath = files[0].name;
         wizardData.bgr.sourceName = 'Datei: ' + files[0].name;
@@ -4880,12 +5572,38 @@ export function generateStudioHtml(initialFile?: string, initialConfig?: ToadCon
 
     function onWizBgrFolder(files) {
       if (!files || files.length === 0) return;
+      wizardData.bgr.files = Array.from(files);
       var dirName = './bilder';
       if (files[0] && files[0].webkitRelativePath) {
         dirName = files[0].webkitRelativePath.split('/')[0];
       }
       wizardData.bgr.sourcePath = dirName;
       wizardData.bgr.sourceName = 'Ordner: ' + dirName + ' (' + files.length + ' Bilder)';
+      renderWizardStep();
+    }
+
+    function onWizEnhFiles(files) {
+      if (!files || files.length === 0) return;
+      wizardData.enhance.files = Array.from(files);
+      if (files.length === 1) {
+        wizardData.enhance.sourcePath = files[0].name;
+        wizardData.enhance.sourceName = 'Datei: ' + files[0].name;
+      } else {
+        wizardData.enhance.sourcePath = files[0].name;
+        wizardData.enhance.sourceName = files.length + ' Dateien ausgewählt';
+      }
+      renderWizardStep();
+    }
+
+    function onWizEnhFolder(files) {
+      if (!files || files.length === 0) return;
+      wizardData.enhance.files = Array.from(files);
+      var dirName = './bilder';
+      if (files[0] && files[0].webkitRelativePath) {
+        dirName = files[0].webkitRelativePath.split('/')[0];
+      }
+      wizardData.enhance.sourcePath = dirName;
+      wizardData.enhance.sourceName = 'Ordner: ' + dirName + ' (' + files.length + ' Bilder)';
       renderWizardStep();
     }
 
@@ -4901,6 +5619,14 @@ export function generateStudioHtml(initialFile?: string, initialConfig?: ToadCon
     }
     function triggerWizBgrFolderInput() {
       var el = document.getElementById('wiz-bgr-folder-input');
+      if (el) el.click();
+    }
+    function triggerWizEnhFileInput() {
+      var el = document.getElementById('wiz-enh-file-input');
+      if (el) el.click();
+    }
+    function triggerWizEnhFolderInput() {
+      var el = document.getElementById('wiz-enh-folder-input');
       if (el) el.click();
     }
     function triggerWizConvertInput() {
@@ -5182,19 +5908,206 @@ export function generateStudioHtml(initialFile?: string, initialConfig?: ToadCon
           e.stopPropagation();
           dropzone.classList.remove('dragover');
           var items = e.dataTransfer.items;
+          var files = await extractFilesFromDataTransfer(e.dataTransfer);
           if (items && items.length > 0) {
             var entry = items[0].webkitGetAsEntry ? items[0].webkitGetAsEntry() : null;
             if (entry && entry.isDirectory) {
-              callback(entry.name, true);
+              callback(entry.name, true, files);
               return;
             }
           }
-          var files = await extractFilesFromDataTransfer(e.dataTransfer);
           if (files.length > 0) {
-            callback(files[0].name, false);
+            callback(files[0].name, false, files);
           }
         });
       }, 50);
+    }
+
+    function setupGenericSplitSlider(boxId, dividerId, topLayerId) {
+      var box = document.getElementById(boxId);
+      var divider = document.getElementById(dividerId);
+      var topLayer = document.getElementById(topLayerId);
+      if (!box || !divider || !topLayer) return;
+      if (box.dataset.splitBound === 'true') return;
+      box.dataset.splitBound = 'true';
+
+      var dragging = false;
+      var onMove = function(clientX) {
+        var rect = box.getBoundingClientRect();
+        if (!rect.width) return;
+        var x = clientX - rect.left;
+        x = Math.max(0, Math.min(rect.width, x));
+        var pct = (x / rect.width) * 100;
+        divider.style.left = pct + '%';
+        topLayer.style.clipPath = 'polygon(' + pct + '% 0, 100% 0, 100% 100%, ' + pct + '% 100%)';
+      };
+
+      var startDrag = function(e) {
+        dragging = true;
+        e.preventDefault();
+        var clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        onMove(clientX);
+      };
+      var handleMove = function(e) {
+        if (!dragging) return;
+        e.preventDefault();
+        var clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        onMove(clientX);
+      };
+      var stopDrag = function() {
+        dragging = false;
+      };
+
+      box.addEventListener('mousedown', startDrag);
+      box.addEventListener('touchstart', startDrag, { passive: false });
+      window.addEventListener('mousemove', handleMove);
+      window.addEventListener('touchmove', handleMove, { passive: false });
+      window.addEventListener('mouseup', stopDrag);
+      window.addEventListener('touchend', stopDrag);
+    }
+
+    function triggerWizPreviewFilePicker() {
+      var picker = document.getElementById('wiz-preview-file-picker');
+      if (picker) picker.click();
+    }
+
+    function onWizPreviewFilePick(files) {
+      if (!files || files.length === 0) return;
+      if (currentWizard === 'enhance') {
+        wizardData.enhance.files = Array.from(files);
+        wizardData.enhance.sourcePath = files[0].name;
+        wizardData.enhance.sourceName = 'Datei: ' + files[0].name;
+      } else if (currentWizard === 'bgr') {
+        wizardData.bgr.files = Array.from(files);
+        wizardData.bgr.sourcePath = files[0].name;
+        wizardData.bgr.sourceName = 'Datei: ' + files[0].name;
+      }
+      initWizardPreviewFromSelection();
+      runWizardLivePreview();
+    }
+
+    function initWizardPreviewFromSelection() {
+      var wizObj = currentWizard === 'enhance' ? wizardData.enhance : (currentWizard === 'bgr' ? wizardData.bgr : null);
+      if (!wizObj) return;
+      var files = wizObj.files;
+      if (files && files.length > 0) {
+        var reader = new FileReader();
+        reader.onload = function() {
+          var origImg = document.getElementById('wiz-split-img-orig');
+          var emptyState = document.getElementById('wiz-split-empty');
+          if (origImg) {
+            origImg.src = reader.result;
+            origImg.style.display = 'block';
+          }
+          if (emptyState) {
+            emptyState.innerHTML =
+              '<i class="fa-solid fa-wand-magic-sparkles" style="font-size: 24px; color: #818cf8;"></i>' +
+              '<div style="font-size: 13px; font-weight: 700; color: var(--text);">Vorher-Bild geladen (' + escapeHtml(files[0].name) + ')</div>' +
+              '<div style="font-size: 11px; color: var(--text-dim);">Klicke oben rechts auf <strong>„Vorher / Nachher Vorschau berechnen"</strong> für den Live-Vergleich.</div>';
+            emptyState.style.background = 'rgba(9, 9, 13, 0.6)';
+          }
+        };
+        reader.readAsDataURL(files[0]);
+      }
+    }
+
+    async function runWizardLivePreview() {
+      var isEnh = currentWizard === 'enhance';
+      var wizObj = isEnh ? wizardData.enhance : wizardData.bgr;
+      var files = wizObj.files || [];
+      var srcPath = (wizObj.sourcePath || '').trim();
+
+      var loadingEl = document.getElementById('wiz-split-loading');
+      var emptyEl = document.getElementById('wiz-split-empty');
+      var origImg = document.getElementById('wiz-split-img-orig');
+      var procImg = document.getElementById('wiz-split-img-proc');
+      var tagBefore = document.getElementById('wiz-tag-before');
+      var tagAfter = document.getElementById('wiz-tag-after');
+      var dimInfoEl = document.getElementById('wiz-preview-dim-info');
+      var btnRun = document.getElementById('btn-wiz-run-preview');
+
+      var dataUrl = null;
+      var filename = 'preview.png';
+
+      if (files.length > 0) {
+        filename = files[0].name;
+        dataUrl = await new Promise(function(res, rej) {
+          var r = new FileReader();
+          r.onload = function() { res(r.result); };
+          r.onerror = rej;
+          r.readAsDataURL(files[0]);
+        });
+      } else if (!srcPath || !/\\.(png|jpe?g|webp|avif|bmp|tiff?)$/i.test(srcPath)) {
+        triggerWizPreviewFilePicker();
+        return;
+      }
+
+      if (emptyEl) emptyEl.style.display = 'none';
+      if (loadingEl) loadingEl.style.display = 'flex';
+      if (btnRun) btnRun.disabled = true;
+
+      if (dataUrl && origImg) {
+        origImg.src = dataUrl;
+        origImg.style.display = 'block';
+      }
+
+      try {
+        var endpoint = isEnh ? '/api/image/enhance' : '/api/bg-remover/process';
+        var payload = isEnh ? {
+          dataUrl: dataUrl,
+          filePath: dataUrl ? undefined : srcPath,
+          filename: filename,
+          preset: wizObj.preset || 'balanced',
+          scale: Number(wizObj.scale) || 2,
+          format: wizObj.format || 'png',
+          saveToDisk: false
+        } : {
+          dataUrl: dataUrl,
+          filePath: dataUrl ? undefined : srcPath,
+          filename: filename,
+          preset: wizObj.model || 'medium',
+          format: wizObj.format || 'png',
+          saveToDisk: false
+        };
+
+        var res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        var data = await res.json();
+        if (data.success && data.resultUrl) {
+          if (origImg) {
+            origImg.src = data.originalDataUrl || dataUrl;
+            origImg.style.display = 'block';
+          }
+          if (procImg) {
+            procImg.src = data.resultUrl;
+            procImg.style.display = 'block';
+          }
+          if (isEnh && data.inputWidth && data.outputWidth) {
+            if (tagBefore) tagBefore.textContent = 'VORHER · ' + data.inputWidth + '×' + data.inputHeight;
+            if (tagAfter) tagAfter.textContent = 'NACHHER · ' + data.outputWidth + '×' + data.outputHeight + ' (' + wizObj.scale + 'x ' + wizObj.preset + ')';
+            if (dimInfoEl) dimInfoEl.innerHTML = data.inputWidth + '×' + data.inputHeight + ' px &rarr; ' + data.outputWidth + '×' + data.outputHeight + ' px (' + (data.durationMs / 1000).toFixed(1) + 's)';
+          } else {
+            if (dimInfoEl) dimInfoEl.textContent = 'Fertig in ' + ((data.durationMs || 0) / 1000).toFixed(1) + 's';
+          }
+          setupGenericSplitSlider('wiz-live-split-box', 'wiz-split-divider', 'wiz-split-top-layer');
+        } else {
+          if (emptyEl) {
+            emptyEl.style.display = 'flex';
+            emptyEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation" style="font-size: 24px; color: var(--danger);"></i><div style="font-size: 12px; color: var(--danger);">' + escapeHtml(data.error || 'Fehler bei der Berechnung') + '</div>';
+          }
+        }
+      } catch (err) {
+        if (emptyEl) {
+          emptyEl.style.display = 'flex';
+          emptyEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation" style="font-size: 24px; color: var(--danger);"></i><div style="font-size: 12px; color: var(--danger);">Fehler: ' + escapeHtml(err.message) + '</div>';
+        }
+      } finally {
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (btnRun) btnRun.disabled = false;
+      }
     }
 
     // Initialization
@@ -5202,10 +6115,13 @@ export function generateStudioHtml(initialFile?: string, initialConfig?: ToadCon
       applySettingsToUi({ config: studioConfig, configPath: initialConfigPath });
       loadFiles();
       setupSplitSlider();
+      setupEnhSplitSlider();
+      setupGenericSplitSlider('conv-split-box', 'conv-split-divider', 'conv-split-top-layer');
       setupSse();
       updateCliPreview();
       setupImageConverterDragDrop();
       setupBgRemoverDragDrop();
+      setupEnhancerDragDrop();
       loadStudioSettings();
       switchTab('hub');
     });
@@ -6374,6 +7290,15 @@ export function generateStudioHtml(initialFile?: string, initialConfig?: ToadCon
           reader.readAsDataURL(next.file);
         });
 
+        // Show original immediately in Vorher preview
+        const bgrEmpty = document.getElementById('bgr-empty-state');
+        if (bgrEmpty) bgrEmpty.style.display = 'none';
+        const origImg = document.getElementById('split-img-orig');
+        if (origImg) {
+          origImg.src = dataUrl;
+          origImg.style.display = 'block';
+        }
+
         updateUi(35, 'KI-Modell verarbeitet...');
 
         // Visual progression
@@ -6424,12 +7349,58 @@ export function generateStudioHtml(initialFile?: string, initialConfig?: ToadCon
       const item = bgrQueue.find(i => i.id === id);
       if (!item || !item.resultUrl) return;
 
+      const bgrEmpty = document.getElementById('bgr-empty-state');
+      if (bgrEmpty) bgrEmpty.style.display = 'none';
+
       const origImg = document.getElementById('split-img-orig');
       const procImg = document.getElementById('split-img-proc');
-      origImg.src = item.originalDataUrl;
-      procImg.src = item.resultUrl;
+      if (origImg) {
+        origImg.src = item.originalDataUrl;
+        origImg.style.display = 'block';
+      }
+      if (procImg) {
+        procImg.src = item.resultUrl;
+        procImg.style.display = 'block';
+      }
+
+      const sbsOrig = document.getElementById('bgr-sbs-orig');
+      const sbsProc = document.getElementById('bgr-sbs-proc');
+      if (sbsOrig) sbsOrig.src = item.originalDataUrl;
+      if (sbsProc) sbsProc.src = item.resultUrl;
 
       document.getElementById('btn-bgr-download').style.display = 'inline-flex';
+    }
+
+    function setBgrCompareMode(mode) {
+      const btnSplit = document.getElementById('bgr-mode-split');
+      const btnSbs = document.getElementById('bgr-mode-sbs');
+      const splitBox = document.getElementById('split-box');
+      const sbsBox = document.getElementById('bgr-sbs-box');
+      if (btnSplit) btnSplit.classList.toggle('active', mode === 'split');
+      if (btnSbs) btnSbs.classList.toggle('active', mode === 'sbs');
+      if (splitBox) splitBox.style.display = mode === 'split' ? 'flex' : 'none';
+      if (sbsBox) sbsBox.classList.toggle('active', mode === 'sbs');
+    }
+
+    function toggleBgrHoldOriginal(hold) {
+      const topLayer = document.getElementById('split-top-layer');
+      const divider = document.getElementById('split-divider');
+      const btnHold = document.getElementById('bgr-mode-hold');
+      if (btnHold) btnHold.classList.toggle('active', !!hold);
+      if (topLayer) topLayer.style.opacity = hold ? '0' : '1';
+      if (divider) divider.style.opacity = hold ? '0' : '1';
+    }
+
+    function setBgrZoom(z) {
+      [1, 2, 4].forEach(val => {
+        const b = document.getElementById('bgr-zoom-' + val);
+        if (b) b.classList.toggle('active', val === z);
+      });
+      const scaleVal = z === 1 ? 1 : (z === 2 ? 1.8 : 2.8);
+      ['split-img-orig', 'split-img-proc', 'bgr-sbs-orig', 'bgr-sbs-proc'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.transform = scaleVal === 1 ? 'none' : \`scale(\${scaleVal})\`;
+      });
     }
 
     async function openBgrTargetFolder() {
@@ -6596,6 +7567,427 @@ export function generateStudioHtml(initialFile?: string, initialConfig?: ToadCon
         const files = await extractFilesFromDataTransfer(e.dataTransfer);
         if (files.length > 0) {
           handleBgFiles(files);
+        }
+      });
+    }
+
+    // Image Enhancer Queue, Split-Slider & Drag-and-Drop
+    let enhQueue = [];
+    let enhPreset = 'balanced';
+    let enhScale = 2;
+    let enhFormat = 'png';
+    let isProcessingEnh = false;
+    let currentActiveEnhId = null;
+    let isDraggingEnhSplit = false;
+
+    function setEnhScale(s) {
+      enhScale = s;
+      const b1 = document.getElementById('enh-scale-1');
+      const b2 = document.getElementById('enh-scale-2');
+      const b4 = document.getElementById('enh-scale-4');
+      if (b1) b1.classList.toggle('active', s === 1);
+      if (b2) b2.classList.toggle('active', s === 2);
+      if (b4) b4.classList.toggle('active', s === 4);
+    }
+
+    function updateEnhPreset() {
+      const checked = document.querySelector('input[name="enh-preset"]:checked');
+      if (checked) enhPreset = checked.value;
+    }
+
+    function setEnhFormat(fmt) {
+      enhFormat = fmt;
+      const bPng = document.getElementById('enh-fmt-png');
+      const bWebp = document.getElementById('enh-fmt-webp');
+      const bJpg = document.getElementById('enh-fmt-jpg');
+      if (bPng) bPng.classList.toggle('active', fmt === 'png');
+      if (bWebp) bWebp.classList.toggle('active', fmt === 'webp');
+      if (bJpg) bJpg.classList.toggle('active', fmt === 'jpg');
+    }
+
+    function onEnhDropzoneClick(event) {
+      if (event && event.target && event.target.closest('button')) return;
+      triggerEnhFilePicker(event);
+    }
+
+    function triggerEnhFilePicker(event) {
+      if (event) event.stopPropagation();
+      const input = document.getElementById('enh-file-input');
+      if (input) {
+        input.value = '';
+        input.click();
+      }
+    }
+
+    async function triggerEnhFolderPicker(event) {
+      if (event) event.stopPropagation();
+      if (window.showDirectoryPicker) {
+        try {
+          const dirHandle = await window.showDirectoryPicker();
+          const files = [];
+          async function scanDir(handle) {
+            for await (const entry of handle.values()) {
+              if (entry.kind === 'file') {
+                if (isImageFile(entry.name)) {
+                  const file = await entry.getFile();
+                  files.push(file);
+                }
+              } else if (entry.kind === 'directory') {
+                await scanDir(entry);
+              }
+            }
+          }
+          await scanDir(dirHandle);
+          if (files.length > 0) {
+            handleEnhFiles(files);
+          } else {
+            alert('Keine unterstützten Bilddateien (.png, .jpg, .webp) im gewählten Ordner gefunden.');
+          }
+          return;
+        } catch (err) {
+          if (err && err.name === 'AbortError') return;
+          console.warn('showDirectoryPicker fallback:', err);
+        }
+      }
+      const input = document.getElementById('enh-folder-input');
+      if (input) {
+        input.value = '';
+        input.click();
+      }
+    }
+
+    function handleEnhFiles(files) {
+      const validFiles = Array.from(files || []).filter(f => isImageFile(f.name));
+      if (validFiles.length === 0) {
+        if (files && files.length > 0) {
+          alert('Keine unterstützten Bilddateien (.png, .jpg, .webp) gefunden.');
+        }
+        return;
+      }
+
+      validFiles.forEach(f => {
+        const id = 'enh-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7);
+        enhQueue.push({
+          id,
+          file: f,
+          name: f.name,
+          progress: 0,
+          status: 'Warteschlange...',
+          resultUrl: null,
+          dimensionsText: ''
+        });
+      });
+      renderEnhQueue();
+      processNextInEnhQueue();
+    }
+
+    function renderEnhQueue() {
+      const container = document.getElementById('enh-queue-list');
+      if (!container) return;
+      if (enhQueue.length === 0) {
+        container.innerHTML = '<div style="font-size: 12px; color: var(--text-dim); text-align: center; padding: 12px;">Keine Bilder geladen.</div>';
+        return;
+      }
+
+      container.innerHTML = enhQueue.map(item => \`
+        <div class="bgr-card" id="card-\${item.id}">
+          <div class="bgr-card-header">
+            <span class="bgr-card-title" title="\${item.name}"><i class="fa-solid fa-wand-magic-sparkles" style="color: #ec4899; margin-right: 6px;"></i>\${item.name}</span>
+            <span style="font-size: 10px; font-family: var(--font-mono); color: var(--text-dim);" id="pct-\${item.id}">\${item.progress}%</span>
+          </div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-fill" id="bar-\${item.id}" style="width: \${item.progress}%; background: linear-gradient(90deg, #ec4899, var(--purple));"></div>
+          </div>
+          <div class="progress-status" style="align-items: center;">
+            <span id="status-\${item.id}">\${item.status}\${item.dimensionsText ? ' &bull; ' + item.dimensionsText : ''}</span>
+            <div style="display: flex; gap: 4px; align-items: center;">
+              \${item.resultUrl ? \`<button class="btn-secondary" style="padding: 2px 8px; font-size: 10px;" onclick="loadEnhComparison('\${item.id}')"><i class="fa-solid fa-arrows-left-right"></i> Vergleichen</button>\` : ''}
+              \${item.savedPath ? \`<button class="btn-secondary" style="padding: 2px 8px; font-size: 10px;" title="Gespeichert: \${item.savedPath}" onclick="openEnhTargetFolder()"><i class="fa-solid fa-folder-open"></i></button>\` : ''}
+            </div>
+          </div>
+        </div>
+      \`).join('');
+    }
+
+    async function processNextInEnhQueue() {
+      if (isProcessingEnh) return;
+      const next = enhQueue.find(i => !i.resultUrl && !String(i.status).startsWith('Fehler'));
+      if (!next) return;
+
+      isProcessingEnh = true;
+      const updateUi = (pct, status) => {
+        next.progress = pct;
+        next.status = status;
+        const bar = document.getElementById('bar-' + next.id);
+        const pctEl = document.getElementById('pct-' + next.id);
+        const stEl = document.getElementById('status-' + next.id);
+        if (bar) bar.style.width = pct + '%';
+        if (pctEl) pctEl.textContent = pct + '%';
+        if (stEl) stEl.textContent = status;
+      };
+
+      try {
+        updateUi(15, 'Lade Bilddaten...');
+        const reader = new FileReader();
+        const dataUrl = await new Promise((res, rej) => {
+          reader.onload = () => res(reader.result);
+          reader.onerror = rej;
+          reader.readAsDataURL(next.file);
+        });
+
+        // Immediately show Vorher image & AI loading overlay in the viewer
+        const enhEmpty = document.getElementById('enh-empty-state');
+        if (enhEmpty) enhEmpty.style.display = 'none';
+        const origImg = document.getElementById('enh-split-img-orig');
+        if (origImg) {
+          origImg.src = dataUrl;
+          origImg.style.display = 'block';
+        }
+        const loadingOverlay = document.getElementById('enh-loading-overlay');
+        const loadingSub = document.getElementById('enh-loading-sub');
+        if (loadingOverlay) loadingOverlay.style.display = 'flex';
+        if (loadingSub) loadingSub.textContent = \`Super-Resolution (\${enhScale}x · \${enhPreset}) wird für "\${next.name}" berechnet...\`;
+
+        updateUi(35, \`KI-Super-Resolution (\${enhScale}x)...\`);
+        const interval = setInterval(() => {
+          if (next.progress < 85) updateUi(next.progress + 8, \`Rekonstruiere Details (\${enhScale}x)...\`);
+        }, 700);
+
+        const autoSave = document.getElementById('enh-auto-save') ? document.getElementById('enh-auto-save').checked : true;
+        const outDir = document.getElementById('enh-out-dir') ? document.getElementById('enh-out-dir').value : './verbessert';
+
+        const res = await fetch('/api/image/enhance', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            dataUrl,
+            filename: next.name,
+            preset: enhPreset,
+            scale: enhScale,
+            format: enhFormat,
+            saveToDisk: autoSave,
+            outDir: outDir
+          })
+        });
+
+        clearInterval(interval);
+        const data = await res.json();
+
+        if (data.success && data.resultUrl) {
+          next.resultUrl = data.resultUrl;
+          next.savedPath = data.savedPath || null;
+          next.originalDataUrl = dataUrl;
+          next.format = enhFormat;
+          next.preset = enhPreset;
+          next.scale = enhScale;
+          next.inputWidth = data.inputWidth;
+          next.inputHeight = data.inputHeight;
+          next.outputWidth = data.outputWidth;
+          next.outputHeight = data.outputHeight;
+          if (data.inputWidth && data.outputWidth) {
+            next.dimensionsText = \`\${data.inputWidth}&times;\${data.inputHeight} &rarr; \${data.outputWidth}&times;\${data.outputHeight}\`;
+          }
+          updateUi(100, \`Fertig (\${(data.durationMs / 1000).toFixed(1)}s)\`);
+          loadEnhComparison(next.id);
+        } else {
+          updateUi(0, 'Fehler: ' + (data.error || 'KI-Verbesserungsfehler'));
+        }
+      } catch (err) {
+        updateUi(0, 'Fehler: ' + err.message);
+      } finally {
+        const loadingOverlay = document.getElementById('enh-loading-overlay');
+        if (loadingOverlay) loadingOverlay.style.display = 'none';
+        isProcessingEnh = false;
+        renderEnhQueue();
+        processNextInEnhQueue();
+      }
+    }
+
+    function loadEnhComparison(id) {
+      currentActiveEnhId = id;
+      const item = enhQueue.find(i => i.id === id);
+      if (!item || !item.resultUrl) return;
+
+      const enhEmpty = document.getElementById('enh-empty-state');
+      if (enhEmpty) enhEmpty.style.display = 'none';
+      const loadingOverlay = document.getElementById('enh-loading-overlay');
+      if (loadingOverlay) loadingOverlay.style.display = 'none';
+
+      const origImg = document.getElementById('enh-split-img-orig');
+      const procImg = document.getElementById('enh-split-img-proc');
+      if (origImg) {
+        origImg.src = item.originalDataUrl;
+        origImg.style.display = 'block';
+      }
+      if (procImg) {
+        procImg.src = item.resultUrl;
+        procImg.style.display = 'block';
+      }
+
+      const sbsOrig = document.getElementById('enh-sbs-orig');
+      const sbsProc = document.getElementById('enh-sbs-proc');
+      if (sbsOrig) sbsOrig.src = item.originalDataUrl;
+      if (sbsProc) sbsProc.src = item.resultUrl;
+
+      const beforeText = item.inputWidth ? \`Vorher (\${item.inputWidth}×\${item.inputHeight})\` : 'Vorher (Original)';
+      const afterText = item.outputWidth ? \`Nachher (\${item.outputWidth}×\${item.outputHeight} · \${item.scale || enhScale}x \${item.preset || enhPreset})\` : 'Nachher (Verbessert KI)';
+
+      const tagBefore = document.getElementById('enh-tag-before');
+      const tagAfter = document.getElementById('enh-tag-after');
+      const sbsTagBefore = document.getElementById('enh-sbs-tag-before');
+      const sbsTagAfter = document.getElementById('enh-sbs-tag-after');
+      if (tagBefore) tagBefore.textContent = beforeText;
+      if (tagAfter) tagAfter.textContent = afterText;
+      if (sbsTagBefore) sbsTagBefore.textContent = beforeText;
+      if (sbsTagAfter) sbsTagAfter.textContent = afterText;
+
+      const resBadge = document.getElementById('enh-res-badge');
+      if (resBadge && item.inputWidth && item.outputWidth) {
+        resBadge.innerHTML = \`\${item.inputWidth}×\${item.inputHeight} px &rarr; \${item.outputWidth}×\${item.outputHeight} px (\${item.scale || enhScale}x)\`;
+        resBadge.style.display = 'inline-flex';
+      }
+
+      const btnReproc = document.getElementById('btn-enh-reprocess');
+      if (btnReproc) btnReproc.style.display = 'inline-flex';
+
+      const btn = document.getElementById('btn-enh-download');
+      if (btn) btn.style.display = 'inline-flex';
+    }
+
+    function setEnhCompareMode(mode) {
+      const btnSplit = document.getElementById('enh-mode-split');
+      const btnSbs = document.getElementById('enh-mode-sbs');
+      const splitBox = document.getElementById('enh-split-box');
+      const sbsBox = document.getElementById('enh-sbs-box');
+      if (btnSplit) btnSplit.classList.toggle('active', mode === 'split');
+      if (btnSbs) btnSbs.classList.toggle('active', mode === 'sbs');
+      if (splitBox) splitBox.style.display = mode === 'split' ? 'flex' : 'none';
+      if (sbsBox) sbsBox.classList.toggle('active', mode === 'sbs');
+    }
+
+    function toggleEnhHoldOriginal(hold) {
+      const topLayer = document.getElementById('enh-split-top-layer');
+      const divider = document.getElementById('enh-split-divider');
+      const btnHold = document.getElementById('enh-mode-hold');
+      if (btnHold) btnHold.classList.toggle('active', !!hold);
+      if (topLayer) topLayer.style.opacity = hold ? '0' : '1';
+      if (divider) divider.style.opacity = hold ? '0' : '1';
+    }
+
+    function setEnhZoom(z) {
+      [1, 2, 3, 4].forEach(val => {
+        const b = document.getElementById('enh-zoom-' + val);
+        if (b) b.classList.toggle('active', val === z);
+      });
+      const scaleVal = z === 1 ? 1 : (z === 2 ? 1.75 : (z === 3 ? 2.5 : 4));
+      ['enh-split-img-orig', 'enh-split-img-proc', 'enh-sbs-orig', 'enh-sbs-proc'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.transform = scaleVal === 1 ? 'none' : \`scale(\${scaleVal})\`;
+      });
+    }
+
+    async function reprocessActiveEnhImage() {
+      const item = enhQueue.find(i => i.id === currentActiveEnhId) || enhQueue[enhQueue.length - 1];
+      if (!item || isProcessingEnh) return;
+      item.resultUrl = null;
+      item.progress = 10;
+      item.status = 'Berechne neu...';
+      renderEnhQueue();
+      await processNextInEnhQueue();
+    }
+
+    async function openEnhTargetFolder() {
+      const outDir = document.getElementById('enh-out-dir') ? document.getElementById('enh-out-dir').value : './verbessert';
+      try {
+        await fetch('/api/open-folder', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dir: outDir })
+        });
+      } catch (err) {
+        console.warn('Fehler beim Öffnen des Ordners:', err);
+      }
+    }
+
+    function downloadEnhResult() {
+      const item = enhQueue.find(i => i.id === currentActiveEnhId);
+      if (!item || !item.resultUrl) return;
+
+      const fmt = item.format || enhFormat || 'png';
+      const ext = fmt === 'webp' ? '.webp' : (fmt === 'jpg' ? '.jpg' : '.png');
+      const outName = item.name.replace(/\\.[^/.]+$/, '') + '-enhanced' + ext;
+      const a = document.createElement('a');
+      a.href = item.resultUrl;
+      a.download = outName;
+      a.click();
+    }
+
+    function setupEnhSplitSlider() {
+      const box = document.getElementById('enh-split-box');
+      const divider = document.getElementById('enh-split-divider');
+      const topLayer = document.getElementById('enh-split-top-layer');
+      if (!box || !divider || !topLayer) return;
+
+      const onMove = (clientX) => {
+        const rect = box.getBoundingClientRect();
+        let x = clientX - rect.left;
+        x = Math.max(0, Math.min(rect.width, x));
+        const pct = (x / rect.width) * 100;
+
+        divider.style.left = pct + '%';
+        topLayer.style.clipPath = \`polygon(\${pct}% 0, 100% 0, 100% 100%, \${pct}% 100%)\`;
+      };
+
+      const startDrag = (e) => {
+        isDraggingEnhSplit = true;
+        e.preventDefault();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        onMove(clientX);
+      };
+
+      const handleMove = (e) => {
+        if (!isDraggingEnhSplit) return;
+        e.preventDefault();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        onMove(clientX);
+      };
+
+      const stopDrag = () => {
+        isDraggingEnhSplit = false;
+      };
+
+      box.addEventListener('mousedown', startDrag);
+      box.addEventListener('touchstart', startDrag, { passive: false });
+      window.addEventListener('mousemove', handleMove);
+      window.addEventListener('touchmove', handleMove, { passive: false });
+      window.addEventListener('mouseup', stopDrag);
+      window.addEventListener('touchend', stopDrag);
+    }
+
+    function setupEnhancerDragDrop() {
+      const dropzone = document.getElementById('enh-dropzone');
+      if (!dropzone) return;
+      ['dragenter', 'dragover'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropzone.classList.add('dragover');
+        });
+      });
+      ['dragleave', 'drop'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropzone.classList.remove('dragover');
+        });
+      });
+      dropzone.addEventListener('drop', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.remove('dragover');
+        const files = await extractFilesFromDataTransfer(e.dataTransfer);
+        if (files.length > 0) {
+          handleEnhFiles(files);
         }
       });
     }
@@ -6850,6 +8242,9 @@ export function generateStudioHtml(initialFile?: string, initialConfig?: ToadCon
         if (data.success) {
           convertedResult = data;
           document.getElementById('img-result-card').style.display = 'block';
+          const convOrig = document.getElementById('conv-split-img-orig');
+          if (convOrig) convOrig.src = selectedImgDataUrl;
+          setupGenericSplitSlider('conv-split-box', 'conv-split-divider', 'conv-split-top-layer');
           
           if (data.format === 'pdf') {
             document.getElementById('img-result-preview').src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="%2338bdf8" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>';
