@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 set -e
 
 echo ""
@@ -34,7 +34,7 @@ if ! command -v node >/dev/null 2>&1 || [ "$(node -v | cut -d'.' -f1 | tr -d 'v'
             aarch64|arm64) ARCH="arm64" ;;
             *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
         esac
-        NODE_VER="v20.18.0"
+        NODE_VER="v20.20.2"
         NODE_URL="https://nodejs.org/dist/$NODE_VER/node-$NODE_VER-$OS-$ARCH.tar.gz"
         curl -fsSL "$NODE_URL" | tar -xz -C "$RUNTIME_DIR" --strip-components=1
         NODE_BIN="$RUNTIME_DIR/bin/node"

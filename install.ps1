@@ -1,4 +1,4 @@
-﻿# TOAD Windows One-Line Installer
+# TOAD Windows One-Line Installer
 # Usage: irm https://raw.githubusercontent.com/razy-me/toad/main/install.ps1 | iex
 
 $ErrorActionPreference = 'Stop'
@@ -67,7 +67,7 @@ if ($NeedsPortableNode) {
         }
         
         $arch = if ([Environment]::Is64BitOperatingSystem) { "win-x64" } else { "win-x86" }
-        $nodeVer = "v20.18.0"
+        $nodeVer = "v20.20.2"
         $zipUrl = "https://nodejs.org/dist/$nodeVer/node-$nodeVer-$arch.zip"
         $zipFile = Join-Path $env:TEMP "toad-node-runtime.zip"
         
